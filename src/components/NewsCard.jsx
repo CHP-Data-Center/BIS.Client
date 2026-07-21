@@ -50,12 +50,14 @@ export default function NewsCard({ article, index = 0 }) {
 
           {article.amount && (
             <span style={{
-              fontSize: 11,
-              fontWeight: 700,
+              fontSize: 11.5,
+              fontWeight: 800,
               color: src.color,
               background: src.bg,
-              padding: '2px 8px',
+              padding: '3px 10px',
               borderRadius: 'var(--radius-full)',
+              border: `1.5px solid ${src.color}40`,
+              letterSpacing: '0.3px',
             }}>
               {article.amount}
             </span>
@@ -98,17 +100,17 @@ export default function NewsCard({ article, index = 0 }) {
           <div style={{
             display: 'flex',
             alignItems: 'flex-start',
-            gap: 6,
-            padding: '8px 10px',
-            background: 'linear-gradient(135deg, rgba(244,114,182,0.08), rgba(167,139,250,0.08))',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid rgba(167,139,250,0.2)',
-            marginTop: 4,
+            gap: 7,
+            padding: '9px 11px',
+            background: 'linear-gradient(135deg, rgba(167,139,250,0.12), rgba(244,114,182,0.08))',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid rgba(167,139,250,0.3)',
+            marginTop: 6,
           }}>
             <span className="ai-badge" style={{ flexShrink: 0 }}>
               <Cpu size={9} />AI
             </span>
-            <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            <span style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.45, fontWeight: 500 }}>
               {article.aiSummary}
             </span>
           </div>

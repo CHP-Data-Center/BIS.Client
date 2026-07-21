@@ -335,27 +335,54 @@ export default function DashboardPage() {
           <TrendingUp size={14} style={{ color: 'var(--brand-500)' }} />
           Phân Bổ Theo Nguồn
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: 'var(--space-6)' }}>
+        {/* ── Source Breakdown ── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 'var(--space-6)',
+        }}>
           {Object.values(SOURCES).map(src => {
             const count = mockArticles.filter(a => a.source === src.id).length;
             const pct = Math.round(count / mockArticles.length * 100);
             return (
-              <div key={src.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 18 }}>{src.icon}</span>{src.name}
+              <div key={src.id} style={{
+                background: 'var(--bg-surface-2)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-5)',
+                borderTop: `3px solid ${src.color}`,
+                transition: 'transform var(--transition-fast), box-shadow var(--transition-fast)',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{
+                      width: 32, height: 32, borderRadius: 8,
+                      background: src.bg || src.darkBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, flexShrink: 0,
+                    }}>{src.icon}</span>
+                    {src.name}
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: src.color }}>{count} bài</span>
+                  <span style={{
+                    fontSize: 22, fontWeight: 900, color: src.color,
+                    letterSpacing: '-0.5px',
+                  }}>{count}</span>
                 </div>
-                <div style={{ height: 8, background: 'var(--bg-surface-2)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginBottom: 6 }}>
                   <div style={{
-                    height: '100%', width: `${pct}%`, background: src.color,
+                    height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, ${src.color}99, ${src.color})`,
                     borderRadius: 'var(--radius-full)',
-                    boxShadow: `0 0 8px ${src.color}66`,
-                    transition: 'width 1.2s cubic-bezier(0.34,1.56,0.64,1)',
+                    boxShadow: `0 0 10px ${src.color}55`,
+                    transition: 'width 1.4s cubic-bezier(0.34,1.56,0.64,1)',
                   }} />
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{pct}% tổng bài viết</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{pct}% tổng bài viết</span>
+                  <span style={{ fontSize: 11, color: src.color, fontWeight: 700 }}>Bài</span>
+                </div>
               </div>
             );
           })}

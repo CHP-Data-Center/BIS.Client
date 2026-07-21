@@ -547,7 +547,7 @@ ul, ol { list-style: none; }
    ============================================ */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-4);
   margin-bottom: var(--space-8);
 }
@@ -1671,7 +1671,8 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-xl);
   padding: var(--space-5) 0 var(--space-5) var(--space-6);
   margin-bottom: var(--space-6);
-  overflow: hidden;
+  /* NO overflow:hidden here — that clips hovered chips */
+  /* overflow is only on .trending-marquee-wrapper */
 }
 .trending-strip-header {
   display: flex; align-items: center; gap: var(--space-3);
@@ -1690,7 +1691,10 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-full);
 }
 .trending-marquee-wrapper {
-  overflow: hidden; position: relative;
+  overflow-x: hidden;
+  overflow-y: visible;   /* allows chip to lift on hover without clip */
+  position: relative;
+  padding-bottom: 6px;   /* space for hover translateY */
 }
 .trending-marquee-wrapper::after {
   content: ''; position: absolute;
