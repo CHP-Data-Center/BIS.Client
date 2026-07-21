@@ -552,8 +552,8 @@ ul, ol { list-style: none; }
    ============================================ */
 .stats-grid {
   display: grid;
-  /* auto-fill adapts to available width; min-width 0 allows shrink */
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  /* Always 5 equal columns so cards fill the full row */
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-4);
   margin-bottom: var(--space-8);
 }
@@ -1669,7 +1669,7 @@ ul, ol { list-style: none; }
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; padding: var(--space-4); }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr 1fr; }
   .news-grid { grid-template-columns: 1fr; }
   .dashboard-banner { flex-direction: column; gap: var(--space-6); }
   .banner-stat { text-align: left; }
@@ -1713,9 +1713,13 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-full);
 }
 .trending-marquee-wrapper {
-  overflow: hidden;      /* back to simple hidden - clips horizontally and vertically */
+  overflow: hidden;      /* clips horizontally */
   position: relative;
-  padding-bottom: 2px;
+  /* vertical padding lets chips scale(1.06) without being cut */
+  padding-top: 6px;
+  padding-bottom: 6px;
+  margin-top: -6px;
+  margin-bottom: -6px;
 }
 .trending-marquee-wrapper::after {
   content: ''; position: absolute;
