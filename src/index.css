@@ -152,6 +152,11 @@ ul, ol { list-style: none; }
   min-height: calc(100vh - var(--header-h));
   padding: var(--space-8);
   transition: margin var(--transition-base);
+  /* Critical: prevent ANY child from overflowing horizontally */
+  overflow-x: hidden;
+  min-width: 0;           /* flex child must shrink */
+  max-width: calc(100vw - var(--sidebar-w));
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
@@ -547,7 +552,8 @@ ul, ol { list-style: none; }
    ============================================ */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* auto-fill adapts to available width; min-width 0 allows shrink */
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-8);
 }
@@ -564,6 +570,8 @@ ul, ol { list-style: none; }
   position: relative;
   overflow: hidden;
   isolation: isolate;
+  min-width: 0;       /* allow shrink in flex/grid */
+  max-width: 100%;
 }
 
 .stats-card::before {
@@ -643,8 +651,9 @@ ul, ol { list-style: none; }
    ============================================ */
 .news-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-5);
+  min-width: 0;         /* don't blow out the grid container */
 }
 
 .news-card {
@@ -652,6 +661,7 @@ ul, ol { list-style: none; }
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  min-width: 0;         /* allow grid item to shrink */
   transition: all var(--transition-base);
   cursor: pointer;
   display: flex;
@@ -1671,11 +1681,11 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-xl);
   padding: var(--space-5) 0 var(--space-5) var(--space-6);
   margin-bottom: var(--space-6);
-  /* NO overflow:hidden here — that clips hovered chips */
-  /* overflow is only on .trending-marquee-wrapper */
+  overflow: hidden;       /* RESTORE: prevent marquee from overflowing page */
 }
 .trending-strip-header {
   display: flex; align-items: center; gap: var(--space-3);
+  flex-wrap: wrap;            /* wrap on small screens */
   margin-bottom: var(--space-4); padding-right: var(--space-6);
 }
 .trending-strip-title {
@@ -1691,10 +1701,9 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-full);
 }
 .trending-marquee-wrapper {
-  overflow-x: hidden;
-  overflow-y: visible;   /* allows chip to lift on hover without clip */
+  overflow: hidden;      /* back to simple hidden - clips horizontally and vertically */
   position: relative;
-  padding-bottom: 6px;   /* space for hover translateY */
+  padding-bottom: 2px;
 }
 .trending-marquee-wrapper::after {
   content: ''; position: absolute;
@@ -1715,7 +1724,7 @@ ul, ol { list-style: none; }
   background: var(--bg-surface-2); color: var(--text-secondary);
   transition: all var(--transition-fast); position: relative; overflow: hidden;
 }
-.trending-keyword-chip:hover { transform: translateY(-3px) scale(1.06); box-shadow: var(--shadow-md); border-color: var(--brand-300); color: var(--brand-700); }
+.trending-keyword-chip:hover { transform: scale(1.06); box-shadow: 0 2px 14px rgba(37,99,235,0.22); border-color: var(--brand-300); color: var(--brand-700); }
 .trending-keyword-chip.rank-1 { background: linear-gradient(135deg,#fef3c7,#fde68a); border-color: #f59e0b; color: #92400e; font-weight: 700; }
 .trending-keyword-chip.rank-2 { background: linear-gradient(135deg,#e0e7ff,#c7d2fe); border-color: #818cf8; color: #3730a3; }
 .trending-keyword-chip.rank-3 { background: linear-gradient(135deg,#fce7f3,#fbcfe8); border-color: #ec4899; color: #9d174d; }
