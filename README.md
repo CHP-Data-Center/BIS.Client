@@ -1,49 +1,93 @@
 # IIH – Integrated Intelligence Hub
 
-**Trung Tâm Thông Tin Tích Hợp** — Web app theo dõi tin tức và đấu thầu từ ADB, World Bank và hệ thống đấu thầu quốc gia Việt Nam.
+> Trung Tâm Thông Tin Tích Hợp — theo dõi tin tức, dự án và đấu thầu từ ADB, World Bank và hệ thống đấu thầu quốc gia. Phân tích bởi AI, cập nhật liên tục.
 
-## Tech Stack
+## 🚀 Tech Stack
 
-- **React 18** + **Vite 5**
-- **React Router v6**
-- **Lucide React** (icons)
-- **Vanilla CSS** — design system tùy chỉnh hoàn toàn
+- **React 18** + **Vite 5** + **JSX**
+- **React Router v6** — Client-side routing
+- **Lucide React** — Icon library
+- **Vanilla CSS** — Custom design system (CSS variables, glassmorphism, 15+ animations)
+- **Context API** — Theme (Light/Dark) & Auth management
 
-## Tính năng
+## ✨ Tính Năng
 
-- 📊 Dashboard tổng quan với animated stats
-- 🔥 Trending keywords marquee
-- 📰 News feed: ADB · World Bank · Đấu Thầu Công
-- 🤖 AI Summary badge trên từng bài viết
-- 🌗 Light / Dark mode toggle
-- 🔍 Tìm kiếm & lọc theo nguồn
-- 📄 Phân trang (6 bài/trang)
-- ⏰ Live clock trong header
-- 🔐 Login tùy chọn (guest mode mặc định)
+| Tính năng | Mô tả |
+|---|---|
+| 🔐 Auth | Đăng nhập / Guest mode (không cần login) |
+| 🌗 Theme | Light / Dark mode với localStorage |
+| 📊 Dashboard | Hero banner, animated stats, news grid, pagination |
+| 🔥 Trending | Marquee auto-scroll + Top-3 pinned pills |
+| 📰 News | Grid/List toggle, filter by source, search, sort |
+| 🤖 AI Summary | Badge + tóm tắt AI cho từng bài viết |
+| ⏰ Deadline | Countdown timer cho gói thầu |
+| 📄 Pagination | 6 bài/trang, smooth scroll |
+| ⬆️ Scroll-top | Floating button |
+| 🕐 Live Clock | Realtime clock trong header |
+| 💀 Skeleton | Shimmer loading effect |
+| 📱 Responsive | Mobile-first layout |
 
-## Cài đặt
+## 📦 Nguồn Dữ Liệu
+
+- **ADB** — Asian Development Bank (adb.org)
+- **World Bank** — World Bank Group (worldbank.org)
+- **Đấu Thầu Công** — Hệ thống đấu thầu quốc gia (muasamcong.mpi.gov.vn)
+
+## 🛠️ Cài Đặt & Chạy
 
 ```bash
+# Cài dependencies
 npm install
+
+# Chạy dev server (http://localhost:3000)
 npm run dev
+
+# Build production
+npm run build
 ```
 
-Mở trình duyệt tại **http://localhost:3000**
+## 📁 Cấu Trúc Dự Án
 
-## Tài khoản demo
+```
+src/
+├── main.jsx               # Entry point
+├── App.jsx                # Router + Layout
+├── index.css              # Design system (CSS variables, animations)
+├── context/
+│   ├── ThemeContext.jsx   # Light/Dark mode
+│   └── AuthContext.jsx    # Auth + Guest mode
+├── data/
+│   └── mockData.js        # Mock data (ADB, World Bank, Đấu Thầu)
+├── components/
+│   ├── Header.jsx         # Fixed header + live clock
+│   ├── Sidebar.jsx        # Navigation
+│   ├── NewsCard.jsx       # Bài viết card
+│   ├── StatsCard.jsx      # Animated stats
+│   ├── SourceDropdown.jsx # Dropdown nguồn dữ liệu
+│   ├── ThemeToggle.jsx    # Light/Dark toggle
+│   └── ScrollToTop.jsx    # Floating scroll button
+└── pages/
+    ├── LoginPage.jsx      # Particles + glassmorphism
+    ├── DashboardPage.jsx  # Main dashboard
+    ├── NewsPage.jsx       # News listing
+    └── ArticlePage.jsx    # Article detail
+```
 
-| Role  | Email           | Password |
-|-------|-----------------|----------|
-| Admin | admin@iih.vn    | iih2026  |
-| Demo  | demo@iih.vn     | demo123  |
-| Guest | *(tự động)*     | *(không cần)* |
+## 🔑 Tài Khoản Demo
 
-## Nguồn dữ liệu
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@iih.vn` | `iih2026` |
+| Demo | `demo@iih.vn` | `demo123` |
+| Khách | *(tự động)* | *(không cần login)* |
 
-| Nguồn | URL |
-|-------|-----|
-| ADB | https://www.adb.org |
-| World Bank | https://www.worldbank.org |
-| Đấu Thầu Công | https://muasamcong.mpi.gov.vn |
+## 🎨 Hiệu Ứng & Animation
 
-> Dữ liệu hiện tại là mock. Backend crawler + AI đang phát triển riêng.
+- `wiggle` · `bounceIn` · `floatY` · `glowPulse` · `jelly`
+- `shimmerSweep` · `scalePop` · `marquee` · `slideInLeft` · `fadeUp`
+- Hover lift, glow border, shimmer overlay, bottom accent bar
+- Staggered card animations, animated counter numbers
+
+---
+
+> **Phiên bản**: 1.0.0 · **License**: MIT
