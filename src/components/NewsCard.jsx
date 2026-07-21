@@ -99,7 +99,7 @@ export default function NewsCard({ article, index = 0 }) {
         {article.aiSummary && (
           <div style={{
             display: 'flex',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             gap: 7,
             padding: '9px 11px',
             background: 'linear-gradient(135deg, rgba(167,139,250,0.12), rgba(244,114,182,0.08))',

@@ -33,32 +33,28 @@ function TrendingStrip() {
           Từ Khóa Đang Nổi Bật
         </div>
         <span className="hot-badge" style={{ animation: 'pulse 2s infinite' }}>🔥 LIVE</span>
-        {/* Top-3 quick pills always visible */}
-        <div style={{ display: 'flex', gap: 6, marginLeft: 16 }}>
-          {trendingKeywords.slice(0, 3).map(kw => (
-            <span key={kw.rank} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-full)',
-              fontSize: 11, fontWeight: 700,
-              background: kw.rank === 1 ? '#fef3c7' : kw.rank === 2 ? '#e0e7ff' : '#fce7f3',
-              color: kw.rank === 1 ? '#92400e' : kw.rank === 2 ? '#3730a3' : '#9d174d',
-              border: `1px solid ${rankColors[kw.rank]}66`,
-              whiteSpace: 'nowrap',
-              animation: `bounceIn 0.5s ${kw.rank * 0.1}s ease both`,
-            }}>
-              <span style={{
-                width: 14, height: 14, borderRadius: '50%',
-                background: rankColors[kw.rank],
-                color: 'white', fontSize: 8, fontWeight: 900,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>{kw.rank}</span>
-              {kw.emoji} {kw.text}
-            </span>
-          ))}
-        </div>
-        <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500 }}>
+        {/* rank-1 pill only — compact, won't overflow */}
+        {trendingKeywords.slice(0, 1).map(kw => (
+          <span key={kw.rank} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '3px 10px',
+            borderRadius: 'var(--radius-full)',
+            fontSize: 11, fontWeight: 700,
+            background: '#fef3c7', color: '#92400e',
+            border: '1px solid #f59e0b66',
+            whiteSpace: 'nowrap',
+            animation: 'bounceIn 0.5s ease both',
+            marginLeft: 4,
+          }}>
+            <span style={{
+              width: 14, height: 14, borderRadius: '50%',
+              background: '#f59e0b', color: 'white', fontSize: 8, fontWeight: 900,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>1</span>
+            {kw.emoji} {kw.text}
+          </span>
+        ))}
+        <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
           ↔ Di chuột để dừng
         </span>
       </div>
