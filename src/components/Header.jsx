@@ -53,10 +53,10 @@ export default function Header() {
       {/* Left */}
       <div className="header-left">
         <div className="header-logo" onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>
-          <div className="logo-mark">IIH</div>
+          <div className="logo-mark">BIS</div>
           <div className="logo-text">
-            <span className="logo-title">Trung Tâm TT</span>
-            <span className="logo-sub">Integrated Intelligence Hub</span>
+            <span className="logo-title">Hệ Thống BIS</span>
+            <span className="logo-sub">Bidding Intelligence System</span>
           </div>
         </div>
 

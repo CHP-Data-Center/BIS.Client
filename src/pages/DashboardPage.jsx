@@ -971,7 +971,7 @@ export default function DashboardPage() {
         <div className="banner-orb" />
         <div className="banner-content">
           <div className="banner-title" style={{ animation: 'slideInLeft 0.6s ease both' }}>
-            Trung Tâm Thông Tin Tích Hợp
+            BIS – Bidding Intelligence System
           </div>
           <div className="banner-sub" style={{ animation: 'slideInLeft 0.6s 0.1s ease both', opacity: 0, animationFillMode: 'forwards' }}>
             Theo dõi tin tức, dự án và đấu thầu từ ADB, World Bank và hệ thống đấu thầu quốc gia.

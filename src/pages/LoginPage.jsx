@@ -87,9 +87,9 @@ export default function LoginPage() {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <div className="login-logo-mark">IIH</div>
-          <div className="login-title">Trung Tâm Thông Tin Tích Hợp</div>
-          <div className="login-subtitle">Integrated Intelligence Hub · Đăng nhập để tiếp tục</div>
+          <div className="login-logo-mark">BIS</div>
+          <div className="login-title">Bidding Intelligence System</div>
+          <div className="login-subtitle">Hệ Thống Thông Tin Đấu Thầu · Đăng nhập để tiếp tục</div>
         </div>
 
         {/* AI badge */}
