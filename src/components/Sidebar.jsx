@@ -12,6 +12,7 @@ const navItems = [
 ];
 
 const sourceNavItems = [
+  { to: '/news/tintuc',     icon: <Newspaper size={16} />,   label: 'Tin Tức Báo Chí',   badge: null, color: SOURCES.tintuc.color },
   { to: '/news/adb',        icon: <Building2 size={16} />,   label: 'ADB',               badge: null, color: SOURCES.adb.color },
   { to: '/news/worldbank',  icon: <Globe size={16} />,        label: 'World Bank',        badge: null, color: SOURCES.worldbank.color },
   { to: '/news/dauthau',    icon: <ShoppingBag size={16} />, label: 'Đấu Thầu Công',    badge: 3,    color: SOURCES.dauthau.color },

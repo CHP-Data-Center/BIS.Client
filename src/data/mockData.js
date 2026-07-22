@@ -15,6 +15,11 @@ export const SOURCES = {
     icon: '📋', color: '#8b5cf6', bg: '#f5f3ff', darkBg: 'rgba(139,92,246,0.1)',
     url: 'https://muasamcong.mpi.gov.vn', desc: 'Mua sắm công & Đấu thầu',
   },
+  tintuc: {
+    id: 'tintuc', name: 'Tin Tức', fullName: 'Tin Tức Báo Chí',
+    icon: '📰', color: '#3b82f6', bg: '#eff6ff', darkBg: 'rgba(59,130,246,0.1)',
+    url: 'https://vnexpress.net', desc: 'Tin tức kinh tế & đầu tư tổng hợp từ các trang báo',
+  },
 };
 
 export const mockArticles = [
@@ -227,6 +232,44 @@ export const mockArticles = [
     coverEmoji: '🖧', gradient: ['#fdf4ff', '#fae8ff'],
     status: 'Đang mở thầu', deadline: '2026-08-20',
   },
+
+  // ── Tin Tức Báo Chí ─────────────────────────────────────────
+  {
+    id: 'tt-001', source: 'tintuc',
+    title: 'Vietnam economy grows 6.42% in first half of 2026',
+    titleVi: 'Kinh tế Việt Nam tăng trưởng 6,42% trong nửa đầu năm 2026',
+    excerpt: 'Vietnam\'s GDP grew by 6.42% in the first half of 2026, driven by strong manufacturing and FDI inflows.',
+    excerptVi: 'GDP của Việt Nam tăng trưởng 6,42% trong nửa đầu năm 2026, nhờ động lực mạnh mẽ từ ngành công nghiệp chế biến chế tạo và dòng vốn FDI dồi dào.',
+    date: '2026-07-22', category: 'Kinh tế', country: 'Vietnam',
+    aiSummary: 'Kinh tế VN hồi phục mạnh mẽ nhờ FDI và xuất khẩu.',
+    tags: ['vietnam', 'economy', 'gdp', 'fdi'],
+    coverUrl: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=600&q=85',
+    coverEmoji: '📈', gradient: ['#eff6ff', '#bfdbfe']
+  },
+  {
+    id: 'tt-002', source: 'tintuc',
+    title: 'Samsung invests another $1 billion in northern Vietnam expansion',
+    titleVi: 'Samsung đầu tư thêm 1 tỷ USD mở rộng nhà máy tại miền Bắc',
+    excerpt: 'Samsung Group has committed to investing another $1 billion to expand its smart devices production lines.',
+    excerptVi: 'Tập đoàn Samsung cam kết rót thêm 1 tỷ USD để mở rộng dây chuyền sản xuất thiết bị thông minh tại Bắc Ninh và Thái Nguyên.',
+    date: '2026-07-21', category: 'Đầu tư', country: 'Vietnam',
+    aiSummary: 'Samsung tăng cường hiện diện sản xuất công nghệ cao tại VN.',
+    tags: ['samsung', 'investment', 'fdi', 'technology'],
+    coverUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=85',
+    coverEmoji: '📱', gradient: ['#ecfdf5', '#a7f3d0']
+  },
+  {
+    id: 'tt-003', source: 'tintuc',
+    title: 'Vietnam speeds up construction of North-South high-speed railway',
+    titleVi: 'Đẩy nhanh tiến độ lập dự án đường sắt tốc độ cao Bắc - Nam',
+    excerpt: 'The Ministry of Transport is accelerating the investment reports for the mega North-South high-speed railway project.',
+    excerptVi: 'Bộ Giao thông Vận tải đang đẩy nhanh tiến độ hoàn thiện báo cáo nghiên cứu tiền khả thi cho dự án đại đường sắt tốc độ cao Bắc - Nam trục 350km/h.',
+    date: '2026-07-20', category: 'Hạ tầng', country: 'Vietnam',
+    aiSummary: 'Dự án đường sắt cao tốc Bắc-Nam chuẩn bị trình Quốc hội phê duyệt.',
+    tags: ['railway', 'highspeed', 'infrastructure', 'vietnam'],
+    coverUrl: 'https://images.unsplash.com/photo-1515162305285-0293e4767cc2?auto=format&fit=crop&w=600&q=85',
+    coverEmoji: '🚄', gradient: ['#fef3c7', '#fde68a']
+  }
 ];
 
 export const getArticlesBySource = (sourceId) => {
@@ -254,3 +297,423 @@ export const statsData = {
   adbCount: 412, wbCount: 389, dauthauCount: 483,
   aiProcessed: 1201, lastUpdate: '2 phút trước',
 };
+
+// ── NEW STRUCTURED DATA FOR WORLD BANK PROJECTS ────────────────
+export const mockWbProjects = [
+  {
+    id: 'wb-p-001',
+    title: 'Philippines Multisectoral Nutrition Project-Converging Nutrition Efforts for our Children\'s Tomorrow',
+    country: 'Philippines',
+    projectId: 'P513206',
+    amount: '$647,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-09-30',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Nutrition',
+    mapCoords: { x: 74, y: 40 }
+  },
+  {
+    id: 'wb-p-002',
+    title: 'Chao Phraya Flood Management Plan 2',
+    country: 'Thailand',
+    projectId: 'P510631',
+    amount: '$880,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-09-21',
+    lastUpdatedDate: '2025-03-09',
+    lastStage: 'Concept Review',
+    sector: 'Water',
+    mapCoords: { x: 45, y: 45 }
+  },
+  {
+    id: 'wb-p-003',
+    title: 'Philippines SME COMPETE +',
+    country: 'Philippines',
+    projectId: 'P507827',
+    amount: '$301,115,008',
+    status: 'Pipeline',
+    approvalDate: '2027-09-15',
+    lastUpdatedDate: '2025-04-11',
+    lastStage: 'Concept Review',
+    sector: 'Finance',
+    mapCoords: { x: 78, y: 46 }
+  },
+  {
+    id: 'wb-p-004',
+    title: 'South Africa Rail & Ports Sector Governance and Skills Development',
+    country: 'South Africa',
+    projectId: 'P17123',
+    amount: '$90,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-09-15',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Transport',
+    mapCoords: { x: 15, y: 82 }
+  },
+  {
+    id: 'wb-p-005',
+    title: 'Inclusive Partnerships for Agrarian Reform Communities',
+    country: 'Philippines',
+    projectId: 'P513635',
+    amount: '$351,709,792',
+    status: 'Pipeline',
+    approvalDate: '2027-09-10',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Agriculture',
+    mapCoords: { x: 76, y: 48 }
+  },
+  {
+    id: 'wb-p-006',
+    title: 'Industrial Decarbonization and Competitiveness Facility Project',
+    country: 'Indonesia',
+    projectId: 'P514469',
+    amount: '$500,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-30',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Energy',
+    mapCoords: { x: 50, y: 80 }
+  },
+  {
+    id: 'wb-p-007',
+    title: 'Groundwater for Food Sustainability and Sovereignty',
+    country: 'Indonesia',
+    projectId: 'P515372',
+    amount: '$200,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-30',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Water',
+    mapCoords: { x: 52, y: 88 }
+  },
+  {
+    id: 'wb-p-008',
+    title: 'Food and Irrigation Security Project',
+    country: 'Indonesia',
+    projectId: 'P515373',
+    amount: '$500,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-30',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Agriculture',
+    mapCoords: { x: 58, y: 90 }
+  },
+  {
+    id: 'wb-p-009',
+    title: 'FINGROW Tajikistan',
+    country: 'Tajikistan',
+    projectId: 'P512525',
+    amount: '$30,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-22',
+    lastUpdatedDate: null,
+    lastStage: 'Concept Review',
+    sector: 'Finance',
+    mapCoords: { x: 12, y: 50 }
+  },
+  {
+    id: 'wb-p-010',
+    title: 'INDONESIA ROAD CONNECTIVITY IMPROVEMENT PROGRAM',
+    country: 'Indonesia',
+    projectId: 'P508107',
+    amount: '$1,000,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-15',
+    lastUpdatedDate: '2025-04-07',
+    lastStage: 'Concept Review',
+    sector: 'Transport',
+    mapCoords: { x: 46, y: 76 }
+  },
+  {
+    id: 'wb-p-011',
+    title: 'Amazon and Cerrado Bioeconomy, Forest Restoration, and Climate-Smart Agriculture Project',
+    country: 'Brazil',
+    projectId: 'P508202',
+    amount: '$426,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-15',
+    lastUpdatedDate: '2024-11-29',
+    lastStage: 'Begin Appraisal',
+    sector: 'Climate',
+    mapCoords: { x: 8, y: 25 }
+  },
+  {
+    id: 'wb-p-012',
+    title: 'Quality, Reliable and Affordable National Health Insurance Financing : JKN-KUAT',
+    country: 'Indonesia',
+    projectId: 'P512159',
+    amount: '$850,000,000',
+    status: 'Pipeline',
+    approvalDate: '2027-07-15',
+    lastUpdatedDate: null,
+    lastStage: 'Begin Negotiation',
+    sector: 'Finance',
+    mapCoords: { x: 54, y: 89 }
+  }
+];
+
+// ── NEW STRUCTURED DATA FOR ADB PROJECTS ───────────────────────
+export const mockAdbProjects = [
+  {
+    id: 'adb-p-001',
+    title: 'Vietnam Clean Energy Transition Project',
+    country: 'Vietnam',
+    projectId: 'P48375',
+    amount: '$500,000,000',
+    status: 'Approved',
+    approvalDate: '2026-07-20',
+    lastUpdatedDate: '2026-07-22',
+    sector: 'Energy',
+    lastStage: 'Approved',
+    mapCoords: { x: 57, y: 25 }
+  },
+  {
+    id: 'adb-p-002',
+    title: 'Urban Development and Flood Management in Ho Chi Minh City',
+    country: 'Vietnam',
+    projectId: 'P48376',
+    amount: '$200,000,000',
+    status: 'Active',
+    approvalDate: '2026-07-18',
+    lastUpdatedDate: '2026-07-19',
+    sector: 'Urban Dev',
+    lastStage: 'Active',
+    mapCoords: { x: 59, y: 55 }
+  },
+  {
+    id: 'adb-p-003',
+    title: 'Digital Financial Inclusion Initiative for Rural Communities',
+    country: 'Cambodia',
+    projectId: 'P48377',
+    amount: '$50,000,000',
+    status: 'Active',
+    approvalDate: '2026-07-15',
+    lastUpdatedDate: '2026-07-16',
+    sector: 'Finance',
+    lastStage: 'Active',
+    mapCoords: { x: 52, y: 54 }
+  },
+  {
+    id: 'adb-p-004',
+    title: 'Asia Climate Resilience Fund 2026',
+    country: 'Regional',
+    projectId: 'P48378',
+    amount: '$1,000,000,000',
+    status: 'Proposed',
+    approvalDate: '2026-07-12',
+    lastUpdatedDate: null,
+    sector: 'Climate',
+    lastStage: 'Proposed',
+    mapCoords: { x: 65, y: 32 }
+  },
+  {
+    id: 'adb-p-005',
+    title: 'Transport Connectivity Project for Greater Mekong Subregion',
+    country: 'GMS',
+    projectId: 'P48379',
+    amount: '$300,000,000',
+    status: 'Approved',
+    approvalDate: '2026-07-10',
+    lastUpdatedDate: '2026-07-11',
+    sector: 'Transport',
+    lastStage: 'Approved',
+    mapCoords: { x: 48, y: 36 }
+  },
+  {
+    id: 'adb-p-006',
+    title: 'Water Security Project for Philippine Island Communities',
+    country: 'Philippines',
+    projectId: 'P48380',
+    amount: '$180,000,000',
+    status: 'Active',
+    approvalDate: '2026-07-08',
+    lastUpdatedDate: null,
+    sector: 'Water',
+    lastStage: 'Active',
+    mapCoords: { x: 80, y: 52 }
+  }
+];
+
+// ── NEW STRUCTURED DATA FOR MUA SẮM CÔNG ───────────────────────
+// 1. Thông báo mời thầu (TBMT)
+export const mockProcurementNotices = [
+  {
+    id: 'IB2600384477-00',
+    title: 'Gói thầu số 2: Tư vấn khảo sát, lập báo cáo nghiên cứu khả thi',
+    orgCode: 'vn5300233808',
+    procuringEntity: 'Ban Quản lý dự án đầu tư xây dựng công trình giao thông tỉnh Lào Cai',
+    publishDate: '2026-07-21 16:32',
+    closeDate: '2026-07-28 08:00',
+    country: 'Vietnam',
+    status: 'Đang mở thầu',
+    sector: 'Transport',
+    mapCoords: { x: 53.5, y: 20 }
+  },
+  {
+    id: 'IB2600377917-00',
+    title: 'Tư vấn khảo sát xây dựng, cắm mốc và lập báo cáo nghiên cứu khả thi',
+    orgCode: 'vn1800809747',
+    procuringEntity: 'Ban Quản lý dự án đầu tư xây dựng công trình giao thông và nông nghiệp thành phố Cần Thơ',
+    publishDate: '2026-07-17 17:07',
+    closeDate: '2026-08-05 09:00',
+    country: 'Vietnam',
+    status: 'Đang mở thầu',
+    sector: 'Transport',
+    mapCoords: { x: 56.5, y: 60 }
+  },
+  {
+    id: 'IB2600350334-00',
+    title: 'Tư vấn khảo sát xây dựng, cắm mốc GPMB, mốc lộ giới và lập báo cáo nghiên cứu khả thi',
+    orgCode: 'vn1800809747',
+    procuringEntity: 'Ban Quản lý dự án đầu tư xây dựng công trình giao thông và nông nghiệp thành phố Cần Thơ',
+    publishDate: '2026-07-08 17:04',
+    closeDate: '2026-07-27 09:00',
+    country: 'Vietnam',
+    status: 'Đang mở thầu',
+    sector: 'Transport',
+    mapCoords: { x: 56.5, y: 62 }
+  },
+  {
+    id: 'IB2600351150-00',
+    title: 'Tư vấn lập nhiệm vụ khảo sát xây dựng, nhiệm vụ thiết kế xây dựng phục vụ lập Báo cáo nghiên cứu khả thi',
+    orgCode: 'vn5600203522',
+    procuringEntity: 'Ban Quản lý dự án các công trình Giao thông tỉnh Điện Biên',
+    publishDate: '2026-07-08 16:53',
+    closeDate: '2026-07-26 16:00',
+    country: 'Vietnam',
+    status: 'Đang mở thầu',
+    sector: 'Transport',
+    mapCoords: { x: 51, y: 21 }
+  },
+  {
+    id: 'IB2600346536-00',
+    title: 'Tư vấn khảo sát, lập Báo cáo nghiên cứu khả thi và cắm cọc GPMB',
+    orgCode: 'vn0402262069',
+    procuringEntity: 'Ban Quản lý dự án đầu tư xây dựng các công trình giao thông và nông nghiệp tỉnh Bình Định',
+    publishDate: '2026-07-05 16:33',
+    closeDate: '2026-07-25 16:50',
+    country: 'Vietnam',
+    status: 'Đang mở thầu',
+    sector: 'Transport',
+    mapCoords: { x: 61, y: 45 }
+  }
+];
+
+// 2. Kế hoạch lựa chọn nhà thầu (KHLCNT)
+export const mockProcurementPlans = [
+  {
+    id: 'PL2600222922-00',
+    title: 'Đường 59 ấp Phước Lập, xã Phước Vinh',
+    orgCode: 'vn3901388425',
+    procuringEntity: 'Ban quản lý dự án xã Phước Vinh',
+    publishDate: '2026-07-22 08:50',
+    packageCount: 3,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 56, y: 53 }
+  },
+  {
+    id: 'PL2600222852-00',
+    title: 'Kế hoạch lựa chọn nhà thầu dự án: Đường giao thông nội bộ làng ông Anh, thôn 1',
+    orgCode: 'vnz000044051',
+    procuringEntity: 'TRUNG TÂM CUNG ỨNG DỊCH VỤ SỰ NGHIỆP CÔNG XÃ TRÀ LENG',
+    publishDate: '2026-07-22 08:45',
+    packageCount: 6,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 59, y: 39 }
+  },
+  {
+    id: 'PL2600222858-00',
+    title: 'Kế hoạch lựa chọn nhà thầu thuộc dự án Đường giao thông từ Đình Trung đi Khu công nghiệp Song Khê-Nội Hoàng, phường Tiền Phong',
+    orgCode: 'vn2401075775',
+    procuringEntity: 'Ban Quản lý dự án xây dựng Tiền Phong',
+    publishDate: '2026-07-22 08:22',
+    packageCount: 2,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 59, y: 26 }
+  },
+  {
+    id: 'PL2600222808-00',
+    title: 'Kế hoạch lựa chọn nhà thầu các gói thầu tư vấn dự án: Hệ thống đèn, điện chiếu sáng đường giao thông và các điểm giao cắt với đường sắt tại tổ dân phố Dốc Đỏ, phường Cam Đường.',
+    orgCode: 'vnz000040031',
+    procuringEntity: 'Ban quản lý dự án đầu tư xây dựng khu vực Cam Đường - Hợp Thành',
+    publishDate: '2026-07-22 07:57',
+    packageCount: 3,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 53, y: 22 }
+  },
+  {
+    id: 'PL2600222691-00',
+    title: 'Kế hoạch lựa chọn nhà thầu công trình: Cải tạo, nâng cấp đường giao thông thôn Phúc Hưng, xã Ninh Giang',
+    orgCode: 'vn0601291716',
+    procuringEntity: 'ỦY BAN NHÂN DÂN XÃ NINH GIANG',
+    publishDate: '2026-07-21 21:05',
+    packageCount: 2,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 58, y: 28 }
+  },
+  {
+    id: 'PL2600222664-00',
+    title: 'Tuyến mương tiêu và đường giao thông xóm Đồng Tân xã Hưng Nguyên Nam',
+    orgCode: 'vn2902236215',
+    procuringEntity: 'Ủy ban nhân dân xã Hưng Nguyên Nam',
+    publishDate: '2026-07-21 20:29',
+    packageCount: 4,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 57, y: 32 }
+  },
+  {
+    id: 'PL2600222559-01',
+    title: 'Kế hoạch lựa chọn nhà thầu dự án: Nâng cấp, mở rộng đường giao thông xóm 6, xã Xuân Lam, huyện Hưng Nguyên',
+    orgCode: 'vn2902236215',
+    procuringEntity: 'Ủy ban nhân dân xã Hưng Nguyên Nam',
+    publishDate: '2026-07-21 20:05',
+    packageCount: 4,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 57, y: 33 }
+  },
+  {
+    id: 'PL2600219946-01',
+    title: 'Quyết định phê duyệt kế hoạch lựa chọn nhà thầu dự án: Nâng cấp, sửa chữa đường Thọ Trung - Bảo Quang',
+    orgCode: 'vn3604041540',
+    procuringEntity: 'VĂN PHÒNG HỘI ĐỒNG NHÂN DÂN VÀ ỦY BAN NHÂN DÂN XÃ XUÂN LỘC',
+    publishDate: '2026-07-21 19:31',
+    packageCount: 10,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 57, y: 30 }
+  },
+  {
+    id: 'PL2600126771-01',
+    title: 'Kế hoạch lựa chọn nhà thầu bổ sung các gói thầu bước TKVBTCDT-Vành đai 4-DATP1-4(ĐH-HK)',
+    orgCode: 'vn1102147652',
+    procuringEntity: 'BAN QUẢN LÝ DỰ ÁN ĐẦU TƯ XÂY DỰNG CÔNG TRÌNH GIAO THÔNG TỈNH TÂY NINH',
+    publishDate: '2026-07-21 19:02',
+    packageCount: 15,
+    country: 'Vietnam',
+    status: 'Mới thầu',
+    sector: 'Transport',
+    mapCoords: { x: 56, y: 54 }
+  }
+];
+
