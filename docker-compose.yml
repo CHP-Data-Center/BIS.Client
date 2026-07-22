@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  bis-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bis-client
+    restart: always
+    ports:
+      - "3003:80"
