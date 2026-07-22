@@ -1729,8 +1729,10 @@ ul, ol { list-style: none; }
   align-items: center;
   gap: var(--space-3);
   flex-wrap: nowrap;          /* single row only — prevent 2-line overflow */
-  overflow: hidden;           /* clip if anything still overflows */
-  margin-bottom: var(--space-4); padding-right: var(--space-6);
+  padding-top: 4px;
+  padding-bottom: 6px;
+  margin-bottom: var(--space-3);
+  padding-right: var(--space-6);
 }
 .trending-strip-title {
   font-size: 13px; font-weight: 800; text-transform: uppercase;
@@ -2532,4 +2534,21 @@ ul, ol { list-style: none; }
   border-color: #3b82f6;
   box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
 }
+
+/* Fix Leaflet map tile repeating & background styling */
+.leaflet-container {
+  background: #cbd5e1 !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18) !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
 

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import StatsCard from '../components/StatsCard';
 import NewsCard from '../components/NewsCard';
 import { mockArticles, statsData, trendingKeywords, SOURCES, mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const PAGE_SIZE = 6;
@@ -38,19 +38,20 @@ function TrendingStrip() {
         {/* rank-1 pill only — compact, won't overflow */}
         {trendingKeywords.slice(0, 1).map(kw => (
           <span key={kw.rank} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            padding: '3px 10px',
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '4px 11px',
             borderRadius: 'var(--radius-full)',
-            fontSize: 11, fontWeight: 700,
+            fontSize: 11, fontWeight: 700, lineHeight: 1.2,
             background: '#fef3c7', color: '#92400e',
-            border: '1px solid #f59e0b66',
+            border: '1.5px solid #f59e0b',
             whiteSpace: 'nowrap',
-            animation: 'bounceIn 0.5s ease both',
             marginLeft: 4,
+            boxShadow: '0 2px 6px rgba(245,158,11,0.15)',
+            boxSizing: 'border-box',
           }}>
             <span style={{
-              width: 14, height: 14, borderRadius: '50%',
-              background: '#f59e0b', color: 'white', fontSize: 8, fontWeight: 900,
+              width: 15, height: 15, borderRadius: '50%',
+              background: '#f59e0b', color: 'white', fontSize: 9, fontWeight: 900,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>1</span>
             {kw.emoji} {kw.text}
@@ -79,7 +80,7 @@ function TrendingStrip() {
                 }}>{kw.rank}</span>
               )}
               {kw.text}
-              <span style={{ fontSize: 10, opacity: 0.55, fontWeight: 700, marginLeft: 2 }}>·{kw.count}</span>
+              <span style={{ fontSize: 11, opacity: 0.65, fontWeight: 700, marginLeft: 4 }}>{kw.count}</span>
             </span>
           ))}
         </div>
@@ -339,6 +340,200 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
 }
 
 
+// ── MultiProjectPopupCard component for viewing projects at a location ──
+function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SECTOR_ICONS, SECTOR_NAMES, STATUS_ICONS }) {
+  const [viewMode, setViewMode] = useState('card'); // 'card' | 'list'
+  const [currIdx, setCurrIdx] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const activeItem = items[currIdx] || items[0];
+  const cfg = sourceConfig[activeItem?.source] || sourceConfig.dauthau;
+
+  const filteredItemsInGroup = searchQuery
+    ? items.filter(i => (i.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || (i.id || '').toLowerCase().includes(searchQuery.toLowerCase()))
+    : items;
+
+  const formatCount = (num) => {
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}k`;
+    return num;
+  };
+
+  return (
+    <div style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif", padding: '2px', maxWidth: 300, minWidth: 270 }}>
+      {/* ── Multi-project Header (Fixed Layout & Zero Overflow) ── */}
+      {items.length > 1 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
+          border: '1px solid #cbd5e1',
+          borderRadius: 10,
+          padding: '6px 8px',
+          marginBottom: 10,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: viewMode === 'card' ? 6 : 0 }}>
+            {/* Country & Count Pill */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden', flex: 1, minWidth: 0 }}>
+              <FlagImg country={activeItem?.country} size={15} />
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {countryLabel(activeItem?.country)}
+              </span>
+              <span style={{
+                background: '#3b82f6', color: 'white',
+                fontSize: 10, fontWeight: 800, padding: '1px 6px',
+                borderRadius: 20, flexShrink: 0, lineHeight: '14px',
+              }}>
+                {formatCount(items.length)} dự án
+              </span>
+            </div>
+
+            {/* Mode Switcher */}
+            <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+              <button
+                onClick={() => setViewMode('card')}
+                style={{
+                  border: 'none', background: viewMode === 'card' ? '#2563eb' : '#e2e8f0',
+                  color: viewMode === 'card' ? 'white' : '#475569',
+                  borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}
+                title="Xem dạng thẻ"
+              >
+                🎴 Thẻ
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                style={{
+                  border: 'none', background: viewMode === 'list' ? '#2563eb' : '#e2e8f0',
+                  color: viewMode === 'list' ? 'white' : '#475569',
+                  borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}
+                title="Xem danh sách"
+              >
+                📜 Danh sách
+              </button>
+            </div>
+          </div>
+
+          {/* Carousel controls if in Card view */}
+          {viewMode === 'card' && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderRadius: 6, padding: '3px 6px', border: '1px solid #e2e8f0' }}>
+              <button
+                onClick={() => setCurrIdx(prev => (prev - 1 + items.length) % items.length)}
+                style={{
+                  border: 'none', background: '#3b82f6', color: 'white', borderRadius: 4,
+                  width: 20, height: 20, cursor: 'pointer', fontSize: 12, fontWeight: 800,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+                title="Dự án trước"
+              >
+                ‹
+              </button>
+              <span style={{ fontSize: 10, fontWeight: 800, color: '#334155' }}>
+                {currIdx + 1} / {items.length}
+              </span>
+              <button
+                onClick={() => setCurrIdx(prev => (prev + 1) % items.length)}
+                style={{
+                  border: 'none', background: '#3b82f6', color: 'white', borderRadius: 4,
+                  width: 20, height: 20, cursor: 'pointer', fontSize: 12, fontWeight: 800,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+                title="Dự án tiếp"
+              >
+                ›
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── CARD VIEW ── */}
+      {viewMode === 'card' ? (
+        <div>
+          {/* Item Type & ID */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: cfg.color, padding: '3px 9px', borderRadius: 20 }}>
+              {activeItem.type}
+            </span>
+            <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(activeItem.id).slice(0, 12)}</span>
+          </div>
+
+          {/* Title */}
+          <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, color: '#0f172a', marginBottom: 8, minHeight: 34 }}>
+            {(activeItem.title || '').length > 85 ? (activeItem.title || '').slice(0, 85) + '…' : activeItem.title}
+          </div>
+
+          {/* Meta tags */}
+          <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#475569', marginBottom: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FlagImg country={activeItem.country} size={15} /> {countryLabel(activeItem.country)}</span>
+            {activeItem.amount && <span style={{ fontWeight: 700, color: cfg.color }}>💰 {activeItem.amount}</span>}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#475569', marginBottom: 8, flexWrap: 'wrap' }}>
+            {activeItem.sector && <span>{SECTOR_ICONS[activeItem.sector] || '🏷️'} {SECTOR_NAMES[activeItem.sector] || activeItem.sector}</span>}
+            {activeItem.status && <span style={{ background: activeItem.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: activeItem.status === 'Active' ? '#16a34a' : '#475569', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>{STATUS_ICONS[activeItem.status] || '⚙️'} {activeItem.status}</span>}
+          </div>
+
+          {/* AI Summary */}
+          <div style={{ background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))', border: '1px dashed rgba(168,85,247,.3)', borderRadius: 10, padding: '8px 10px', fontSize: 11, color: '#334155', lineHeight: 1.45 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#a855f7', fontSize: 10, marginBottom: 3 }}>
+              <Cpu size={10} /> PHÂN TÍCH AI
+            </div>
+            {activeItem.aiSummary || 'Dự án thúc đẩy nâng cấp hạ tầng, kết nối vùng và cải thiện an sinh xã hội khu vực.'}
+          </div>
+        </div>
+      ) : (
+        /* ── LIST VIEW (For 1k+ / high volume projects at location) ── */
+        <div style={{ maxHeight: 250, overflowY: 'auto' }}>
+          {items.length > 3 && (
+            <input
+              type="text"
+              placeholder="🔍 Tìm trong vị trí này..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%', padding: '5px 8px', borderRadius: 6, border: '1px solid #cbd5e1',
+                fontSize: 11, marginBottom: 6, outline: 'none', boxSizing: 'border-box'
+              }}
+            />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {filteredItemsInGroup.map((it) => {
+              const origIdx = items.findIndex(x => x.id === it.id);
+              const isSelected = origIdx === currIdx;
+              const itCfg = sourceConfig[it.source] || sourceConfig.dauthau;
+              return (
+                <div
+                  key={it.id}
+                  onClick={() => { setCurrIdx(origIdx); setViewMode('card'); }}
+                  style={{
+                    padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                    background: isSelected ? '#eff6ff' : '#f8fafc',
+                    border: '1px solid', borderColor: isSelected ? '#3b82f6' : '#e2e8f0',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: itCfg.color, padding: '1px 6px', borderRadius: 10 }}>
+                      {it.type}
+                    </span>
+                    {it.amount && <span style={{ fontSize: 10, fontWeight: 700, color: itCfg.color }}>💰 {it.amount}</span>}
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: isSelected ? 700 : 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {it.title}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ── Project Distribution Map (Leaflet Real World Map) ────────────
 function ProjectDistributionMap() {
   // Multi-select: empty Set = "all"
@@ -426,6 +621,20 @@ function ProjectDistributionMap() {
 
   const countryLabel2 = c => countryLabel(c);
 
+  // Group filtered items by location key for 1k+ scalable map clustering
+  const locationGroupList = Object.values(
+    filteredItems.reduce((acc, item) => {
+      const rawCoords = MAP_COORDS[item.id];
+      if (!rawCoords) return acc;
+      const key = `${rawCoords[0].toFixed(3)},${rawCoords[1].toFixed(3)}`;
+      if (!acc[key]) {
+        acc[key] = { key, baseCoords: rawCoords, items: [] };
+      }
+      acc[key].items.push(item);
+      return acc;
+    }, {})
+  );
+
   return (
     <div style={{ marginBottom: 'var(--space-8)' }}>
       {/* ── Section Header ── */}
@@ -445,7 +654,7 @@ function ProjectDistributionMap() {
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
               <Cpu size={11} style={{ color: '#a855f7' }} />
-              AI Powered · {filteredItems.length} dự án hiển thị trên bản đồ
+              AI Powered · {filteredItems.length} dự án trên bản đồ ({locationGroupList.length} địa điểm)
             </div>
           </div>
         </div>
@@ -478,7 +687,10 @@ function ProjectDistributionMap() {
           <MapContainer
             center={[15, 107]}
             zoom={4}
-            style={{ height: 500, width: '100%' }}
+            minZoom={2.5}
+            maxBounds={[[-85, -200], [85, 200]]}
+            maxBoundsViscosity={1.0}
+            style={{ height: 500, width: '100%', background: '#cbd5e1' }}
             scrollWheelZoom={true}
             zoomControl={false}
           >
@@ -486,6 +698,8 @@ function ProjectDistributionMap() {
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>'
               maxZoom={18}
+              noWrap={true}
+              bounds={[[-85, -180], [85, 180]]}
             />
             <MapFlyTo
               items={filteredItems}
@@ -495,43 +709,36 @@ function ProjectDistributionMap() {
               status={[...selStatuses].join(',')}
             />
 
-            {filteredItems.map(item => {
-              const coords = MAP_COORDS[item.id];
-              if (!coords) return null;
-              const cfg = sourceConfig[item.source] || sourceConfig.dauthau;
+            {/* Render 1 Marker per Location (Supports 1k+ Scalability & Zero Line Clutter) */}
+            {locationGroupList.map(group => {
+              const { key, baseCoords, items } = group;
+              const isCluster = items.length > 1;
+              const mainSource = items[0].source;
+              const cfg = sourceConfig[mainSource] || sourceConfig.dauthau;
+              const markerRadius = isCluster ? Math.min(10 + Math.log2(items.length) * 3, 20) : (mainSource === 'dauthau' ? 7.5 : 10);
+
               return (
                 <CircleMarker
-                  key={item.id}
-                  center={coords}
-                  radius={item.source === 'dauthau' ? 7 : 10}
-                  pathOptions={{ color: 'white', weight: 2.5, fillColor: cfg.color, fillOpacity: 0.92 }}
+                  key={key}
+                  center={baseCoords}
+                  radius={markerRadius}
+                  pathOptions={{
+                    color: 'white',
+                    weight: isCluster ? 3 : 2.5,
+                    fillColor: isCluster ? (items.length >= 10 ? '#2563eb' : cfg.color) : cfg.color,
+                    fillOpacity: 0.95
+                  }}
                 >
-                  <Popup maxWidth={280}>
-                    <div style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif", padding: '4px 2px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: cfg.color, padding: '3px 9px', borderRadius: 20 }}>
-                          {item.type}
-                        </span>
-                        <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(item.id).slice(0,12)}</span>
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4, color: '#0f172a', marginBottom: 8 }}>
-                        {(item.title||'').length > 80 ? (item.title||'').slice(0,80)+'…' : item.title}
-                      </div>
-                      <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#475569', marginBottom: 5, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FlagImg country={item.country} size={16} /> {countryLabel2(item.country)}</span>
-                        {item.amount && <span style={{ fontWeight: 700, color: cfg.color }}>💰 {item.amount}</span>}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#475569', marginBottom: 10, flexWrap: 'wrap' }}>
-                        {item.sector && <span>{SECTOR_ICONS[item.sector] || '🏷️'} {SECTOR_NAMES[item.sector] || item.sector}</span>}
-                        {item.status && <span style={{ background: item.status==='Active' ? '#dcfce7':'#f1f5f9', color: item.status==='Active' ? '#16a34a':'#475569', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>{STATUS_ICONS[item.status] || '⚙️'} {item.status}</span>}
-                      </div>
-                      <div style={{ background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))', border: '1px dashed rgba(168,85,247,.3)', borderRadius: 10, padding: '8px 10px', fontSize: 11, color: '#334155', lineHeight: 1.5 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#a855f7', fontSize: 10, marginBottom: 4 }}>
-                          <Cpu size={10} /> PHÂN TÍCH AI
-                        </div>
-                        {item.aiSummary || 'Dự án thúc đẩy nâng cấp hạ tầng, kết nối vùng và cải thiện an sinh xã hội khu vực.'}
-                      </div>
-                    </div>
+                  <Popup maxWidth={310}>
+                    <MultiProjectPopupCard
+                      items={items}
+                      sourceConfig={sourceConfig}
+                      countryLabel={countryLabel}
+                      FlagImg={FlagImg}
+                      SECTOR_ICONS={SECTOR_ICONS}
+                      SECTOR_NAMES={SECTOR_NAMES}
+                      STATUS_ICONS={STATUS_ICONS}
+                    />
                   </Popup>
                 </CircleMarker>
               );
@@ -887,63 +1094,117 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Source Breakdown ── */}
+      {/* ── Source Breakdown (Balanced 4-Column Grid) ── */}
       <div style={{
-        background: 'var(--bg-surface)', border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)', padding: 'var(--space-5)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 18,
+        padding: '22px 24px',
         marginTop: 'var(--space-8)',
+        boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
       }}>
-        <div className="article-sidebar-title" style={{ marginBottom: 'var(--space-5)' }}>
-          <TrendingUp size={14} style={{ color: 'var(--brand-500)' }} />
-          Phân Bổ Theo Nguồn
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
+            }}>
+              <TrendingUp size={16} />
+            </div>
+            Phân Bổ Theo Nguồn Dữ Liệu
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
+            4 nguồn tổng hợp · {mockArticles.length} bài viết
+          </span>
         </div>
-        {/* ── Source Breakdown ── */}
+
+        {/* ── Balanced 4-Column Grid ── */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 'var(--space-6)',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
         }}>
           {Object.values(SOURCES).map(src => {
             const count = mockArticles.filter(a => a.source === src.id).length;
-            const pct = Math.round(count / mockArticles.length * 100);
+            const pct = Math.round((count / mockArticles.length) * 100);
             return (
-              <div key={src.id} style={{
-                background: 'var(--bg-surface-2)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-5)',
-                borderTop: `3px solid ${src.color}`,
-                transition: 'transform var(--transition-fast), box-shadow var(--transition-fast)',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+              <div
+                key={src.id}
+                onClick={() => handleFilter(src.id)}
+                style={{
+                  background: 'var(--bg-surface-2)',
+                  border: '1.5px solid var(--border-subtle)',
+                  borderRadius: 14,
+                  padding: '16px 18px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = `0 12px 28px ${src.color}25`;
+                  e.currentTarget.style.borderColor = src.color;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
+                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 7 }}>
+                {/* Top accent bar */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+                  background: `linear-gradient(90deg, ${src.color}, ${src.color}dd)`,
+                }} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{
-                      width: 32, height: 32, borderRadius: 8,
-                      background: src.bg || src.darkBg,
+                      width: 34, height: 34, borderRadius: 10,
+                      background: src.bg || 'rgba(59,130,246,0.1)',
+                      border: `1px solid ${src.color}30`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 18, flexShrink: 0,
-                    }}>{src.icon}</span>
-                    {src.name}
+                      fontSize: 17, flexShrink: 0,
+                      boxShadow: `0 3px 10px ${src.color}20`,
+                    }}>
+                      {src.icon}
+                    </span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 105 }}>
+                      {src.name}
+                    </span>
                   </span>
                   <span style={{
                     fontSize: 22, fontWeight: 900, color: src.color,
                     letterSpacing: '-0.5px',
-                  }}>{count}</span>
+                  }}>
+                    {count}
+                  </span>
                 </div>
-                <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden', marginBottom: 6 }}>
+
+                {/* Progress bar container */}
+                <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 20, overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(0,0,0,0.05)' }}>
                   <div style={{
-                    height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, ${src.color}99, ${src.color})`,
-                    borderRadius: 'var(--radius-full)',
-                    boxShadow: `0 0 10px ${src.color}55`,
-                    transition: 'width 1.4s cubic-bezier(0.34,1.56,0.64,1)',
+                    height: '100%', width: `${pct}%`,
+                    background: `linear-gradient(90deg, ${src.color}aa, ${src.color})`,
+                    borderRadius: 20,
+                    boxShadow: `0 0 10px ${src.color}66`,
+                    transition: 'width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }} />
                 </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{pct}% tổng bài viết</span>
-                  <span style={{ fontSize: 11, color: src.color, fontWeight: 700 }}>Bài</span>
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 700, color: src.color,
+                    background: `${src.color}15`, padding: '2px 8px', borderRadius: 12,
+                  }}>
+                    {pct}% tổng số
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {count} bài viết
+                  </span>
                 </div>
               </div>
             );
