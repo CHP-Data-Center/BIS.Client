@@ -87,7 +87,7 @@ export default function LoginPage() {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <div className="login-logo-mark">BIS</div>
+          <img src="/logo.png" alt="BIS Logo" style={{ width: 64, height: 64, objectFit: 'contain', marginBottom: 'var(--space-4)', filter: 'drop-shadow(0 4px 12px rgba(37,99,235,0.3))' }} />
           <div className="login-title">Bidding Intelligence System</div>
           <div className="login-subtitle">Hệ Thống Thông Tin Đấu Thầu · Đăng nhập để tiếp tục</div>
         </div>

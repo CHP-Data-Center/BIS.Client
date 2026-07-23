@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Newspaper, Building2, Globe, ShoppingBag, Cpu,
-  RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap
+  RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap, Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from '../components/StatsCard';
@@ -157,6 +157,41 @@ function Pagination({ page, total, pageSize, onChange }) {
 
 // ── Lat/Lng coords for each project ─────────────────────────────
 const MAP_COORDS = {
+  'cluster-p-01': [21.0245, 105.8412],
+  'cluster-p-02': [21.0245, 105.8412],
+  'cluster-p-03': [21.0245, 105.8412],
+  'cluster-p-04': [21.0245, 105.8412],
+  'cluster-p-05': [21.0245, 105.8412],
+  'cluster-p-06': [21.0245, 105.8412],
+  'cluster-p-07': [21.0245, 105.8412],
+  'cluster-p-08': [21.0245, 105.8412],
+  'cluster-p-09': [21.0245, 105.8412],
+  'cluster-p-10': [21.0245, 105.8412],
+  'cluster-p-11': [21.0245, 105.8412],
+  'cluster-p-12': [21.0245, 105.8412],
+  'cluster-p-13': [21.0245, 105.8412],
+  'cluster-p-14': [21.0245, 105.8412],
+  'cluster-p-15': [21.0245, 105.8412],
+  'cluster-p-16': [21.0245, 105.8412],
+  'cluster-p-17': [21.0245, 105.8412],
+  'cluster-p-18': [21.0245, 105.8412],
+  'cluster-p-19': [21.0245, 105.8412],
+  'cluster-p-20': [21.0245, 105.8412],
+  'cluster-p-21': [21.0245, 105.8412],
+  'cluster-p-22': [21.0245, 105.8412],
+  'cluster-p-23': [21.0245, 105.8412],
+  'cluster-p-24': [21.0245, 105.8412],
+  'cluster-p-25': [21.0245, 105.8412],
+  'cluster-p-26': [21.0245, 105.8412],
+  'cluster-p-27': [21.0245, 105.8412],
+  'cluster-p-28': [21.0245, 105.8412],
+  'cluster-p-29': [21.0245, 105.8412],
+  'cluster-p-30': [21.0245, 105.8412],
+  'cluster-p-31': [21.0245, 105.8412],
+  'cluster-p-32': [21.0245, 105.8412],
+  'cluster-p-33': [21.0245, 105.8412],
+  'cluster-p-34': [21.0245, 105.8412],
+  'cluster-p-35': [21.0245, 105.8412],
   'adb-p-001': [21.0245, 105.8412],
   'adb-p-002': [10.8231, 106.6297],
   'adb-p-003': [11.5564, 104.9282],
@@ -340,13 +375,15 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
 }
 
 
-// ── MultiProjectPopupCard component for viewing projects at a location ──
 function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SECTOR_ICONS, SECTOR_NAMES, STATUS_ICONS }) {
   const [viewMode, setViewMode] = useState('card'); // 'card' | 'list'
   const [currIdx, setCurrIdx] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeItem = items[currIdx] || items[0];
+  if (!items || items.length === 0) return null;
+
+  const validIdx = currIdx < items.length ? currIdx : 0;
+  const activeItem = items[validIdx] || items[0] || {};
   const cfg = sourceConfig[activeItem?.source] || sourceConfig.dauthau;
 
   const filteredItemsInGroup = searchQuery
@@ -454,9 +491,9 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
           {/* Item Type & ID */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: cfg.color, padding: '3px 9px', borderRadius: 20 }}>
-              {activeItem.type}
+              {activeItem?.type || 'Dự án'}
             </span>
-            <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(activeItem.id).slice(0, 12)}</span>
+            <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(activeItem?.id || '').slice(0, 12)}</span>
           </div>
 
           {/* Title */}
@@ -968,33 +1005,28 @@ export default function DashboardPage() {
     <div>
       {/* ── Hero Banner ── */}
       <div className="dashboard-banner">
-        <div className="banner-orb" />
+        <div className="banner-aurora-1" />
+        <div className="banner-aurora-2" />
+        <img src="/logo.png" alt="" className="banner-logo-watermark" />
+        
         <div className="banner-content">
-          <div className="banner-title" style={{ animation: 'slideInLeft 0.6s ease both' }}>
-            BIS – Bidding Intelligence System
+          <div className="banner-title" style={{ animation: 'slideInLeft 0.5s ease both' }}>
+            Hệ Thống Đấu Thầu &amp; ODA Thông Minh
           </div>
-          <div className="banner-sub" style={{ animation: 'slideInLeft 0.6s 0.1s ease both', opacity: 0, animationFillMode: 'forwards' }}>
-            Theo dõi tin tức, dự án và đấu thầu từ ADB, World Bank và hệ thống đấu thầu quốc gia.
-            Phân tích bởi AI — cập nhật liên tục.
+          <div className="banner-sub" style={{ animation: 'slideInLeft 0.5s 0.05s ease both' }}>
+            Theo dõi dữ liệu dự án, cơ hội đấu thầu từ ADB, World Bank &amp; Mua sắm công quốc gia. Phân tích tự động bởi AI — cập nhật liên tục realtime.
           </div>
-          <div className="banner-pills" style={{ animation: 'slideInLeft 0.6s 0.2s ease both', opacity: 0, animationFillMode: 'forwards' }}>
-            <span className="banner-pill"><Building2 size={11} /> ADB</span>
-            <span className="banner-pill"><Globe size={11} /> World Bank</span>
-            <span className="banner-pill"><ShoppingBag size={11} /> Đấu Thầu</span>
-            <span className="banner-pill"><Cpu size={11} /> AI Powered</span>
-          </div>
-        </div>
-        <div className="banner-stat" style={{ animation: 'bounceIn 0.7s 0.3s ease both', opacity: 0, animationFillMode: 'forwards' }}>
-          <div className="banner-stat-num">{statsData.totalArticles.toLocaleString()}</div>
-          <div className="banner-stat-label">Bài Viết Tổng Hợp</div>
-          <div style={{ marginTop: 8, fontSize: 12, opacity: 0.65 }}>
-            Hôm nay: +{statsData.todayArticles} bài mới
+          <div className="banner-pills" style={{ animation: 'slideInLeft 0.5s 0.1s ease both' }}>
+            <span className="banner-pill"><Building2 size={13} style={{ color: '#f59e0b' }} /> ADB (Châu Á)</span>
+            <span className="banner-pill"><Globe size={13} style={{ color: '#10b981' }} /> World Bank</span>
+            <span className="banner-pill"><ShoppingBag size={13} style={{ color: '#a855f7' }} /> Đấu Thầu Công</span>
+            <span className="banner-pill"><Cpu size={13} style={{ color: '#60a5fa' }} /> AI Insights</span>
           </div>
         </div>
       </div>
 
       {/* ── Stats Grid ── */}
-      <div className="stats-grid" style={{ animation: 'fadeUp 0.5s 0.1s ease both' }}>
+      <div className="stats-grid">
         <StatsCard icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
           label="Tổng Bài Viết" value={statsData.totalArticles}
           sub={`+${statsData.todayArticles} hôm nay`} trend="+12.4%"

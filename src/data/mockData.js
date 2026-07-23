@@ -301,6 +301,176 @@ export const statsData = {
 // ── NEW STRUCTURED DATA FOR WORLD BANK PROJECTS ────────────────
 export const mockWbProjects = [
   {
+      "id": "cluster-p-03",
+      "title": "Hệ thống Quản lý Giao thông Thông minh ITS Hà Nội giai đoạn 2",
+      "country": "Vietnam",
+      "projectId": "P520101",
+      "amount": "$45,000,000",
+      "status": "Active",
+      "approvalDate": "2025-10-12",
+      "lastUpdatedDate": "2026-05-14",
+      "sector": "Urban Dev",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Lắp đặt 600 camera AI điều phối đèn giao thông tự động chống ùn tắc."
+  },
+  {
+      "id": "cluster-p-04",
+      "title": "Dự án Nâng cấp Nhà máy Nước sạch Sông Đống Đa & Sông Đuống",
+      "country": "Vietnam",
+      "projectId": "P520102",
+      "amount": "$95,000,000",
+      "status": "Active",
+      "approvalDate": "2025-08-20",
+      "lastUpdatedDate": "2026-04-10",
+      "sector": "Water",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Tăng công suất cấp nước sạch thêm 300.000 m3/ngày đêm cho nội đô."
+  },
+  {
+      "id": "cluster-p-09",
+      "title": "World Bank Hỗ trợ Dự án Chống Ngập và Xử lý Nước thải Sông Nhuệ",
+      "country": "Vietnam",
+      "projectId": "P520103",
+      "amount": "$180,000,000",
+      "status": "Active",
+      "approvalDate": "2026-01-08",
+      "lastUpdatedDate": "2026-06-22",
+      "sector": "Water",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Xây dựng trạm bơm đầu mối 45 m3/s và hệ thống gom nước thải lưu vực."
+  },
+  {
+      "id": "cluster-p-13",
+      "title": "Dự án Nâng cấp Sân bay Quốc tế Nội Bài - Ga T2 Mở rộng",
+      "country": "Vietnam",
+      "projectId": "P520104",
+      "amount": "$450,000,000",
+      "status": "Active",
+      "approvalDate": "2025-06-15",
+      "lastUpdatedDate": "2026-07-05",
+      "sector": "Transport",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Nâng công suất phục vụ hành khách lên 15 triệu lượt/năm."
+  },
+  {
+      "id": "cluster-p-17",
+      "title": "World Bank Dự án Giảm nhẹ Rủi ro Thiên tai và Thích ứng Khí hậu",
+      "country": "Vietnam",
+      "projectId": "P520105",
+      "amount": "$130,000,000",
+      "status": "Active",
+      "approvalDate": "2025-12-01",
+      "lastUpdatedDate": "2026-05-30",
+      "sector": "Climate",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Gia cố 45km đê điều xung yếu và xây trạm cảnh báo thiên tai tự động."
+  },
+  {
+      "id": "cluster-p-20",
+      "title": "Dự án Cải tạo Môi trường Nước Hồ Tây và Xử lý Trầm tích",
+      "country": "Vietnam",
+      "projectId": "P520106",
+      "amount": "$40,000,000",
+      "status": "Planned",
+      "approvalDate": "2026-10-15",
+      "lastUpdatedDate": null,
+      "sector": "Water",
+      "lastStage": "Concept Review",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Nạo vét 1,5 triệu m3 bùn thải và lắp hệ thống sục khí sinh học tự động."
+  },
+  {
+      "id": "cluster-p-24",
+      "title": "World Bank Tài trợ Hệ thống Lưu trữ Điện Năng pin BESS Hà Nội",
+      "country": "Vietnam",
+      "projectId": "P520107",
+      "amount": "$90,000,000",
+      "status": "Pipeline",
+      "approvalDate": "2027-01-20",
+      "lastUpdatedDate": null,
+      "sector": "Energy",
+      "lastStage": "Pipeline",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Thử nghiệm hệ thống BESS 100MW/200MWh cân bằng phụ tải giờ cao điểm."
+  },
+  {
+      "id": "cluster-p-28",
+      "title": "Dự án Phát triển Nông nghiệp Hữu cơ và Chuỗi Cung ứng Hà Nội",
+      "country": "Vietnam",
+      "projectId": "P520108",
+      "amount": "$32,000,000",
+      "status": "Active",
+      "approvalDate": "2025-11-25",
+      "lastUpdatedDate": "2026-06-18",
+      "sector": "Agriculture",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Hỗ trợ 50 hợp tác tác xã đạt tiêu chuẩn VietGAP và truy xuất nguồn gốc QR."
+  },
+  {
+      "id": "cluster-p-31",
+      "title": "Dự án Xây dựng Cầu Tứ Liên kết nối Tây Hồ với Đông Anh",
+      "country": "Vietnam",
+      "projectId": "P520109",
+      "amount": "$280,000,000",
+      "status": "Planned",
+      "approvalDate": "2026-12-01",
+      "lastUpdatedDate": null,
+      "sector": "Transport",
+      "lastStage": "Concept Review",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Cầu dây văng mang biểu tượng hoa sen độc đáo vượt sông Hồng."
+  },
+  {
+      "id": "cluster-p-35",
+      "title": "World Bank Dự án Giao thông Công cộng Sức chứa Lớn BRT Hà Nội 2.0",
+      "country": "Vietnam",
+      "projectId": "P520110",
+      "amount": "$115,000,000",
+      "status": "Pipeline",
+      "approvalDate": "2027-03-15",
+      "lastUpdatedDate": null,
+      "sector": "Transport",
+      "lastStage": "Pipeline",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Tái cấu trúc tuyến bus nhanh kết nối với các ga Metro chính."
+  },
+  {
     id: 'wb-p-001',
     title: 'Philippines Multisectoral Nutrition Project-Converging Nutrition Efforts for our Children\'s Tomorrow',
     country: 'Philippines',
@@ -461,6 +631,176 @@ export const mockWbProjects = [
 // ── NEW STRUCTURED DATA FOR ADB PROJECTS ───────────────────────
 export const mockAdbProjects = [
   {
+      "id": "cluster-p-02",
+      "title": "Dự án Tuyến đường sắt đô thị Metro Line 3 Nhổn - Ga Hà Nội (Đoạn ngầm)",
+      "country": "Vietnam",
+      "projectId": "P48901",
+      "amount": "$320,000,000",
+      "status": "Active",
+      "approvalDate": "2026-01-15",
+      "lastUpdatedDate": "2026-06-20",
+      "sector": "Transport",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "ADB tài trợ thi công 4 ga ngầm và 4km đường hầm TBM xuyên tâm thủ đô."
+  },
+  {
+      "id": "cluster-p-06",
+      "title": "ADB Phê duyệt Khoản vay Xây dựng Hạ tầng Đô thị Xanh Hà Nội",
+      "country": "Vietnam",
+      "projectId": "P48902",
+      "amount": "$210,000,000",
+      "status": "Active",
+      "approvalDate": "2026-02-10",
+      "lastUpdatedDate": "2026-05-18",
+      "sector": "Climate",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Phát triển công viên sinh thái điều hòa và cải tạo 12 hồ nội thành."
+  },
+  {
+      "id": "cluster-p-07",
+      "title": "Dự án Năng lượng Mặt trời Mái nhà & Lưới điện Thông minh EVN Hà Nội",
+      "country": "Vietnam",
+      "projectId": "P48903",
+      "amount": "$150,000,000",
+      "status": "Active",
+      "approvalDate": "2026-03-05",
+      "lastUpdatedDate": "2026-07-01",
+      "sector": "Energy",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Tích hợp 200MWp điện mặt trời và hệ thống tự động hóa lưới điện."
+  },
+  {
+      "id": "cluster-p-12",
+      "title": "ADB Tài trợ Hạ tầng Nông nghiệp Thông minh & Logistics Nông sản Phía Bắc",
+      "country": "Vietnam",
+      "projectId": "P48904",
+      "amount": "$110,000,000",
+      "status": "Pipeline",
+      "approvalDate": "2026-11-20",
+      "lastUpdatedDate": null,
+      "sector": "Agriculture",
+      "lastStage": "Concept Review",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Xây dựng trung tâm kho lạnh và sàn giao dịch nông sản hiện đại Phía Bắc."
+  },
+  {
+      "id": "cluster-p-15",
+      "title": "Dự án Chuyển đổi Số Y tế và Bệnh án Điện tử Thành phố Hà Nội",
+      "country": "Vietnam",
+      "projectId": "P48905",
+      "amount": "$35,000,000",
+      "status": "Active",
+      "approvalDate": "2026-04-12",
+      "lastUpdatedDate": "2026-07-10",
+      "sector": "Finance",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Kết nối dữ liệu y tế toàn dân và triển khai hồ sơ sức khỏe điện tử."
+  },
+  {
+      "id": "cluster-p-19",
+      "title": "ADB Tài trợ Chương trình Giáo dục Nghề nghiệp & Kỹ năng Số Phía Bắc",
+      "country": "Vietnam",
+      "projectId": "P48906",
+      "amount": "$75,000,000",
+      "status": "Active",
+      "approvalDate": "2026-01-25",
+      "lastUpdatedDate": "2026-06-15",
+      "sector": "Finance",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Đào tạo 30.000 kỹ sư vi mạch, AI và lập trình viên chất lượng cao."
+  },
+  {
+      "id": "cluster-p-22",
+      "title": "Dự án Xây dựng Trung tâm Đổi mới Sáng tạo Quốc gia NIC Hòa Lạc",
+      "country": "Vietnam",
+      "projectId": "P48907",
+      "amount": "$125,000,000",
+      "status": "Completed",
+      "approvalDate": "2024-05-10",
+      "lastUpdatedDate": "2026-01-10",
+      "sector": "Urban Dev",
+      "lastStage": "Completed",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Tổ hợp công trình xanh chứng nhận LEED Gold hỗ trợ 500 startup công nghệ."
+  },
+  {
+      "id": "cluster-p-26",
+      "title": "Dự án Nâng cấp Đê Sông Hồng Thích ứng Biến đổi Khí hậu",
+      "country": "Vietnam",
+      "projectId": "P48908",
+      "amount": "$140,000,000",
+      "status": "Active",
+      "approvalDate": "2025-09-15",
+      "lastUpdatedDate": "2026-06-01",
+      "sector": "Climate",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Bê tông hóa đê kè và xây dựng cảnh quan công viên ven sông."
+  },
+  {
+      "id": "cluster-p-30",
+      "title": "ADB Hỗ trợ Phát triển Mạng lưới Viễn thông 5G & Đô thị Thông minh",
+      "country": "Vietnam",
+      "projectId": "P48909",
+      "amount": "$200,000,000",
+      "status": "Active",
+      "approvalDate": "2026-02-28",
+      "lastUpdatedDate": "2026-07-15",
+      "sector": "Urban Dev",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Xây dựng 1.200 trạm BTS 5G dùng chung cho toàn vùng đô thị."
+  },
+  {
+      "id": "cluster-p-33",
+      "title": "Dự án Xử lý Chất thải Rác Sinh hoạt Phát điện Nam Sơn Giai đoạn 2",
+      "country": "Vietnam",
+      "projectId": "P48910",
+      "amount": "$165,000,000",
+      "status": "Active",
+      "approvalDate": "2025-11-10",
+      "lastUpdatedDate": "2026-06-30",
+      "sector": "Energy",
+      "lastStage": "Active",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Nâng công suất đốt rác phát điện thêm 2.000 tấn/ngày đêm."
+  },
+  {
     id: 'adb-p-001',
     title: 'Vietnam Clean Energy Transition Project',
     country: 'Vietnam',
@@ -543,6 +883,261 @@ export const mockAdbProjects = [
 // ── NEW STRUCTURED DATA FOR MUA SẮM CÔNG ───────────────────────
 // 1. Thông báo mời thầu (TBMT)
 export const mockProcurementNotices = [
+  {
+      "id": "cluster-p-01",
+      "title": "Gói thầu XL-01: Thi công xây dựng Cầu Trần Hưng Đạo qua sông Hồng",
+      "orgCode": "vn010029381",
+      "procuringEntity": "Ban QLDA Đầu tư Xây dựng Công trình Giao thông Thành phố Hà Nội",
+      "publishDate": "2026-07-22 09:00",
+      "closeDate": "2026-08-20 16:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Transport",
+      "amount": "$185,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Công trình trọng điểm kết nối quận Hoàn Kiếm và Long Biên."
+  },
+  {
+      "id": "cluster-p-05",
+      "title": "Gói thầu Thiết bị Công nghệ Thông tin & AI Trung tâm Dữ liệu Hà Nội",
+      "orgCode": "vn010029382",
+      "procuringEntity": "Sở Thông tin và Truyền thông Thành phố Hà Nội",
+      "publishDate": "2026-07-20 10:30",
+      "closeDate": "2026-08-15 15:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Finance",
+      "amount": "$28,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Mua sắm máy chủ GPU và hạ tầng đám mây dùng chung cho cơ quan nhà nước."
+  },
+  {
+      "id": "cluster-p-08",
+      "title": "Gói thầu Xây lắp Nâng cấp Bệnh viện Đa khoa Xanh Pôn cơ sở 2",
+      "orgCode": "vn010029383",
+      "procuringEntity": "Ban QLDA Đầu tư Xây dựng Công trình Dân dụng Hà Nội",
+      "publishDate": "2026-07-18 14:00",
+      "closeDate": "2026-08-10 10:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Nutrition",
+      "amount": "$65,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Xây mới khối nhà 10 tầng quy mô 500 giường bệnh đạt chuẩn quốc tế."
+  },
+  {
+      "id": "cluster-p-10",
+      "title": "Gói thầu Tư vấn Giám sát Thi công Tuyến đường Vành đai 4 Vùng Thủ đô",
+      "orgCode": "vn010029384",
+      "procuringEntity": "Ban QLDA Đầu tư Xây dựng Công trình Giao thông Thành phố Hà Nội",
+      "publishDate": "2026-07-16 08:30",
+      "closeDate": "2026-08-08 17:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Transport",
+      "amount": "$15,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Giám sát kỹ thuật toàn bộ 112km đường cao tốc liên vùng Hà Nội - Hưng Yên - Bắc Ninh."
+  },
+  {
+      "id": "cluster-p-11",
+      "title": "Kế hoạch Xây dựng Công viên Khoa học Công nghệ Cao Hòa Lạc",
+      "orgCode": "vn010029385",
+      "procuringEntity": "Ban Quản lý Khu Công nghệ cao Hòa Lạc",
+      "publishDate": "2026-07-15 11:00",
+      "closeDate": "2026-08-05 09:00",
+      "country": "Vietnam",
+      "status": "Đã duyệt",
+      "sector": "Urban Dev",
+      "amount": "$85,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Hạ tầng kỹ thuật đồng bộ cho khu nghiên cứu bán dẫn và công nghệ sinh học."
+  },
+  {
+      "id": "cluster-p-14",
+      "title": "Gói thầu Hệ thống Chiếu sáng Thông minh Tiết kiệm Năng lượng Hà Nội",
+      "orgCode": "vn010029386",
+      "procuringEntity": "Sở Xây dựng Thành phố Hà Nội",
+      "publishDate": "2026-07-12 15:30",
+      "closeDate": "2026-08-02 16:30",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Energy",
+      "amount": "$22,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Thay thế 50.000 đèn LED thông minh kết nối IoT điều khiển trung tâm."
+  },
+  {
+      "id": "cluster-p-16",
+      "title": "Gói thầu Mua sắm Xe buýt Điện và Trạm sạc Công cộng Giai đoạn 1",
+      "orgCode": "vn010029387",
+      "procuringEntity": "Tổng Công ty Vận tải Hà Nội (Transerco)",
+      "publishDate": "2026-07-10 09:15",
+      "closeDate": "2026-07-31 14:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Transport",
+      "amount": "$55,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Đưa vào vận hành 250 xe buýt điện xanh giảm ô nhiễm không khí nội đô."
+  },
+  {
+      "id": "cluster-p-18",
+      "title": "Gói thầu XL-04: Xây dựng Nút giao Khác mức Cổ Linh - Vĩnh Tuy",
+      "orgCode": "vn010029388",
+      "procuringEntity": "Ban QLDA Đầu tư Xây dựng Công trình Giao thông Thành phố Hà Nội",
+      "publishDate": "2026-07-08 16:00",
+      "closeDate": "2026-07-28 17:00",
+      "country": "Vietnam",
+      "status": "Đã hoàn thành",
+      "sector": "Transport",
+      "amount": "$42,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Đã hoàn thành bàn giao thông xe vượt tiến độ 3 tháng."
+  },
+  {
+      "id": "cluster-p-21",
+      "title": "Gói thầu Mua sắm Hệ thống Radar và Giám sát Không lưu Hà Nội",
+      "orgCode": "vn010029389",
+      "procuringEntity": "Tổng Công ty Quản lý bay Việt Nam (VATM)",
+      "publishDate": "2026-07-05 13:45",
+      "closeDate": "2026-07-26 15:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Transport",
+      "amount": "$60,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Trang bị radar thứ cấp thế hệ mới đảm bảo an toàn bay khu vực phía Bắc."
+  },
+  {
+      "id": "cluster-p-23",
+      "title": "Gói thầu Mua sắm Vật tư Y tế & Khóa Sinh học Bệnh viện Bạch Mai",
+      "orgCode": "vn010029390",
+      "procuringEntity": "Bệnh viện Bạch Mai Hà Nội",
+      "publishDate": "2026-07-03 10:00",
+      "closeDate": "2026-07-24 11:30",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Nutrition",
+      "amount": "$18,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Cung ứng vật tư tiêu hao y tế chất lượng cao cho các khoa cấp cứu."
+  },
+  {
+      "id": "cluster-p-25",
+      "title": "Gói thầu Tư vấn Lập Quy hoạch Đô thị Vệ tinh Sơn Tây - Hòa Lạc",
+      "orgCode": "vn010029391",
+      "procuringEntity": "Viện Quy hoạch Xây dựng Hà Nội",
+      "publishDate": "2026-07-01 08:00",
+      "closeDate": "2026-07-22 17:00",
+      "country": "Vietnam",
+      "status": "Đã duyệt",
+      "sector": "Urban Dev",
+      "amount": "$8,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Quy hoạch chi tiết 1/2000 trục đô thị sinh thái kết nối đại học."
+  },
+  {
+      "id": "cluster-p-27",
+      "title": "Gói thầu Thi công Xây lắp Đường nối Hà Nội - Bái Đính",
+      "orgCode": "vn010029392",
+      "procuringEntity": "Ban QLDA Đầu tư Xây dựng Công trình Giao thông Thành phố Hà Nội",
+      "publishDate": "2026-06-28 14:20",
+      "closeDate": "2026-07-20 16:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Transport",
+      "amount": "$98,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Tuyến đường quy mô 6 làn xe kết nối du lịch tâm linh vùng di sản."
+  },
+  {
+      "id": "cluster-p-29",
+      "title": "Gói thầu Phần mềm Giám sát Đấu thầu Quốc gia AI-Bidding",
+      "orgCode": "vn010029393",
+      "procuringEntity": "Cục Quản lý Đấu thầu - Bộ Kế hoạch và Đầu tư",
+      "publishDate": "2026-06-25 09:30",
+      "closeDate": "2026-07-18 10:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Finance",
+      "amount": "$12,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Tích hợp mô hình AI phát hiện dấu hiệu thông thầu và bất thường dữ liệu."
+  },
+  {
+      "id": "cluster-p-32",
+      "title": "Gói thầu Xây dựng Ký túc xá Sinh viên ĐHQG Hà Nội tại Hòa Lạc",
+      "orgCode": "vn010029394",
+      "procuringEntity": "Ban QLDA Đầu tư Xây dựng Đại học Quốc gia Hà Nội",
+      "publishDate": "2026-06-22 11:15",
+      "closeDate": "2026-07-15 15:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Urban Dev",
+      "amount": "$48,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Cung cấp 10.000 chỗ ở cho sinh viên với đầy đủ tiện ích thể thao."
+  },
+  {
+      "id": "cluster-p-34",
+      "title": "Gói thầu Mua sắm Thiết bị Quan trắc Môi trường Không khí Tự động",
+      "orgCode": "vn010029395",
+      "procuringEntity": "Sở Tài nguyên và Môi trường Thành phố Hà Nội",
+      "publishDate": "2026-06-20 16:45",
+      "closeDate": "2026-07-12 11:00",
+      "country": "Vietnam",
+      "status": "Đang mở thầu",
+      "sector": "Climate",
+      "amount": "$14,000,000",
+      "mapCoords": {
+          "x": 52,
+          "y": 22
+      },
+      "aiSummary": "Lắp đặt 30 trạm quan trắc chỉ số AQI truyền dữ liệu realtime."
+  },
   {
     id: 'IB2600384477-00',
     title: 'Gói thầu số 2: Tư vấn khảo sát, lập báo cáo nghiên cứu khả thi',
