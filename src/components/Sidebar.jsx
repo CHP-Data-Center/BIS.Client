@@ -2,29 +2,32 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag,
-  TrendingUp, BookOpen, Settings, HelpCircle, Cpu
+  TrendingUp, BookOpen, Settings, HelpCircle, Cpu,
+  Tag, Bookmark, Bot, ShieldCheck
 } from 'lucide-react';
-import { SOURCES, statsData } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard', badge: null },
-  { to: '/news/all',  icon: <Newspaper size={16} />,        label: 'Tất Cả Tin',  badge: statsData.todayArticles },
+  { to: '/news/all',  icon: <Newspaper size={16} />,       label: 'Tất Cả Tin',  badge: null },
 ];
 
 const sourceNavItems = [
-  { to: '/news/tintuc',     icon: <Newspaper size={16} />,   label: 'Tin Tức Báo Chí',   badge: null, color: SOURCES.tintuc.color },
-  { to: '/news/adb',        icon: <Building2 size={16} />,   label: 'ADB',               badge: null, color: SOURCES.adb.color },
-  { to: '/news/worldbank',  icon: <Globe size={16} />,        label: 'World Bank',        badge: null, color: SOURCES.worldbank.color },
-  { to: '/news/dauthau',    icon: <ShoppingBag size={16} />, label: 'Đấu Thầu Công',    badge: 3,    color: SOURCES.dauthau.color },
+  { to: '/news/press',     icon: <Newspaper size={16} />,   label: 'Báo Chí',           badge: null, color: '#3b82f6' },
+  { to: '/news/adb',       icon: <Building2 size={16} />,   label: 'ADB (Châu Á)',      badge: null, color: '#f59e0b' },
+  { to: '/news/worldbank', icon: <Globe size={16} />,        label: 'World Bank',        badge: null, color: '#10b981' },
+  { to: '/news/gov',       icon: <ShoppingBag size={16} />, label: 'Đấu Thầu Công',    badge: null, color: '#8b5cf6' },
 ];
 
 const toolItems = [
-  { to: '/trending',  icon: <TrendingUp size={16} />,  label: 'Xu Hướng',     badge: null },
-  { to: '/reports',   icon: <BookOpen size={16} />,    label: 'Báo Cáo AI',   badge: null },
-  { to: '/ai-engine', icon: <Cpu size={16} />,         label: 'AI Engine',    badge: null },
+  { to: '/keywords',  icon: <Tag size={16} />,      label: 'Từ Khóa',    badge: null },
+  { to: '/bookmarks', icon: <Bookmark size={16} />, label: 'Đã Lưu',     badge: null },
+  { to: '/ai-chat',   icon: <Bot size={16} />,      label: 'Trợ Lý AI',  badge: null, highlight: true },
 ];
 
 export default function Sidebar() {
+  const { user, isAdmin } = useAuth();
+
   return (
     <aside className="sidebar">
       {/* Main Nav */}
@@ -58,7 +61,6 @@ export default function Sidebar() {
           >
             <span style={{ color: item.color }}>{item.icon}</span>
             {item.label}
-            {item.badge != null && <span className="nav-badge">{item.badge}</span>}
           </NavLink>
         ))}
       </div>
@@ -74,11 +76,39 @@ export default function Sidebar() {
             to={item.to}
             id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            style={item.highlight ? { position: 'relative' } : {}}
           >
-            {item.icon}
+            {item.highlight ? (
+              <span style={{ color: '#a855f7' }}>{item.icon}</span>
+            ) : item.icon}
             {item.label}
+            {item.highlight && (
+              <span style={{
+                marginLeft: 'auto',
+                fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8,
+                background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+                color: 'white', letterSpacing: '0.3px',
+              }}>AI</span>
+            )}
           </NavLink>
         ))}
+
+        {isAdmin && (
+          <NavLink
+            to="/admin"
+            id="sidebar-admin"
+            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            style={{ color: '#2563eb', fontWeight: 700, marginTop: 4 }}
+          >
+            <ShieldCheck size={16} style={{ color: '#2563eb' }} />
+            Quản Trị Admin
+            <span style={{
+              marginLeft: 'auto',
+              fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,
+              background: '#dbeafe', color: '#1d4ed8',
+            }}>PRO</span>
+          </NavLink>
+        )}
       </div>
 
       {/* Bottom */}
@@ -90,14 +120,6 @@ export default function Sidebar() {
         >
           <Settings size={16} />
           Cài đặt
-        </NavLink>
-        <NavLink
-          to="/help"
-          id="sidebar-help"
-          className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-        >
-          <HelpCircle size={16} />
-          Hỗ trợ
         </NavLink>
 
         {/* System status */}
@@ -111,14 +133,19 @@ export default function Sidebar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <span style={{
               width: 7, height: 7, borderRadius: '50%', background: '#10b981',
-              boxShadow: '0 0 6px #10b981',
-              animation: 'pulse 2s infinite'
+              boxShadow: '0 0 6px #10b981', animation: 'pulse 2s infinite'
             }} />
             <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Hệ thống hoạt động</span>
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-            AI Engine: Online · Cập nhật {statsData.lastUpdate}
+            AI Crawler: Online · Crawl mỗi 4h
           </div>
+          {user && (
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>
+              👤 {user.display_name || user.email}
+              {isAdmin && ' · 👑 Admin'}
+            </div>
+          )}
         </div>
       </div>
     </aside>

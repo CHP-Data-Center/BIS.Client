@@ -34,7 +34,7 @@ function Particles() {
 }
 
 export default function LoginPage() {
-  const { login, loginError, setLoginError } = useAuth();
+  const { login, loginError, setLoginError, isLoggedIn } = useAuth();
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,18 +43,22 @@ export default function LoginPage() {
 
   useEffect(() => { setLoginError(''); }, []);
 
+  // Nếu đã đăng nhập → redirect dashboard
+  useEffect(() => {
+    if (isLoggedIn) nav('/dashboard', { replace: true });
+  }, [isLoggedIn]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800)); // simulate API
-    const ok = login(email, password);
+    const ok = await login(email, password);
     setLoading(false);
     if (ok) nav('/dashboard');
   };
 
-  const fillDemo = (type) => {
-    if (type === 'admin') { setEmail('admin@iih.vn'); setPassword('iih2026'); }
-    else                  { setEmail('demo@iih.vn');  setPassword('demo123'); }
+  const fillDemo = () => {
+    setEmail('admin@ckjvn.vn');
+    setPassword('Admin@12345');
   };
 
   return (
@@ -105,7 +109,7 @@ export default function LoginPage() {
         }}>
           <Cpu size={13} style={{ color: '#a78bfa' }} />
           <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-            Hệ thống AI Crawler đang hoạt động · Dữ liệu cập nhật mỗi 30 phút
+            Hệ thống AI Crawler đang hoạt động · Dữ liệu cập nhật mỗi 4h
           </span>
           <span style={{
             marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%',
@@ -122,7 +126,7 @@ export default function LoginPage() {
               id="input-email"
               type="email"
               className="form-input"
-              placeholder="admin@iih.vn"
+              placeholder="admin@ckjvn.vn"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
@@ -189,12 +193,12 @@ export default function LoginPage() {
         {/* Demo hint */}
         <div className="login-demo-hint">
           <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-secondary)', fontSize: 11 }}>
-            🔑 TÀI KHOẢN DEMO
+            🔑 TÀI KHOẢN MẶC ĐỊNH
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={() => fillDemo('admin')}
+              onClick={fillDemo}
               id="btn-demo-admin"
               style={{
                 fontSize: 11, padding: '4px 12px',
@@ -203,20 +207,7 @@ export default function LoginPage() {
                 border: '1px solid var(--brand-200)', cursor: 'pointer',
               }}
             >
-              Admin: admin@iih.vn / iih2026
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo('viewer')}
-              id="btn-demo-viewer"
-              style={{
-                fontSize: 11, padding: '4px 12px',
-                background: '#f5f3ff', color: '#6d28d9',
-                borderRadius: 'var(--radius-full)', fontWeight: 600,
-                border: '1px solid #ddd6fe', cursor: 'pointer',
-              }}
-            >
-              Demo: demo@iih.vn / demo123
+              Admin: admin@ckjvn.vn / Admin@12345
             </button>
           </div>
         </div>

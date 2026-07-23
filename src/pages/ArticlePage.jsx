@@ -1,12 +1,96 @@
 // src/pages/ArticlePage.jsx
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Tag, Globe, Cpu, ExternalLink, Bookmark, Share2, ChevronRight } from 'lucide-react';
-import { getArticleById, mockArticles, SOURCES } from '../data/mockData';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck, Share2, ChevronRight, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { articlesService } from '../services/articles';
+
+// Source color/icon fallback table (nếu backend không trả source name)
+const SOURCE_COLORS = {
+  gov:   { color: '#8b5cf6', bg: '#f5f3ff', icon: '📋', name: 'Mua Sắm Công' },
+  press: { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: 'Báo Chí' },
+};
+const DEFAULT_SRC = { color: '#6b7280', bg: '#f9fafb', icon: '📄', name: 'Nguồn tin' };
 
 export default function ArticlePage() {
   const { id } = useParams();
   const nav = useNavigate();
-  const article = getArticleById(id);
+  const location = useLocation();
+
+  // Article có thể được truyền qua navigation state (từ NewsCard click)
+  const [article, setArticle] = useState(location.state?.article || null);
+  const [loading, setLoading]     = useState(!article);
+  const [bookmarked, setBookmarked] = useState(article?.is_bookmarked || false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [related, setRelated]   = useState([]);
+
+  // Nếu không có article trong state → fetch từ API
+  useEffect(() => {
+    if (article) {
+      // Đã có data, mark read
+      articlesService.markRead(article.id).catch(() => {});
+      setBookmarked(article.is_bookmarked);
+      return;
+    }
+    // Không có state → fetch list với id để tìm bài
+    setLoading(true);
+    articlesService.getArticles({ only_my_keywords: false, size: 100, page: 1 })
+      .then((data) => {
+        const found = data.items?.find((a) => String(a.id) === String(id));
+        if (found) {
+          setArticle(found);
+          setBookmarked(found.is_bookmarked);
+          articlesService.markRead(found.id).catch(() => {});
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  // Lấy related articles (cùng source type)
+  useEffect(() => {
+    if (!article) return;
+    articlesService.getArticles({ only_my_keywords: false, size: 5, page: 1 })
+      .then((data) => {
+        setRelated((data.items || []).filter((a) => a.id !== article.id).slice(0, 4));
+      })
+      .catch(() => {});
+  }, [article?.id]);
+
+  const handleBookmark = async () => {
+    if (!article) return;
+    setBookmarkLoading(true);
+    try {
+      if (bookmarked) {
+        await articlesService.removeBookmark(article.id);
+        setBookmarked(false);
+      } else {
+        await articlesService.addBookmark(article.id);
+        setBookmarked(true);
+      }
+    } catch (e) {
+      console.warn('Bookmark error:', e);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
+  const handleShare = () => {
+    if (navigator.share && article) {
+      navigator.share({ title: article.title, url: article.url || window.location.href })
+        .catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
+        <Loader2 size={32} style={{ color: 'var(--brand-500)', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Đang tải bài viết...</span>
+      </div>
+    );
+  }
 
   if (!article) {
     return (
@@ -21,19 +105,16 @@ export default function ArticlePage() {
     );
   }
 
-  const src = SOURCES[article.source];
-  const related = mockArticles
-    .filter(a => a.id !== article.id && (a.source === article.source || a.category === article.category))
-    .slice(0, 4);
+  // Lấy source info từ article.sources[0] nếu có
+  const firstSource = article.sources?.[0];
+  const srcName = firstSource?.source_name || DEFAULT_SRC.name;
+  const srcColor = DEFAULT_SRC.color;
+  const srcBg    = DEFAULT_SRC.bg;
+  const srcIcon  = DEFAULT_SRC.icon;
 
-  // Generate rich fake body content
-  const bodyParagraphs = [
-    article.excerptVi || article.excerpt,
-    `Theo thông tin từ ${src.fullName}, dự án này được đánh giá là một trong những sáng kiến quan trọng nhất trong khu vực năm 2026. Các chuyên gia phân tích cho rằng đây là bước đi chiến lược nhằm tăng cường hợp tác phát triển bền vững.`,
-    `Với tổng giá trị đầu tư lên đến ${article.amount ?? 'hàng trăm triệu USD'}, dự án dự kiến sẽ tác động trực tiếp đến hàng triệu người dân trong khu vực, đặc biệt tại các vùng nông thôn còn gặp nhiều khó khăn về cơ sở hạ tầng và dịch vụ cơ bản.`,
-    `Hệ thống AI của IIH đã phân tích và tổng hợp thông tin từ nhiều nguồn chính thống để đưa ra bản tóm tắt này. Tất cả dữ liệu được cập nhật tự động mỗi 30 phút thông qua hệ thống crawler thông minh tích hợp sẵn.`,
-    `Các bên liên quan dự kiến sẽ tổ chức cuộc họp vào quý III năm 2026 để đánh giá tiến độ triển khai và đưa ra những điều chỉnh phù hợp với bối cảnh thực tế. Đây cũng là cơ hội để các nhà thầu và đối tác quan tâm cập nhật thông tin chi tiết nhất.`,
-  ];
+  const publishedDate = article.published_at
+    ? new Date(article.published_at).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+    : null;
 
   return (
     <div>
@@ -41,10 +122,10 @@ export default function ArticlePage() {
       <div className="breadcrumb">
         <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>Dashboard</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
-        <a onClick={() => nav(`/news/${article.source}`)} style={{ cursor: 'pointer' }}>{src.name}</a>
+        <a onClick={() => nav(-1)} style={{ cursor: 'pointer' }}>Tin tức</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
         <span style={{ color: 'var(--text-primary)', fontWeight: 600, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {(article.titleVi || article.title).slice(0, 40)}…
+          {article.title?.slice(0, 40)}…
         </span>
       </div>
 
@@ -52,61 +133,45 @@ export default function ArticlePage() {
         {/* Main */}
         <div>
           <article className="article-card">
-            {/* Cover */}
+            {/* Cover image or gradient */}
             <div style={{
               height: 200,
-              background: `linear-gradient(135deg, ${article.gradient[0]}, ${article.gradient[1]})`,
+              background: article.image_url
+                ? 'none'
+                : 'linear-gradient(135deg, #eff6ff, #dbeafe)',
               borderRadius: 'var(--radius-lg)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               marginBottom: 'var(--space-6)',
-              fontSize: 72,
-              filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.08))',
+              overflow: 'hidden',
             }}>
-              {article.coverEmoji}
+              {article.image_url ? (
+                <img src={article.image_url} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: 72, filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.08))' }}>📰</span>
+              )}
             </div>
 
             {/* Meta */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              <span className="news-source-tag" style={{ background: src.color }}>
-                {src.icon} {src.name}
+              <span className="news-source-tag" style={{ background: srcColor }}>
+                {srcIcon} {srcName}
               </span>
-              {article.category && (
-                <span style={{
+              {article.matched_keywords?.length > 0 && article.matched_keywords.map((kw) => (
+                <span key={kw} style={{
                   fontSize: 11, fontWeight: 600,
                   padding: '2px 8px', borderRadius: 'var(--radius-full)',
                   background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
                   border: '1px solid var(--border)',
                 }}>
-                  <Tag size={9} style={{ display: 'inline', marginRight: 3 }} />{article.category}
+                  #{kw}
                 </span>
-              )}
-              {article.amount && (
-                <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: '2px 10px', borderRadius: 'var(--radius-full)',
-                  background: src.bg, color: src.color,
-                  border: `1px solid ${src.color}40`,
-                }}>
-                  💰 {article.amount}
-                </span>
-              )}
-              {article.status && (
-                <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  padding: '2px 10px', borderRadius: 'var(--radius-full)',
-                  background: article.status === 'Đang mở thầu' ? '#ecfdf5' : '#fffbeb',
-                  color: article.status === 'Đang mở thầu' ? '#059669' : '#d97706',
-                  border: `1px solid ${article.status === 'Đang mở thầu' ? '#a7f3d0' : '#fde68a'}`,
-                }}>
-                  {article.status}
-                </span>
-              )}
+              ))}
             </div>
 
-            <h1 className="article-title">{article.titleVi || article.title}</h1>
+            <h1 className="article-title">{article.title}</h1>
 
-            {/* AI Summary Box */}
-            {article.aiSummary && (
+            {/* Excerpt / AI summary */}
+            {article.excerpt && (
               <div style={{
                 display: 'flex',
                 gap: 10,
@@ -118,10 +183,10 @@ export default function ArticlePage() {
               }}>
                 <div>
                   <span className="ai-badge" style={{ marginBottom: 6, display: 'inline-flex' }}>
-                    <Cpu size={9} /> Tóm tắt AI
+                    <Cpu size={9} /> Tóm tắt
                   </span>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-                    {article.aiSummary}
+                    {article.excerpt}
                   </p>
                 </div>
               </div>
@@ -136,56 +201,76 @@ export default function ArticlePage() {
               marginBottom: 'var(--space-6)',
               fontSize: 12, color: 'var(--text-muted)',
             }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Calendar size={12} />
-                {new Date(article.date).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Globe size={12} /> {article.country}
-              </span>
-              {article.deadline && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f59e0b', fontWeight: 600 }}>
-                  ⏰ Hạn nộp: {new Date(article.deadline).toLocaleDateString('vi-VN')}
+              {publishedDate && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Calendar size={12} /> {publishedDate}
+                </span>
+              )}
+              {article.sources?.length > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Globe size={12} /> {article.sources.length} nguồn đăng
                 </span>
               )}
             </div>
 
-            {/* Body */}
-            <div className="article-body">
-              {bodyParagraphs.map((p, i) => <p key={i}>{p}</p>)}
-            </div>
-
-            {/* Tags */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'var(--space-6)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-subtle)' }}>
-              {article.tags?.map(tag => (
-                <span key={tag} style={{
-                  fontSize: 11, fontWeight: 600,
-                  padding: '3px 10px', borderRadius: 'var(--radius-full)',
-                  background: 'var(--bg-surface-2)', color: 'var(--text-muted)',
-                  border: '1px solid var(--border)',
-                }}>
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            {/* Multi-source switcher */}
+            {article.sources?.length > 1 && (
+              <div style={{ marginBottom: 'var(--space-6)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  🔗 Xem từ nguồn khác:
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {article.sources.map((s) => (
+                    <a
+                      key={s.article_id}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '5px 12px', borderRadius: 'var(--radius-full)',
+                        background: 'var(--bg-surface-2)', color: 'var(--brand-600)',
+                        fontSize: 11, fontWeight: 600,
+                        border: '1px solid var(--border)',
+                        textDecoration: 'none',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <ExternalLink size={10} /> {s.source_name}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 10, marginTop: 'var(--space-6)' }}>
-              <button className="btn btn-primary" style={{ gap: 6 }} id="btn-read-original">
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ gap: 6 }}
+                id="btn-read-original"
+              >
                 <ExternalLink size={14} /> Xem bài gốc
+              </a>
+              <button
+                className={`btn ${bookmarked ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ gap: 6 }}
+                id="btn-bookmark"
+                onClick={handleBookmark}
+                disabled={bookmarkLoading}
+              >
+                {bookmarkLoading
+                  ? <Loader2 size={14} style={{ animation: 'spin 0.6s linear infinite' }} />
+                  : bookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                {bookmarked ? 'Đã lưu' : 'Lưu lại'}
               </button>
-              <button className="btn btn-secondary" style={{ gap: 6 }} id="btn-bookmark">
-                <Bookmark size={14} /> Lưu lại
-              </button>
-              <button className="btn btn-secondary" style={{ gap: 6 }} id="btn-share">
+              <button className="btn btn-secondary" style={{ gap: 6 }} id="btn-share" onClick={handleShare}>
                 <Share2 size={14} /> Chia sẻ
               </button>
-              <button
-                className="btn btn-ghost"
-                onClick={() => nav(-1)}
-                id="btn-back"
-                style={{ marginLeft: 'auto', gap: 6 }}
-              >
+              <button className="btn btn-ghost" onClick={() => nav(-1)} id="btn-back" style={{ marginLeft: 'auto', gap: 6 }}>
                 <ArrowLeft size={14} /> Quay lại
               </button>
             </div>
@@ -197,84 +282,82 @@ export default function ArticlePage() {
           {/* Source info */}
           <div className="article-sidebar-card">
             <div className="article-sidebar-title">
-              <span>{src.icon}</span> Về {src.name}
+              <span>{srcIcon}</span> Về {srcName}
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              {src.fullName} ({src.name}) là một tổ chức tài chính quốc tế lớn, cung cấp vốn vay, tư vấn chính sách và hỗ trợ kỹ thuật cho các nước đang phát triển.
+              Bài viết được thu thập tự động từ nguồn tin {srcName} thông qua hệ thống BIS Crawler.
             </p>
-            <a
-              href={src.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                marginTop: 12, fontSize: 12, fontWeight: 600,
-                color: src.color, textDecoration: 'none',
-              }}
-            >
-              <ExternalLink size={11} /> {src.url}
-            </a>
+            {article.url && (
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  marginTop: 12, fontSize: 12, fontWeight: 600,
+                  color: srcColor, textDecoration: 'none',
+                }}
+              >
+                <ExternalLink size={11} /> Xem bài gốc
+              </a>
+            )}
           </div>
 
-          {/* Related */}
-          {related.length > 0 && (
+          {/* Matched keywords */}
+          {article.matched_keywords?.length > 0 && (
             <div className="article-sidebar-card">
-              <div className="article-sidebar-title">
-                📰 Bài Viết Liên Quan
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {related.map(ra => {
-                  const rs = SOURCES[ra.source];
-                  return (
-                    <div
-                      key={ra.id}
-                      style={{
-                        display: 'flex', gap: 10, padding: '10px 6px',
-                        borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                        transition: 'background 0.15s',
-                      }}
-                      onClick={() => nav(`/article/${ra.id}`)}
-                      id={`related-${ra.id}`}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-surface-2)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 8,
-                        background: `linear-gradient(135deg, ${ra.gradient[0]}, ${ra.gradient[1]})`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 18, flexShrink: 0,
-                      }}>
-                        {ra.coverEmoji}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          {ra.titleVi || ra.title}
-                        </div>
-                        <div style={{ fontSize: 10.5, color: rs.color, marginTop: 3, fontWeight: 600 }}>{rs.name}</div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="article-sidebar-title">🏷️ Từ Khóa Khớp</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {article.matched_keywords.map((kw) => (
+                  <span key={kw} style={{
+                    fontSize: 11, fontWeight: 600, padding: '3px 10px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'var(--brand-50)', color: 'var(--brand-700)',
+                    border: '1px solid var(--brand-200)',
+                  }}>
+                    #{kw}
+                  </span>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Deadline alert */}
-          {article.deadline && (
-            <div style={{
-              padding: 'var(--space-4)',
-              background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-              border: '1px solid #fde68a',
-              borderRadius: 'var(--radius-lg)',
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e', marginBottom: 6 }}>
-                ⏰ Hạn Nộp Hồ Sơ
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#b45309', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                {new Date(article.deadline).toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' })}
-              </div>
-              <div style={{ fontSize: 11.5, color: '#92400e', marginTop: 6 }}>
-                Còn {Math.max(0, Math.ceil((new Date(article.deadline) - new Date()) / (1000 * 60 * 60 * 24)))} ngày nữa
+          {/* Related articles */}
+          {related.length > 0 && (
+            <div className="article-sidebar-card">
+              <div className="article-sidebar-title">📰 Bài Viết Liên Quan</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {related.map((ra) => (
+                  <div
+                    key={ra.id}
+                    style={{
+                      display: 'flex', gap: 10, padding: '10px 6px',
+                      borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                      transition: 'background 0.15s',
+                    }}
+                    onClick={() => nav(`/article/${ra.id}`, { state: { article: ra } })}
+                    id={`related-${ra.id}`}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-surface-2)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18, flexShrink: 0,
+                    }}>
+                      📰
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3, color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {ra.title}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 3 }}>
+                        {ra.published_at ? new Date(ra.published_at).toLocaleDateString('vi-VN') : ''}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

@@ -1,22 +1,23 @@
 // src/pages/DashboardPage.jsx
 import { useState, useEffect, useRef } from 'react';
 import {
-  Newspaper, Building2, Globe, ShoppingBag, Cpu,
-  RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap, Sparkles
+  Newspaper, Globe, Building2, ShoppingBag, Cpu,
+  RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from '../components/StatsCard';
 import NewsCard from '../components/NewsCard';
-import { mockArticles, statsData, trendingKeywords, SOURCES, mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
-import { MapContainer, TileLayer, CircleMarker, Popup, Polyline, useMap } from 'react-leaflet';
+import { statsService } from '../services/stats';
+import { articlesService } from '../services/articles';
+import { mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const PAGE_SIZE = 6;
 
 // ── Trending marquee strip ───────────────────────────────────
-function TrendingStrip() {
-  // items = [all keywords] + [all keywords] for seamless loop
-  const items = [...trendingKeywords, ...trendingKeywords];
+function TrendingStrip({ keywords }) {
+  const items = keywords.length > 0 ? [...keywords, ...keywords] : [];
 
   const getRankClass = (rank) => {
     if (rank === 1) return 'rank-1';
@@ -24,8 +25,9 @@ function TrendingStrip() {
     if (rank === 3) return 'rank-3';
     return '';
   };
-
   const rankColors = { 1: '#f59e0b', 2: '#818cf8', 3: '#ec4899' };
+
+  if (items.length === 0) return null;
 
   return (
     <div className="trending-strip">
@@ -35,17 +37,15 @@ function TrendingStrip() {
           Từ Khóa Đang Nổi Bật
         </div>
         <span className="hot-badge" style={{ animation: 'pulse 2s infinite' }}>🔥 LIVE</span>
-        {/* rank-1 pill only — compact, won't overflow */}
-        {trendingKeywords.slice(0, 1).map(kw => (
-          <span key={kw.rank} style={{
+        {keywords.slice(0, 1).map((kw, i) => (
+          <span key={i} style={{
             display: 'inline-flex', alignItems: 'center', gap: 5,
             padding: '4px 11px',
             borderRadius: 'var(--radius-full)',
             fontSize: 11, fontWeight: 700, lineHeight: 1.2,
             background: '#fef3c7', color: '#92400e',
             border: '1.5px solid #f59e0b',
-            whiteSpace: 'nowrap',
-            marginLeft: 4,
+            whiteSpace: 'nowrap', marginLeft: 4,
             boxShadow: '0 2px 6px rgba(245,158,11,0.15)',
             boxSizing: 'border-box',
           }}>
@@ -54,7 +54,7 @@ function TrendingStrip() {
               background: '#f59e0b', color: 'white', fontSize: 9, fontWeight: 900,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>1</span>
-            {kw.emoji} {kw.text}
+            {kw.term}
           </span>
         ))}
         <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
@@ -67,19 +67,18 @@ function TrendingStrip() {
           {items.map((kw, i) => (
             <span
               key={i}
-              className={`trending-keyword-chip ${getRankClass(kw.rank)}`}
-              id={i < trendingKeywords.length ? `trending-chip-${kw.rank}` : undefined}
+              className={`trending-keyword-chip ${getRankClass(i < keywords.length ? (i + 1) : (i - keywords.length + 1))}`}
+              id={i < keywords.length ? `trending-chip-${i + 1}` : undefined}
             >
-              <span style={{ fontSize: 14 }}>{kw.emoji}</span>
-              {kw.rank <= 3 && (
+              {i < keywords.length && i < 3 && (
                 <span style={{
                   width: 16, height: 16, borderRadius: '50%',
-                  background: rankColors[kw.rank],
+                  background: rankColors[i + 1],
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 8, fontWeight: 900, color: 'white', flexShrink: 0,
-                }}>{kw.rank}</span>
+                }}>{i + 1}</span>
               )}
-              {kw.text}
+              {kw.term}
               <span style={{ fontSize: 11, opacity: 0.65, fontWeight: 700, marginLeft: 4 }}>{kw.count}</span>
             </span>
           ))}
@@ -113,7 +112,11 @@ function Pagination({ page, total, pageSize, onChange }) {
   const totalPages = Math.ceil(total / pageSize);
   if (totalPages <= 1) return null;
 
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) pages.push(i);
+    else if (pages[pages.length - 1] !== '...') pages.push('...');
+  }
 
   return (
     <div className="pagination">
@@ -127,15 +130,17 @@ function Pagination({ page, total, pageSize, onChange }) {
         <ChevronLeft size={15} />
       </button>
 
-      {pages.map(p => (
-        <button
-          key={p}
-          className={`page-btn ${p === page ? 'active' : ''}`}
-          onClick={() => onChange(p)}
-          id={`btn-page-${p}`}
-        >
-          {p}
-        </button>
+      {pages.map((p, i) => (
+        p === '...'
+          ? <span key={`ellipsis-${i}`} style={{ padding: '0 4px', color: 'var(--text-muted)' }}>…</span>
+          : <button
+              key={p}
+              className={`page-btn ${p === page ? 'active' : ''}`}
+              onClick={() => onChange(p)}
+              id={`btn-page-${p}`}
+            >
+              {p}
+            </button>
       ))}
 
       <span className="page-info">
@@ -231,14 +236,12 @@ function MapFlyTo({ items, source, country, sector, status }) {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    // Debounce: wait a frame so React finishes rendering markers before moving
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       const coords = items.map(i => MAP_COORDS[i.id]).filter(Boolean);
       if (coords.length === 0) return;
 
       if (coords.length === 1) {
-        // Single point: smooth fly, but clamp zoom so marker never looks huge
         map.flyTo(coords[0], 7, { animate: true, duration: 0.5, easeLinearity: 0.5 });
       } else {
         const lats = coords.map(c => c[0]);
@@ -247,8 +250,6 @@ function MapFlyTo({ items, source, country, sector, status }) {
           [Math.min(...lats), Math.min(...lngs)],
           [Math.max(...lats), Math.max(...lngs)],
         ];
-        // fitBounds = instant snap to correct zoom, no ugly intermediate zoom frames
-        // Then we smooth it with a short CSS opacity crossfade via map panning
         map.fitBounds(bounds, {
           padding: [55, 55],
           maxZoom: 8,
@@ -257,14 +258,13 @@ function MapFlyTo({ items, source, country, sector, status }) {
           easeLinearity: 0.35,
         });
       }
-    }, 30); // 30ms debounce — enough for React to paint the filtered markers
+    }, 30);
 
     return () => clearTimeout(timerRef.current);
   }, [source, country, sector, status, items.length]);
 
   return null;
 }
-
 
 // ── MultiSelectDropdown ──────────────────────────────────────
 function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
@@ -323,7 +323,6 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
           borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           maxHeight: 200, overflowY: 'auto', zIndex: 9999,
         }}>
-          {/* Clear all row */}
           <div onClick={() => onChange(new Set())} style={{
             padding: '8px 10px', fontSize: 11, fontWeight: 600,
             color: selCount === 0 ? '#3b82f6' : '#94a3b8',
@@ -374,9 +373,8 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
   );
 }
 
-
 function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SECTOR_ICONS, SECTOR_NAMES, STATUS_ICONS }) {
-  const [viewMode, setViewMode] = useState('card'); // 'card' | 'list'
+  const [viewMode, setViewMode] = useState('card');
   const [currIdx, setCurrIdx] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -397,7 +395,6 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif", padding: '2px', maxWidth: 300, minWidth: 270 }}>
-      {/* ── Multi-project Header (Fixed Layout & Zero Overflow) ── */}
       {items.length > 1 && (
         <div style={{
           background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
@@ -408,7 +405,6 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
           boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: viewMode === 'card' ? 6 : 0 }}>
-            {/* Country & Count Pill */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden', flex: 1, minWidth: 0 }}>
               <FlagImg country={activeItem?.country} size={15} />
               <span style={{ fontSize: 11, fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -423,7 +419,6 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
               </span>
             </div>
 
-            {/* Mode Switcher */}
             <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
               <button
                 onClick={() => setViewMode('card')}
@@ -452,7 +447,6 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             </div>
           </div>
 
-          {/* Carousel controls if in Card view */}
           {viewMode === 'card' && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderRadius: 6, padding: '3px 6px', border: '1px solid #e2e8f0' }}>
               <button
@@ -485,10 +479,8 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
         </div>
       )}
 
-      {/* ── CARD VIEW ── */}
       {viewMode === 'card' ? (
         <div>
-          {/* Item Type & ID */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: cfg.color, padding: '3px 9px', borderRadius: 20 }}>
               {activeItem?.type || 'Dự án'}
@@ -496,12 +488,10 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(activeItem?.id || '').slice(0, 12)}</span>
           </div>
 
-          {/* Title */}
           <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, color: '#0f172a', marginBottom: 8, minHeight: 34 }}>
             {(activeItem.title || '').length > 85 ? (activeItem.title || '').slice(0, 85) + '…' : activeItem.title}
           </div>
 
-          {/* Meta tags */}
           <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#475569', marginBottom: 5, flexWrap: 'wrap', alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FlagImg country={activeItem.country} size={15} /> {countryLabel(activeItem.country)}</span>
             {activeItem.amount && <span style={{ fontWeight: 700, color: cfg.color }}>💰 {activeItem.amount}</span>}
@@ -512,7 +502,6 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             {activeItem.status && <span style={{ background: activeItem.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: activeItem.status === 'Active' ? '#16a34a' : '#475569', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>{STATUS_ICONS[activeItem.status] || '⚙️'} {activeItem.status}</span>}
           </div>
 
-          {/* AI Summary */}
           <div style={{ background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))', border: '1px dashed rgba(168,85,247,.3)', borderRadius: 10, padding: '8px 10px', fontSize: 11, color: '#334155', lineHeight: 1.45 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#a855f7', fontSize: 10, marginBottom: 3 }}>
               <Cpu size={10} /> PHÂN TÍCH AI
@@ -521,7 +510,6 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
           </div>
         </div>
       ) : (
-        /* ── LIST VIEW (For 1k+ / high volume projects at location) ── */
         <div style={{ maxHeight: 250, overflowY: 'auto' }}>
           {items.length > 3 && (
             <input
@@ -570,10 +558,8 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
   );
 }
 
-
-// ── Project Distribution Map (Leaflet Real World Map) ────────────
+// ── Project Distribution Map (Original state: Floating Filter Panel & fitBounds) ──────
 function ProjectDistributionMap() {
-  // Multi-select: empty Set = "all"
   const [selSources,   setSelSources]   = useState(new Set());
   const [selCountries, setSelCountries] = useState(new Set());
   const [selStatuses,  setSelStatuses]  = useState(new Set());
@@ -656,9 +642,6 @@ function ProjectDistributionMap() {
 
   const hasFilters = selSources.size > 0 || selCountries.size > 0 || selSectors.size > 0 || selStatuses.size > 0;
 
-  const countryLabel2 = c => countryLabel(c);
-
-  // Group filtered items by location key for 1k+ scalable map clustering
   const locationGroupList = Object.values(
     filteredItems.reduce((acc, item) => {
       const rawCoords = MAP_COORDS[item.id];
@@ -686,8 +669,14 @@ function ProjectDistributionMap() {
             <Globe size={20} color="white" />
           </div>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8 }}>
               Bản Đồ Phân Bố Dự Án ODA &amp; Đấu Thầu
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
+                background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a',
+              }}>
+                📌 Dữ liệu mẫu minh họa
+              </span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
               <Cpu size={11} style={{ color: '#a855f7' }} />
@@ -695,7 +684,6 @@ function ProjectDistributionMap() {
             </div>
           </div>
         </div>
-        {/* Legend pills */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {Object.entries(sourceConfig).map(([key, cfg]) => (
             <div key={key} style={{
@@ -711,7 +699,7 @@ function ProjectDistributionMap() {
         </div>
       </div>
 
-      {/* ── Full-width map with floating filter overlay ── */}
+      {/* ── Map Container with Floating Filter Panel ── */}
       <div style={{
         borderRadius: 16,
         boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)',
@@ -719,15 +707,13 @@ function ProjectDistributionMap() {
         position: 'relative',
         overflow: 'visible',
       }}>
-        {/* Map container needs clip */}
         <div style={{ borderRadius: 16, overflow: 'hidden' }}>
           <MapContainer
             center={[15, 107]}
             zoom={4}
-            minZoom={2.5}
-            maxBounds={[[-85, -200], [85, 200]]}
-            maxBoundsViscosity={1.0}
-            style={{ height: 500, width: '100%', background: '#cbd5e1' }}
+            minZoom={3}
+            worldCopyJump={true}
+            style={{ height: 500, width: '100%', background: '#dbeafe' }}
             scrollWheelZoom={true}
             zoomControl={false}
           >
@@ -735,8 +721,6 @@ function ProjectDistributionMap() {
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>'
               maxZoom={18}
-              noWrap={true}
-              bounds={[[-85, -180], [85, 180]]}
             />
             <MapFlyTo
               items={filteredItems}
@@ -746,7 +730,6 @@ function ProjectDistributionMap() {
               status={[...selStatuses].join(',')}
             />
 
-            {/* Render 1 Marker per Location (Supports 1k+ Scalability & Zero Line Clutter) */}
             {locationGroupList.map(group => {
               const { key, baseCoords, items } = group;
               const isCluster = items.length > 1;
@@ -783,7 +766,6 @@ function ProjectDistributionMap() {
           </MapContainer>
         </div>
 
-        {/* Empty state overlay */}
         {filteredItems.length === 0 && (
           <div style={{ position:'absolute', inset:0, zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(15,23,42,0.5)', backdropFilter:'blur(6px)', borderRadius: 16 }}>
             <div style={{ background:'white', borderRadius:16, padding:'20px 28px', textAlign:'center', boxShadow:'0 16px 48px rgba(0,0,0,0.2)' }}>
@@ -794,7 +776,7 @@ function ProjectDistributionMap() {
           </div>
         )}
 
-        {/* ── Floating Filter Panel ── */}
+        {/* ── Floating Filter Panel (Pre-opened / Always visible overlay on top right) ── */}
         <div style={{
           position: 'absolute', top: 12, right: 12, zIndex: 1000,
           width: 228,
@@ -805,7 +787,6 @@ function ProjectDistributionMap() {
           borderRadius: 14,
           boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
         }}>
-          {/* Panel header */}
           <div style={{
             background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
             padding: '9px 12px', borderRadius: '13px 13px 0 0',
@@ -818,8 +799,6 @@ function ProjectDistributionMap() {
           </div>
 
           <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-
-            {/* ── Source multi-toggle chips ── */}
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Nguồn dữ liệu</div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -848,12 +827,8 @@ function ProjectDistributionMap() {
                   );
                 })}
               </div>
-              {selSources.size === 0 && (
-                <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4, fontStyle: 'italic' }}>Chọn để lọc theo nguồn</div>
-              )}
             </div>
 
-            {/* ── Country multi-select ── */}
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Quốc gia</div>
               <MultiSelectDropdown
@@ -868,7 +843,6 @@ function ProjectDistributionMap() {
               />
             </div>
 
-            {/* ── Sector multi-select ── */}
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Lĩnh vực</div>
               <MultiSelectDropdown
@@ -883,7 +857,6 @@ function ProjectDistributionMap() {
               />
             </div>
 
-            {/* ── Status multi-select ── */}
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Trạng thái</div>
               <MultiSelectDropdown
@@ -898,7 +871,6 @@ function ProjectDistributionMap() {
               />
             </div>
 
-            {/* ── Mini stats ── */}
             <div style={{
               background: 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(59,130,246,0.08))',
               border: '1px solid rgba(16,185,129,0.2)', borderRadius: 9, padding: '7px 9px',
@@ -917,7 +889,6 @@ function ProjectDistributionMap() {
               </div>
             </div>
 
-            {/* Reset */}
             {hasFilters && (
               <button onClick={() => { setSelSources(new Set()); setSelCountries(new Set()); setSelStatuses(new Set()); setSelSectors(new Set()); }}
                 style={{
@@ -952,36 +923,91 @@ function ProjectDistributionMap() {
   );
 }
 
+// ── Source breakdown config ───────────────────────────────────
+const SOURCE_CONFIG = {
+  press:     { label: 'Báo Chí',        icon: '📰', color: '#3b82f6', bg: '#eff6ff' },
+  adb:       { label: 'ADB (Châu Á)',   icon: '🏦', color: '#f59e0b', bg: '#fffbeb' },
+  worldbank: { label: 'World Bank',     icon: '🌍', color: '#10b981', bg: '#ecfdf5' },
+  gov:       { label: 'Đấu Thầu Công', icon: '📋', color: '#8b5cf6', bg: '#f5f3ff' },
+};
 
 // ── Main Dashboard ───────────────────────────────────────────
 export default function DashboardPage() {
   const nav = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]         = useState(true);
+  const [refreshing, setRefreshing]   = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage]               = useState(1);
   const gridRef = useRef(null);
 
+  // API data
+  const [overview, setOverview]   = useState(null);
+  const [trending, setTrending]   = useState([]);
+  const [articles, setArticles]   = useState([]);
+  const [totalArticles, setTotal] = useState(0);
+
+  // Fetch stats overview
+  const fetchOverview = async () => {
+    try {
+      const data = await statsService.getOverview();
+      setOverview(data);
+    } catch (e) {
+      console.warn('Stats overview error:', e);
+    }
+  };
+
+  // Fetch trending keywords
+  const fetchTrending = async () => {
+    try {
+      const data = await statsService.getTrending(15);
+      setTrending(data);
+    } catch (e) {
+      console.warn('Trending error:', e);
+    }
+  };
+
+  // Fetch articles
+  const fetchArticles = async (filter = activeFilter, p = page) => {
+    setLoading(true);
+    try {
+      const params = {
+        page: p,
+        size: PAGE_SIZE,
+        sort: 'newest',
+        only_my_keywords: false,
+      };
+      if (filter === 'gov')   params.source_type = 'gov';
+      if (filter === 'press') params.source_type = 'press';
+
+      const data = await articlesService.getArticles(params);
+      setArticles(data.items || []);
+      setTotal(data.total || 0);
+    } catch (e) {
+      console.warn('Articles error:', e);
+      setArticles([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 900);
-    return () => clearTimeout(t);
+    fetchOverview();
+    fetchTrending();
+    fetchArticles('all', 1);
   }, []);
+
+  // Khi filter/page thay đổi
+  useEffect(() => {
+    fetchArticles(activeFilter, page);
+  }, [activeFilter, page]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setLoading(false);
+    await Promise.all([fetchOverview(), fetchTrending(), fetchArticles(activeFilter, page)]);
     setRefreshing(false);
   };
-
-  const filtered = (activeFilter === 'all'
-    ? mockArticles
-    : mockArticles.filter(a => a.source === activeFilter)
-  ).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  const totalFiltered = filtered.length;
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleFilter = (id) => {
     setActiveFilter(id);
@@ -993,12 +1019,21 @@ export default function DashboardPage() {
     gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // Stats từ API (khớp với StatsOverview DTO)
+  const totalCount       = overview?.total_articles ?? 0;
+  const todayCount       = overview?.today_articles ?? 0;
+  const govCount         = overview?.gov_count ?? 0;
+  const pressCount       = overview?.press_count ?? 0;
+  const adbCount         = overview?.adb_count ?? 0;
+  const wbCount          = overview?.wb_count ?? 0;
+  const aiProcessed      = overview?.ai_processed ?? 0;
+
   const chips = [
-    { id: 'all',       label: '🗂️ Tất Cả',   count: mockArticles.length },
-    { id: 'tintuc',    label: '📰 Tin Tức',   count: mockArticles.filter(a => a.source === 'tintuc').length },
-    { id: 'adb',       label: '🏦 ADB',       count: mockArticles.filter(a => a.source === 'adb').length },
-    { id: 'worldbank', label: '🌍 World Bank', count: mockArticles.filter(a => a.source === 'worldbank').length },
-    { id: 'dauthau',   label: '📋 Đấu Thầu',  count: mockArticles.filter(a => a.source === 'dauthau').length },
+    { id: 'all',       label: '🗂️ Tất Cả',    count: totalCount },
+    { id: 'press',     label: '📰 Báo Chí',    count: pressCount },
+    { id: 'adb',       label: '🏦 ADB',        count: adbCount },
+    { id: 'worldbank', label: '🌍 World Bank',  count: wbCount },
+    { id: 'gov',       label: '📋 Đấu Thầu',   count: govCount },
   ];
 
   return (
@@ -1008,13 +1043,13 @@ export default function DashboardPage() {
         <div className="banner-aurora-1" />
         <div className="banner-aurora-2" />
         <img src="/logo.png" alt="" className="banner-logo-watermark" />
-        
+
         <div className="banner-content">
           <div className="banner-title" style={{ animation: 'slideInLeft 0.5s ease both' }}>
             Hệ Thống Đấu Thầu &amp; ODA Thông Minh
           </div>
           <div className="banner-sub" style={{ animation: 'slideInLeft 0.5s 0.05s ease both' }}>
-            Theo dõi dữ liệu dự án, cơ hội đấu thầu từ ADB, World Bank &amp; Mua sắm công quốc gia. Phân tích tự động bởi AI — cập nhật liên tục realtime.
+            Theo dõi dữ liệu dự án, cơ hội đấu thầu từ ADB, World Bank &amp; Mua sắm công quốc gia. Phân tích tự động bởi AI — cập nhật liên tục mỗi 4h.
           </div>
           <div className="banner-pills" style={{ animation: 'slideInLeft 0.5s 0.1s ease both' }}>
             <span className="banner-pill"><Building2 size={13} style={{ color: '#f59e0b' }} /> ADB (Châu Á)</span>
@@ -1027,41 +1062,59 @@ export default function DashboardPage() {
 
       {/* ── Stats Grid ── */}
       <div className="stats-grid">
-        <StatsCard icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
-          label="Tổng Bài Viết" value={statsData.totalArticles}
-          sub={`+${statsData.todayArticles} hôm nay`} trend="+12.4%"
-          accentColor="#3b82f6" iconBg="var(--brand-50)" />
-        <StatsCard icon={<Building2 size={20} style={{ color: '#f59e0b' }} />}
-          label="ADB" value={statsData.adbCount}
-          sub="Ngân hàng Phát triển Châu Á" trend="+8.1%"
-          accentColor="#f59e0b" iconBg="#fffbeb" />
-        <StatsCard icon={<Globe size={20} style={{ color: '#10b981' }} />}
-          label="World Bank" value={statsData.wbCount}
-          sub="Ngân hàng Thế giới" trend="+5.3%"
-          accentColor="#10b981" iconBg="#ecfdf5" />
-        <StatsCard icon={<ShoppingBag size={20} style={{ color: '#8b5cf6' }} />}
-          label="Đấu Thầu Công" value={statsData.dauthauCount}
-          sub="Mua sắm công quốc gia" trend="+18.7%"
-          accentColor="#8b5cf6" iconBg="#f5f3ff" />
-        <StatsCard icon={<Newspaper size={20} style={{ color: 'var(--color-ai)' }} />}
-          label="Tin Tức Báo Chí" value={mockArticles.filter(a => a.source === 'tintuc').length}
-          sub="Crawl từ các trang báo" trend="+6.2%"
-          accentColor="var(--color-ai)" iconBg="var(--brand-50)" />
-        <StatsCard icon={<Cpu size={20} style={{ color: '#ec4899' }} />}
-          label="AI Đã Xử Lý" value={statsData.aiProcessed}
-          sub={`${Math.round(statsData.aiProcessed / statsData.totalArticles * 100)}% tổng bài`} trend="+99.3%"
-          accentColor="#ec4899" iconBg="#fdf2f8" />
+        <StatsCard
+          icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
+          label="Tổng Bài Viết"
+          value={totalCount}
+          sub={`+${todayCount} hôm nay`}
+          trend={todayCount > 0 ? `+${todayCount}` : null}
+          accentColor="#3b82f6" iconBg="var(--brand-50)"
+        />
+        <StatsCard
+          icon={<Building2 size={20} style={{ color: '#f59e0b' }} />}
+          label="ADB"
+          value={adbCount}
+          sub="Ngân hàng Phát triển Châu Á"
+          accentColor="#f59e0b" iconBg="#fffbeb"
+        />
+        <StatsCard
+          icon={<Globe size={20} style={{ color: '#10b981' }} />}
+          label="World Bank"
+          value={wbCount}
+          sub="Ngân hàng Thế giới"
+          accentColor="#10b981" iconBg="#ecfdf5"
+        />
+        <StatsCard
+          icon={<ShoppingBag size={20} style={{ color: '#8b5cf6' }} />}
+          label="Đấu Thầu Công"
+          value={govCount}
+          sub="Mua sắm công quốc gia"
+          accentColor="#8b5cf6" iconBg="#f5f3ff"
+        />
+        <StatsCard
+          icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
+          label="Báo Chí"
+          value={pressCount}
+          sub="Tin tức tổng hợp"
+          accentColor="#3b82f6" iconBg="#eff6ff"
+        />
+        <StatsCard
+          icon={<Cpu size={20} style={{ color: '#ec4899' }} />}
+          label="AI Đã Xử Lý"
+          value={aiProcessed}
+          sub={`${totalCount > 0 ? Math.round(aiProcessed/totalCount*100) : 0}% tổng bài`}
+          accentColor="#ec4899" iconBg="#fdf2f8"
+        />
       </div>
 
-      {/* ── 🔥 Trending Strip (TOP) ── */}
-      <TrendingStrip />
+      {/* ── Trending Strip ── */}
+      <TrendingStrip keywords={trending} />
 
-      {/* ── Geographical Distribution Map ── */}
+      {/* ── Map ── */}
       <ProjectDistributionMap />
 
       {/* ── News Section ── */}
       <div ref={gridRef}>
-        {/* Section header */}
         <div className="section-header">
           <div className="section-title">
             <span className="dot" />
@@ -1071,12 +1124,14 @@ export default function DashboardPage() {
               padding: '2px 8px', background: 'var(--bg-surface-2)',
               borderRadius: 'var(--radius-full)', border: '1px solid var(--border)',
             }}>
-              {totalFiltered} bài
+              {totalArticles} bài
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button className="btn btn-ghost btn-sm" onClick={handleRefresh} id="btn-refresh" style={{ gap: 5 }}>
-              <RefreshCw size={13} style={{ animation: refreshing ? 'spin 0.7s linear infinite' : 'none' }} />
+              {refreshing
+                ? <Loader2 size={13} style={{ animation: 'spin 0.7s linear infinite' }} />
+                : <RefreshCw size={13} />}
               Làm mới
             </button>
             <button className="btn btn-secondary btn-sm" onClick={() => nav('/news/all')} id="btn-view-all" style={{ gap: 5 }}>
@@ -1112,137 +1167,126 @@ export default function DashboardPage() {
         <div className="news-grid">
           {loading
             ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonCard key={i} />)
-            : paged.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)}
+            : articles.length === 0
+              ? (
+                <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 200 }}>
+                  <div className="empty-icon">📭</div>
+                  <div className="empty-title">Chưa có bài viết</div>
+                  <div className="empty-sub">Hệ thống sẽ crawl tự động mỗi 4h. Admin có thể crawl ngay trong phần Cài đặt.</div>
+                </div>
+              )
+              : articles.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)
+          }
         </div>
 
-        {/* Pagination */}
         {!loading && (
           <Pagination
             page={page}
-            total={totalFiltered}
+            total={totalArticles}
             pageSize={PAGE_SIZE}
             onChange={handlePageChange}
           />
         )}
       </div>
 
-      {/* ── Source Breakdown (Balanced 4-Column Grid) ── */}
-      <div style={{
-        background: 'var(--bg-surface)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 18,
-        padding: '22px 24px',
-        marginTop: 'var(--space-8)',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
-            <div style={{
-              width: 30, height: 30, borderRadius: 8,
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
-            }}>
-              <TrendingUp size={16} />
-            </div>
-            Phân Bổ Theo Nguồn Dữ Liệu
-          </div>
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
-            4 nguồn tổng hợp · {mockArticles.length} bài viết
-          </span>
-        </div>
-
-        {/* ── Balanced 4-Column Grid ── */}
+      {/* ── Source Breakdown (4-Column Grid) ── */}
+      {overview && (
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '16px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 18,
+          padding: '22px 24px',
+          marginTop: 'var(--space-8)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
         }}>
-          {Object.values(SOURCES).map(src => {
-            const count = mockArticles.filter(a => a.source === src.id).length;
-            const pct = Math.round((count / mockArticles.length) * 100);
-            return (
-              <div
-                key={src.id}
-                onClick={() => handleFilter(src.id)}
-                style={{
-                  background: 'var(--bg-surface-2)',
-                  border: '1.5px solid var(--border-subtle)',
-                  borderRadius: 14,
-                  padding: '16px 18px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = `0 12px 28px ${src.color}25`;
-                  e.currentTarget.style.borderColor = src.color;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
-                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                }}
-              >
-                {/* Top accent bar */}
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                  background: `linear-gradient(90deg, ${src.color}, ${src.color}dd)`,
-                }} />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{
-                      width: 34, height: 34, borderRadius: 10,
-                      background: src.bg || 'rgba(59,130,246,0.1)',
-                      border: `1px solid ${src.color}30`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 17, flexShrink: 0,
-                      boxShadow: `0 3px 10px ${src.color}20`,
-                    }}>
-                      {src.icon}
-                    </span>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 105 }}>
-                      {src.name}
-                    </span>
-                  </span>
-                  <span style={{
-                    fontSize: 22, fontWeight: 900, color: src.color,
-                    letterSpacing: '-0.5px',
-                  }}>
-                    {count}
-                  </span>
-                </div>
-
-                {/* Progress bar container */}
-                <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 20, overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(0,0,0,0.05)' }}>
-                  <div style={{
-                    height: '100%', width: `${pct}%`,
-                    background: `linear-gradient(90deg, ${src.color}aa, ${src.color})`,
-                    borderRadius: 20,
-                    boxShadow: `0 0 10px ${src.color}66`,
-                    transition: 'width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  }} />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{
-                    fontSize: 10.5, fontWeight: 700, color: src.color,
-                    background: `${src.color}15`, padding: '2px 8px', borderRadius: 12,
-                  }}>
-                    {pct}% tổng số
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {count} bài viết
-                  </span>
-                </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+              <div style={{
+                width: 30, height: 30, borderRadius: 8,
+                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
+              }}>
+                <TrendingUp size={16} />
               </div>
-            );
-          })}
+              Phân Bổ Theo Nguồn Dữ Liệu
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
+              {totalCount} bài viết tổng
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            {Object.entries(SOURCE_CONFIG).map(([key, src]) => {
+              let count = 0;
+              if (key === 'gov') count = govCount;
+              else if (key === 'press') count = pressCount;
+              else if (key === 'adb') count = adbCount;
+              else if (key === 'worldbank') count = wbCount;
+
+              const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+              return (
+                <div
+                  key={key}
+                  onClick={() => handleFilter(key)}
+                  style={{
+                    background: 'var(--bg-surface-2)',
+                    border: '1.5px solid var(--border-subtle)',
+                    borderRadius: 14, padding: '16px 18px',
+                    position: 'relative', overflow: 'hidden',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = `0 12px 28px ${src.color}25`;
+                    e.currentTarget.style.borderColor = src.color;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
+                    e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${src.color}, ${src.color}dd)` }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{
+                        width: 34, height: 34, borderRadius: 10,
+                        background: src.bg, border: `1px solid ${src.color}30`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 17, flexShrink: 0, boxShadow: `0 3px 10px ${src.color}20`,
+                      }}>
+                        {src.icon}
+                      </span>
+                      {src.label}
+                    </span>
+                    <span style={{ fontSize: 22, fontWeight: 900, color: src.color, letterSpacing: '-0.5px' }}>
+                      {count}
+                    </span>
+                  </div>
+                  <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 20, overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(0,0,0,0.05)' }}>
+                    <div style={{
+                      height: '100%', width: `${pct}%`,
+                      background: `linear-gradient(90deg, ${src.color}aa, ${src.color})`,
+                      borderRadius: 20, boxShadow: `0 0 10px ${src.color}66`,
+                      transition: 'width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: src.color, background: `${src.color}15`, padding: '2px 8px', borderRadius: 12 }}>
+                      {pct}% tổng số
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+                      {count} bài viết
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

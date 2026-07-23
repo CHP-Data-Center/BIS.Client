@@ -1,10 +1,9 @@
 // src/components/Header.jsx
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock } from 'lucide-react';
+import { Search, Bell, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import SourceDropdown from './SourceDropdown';
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -31,7 +30,7 @@ function LiveClock() {
 }
 
 export default function Header() {
-  const { user, logout, isGuest } = useAuth();
+  const { user, logout, isGuest, isAdmin } = useAuth();
   const nav = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
@@ -48,6 +47,16 @@ export default function Header() {
     nav('/login');
   };
 
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchVal.trim()) {
+      nav(`/news/all?q=${encodeURIComponent(searchVal.trim())}`);
+    }
+  };
+
+  const displayName = user?.display_name || user?.name || user?.email || 'User';
+  const nameParts = displayName.split(' ').filter(Boolean);
+  const shortName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : 'User';
+
   return (
     <header className="header">
       {/* Left */}
@@ -62,8 +71,6 @@ export default function Header() {
 
         <div style={{ width: 1, height: 28, background: 'var(--border)', margin: '0 4px' }} />
 
-        <SourceDropdown />
-
         <LiveClock />
       </div>
 
@@ -75,9 +82,10 @@ export default function Header() {
           <input
             id="input-search"
             className="search-input"
-            placeholder="Tìm kiếm tin tức..."
+            placeholder="Tìm kiếm tin tức... (Enter)"
             value={searchVal}
             onChange={e => setSearchVal(e.target.value)}
+            onKeyDown={handleSearch}
           />
         </div>
 
@@ -110,15 +118,15 @@ export default function Header() {
               onClick={() => setUserMenuOpen(o => !o)}
               id="btn-user-menu"
             >
-              <div className="avatar">{user?.initials ?? 'U'}</div>
-              <span className="avatar-name">{user?.name?.split(' ')[0] ?? 'User'}</span>
+              <div className="avatar">{user?.initials || 'U'}</div>
+              <span className="avatar-name">{shortName}</span>
               <ChevronDown size={12} style={{ color: 'var(--text-muted)' }} />
             </button>
 
             {userMenuOpen && (
               <div className="user-menu">
                 <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 4 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{user?.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{displayName}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{user?.email}</div>
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -127,11 +135,20 @@ export default function Header() {
                     borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 700,
                     border: '1px solid var(--brand-200)',
                   }}>
-                    <Zap size={9} /> {user?.role?.toUpperCase()}
+                    <Zap size={9} /> {(user?.role || 'user').toUpperCase()}
                   </div>
                 </div>
-                <div className="user-menu-item" id="menu-profile"><User size={14} /> Hồ sơ</div>
-                <div className="user-menu-item" id="menu-settings"><Settings size={14} /> Cài đặt</div>
+                {isAdmin && (
+                  <div className="user-menu-item" onClick={() => { nav('/admin'); setUserMenuOpen(false); }} id="menu-admin" style={{ color: '#2563eb', fontWeight: 700 }}>
+                    <ShieldCheck size={14} style={{ color: '#2563eb' }} /> Bảng Quản Trị Admin
+                  </div>
+                )}
+                <div className="user-menu-item" onClick={() => { nav('/settings'); setUserMenuOpen(false); }} id="menu-settings">
+                  <Settings size={14} /> Cài đặt
+                </div>
+                <div className="user-menu-item" onClick={() => { nav('/keywords'); setUserMenuOpen(false); }} id="menu-keywords">
+                  <User size={14} /> Từ khóa của tôi
+                </div>
                 <div className="user-menu-item danger" onClick={handleLogout} id="menu-logout">
                   <LogOut size={14} /> Đăng xuất
                 </div>

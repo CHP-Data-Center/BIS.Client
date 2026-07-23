@@ -1,45 +1,89 @@
 // src/context/AuthContext.jsx
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authService } from '../services/auth';
 
 const AuthContext = createContext(null);
 
-const DEMO_USERS = [
-  { email: 'admin@iih.vn', password: 'iih2026', name: 'Admin IIH', role: 'admin', initials: 'AI' },
-  { email: 'demo@iih.vn',  password: 'demo123',  name: 'Demo User', role: 'viewer', initials: 'DU' },
-];
-
-// Guest user - auto-logged in
-const GUEST_USER = { email: 'guest@iih.vn', name: 'Khách', role: 'guest', initials: 'KH' };
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = sessionStorage.getItem('iih-user');
-      return saved ? JSON.parse(saved) : GUEST_USER; // default = guest
-    } catch { return GUEST_USER; }
-  });
+  const [user, setUser]       = useState(null);       // UserOut | null
+  const [token, setToken]     = useState(() => localStorage.getItem('bis_token'));
+  const [loading, setLoading] = useState(true);       // init check
   const [loginError, setLoginError] = useState('');
 
-  const login = (email, password) => {
-    const found = DEMO_USERS.find(u => u.email === email && u.password === password);
-    if (found) {
-      const { password: _, ...safe } = found;
-      setUser(safe);
-      setLoginError('');
-      sessionStorage.setItem('iih-user', JSON.stringify(safe));
-      return true;
-    }
-    setLoginError('Email hoặc mật khẩu không đúng.');
-    return false;
-  };
+  // Khởi tạo: nếu có token → gọi /auth/me để xác thực
+  useEffect(() => {
+    if (!token) { setLoading(false); return; }
+    authService.getMe()
+      .then((me) => setUser(me))
+      .catch(() => {
+        // Token hết hạn hoặc không hợp lệ
+        localStorage.removeItem('bis_token');
+        localStorage.removeItem('bis_user');
+        setToken(null);
+      })
+      .finally(() => setLoading(false));
+  }, []); // chỉ chạy khi mount
 
-  const logout = () => {
-    setUser(GUEST_USER);
-    sessionStorage.removeItem('iih-user');
-  };
+  const login = useCallback(async (email, password) => {
+    setLoginError('');
+    try {
+      const res = await authService.login(email, password);
+      localStorage.setItem('bis_token', res.access_token);
+      setToken(res.access_token);
+
+      // Lấy thông tin user sau khi đăng nhập
+      const me = await authService.getMe();
+      setUser(me);
+      setLoginError('');
+      return true;
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Email hoặc mật khẩu không đúng.';
+      setLoginError(msg);
+      return false;
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('bis_token');
+    localStorage.removeItem('bis_user');
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  const isGuest  = !user;
+  const isAdmin  = user?.role === 'admin';
+  const isLoggedIn = !!user;
+
+  // Tên viết tắt (avatar initials)
+  const initials = user
+    ? (user.display_name || user.email || 'U')
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'KH';
+
+  // Augment user với initials & name alias
+  const augmentedUser = user
+    ? { ...user, initials, name: user.display_name || user.email }
+    : null;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loginError, setLoginError, isGuest: user?.role === 'guest' }}>
+    <AuthContext.Provider
+      value={{
+        user: augmentedUser,
+        token,
+        login,
+        logout,
+        loginError,
+        setLoginError,
+        isGuest,
+        isAdmin,
+        isLoggedIn,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

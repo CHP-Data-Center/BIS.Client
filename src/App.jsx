@@ -1,4 +1,5 @@
 // src/App.jsx
+import { Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Header from './components/Header';
@@ -8,8 +9,56 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import NewsPage from './pages/NewsPage';
 import ArticlePage from './pages/ArticlePage';
+import KeywordsPage from './pages/KeywordsPage';
+import BookmarksPage from './pages/BookmarksPage';
+import AiPage from './pages/AiPage';
+import SettingsPage from './pages/SettingsPage';
+import AdminPage from './pages/AdminPage';
 
-// Guest mode: everyone can access. Login is optional/decorative for now.
+// Error Boundary cho React
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexDirection: 'column', gap: 16, background: 'var(--bg-base)', padding: 24, textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 48 }}>⚠️</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>
+            Đã xảy ra lỗi không mong muốn
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 460, fontFamily: 'monospace', background: 'var(--bg-surface-2)', padding: 12, borderRadius: 8 }}>
+            {this.state.error?.toString() || 'Unknown error'}
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={() => { window.location.href = '/dashboard'; }}
+            style={{ padding: '10px 20px', fontSize: 13, fontWeight: 700 }}
+          >
+            Quay lại Dashboard
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Layout wrapper cho các trang cần header + sidebar
 function AppLayout({ children }) {
   return (
     <div className="app-layout">
@@ -23,7 +72,39 @@ function AppLayout({ children }) {
   );
 }
 
-// Placeholder pages for sidebar items not yet implemented
+// Route được bảo vệ: chỉ truy cập khi đã đăng nhập
+function ProtectedRoute({ children }) {
+  const { isLoggedIn, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 12, background: 'var(--bg-base)',
+      }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: '50%',
+          border: '3px solid var(--brand-200)', borderTopColor: 'var(--brand-500)',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>Đang tải...</span>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  return children;
+}
+
+// Route dành riêng cho Admin
+function AdminRoute({ children }) {
+  const { isLoggedIn, isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!isLoggedIn || !isAdmin) return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
+// ComingSoon placeholder
 function ComingSoon({ title }) {
   return (
     <div className="empty-state" style={{ minHeight: '60vh' }}>
@@ -35,51 +116,85 @@ function ComingSoon({ title }) {
 }
 
 export default function App() {
-  const { user } = useAuth();
-
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected */}
-        <Route path="/dashboard" element={
-          <AppLayout><DashboardPage /></AppLayout>
-        } />
+          {/* Protected — tất cả cần đăng nhập */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <AppLayout><DashboardPage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/news/:source" element={
-          <AppLayout><NewsPage /></AppLayout>
-        } />
+          <Route path="/news/:source" element={
+            <ProtectedRoute>
+              <AppLayout><NewsPage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/article/:id" element={
-          <AppLayout><ArticlePage /></AppLayout>
-        } />
+          <Route path="/article/:id" element={
+            <ProtectedRoute>
+              <AppLayout><ArticlePage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/trending" element={
-          <AppLayout><ComingSoon title="Xu Hướng & Analytics" /></AppLayout>
-        } />
+          <Route path="/keywords" element={
+            <ProtectedRoute>
+              <AppLayout><KeywordsPage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/reports" element={
-          <AppLayout><ComingSoon title="Báo Cáo AI" /></AppLayout>
-        } />
+          <Route path="/bookmarks" element={
+            <ProtectedRoute>
+              <AppLayout><BookmarksPage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/ai-engine" element={
-          <AppLayout><ComingSoon title="AI Engine Monitor" /></AppLayout>
-        } />
+          <Route path="/ai-chat" element={
+            <ProtectedRoute>
+              <AppLayout><AiPage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/settings" element={
-          <AppLayout><ComingSoon title="Cài Đặt Hệ Thống" /></AppLayout>
-        } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <AppLayout><SettingsPage /></AppLayout>
+            </ProtectedRoute>
+          } />
 
-        <Route path="/help" element={
-          <AppLayout><ComingSoon title="Trung Tâm Hỗ Trợ" /></AppLayout>
-        } />
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AppLayout><AdminPage /></AppLayout>
+            </AdminRoute>
+          } />
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="/trending" element={
+            <ProtectedRoute>
+              <AppLayout><ComingSoon title="Xu Hướng & Analytics" /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/reports" element={
+            <ProtectedRoute>
+              <AppLayout><ComingSoon title="Báo Cáo AI" /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/help" element={
+            <ProtectedRoute>
+              <AppLayout><ComingSoon title="Trung Tâm Hỗ Trợ" /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
