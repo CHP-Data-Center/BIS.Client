@@ -1,8 +1,24 @@
 // src/pages/ArticlePage.jsx
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck, Share2, ChevronRight, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { articlesService } from '../services/articles';
+
+function stripAccents(str = '') {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function isTagMatched(tag, query) {
+  if (!query || !query.trim()) return false;
+  const normTag = stripAccents(tag);
+  const normQ = stripAccents(query.trim());
+  return normTag.includes(normQ);
+}
 
 // Source color/icon fallback table (nếu backend không trả source name)
 const SOURCE_COLORS = {
@@ -15,6 +31,8 @@ export default function ArticlePage() {
   const { id } = useParams();
   const nav = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const currentQ = searchParams.get('q') || '';
 
   // Article có thể được truyền qua navigation state (từ NewsCard click)
   const [article, setArticle] = useState(location.state?.article || null);
@@ -156,16 +174,38 @@ export default function ArticlePage() {
               <span className="news-source-tag" style={{ background: srcColor }}>
                 {srcIcon} {srcName}
               </span>
-              {article.matched_keywords?.length > 0 && article.matched_keywords.map((kw) => (
-                <span key={kw} style={{
-                  fontSize: 11, fontWeight: 600,
-                  padding: '2px 8px', borderRadius: 'var(--radius-full)',
-                  background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
-                  border: '1px solid var(--border)',
-                }}>
-                  #{kw}
-                </span>
-              ))}
+              {article.matched_keywords?.length > 0 && article.matched_keywords.map((kw) => {
+                const matched = isTagMatched(kw, currentQ);
+                return (
+                  <span
+                    key={kw}
+                    onClick={() => nav(`/news/all?q=${encodeURIComponent(kw)}`)}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: matched ? 700 : 600,
+                      padding: '2px 9px',
+                      borderRadius: 'var(--radius-full)',
+                      background: matched
+                        ? 'linear-gradient(135deg, #2563eb, #1d4ed8)'
+                        : 'var(--bg-surface-2)',
+                      color: matched ? '#ffffff' : 'var(--text-secondary)',
+                      border: matched ? '1px solid #1d4ed8' : '1px solid var(--border)',
+                      cursor: 'pointer',
+                      boxShadow: matched
+                        ? '0 2px 8px rgba(37, 99, 235, 0.4), 0 0 0 2px rgba(59, 130, 246, 0.2)'
+                        : 'none',
+                      transition: 'all 0.15s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 3,
+                    }}
+                    title={`Bấm để tìm bài viết với từ khóa #${kw}`}
+                  >
+                    {matched && <span style={{ fontSize: 9 }}>⚡</span>}
+                    #{kw}
+                  </span>
+                );
+              })}
             </div>
 
             <h1 className="article-title">{article.title}</h1>
@@ -308,16 +348,34 @@ export default function ArticlePage() {
             <div className="article-sidebar-card">
               <div className="article-sidebar-title">🏷️ Từ Khóa Khớp</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {article.matched_keywords.map((kw) => (
-                  <span key={kw} style={{
-                    fontSize: 11, fontWeight: 600, padding: '3px 10px',
-                    borderRadius: 'var(--radius-full)',
-                    background: 'var(--brand-50)', color: 'var(--brand-700)',
-                    border: '1px solid var(--brand-200)',
-                  }}>
-                    #{kw}
-                  </span>
-                ))}
+                {article.matched_keywords.map((kw) => {
+                  const matched = isTagMatched(kw, currentQ);
+                  return (
+                    <span
+                      key={kw}
+                      onClick={() => nav(`/news/all?q=${encodeURIComponent(kw)}`)}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: matched ? 700 : 600,
+                        padding: '3px 10px',
+                        borderRadius: 'var(--radius-full)',
+                        background: matched
+                          ? 'linear-gradient(135deg, #2563eb, #1d4ed8)'
+                          : 'var(--brand-50)',
+                        color: matched ? '#ffffff' : 'var(--brand-700)',
+                        border: matched ? '1px solid #1d4ed8' : '1px solid var(--brand-200)',
+                        cursor: 'pointer',
+                        boxShadow: matched
+                          ? '0 2px 6px rgba(37, 99, 235, 0.35)'
+                          : 'none',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title={`Bấm để tìm bài viết với từ khóa #${kw}`}
+                    >
+                      {matched ? '⚡ ' : ''}#{kw}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}

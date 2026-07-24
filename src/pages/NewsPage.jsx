@@ -160,15 +160,16 @@ export default function NewsPage() {
     }
   }, [onlyBookmarked]);
 
-  // Reset + fetch khi source thay đổi
+  const queryQ = searchParams.get('q') || '';
+
+  // Đồng bộ + fetch khi source hoặc từ khóa tìm kiếm trên URL (q) thay đổi
   useEffect(() => {
-    const initialQ = searchParams.get('q') || '';
     setPage(1);
-    setSearchInput(initialQ);
-    setSearch(initialQ);
+    setSearchInput(queryQ);
+    setSearch(queryQ);
     setOnlyBookmarked(false);
-    fetchArticles(1, initialQ);
-  }, [source]);
+    fetchArticles(1, queryQ);
+  }, [source, queryQ]);
 
   // Fetch khi trang thay đổi
   useEffect(() => {
@@ -177,9 +178,15 @@ export default function NewsPage() {
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
-    setSearch(searchInput);
+    const q = searchInput.trim();
+    setSearch(q);
     setPage(1);
-    fetchArticles(1, searchInput);
+    fetchArticles(1, q);
+    if (q) {
+      nav(`/news/${source}?q=${encodeURIComponent(q)}`);
+    } else {
+      nav(`/news/${source}`);
+    }
   };
 
   const handleReset = () => {
@@ -192,6 +199,7 @@ export default function NewsPage() {
     setOnlyBookmarked(false);
     setPage(1);
     fetchArticles(1, '');
+    nav(`/news/${source}`);
   };
 
   const handlePageChange = (p) => {

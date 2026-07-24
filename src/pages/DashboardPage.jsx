@@ -1,8 +1,9 @@
 // src/pages/DashboardPage.jsx
 import { useState, useEffect, useRef } from 'react';
 import {
-  Newspaper, Globe, Building2, ShoppingBag, Cpu,
-  RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap, Loader2
+  Newspaper, Globe, Building2, ShoppingBag, Cpu, ExternalLink,
+  RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap, Loader2,
+  Crown, Trophy, Award
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatsCard from '../components/StatsCard';
@@ -10,7 +11,7 @@ import NewsCard from '../components/NewsCard';
 import { statsService } from '../services/stats';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
-import { buildMapItems } from '../adapters/oda';
+import { buildMapItems, adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import { mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -18,8 +19,13 @@ import 'leaflet/dist/leaflet.css';
 const PAGE_SIZE = 6;
 
 // ── Trending marquee strip ───────────────────────────────────
-function TrendingStrip({ keywords }) {
-  const items = keywords.length > 0 ? [...keywords, ...keywords] : [];
+function TrendingStrip({ keywords, onSelectKeyword }) {
+  if (!keywords || keywords.length === 0) return null;
+
+  // Duplicate keywords so each half has at least 15 items for seamless 0% -> -50% infinite looping without blank gaps
+  const repeatCount = Math.max(2, Math.ceil(15 / keywords.length));
+  const baseList = Array(repeatCount).fill(keywords).flat();
+  const items = [...baseList, ...baseList];
 
   const getRankClass = (rank) => {
     if (rank === 1) return 'rank-1';
@@ -27,63 +33,95 @@ function TrendingStrip({ keywords }) {
     if (rank === 3) return 'rank-3';
     return '';
   };
-  const rankColors = { 1: '#f59e0b', 2: '#818cf8', 3: '#ec4899' };
 
-  if (items.length === 0) return null;
+  const renderRankIcon = (rank) => {
+    if (rank === 1) {
+      return (
+        <Crown
+          size={16}
+          style={{
+            color: '#d97706',
+            fill: '#f59e0b',
+            filter: 'drop-shadow(0 2px 5px rgba(245,158,11,0.5))',
+            flexShrink: 0,
+          }}
+        />
+      );
+    }
+    if (rank === 2) {
+      return (
+        <Trophy
+          size={15}
+          style={{
+            color: '#475569',
+            fill: '#94a3b8',
+            filter: 'drop-shadow(0 1px 3px rgba(148,163,184,0.4))',
+            flexShrink: 0,
+          }}
+        />
+      );
+    }
+    if (rank === 3) {
+      return (
+        <Award
+          size={15}
+          style={{
+            color: '#9a3412',
+            fill: '#f97316',
+            filter: 'drop-shadow(0 1px 3px rgba(249,115,22,0.4))',
+            flexShrink: 0,
+          }}
+        />
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="trending-strip">
       <div className="trending-strip-header">
         <div className="trending-strip-title">
-          <Zap size={14} style={{ color: '#f59e0b', animation: 'floatY 1.5s ease-in-out infinite' }} />
-          Từ Khóa Đang Nổi Bật
+          <Zap size={15} style={{ color: '#f59e0b', animation: 'pulse 1.8s ease-in-out infinite' }} />
+          <span>Từ Khóa Đang Nổi Bật</span>
         </div>
-        <span className="hot-badge" style={{ animation: 'pulse 2s infinite' }}>🔥 LIVE</span>
+        <span className="hot-badge">🔥 LIVE</span>
+
         {keywords.slice(0, 1).map((kw, i) => (
-          <span key={i} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '4px 11px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: 11, fontWeight: 700, lineHeight: 1.2,
-            background: '#fef3c7', color: '#92400e',
-            border: '1.5px solid #f59e0b',
-            whiteSpace: 'nowrap', marginLeft: 4,
-            boxShadow: '0 2px 6px rgba(245,158,11,0.15)',
-            boxSizing: 'border-box',
-          }}>
-            <span style={{
-              width: 15, height: 15, borderRadius: '50%',
-              background: '#f59e0b', color: 'white', fontSize: 9, fontWeight: 900,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>1</span>
-            {kw.term}
+          <span
+            key={i}
+            className="top-kw-pill"
+            style={{ cursor: onSelectKeyword ? 'pointer' : 'default' }}
+            onClick={() => onSelectKeyword && onSelectKeyword(kw.term)}
+          >
+            <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.4))' }} />
+            <span>{kw.term}</span>
+            <span className="top-kw-count">{kw.count}</span>
           </span>
         ))}
-        <span style={{ marginLeft: 'auto', fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>
-          ↔ Di chuột để dừng
+
+        <span className="trending-hint">
+          ↔ Di chuột để dừng · Click từ khóa để tìm bài
         </span>
       </div>
 
       <div className="trending-marquee-wrapper">
         <div className="trending-marquee-track">
-          {items.map((kw, i) => (
-            <span
-              key={i}
-              className={`trending-keyword-chip ${getRankClass(i < keywords.length ? (i + 1) : (i - keywords.length + 1))}`}
-              id={i < keywords.length ? `trending-chip-${i + 1}` : undefined}
-            >
-              {i < keywords.length && i < 3 && (
-                <span style={{
-                  width: 16, height: 16, borderRadius: '50%',
-                  background: rankColors[i + 1],
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 8, fontWeight: 900, color: 'white', flexShrink: 0,
-                }}>{i + 1}</span>
-              )}
-              {kw.term}
-              <span style={{ fontSize: 11, opacity: 0.65, fontWeight: 700, marginLeft: 4 }}>{kw.count}</span>
-            </span>
-          ))}
+          {items.map((kw, i) => {
+            const originalRank = (i % keywords.length) + 1;
+            const isTop3 = originalRank <= 3;
+            return (
+              <span
+                key={i}
+                className={`trending-keyword-chip ${getRankClass(originalRank)}`}
+                onClick={() => onSelectKeyword && onSelectKeyword(kw.term)}
+                title={`Hạng ${originalRank}: Bấm để tìm bài viết chứa từ khóa "${kw.term}"`}
+              >
+                {isTop3 && renderRankIcon(originalRank)}
+                <span className="chip-term-text">{kw.term}</span>
+                <span className="chip-count-tag">{kw.count}</span>
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -401,6 +439,26 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
     return num;
   };
 
+  const handleOpenDetail = (item, e) => {
+    if (e) e.stopPropagation();
+    if (!item) return;
+
+    if (item.url) {
+      window.open(item.url, '_blank');
+      return;
+    }
+
+    const rawId = item.original_id || String(item.id || '').replace(/^(adb|wb|proc|worldbank)-/, '');
+
+    if (item.source === 'worldbank') {
+      window.open(`https://projects.worldbank.org/en/projects-operations/project-detail/${rawId}`, '_blank');
+    } else if (item.source === 'adb') {
+      window.open(`https://www.adb.org/projects/${rawId}/main`, '_blank');
+    } else {
+      window.open(`https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(rawId || item.title)}`, '_blank');
+    }
+  };
+
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif", padding: '2px', maxWidth: 300, minWidth: 270 }}>
       {items.length > 1 && (
@@ -429,7 +487,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
 
             <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
               <button
-                onClick={() => setViewMode('card')}
+                onClick={(e) => { e.stopPropagation(); setViewMode('card'); }}
                 style={{
                   border: 'none', background: viewMode === 'card' ? '#2563eb' : '#e2e8f0',
                   color: viewMode === 'card' ? 'white' : '#475569',
@@ -441,7 +499,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                 🎴 Thẻ
               </button>
               <button
-                onClick={() => setViewMode('list')}
+                onClick={(e) => { e.stopPropagation(); setViewMode('list'); }}
                 style={{
                   border: 'none', background: viewMode === 'list' ? '#2563eb' : '#e2e8f0',
                   color: viewMode === 'list' ? 'white' : '#475569',
@@ -458,7 +516,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
           {viewMode === 'card' && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderRadius: 6, padding: '3px 6px', border: '1px solid #e2e8f0' }}>
               <button
-                onClick={() => setCurrIdx(prev => (prev - 1 + items.length) % items.length)}
+                onClick={(e) => { e.stopPropagation(); setCurrIdx(prev => (prev - 1 + items.length) % items.length); }}
                 style={{
                   border: 'none', background: '#3b82f6', color: 'white', borderRadius: 4,
                   width: 20, height: 20, cursor: 'pointer', fontSize: 12, fontWeight: 800,
@@ -472,7 +530,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                 {currIdx + 1} / {items.length}
               </span>
               <button
-                onClick={() => setCurrIdx(prev => (prev + 1) % items.length)}
+                onClick={(e) => { e.stopPropagation(); setCurrIdx(prev => (prev + 1) % items.length); }}
                 style={{
                   border: 'none', background: '#3b82f6', color: 'white', borderRadius: 4,
                   width: 20, height: 20, cursor: 'pointer', fontSize: 12, fontWeight: 800,
@@ -496,8 +554,20 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(activeItem?.id || '').slice(0, 12)}</span>
           </div>
 
-          <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, color: '#0f172a', marginBottom: 8, minHeight: 34 }}>
-            {(activeItem.title || '').length > 85 ? (activeItem.title || '').slice(0, 85) + '…' : activeItem.title}
+          <div
+            onClick={(e) => handleOpenDetail(activeItem, e)}
+            style={{
+              fontSize: 12.5, fontWeight: 700, lineHeight: 1.4, color: '#2563eb',
+              marginBottom: 8, minHeight: 34, cursor: 'pointer',
+              display: 'flex', alignItems: 'flex-start', gap: 4,
+              transition: 'color 0.15s ease',
+            }}
+            title="Bấm để chuyển hướng tới trang chi tiết dự án"
+          >
+            <span style={{ flex: 1, textDecoration: 'underline', textDecorationColor: 'transparent' }}>
+              {(activeItem.title || '').length > 85 ? (activeItem.title || '').slice(0, 85) + '…' : activeItem.title}
+            </span>
+            <ExternalLink size={13} style={{ flexShrink: 0, marginTop: 2, color: '#3b82f6' }} />
           </div>
 
           <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#475569', marginBottom: 5, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -524,6 +594,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
               type="text"
               placeholder="🔍 Tìm trong vị trí này..."
               value={searchQuery}
+              onClick={(e) => e.stopPropagation()}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
                 width: '100%', padding: '5px 8px', borderRadius: 6, border: '1px solid #cbd5e1',
@@ -539,21 +610,30 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
               return (
                 <div
                   key={it.id}
-                  onClick={() => { setCurrIdx(origIdx); setViewMode('card'); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrIdx(origIdx);
+                    setViewMode('card');
+                  }}
                   style={{
-                    padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                    padding: '7px 9px', borderRadius: 8, cursor: 'pointer',
                     background: isSelected ? '#eff6ff' : '#f8fafc',
                     border: '1px solid', borderColor: isSelected ? '#3b82f6' : '#e2e8f0',
-                    transition: 'all 0.1s',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isSelected ? '0 2px 8px rgba(59,130,246,0.15)' : 'none',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                    <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: itCfg.color, padding: '1px 6px', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: itCfg.color, padding: '2px 7px', borderRadius: 10 }}>
                       {it.type}
                     </span>
-                    {it.amount && <span style={{ fontSize: 10, fontWeight: 700, color: itCfg.color }}>💰 {it.amount}</span>}
+                    {it.amount && <span style={{ fontSize: 10.5, fontWeight: 800, color: itCfg.color }}>💰 {it.amount}</span>}
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: isSelected ? 700 : 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{
+                    fontSize: 11.5, fontWeight: isSelected ? 700 : 600,
+                    color: isSelected ? '#1e40af' : '#0f172a',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                  }}>
                     {it.title}
                   </div>
                 </div>
@@ -998,22 +1078,32 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch articles
+  // Fetch articles / ODA / procurement items based on active tab
   const fetchArticles = async (filter = activeFilter, p = page) => {
     setLoading(true);
     try {
-      const params = {
-        page: p,
-        size: PAGE_SIZE,
-        sort: 'newest',
-        only_my_keywords: false,
-      };
-      if (filter === 'gov')   params.source_type = 'gov';
-      if (filter === 'press') params.source_type = 'press';
-
-      const data = await articlesService.getArticles(params);
-      setArticles(data.items || []);
-      setTotal(data.total || 0);
+      if (filter === 'adb') {
+        const data = await odaService.getProjects({ source: 'adb', page: p, size: PAGE_SIZE });
+        setArticles((data.items || []).map(adaptOdaToCard));
+        setTotal(data.total || 0);
+      } else if (filter === 'worldbank') {
+        const data = await odaService.getProjects({ source: 'worldbank', page: p, size: PAGE_SIZE });
+        setArticles((data.items || []).map(adaptOdaToCard));
+        setTotal(data.total || 0);
+      } else if (filter === 'gov') {
+        const data = await odaService.getProcurement({ page: p, size: PAGE_SIZE });
+        setArticles((data.items || []).map(adaptProcToCard));
+        setTotal(data.total || 0);
+      } else if (filter === 'press') {
+        const data = await articlesService.getArticles({ page: p, size: PAGE_SIZE, sort: 'newest', source_type: 'press' });
+        setArticles(data.items || []);
+        setTotal(data.total || 0);
+      } else {
+        // 'all'
+        const data = await articlesService.getArticles({ page: p, size: PAGE_SIZE, sort: 'newest' });
+        setArticles(data.items || []);
+        setTotal(data.total || 0);
+      }
     } catch (e) {
       console.warn('Articles error:', e);
       setArticles([]);
@@ -1140,7 +1230,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Trending Strip ── */}
-      <TrendingStrip keywords={trending} />
+      <TrendingStrip
+        keywords={trending}
+        onSelectKeyword={(term) => nav(`/news/all?q=${encodeURIComponent(term)}`)}
+      />
 
       {/* ── Map ── */}
       <ProjectDistributionMap />

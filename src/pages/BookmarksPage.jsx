@@ -1,9 +1,25 @@
 // src/pages/BookmarksPage.jsx
 import { useState, useEffect } from 'react';
 import { Bookmark, Trash2, ExternalLink, Calendar, Loader2, Eye, LayoutGrid, List } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { articlesService } from '../services/articles';
 import NewsCard from '../components/NewsCard';
+
+function stripAccents(str = '') {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function isTagMatched(tag, query) {
+  if (!query || !query.trim()) return false;
+  const normTag = stripAccents(tag);
+  const normQ = stripAccents(query.trim());
+  return normTag.includes(normQ);
+}
 
 // Color & icon mapping for source tags
 const SOURCE_STYLE = {
@@ -175,6 +191,8 @@ function getLocalBookmarks() {
 
 export default function BookmarksPage() {
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentQ = searchParams.get('q') || '';
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [removing, setRemoving]   = useState(null);
@@ -424,15 +442,38 @@ export default function BookmarksPage() {
                       )}
 
                       {/* Keyword tags */}
-                      {bm.matched_keywords && bm.matched_keywords.length > 0 && bm.matched_keywords.map((kw) => (
-                        <span key={kw} style={{
-                          fontSize: 10.5, fontWeight: 600, padding: '1px 8px', borderRadius: 10,
-                          background: 'var(--brand-50)', color: 'var(--brand-600)',
-                          border: '1px solid var(--brand-200)',
-                        }}>
-                          #{kw}
-                        </span>
-                      ))}
+                      {bm.matched_keywords && bm.matched_keywords.length > 0 && bm.matched_keywords.map((kw) => {
+                        const matched = isTagMatched(kw, currentQ);
+                        return (
+                          <span
+                            key={kw}
+                            onClick={() => nav(`/news/all?q=${encodeURIComponent(kw)}`)}
+                            style={{
+                              fontSize: 10.5,
+                              fontWeight: matched ? 700 : 600,
+                              padding: '1px 8px',
+                              borderRadius: 10,
+                              background: matched
+                                ? 'linear-gradient(135deg, #2563eb, #1d4ed8)'
+                                : 'var(--brand-50)',
+                              color: matched ? '#ffffff' : 'var(--brand-600)',
+                              border: matched ? '1px solid #1d4ed8' : '1px solid var(--brand-200)',
+                              cursor: 'pointer',
+                              boxShadow: matched
+                                ? '0 2px 6px rgba(37, 99, 235, 0.35)'
+                                : 'none',
+                              transition: 'all 0.15s ease',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 3,
+                            }}
+                            title={`Bấm để tìm bài viết với từ khóa #${kw}`}
+                          >
+                            {matched && <span style={{ fontSize: 9 }}>⚡</span>}
+                            #{kw}
+                          </span>
+                        );
+                      })}
                     </div>
 
                     {/* Title */}

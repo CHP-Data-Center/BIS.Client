@@ -1,5 +1,6 @@
 // src/components/WorldBankView.jsx
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Globe, Building2, ShoppingBag, Search, Filter, RotateCcw, ArrowUpDown, ChevronUp, ChevronDown,
   Bookmark, BookmarkCheck, ExternalLink, Download, LayoutGrid, List,
@@ -98,6 +99,8 @@ const CONFIG_MAP = {
 };
 
 export default function WorldBankView({ type = 'worldbank' }) {
+  const [searchParams] = useSearchParams();
+  const initialQ = searchParams.get('q') || '';
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
   const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
   const HeaderIcon = config.icon;
@@ -117,8 +120,8 @@ export default function WorldBankView({ type = 'worldbank' }) {
   const [sortOrder, setSortOrder] = useState('desc');
 
   // Filters
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(initialQ);
+  const [searchTerm, setSearchTerm] = useState(initialQ);
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [selectedStages, setSelectedStages] = useState([]);

@@ -6,8 +6,14 @@ const PROC_TYPE = { notice: 'TB Mời thầu', plan: 'Kế hoạch thầu' };
 
 /** Một dự án ODA (ADB/WB) -> item bản đồ. */
 export function adaptOdaProject(p) {
+  const origId = p.external_id || p.id;
+  const projectUrl = p.url || (p.source_org === 'worldbank'
+    ? `https://projects.worldbank.org/en/projects-operations/project-detail/${origId}`
+    : `https://www.adb.org/projects/${origId}/main`);
+
   return {
     id: `${p.source_org}-${p.id}`,
+    original_id: origId,
     source: p.source_org, // 'adb' | 'worldbank' -> khớp sourceConfig
     type: p.source_org === 'adb' ? 'Dự án ADB' : 'Dự án World Bank',
     title: p.title,
@@ -18,6 +24,7 @@ export function adaptOdaProject(p) {
     sector: p.sector,
     aiSummary: p.ai_summary,
     date: p.approval_date,
+    url: projectUrl,
     lat: p.lat,
     lng: p.lng,
   };
@@ -25,8 +32,12 @@ export function adaptOdaProject(p) {
 
 /** Một gói mua sắm công -> item bản đồ (nguồn 'dauthau'). */
 export function adaptProcurement(p) {
+  const origId = p.id;
+  const procUrl = p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`;
+
   return {
     id: `proc-${p.id}`,
+    original_id: origId,
     source: 'dauthau',
     type: PROC_TYPE[p.kind] || 'Đấu thầu',
     title: p.title,
@@ -37,6 +48,7 @@ export function adaptProcurement(p) {
     sector: p.sector || 'Transport',
     aiSummary: null,
     date: p.publish_date,
+    url: procUrl,
     lat: p.lat,
     lng: p.lng,
   };
@@ -45,8 +57,14 @@ export function adaptProcurement(p) {
 /** Một dự án ODA -> shape thẻ NewsCard (trang list ADB/World Bank). */
 export function adaptOdaToCard(p) {
   const bits = [p.country, p.status].filter(Boolean).join(' · ');
+  const origId = p.external_id || p.id;
+  const projectUrl = p.url || (p.source_org === 'worldbank'
+    ? `https://projects.worldbank.org/en/projects-operations/project-detail/${origId}`
+    : `https://www.adb.org/projects/${origId}/main`);
+
   return {
     id: `${p.source_org}-${p.id}`, // chuỗi -> NewsCard bỏ qua bookmark an toàn
+    original_id: origId,
     source: p.source_org, // 'adb' | 'worldbank' -> SOURCE_STYLE
     title: p.title,
     titleVi: p.title_vi || p.title,
@@ -54,6 +72,9 @@ export function adaptOdaToCard(p) {
     amount: p.amount,
     aiSummary: p.ai_summary,
     date: p.approval_date,
+    url: projectUrl,
+    is_local_project: true,
+    local_key: p.source_org === 'worldbank' ? 'saved_worldbank_projects' : 'saved_adb_projects',
   };
 }
 
@@ -64,13 +85,19 @@ export function adaptProcToCard(p) {
     p.package_count ? `${p.package_count} gói` : null,
     p.status,
   ].filter(Boolean).join(' · ');
+  const procUrl = p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`;
+
   return {
     id: `proc-${p.id}`,
+    original_id: p.id,
     source: 'gov',
     title: p.title,
     titleVi: p.title,
     excerpt: bits || undefined,
     date: p.publish_date,
+    url: procUrl,
+    is_local_project: true,
+    local_key: 'saved_procurement_items',
   };
 }
 
