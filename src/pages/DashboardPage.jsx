@@ -9,6 +9,8 @@ import StatsCard from '../components/StatsCard';
 import NewsCard from '../components/NewsCard';
 import { statsService } from '../services/stats';
 import { articlesService } from '../services/articles';
+import { odaService } from '../services/oda';
+import { buildMapItems } from '../adapters/oda';
 import { mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -231,6 +233,12 @@ const MAP_COORDS = {
   'PL2600126771-01': [11.3100, 106.1000],
 };
 
+// Toạ độ marker: ưu tiên lat/lng thật từ backend, fallback toạ độ hardcode (mock).
+function coordsOf(item) {
+  if (item && item.lat != null && item.lng != null) return [item.lat, item.lng];
+  return MAP_COORDS[item?.id];
+}
+
 function MapFlyTo({ items, source, country, sector, status }) {
   const map = useMap();
   const timerRef = useRef(null);
@@ -238,7 +246,7 @@ function MapFlyTo({ items, source, country, sector, status }) {
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      const coords = items.map(i => MAP_COORDS[i.id]).filter(Boolean);
+      const coords = items.map(i => coordsOf(i)).filter(Boolean);
       if (coords.length === 0) return;
 
       if (coords.length === 1) {
@@ -564,13 +572,35 @@ function ProjectDistributionMap() {
   const [selCountries, setSelCountries] = useState(new Set());
   const [selStatuses,  setSelStatuses]  = useState(new Set());
   const [selSectors,   setSelSectors]   = useState(new Set());
+  const [realItems,    setRealItems]    = useState(null); // null = chưa có -> dùng mock
 
-  const allItems = [
+  // Lấy dự án ODA + mua sắm công THẬT từ backend; lỗi/rỗng -> giữ null (fallback mock).
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const [oda, proc] = await Promise.all([
+          odaService.getProjects(),
+          odaService.getProcurement(),
+        ]);
+        const items = buildMapItems(oda?.items || [], proc?.items || []);
+        if (alive && items.length > 0) setRealItems(items);
+      } catch (e) {
+        console.warn('ODA map data error (dùng mock):', e);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const mockItems = [
     ...mockAdbProjects.map(p => ({ ...p, source: 'adb', type: 'Dự án ADB' })),
     ...mockWbProjects.map(p => ({ ...p, source: 'worldbank', type: 'Dự án World Bank' })),
     ...mockProcurementNotices.map(p => ({ ...p, source: 'dauthau', type: 'TB Mời thầu', sector: p.sector || 'Transport' })),
     ...mockProcurementPlans.map(p => ({ ...p, source: 'dauthau', type: 'Kế hoạch thầu', sector: p.sector || 'Transport' }))
   ].filter(item => MAP_COORDS[item.id]);
+
+  const usingReal = realItems != null;
+  const allItems = usingReal ? realItems : mockItems;
 
   const filteredItems = allItems.filter(item => {
     if (selSources.size   > 0 && !selSources.has(item.source))     return false;
@@ -644,7 +674,7 @@ function ProjectDistributionMap() {
 
   const locationGroupList = Object.values(
     filteredItems.reduce((acc, item) => {
-      const rawCoords = MAP_COORDS[item.id];
+      const rawCoords = coordsOf(item);
       if (!rawCoords) return acc;
       const key = `${rawCoords[0].toFixed(3)},${rawCoords[1].toFixed(3)}`;
       if (!acc[key]) {
@@ -673,9 +703,11 @@ function ProjectDistributionMap() {
               Bản Đồ Phân Bố Dự Án ODA &amp; Đấu Thầu
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
-                background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a',
+                background: usingReal ? '#dcfce7' : '#fef3c7',
+                color: usingReal ? '#166534' : '#92400e',
+                border: `1px solid ${usingReal ? '#bbf7d0' : '#fde68a'}`,
               }}>
-                📌 Dữ liệu mẫu minh họa
+                {usingReal ? '🟢 Dữ liệu thật' : '📌 Dữ liệu mẫu minh họa'}
               </span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
