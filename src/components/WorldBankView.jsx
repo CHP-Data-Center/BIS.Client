@@ -656,21 +656,25 @@ export default function WorldBankView({ type = 'worldbank' }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 6,
-                padding: '6px 12px',
+                padding: '9px 12px',
                 borderRadius: 8,
                 border: onlySaved ? 'none' : '1px solid var(--border)',
-                background: onlySaved ? config.brandColor : 'var(--bg-surface-2)',
+                background: onlySaved
+                  ? 'linear-gradient(135deg, var(--brand-600), #2563eb)'
+                  : 'var(--bg-surface-2)',
                 color: onlySaved ? 'white' : 'var(--text-secondary)',
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: 'pointer',
                 width: '100%',
+                boxShadow: onlySaved ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
+                transition: 'all 0.2s ease',
               }}
             >
-              <Bookmark size={13} />
+              {onlySaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
               {onlySaved ? `Đang hiện: ${config.entityLabel} đã lưu` : `Chỉ ${config.entityLabel} đã lưu`}
               {savedIds.size > 0 && (
-                <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.3)', padding: '1px 6px', borderRadius: 10 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, background: onlySaved ? 'rgba(255,255,255,0.25)' : 'var(--brand-100)', color: onlySaved ? 'white' : 'var(--brand-700)', padding: '1px 6px', borderRadius: 10 }}>
                   {savedIds.size}
                 </span>
               )}

@@ -255,28 +255,29 @@ export default function NewsPage() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 6,
-            padding: '8px 12px',
+            padding: '9px 12px',
             borderRadius: 8,
             border: onlyBookmarked ? 'none' : '1px solid var(--border)',
             background: onlyBookmarked
-              ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+              ? 'linear-gradient(135deg, var(--brand-600), #2563eb)'
               : 'var(--bg-surface-2)',
             color: onlyBookmarked ? 'white' : 'var(--text-secondary)',
             fontWeight: 600,
             fontSize: 12,
             cursor: 'pointer',
             width: '100%',
+            boxShadow: onlyBookmarked ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
             transition: 'all 0.2s ease',
           }}
         >
-          {onlyBookmarked ? <BookmarkCheck size={13} /> : <Bookmark size={13} />}
+          {onlyBookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
           {onlyBookmarked
             ? (srcConfig.api === 'oda' ? 'Đang hiện: Dự án đã lưu' : 'Đang hiện: Bài đã lưu')
             : (srcConfig.api === 'oda' ? 'Chỉ dự án đã lưu' : 'Chỉ bài đã lưu')}
           {bookmarkedCount > 0 && (
             <span style={{
               fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 10,
-              background: onlyBookmarked ? 'rgba(255,255,255,0.3)' : 'var(--brand-100)',
+              background: onlyBookmarked ? 'rgba(255,255,255,0.25)' : 'var(--brand-100)',
               color: onlyBookmarked ? 'white' : 'var(--brand-700)',
             }}>
               {bookmarkedCount}

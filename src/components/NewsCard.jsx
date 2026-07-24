@@ -8,23 +8,30 @@ import { articlesService } from '../services/articles';
 const SOURCE_STYLE = {
   adb:       { color: '#f59e0b', bg: '#fffbeb', icon: '🏦', name: 'ADB' },
   worldbank: { color: '#10b981', bg: '#ecfdf5', icon: '🌍', name: 'World Bank' },
-  dauthau:   { color: '#8b5cf6', bg: '#f5f3ff', icon: '📋', name: 'Đấu Thầu' },
-  gov:       { color: '#8b5cf6', bg: '#f5f3ff', icon: '📋', name: 'Mua Sắm Công' },
+  dauthau:   { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Đấu Thầu' },
+  gov:       { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Mua Sắm Công' },
   press:     { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: 'Báo Chí' },
-  default:   { color: '#6b7280', bg: '#f9fafb', icon: '📄', name: 'Nguồn tin' },
+  default:   { color: '#3b82f6', bg: '#eff6ff', icon: '📄', name: 'Nguồn tin' },
 };
 
 function getSourceStyle(article) {
-  if (article.source && SOURCE_STYLE[article.source]) {
-    return SOURCE_STYLE[article.source];
-  }
   const sourceName = article.sources?.[0]?.source_name || '';
+  if (sourceName.toLowerCase().includes('báo')) {
+    return { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: sourceName };
+  }
+  if (article.source && SOURCE_STYLE[article.source]) {
+    const base = SOURCE_STYLE[article.source];
+    if (sourceName) {
+      return { ...base, name: sourceName };
+    }
+    return base;
+  }
   if (sourceName.toLowerCase().includes('adb'))
     return { ...SOURCE_STYLE.adb, name: sourceName };
   if (sourceName.toLowerCase().includes('world bank') || sourceName.toLowerCase().includes('wb'))
     return { ...SOURCE_STYLE.worldbank, name: sourceName };
   if (sourceName.toLowerCase().includes('egp') || sourceName.toLowerCase().includes('thầu'))
-    return { ...SOURCE_STYLE.gov, name: sourceName || 'Đấu Thầu' };
+    return { ...SOURCE_STYLE.gov, name: sourceName };
   if (sourceName)
     return { ...SOURCE_STYLE.press, name: sourceName };
   return { ...SOURCE_STYLE.default, name: 'Nguồn tin' };
@@ -209,21 +216,24 @@ export default function NewsCard({ article, index = 0 }) {
           <button
             onClick={handleBookmark}
             id={`btn-bookmark-${article.id}`}
-            title={bookmarked ? 'Bỏ bookmark' : 'Lưu lại'}
+            title={bookmarked ? 'Bỏ lưu' : 'Lưu lại'}
             style={{
-              background: 'none', border: 'none', cursor: bkLoading ? 'wait' : 'pointer',
-              color: bookmarked ? '#f59e0b' : 'var(--text-muted)',
+              background: 'none', border: 'none',
+              cursor: bkLoading ? 'wait' : 'pointer',
+              color: bookmarked ? 'var(--brand-600)' : 'var(--text-muted)',
               padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center',
               transition: 'color 0.15s, background-color 0.15s',
             }}
             onMouseEnter={e => {
+              e.currentTarget.style.color = 'var(--brand-600)';
               e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
             }}
             onMouseLeave={e => {
+              e.currentTarget.style.color = bookmarked ? 'var(--brand-600)' : 'var(--text-muted)';
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
-            {bookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+            {bookmarked ? <BookmarkCheck size={18} style={{ color: 'var(--brand-600)' }} /> : <Bookmark size={18} />}
           </button>
           {article.url && (
             <a

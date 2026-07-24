@@ -9,10 +9,10 @@ import NewsCard from '../components/NewsCard';
 const SOURCE_STYLE = {
   adb:       { color: '#f59e0b', bg: '#fffbeb', icon: '🏦', name: 'ADB', label: 'Dự Án ADB' },
   worldbank: { color: '#10b981', bg: '#ecfdf5', icon: '🌍', name: 'World Bank', label: 'World Bank' },
-  dauthau:   { color: '#8b5cf6', bg: '#f5f3ff', icon: '📋', name: 'Mua Sắm Công', label: 'Đấu Thầu' },
-  gov:       { color: '#8b5cf6', bg: '#f5f3ff', icon: '📋', name: 'Mua Sắm Công', label: 'Đấu Thầu' },
+  dauthau:   { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Mua Sắm Công', label: 'Đấu Thầu' },
+  gov:       { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Mua Sắm Công', label: 'Đấu Thầu' },
   press:     { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: 'Báo Chí', label: 'Tin Tức' },
-  default:   { color: '#6b7280', bg: '#f9fafb', icon: '📄', name: 'Nguồn Tin', label: 'Tin Tức' },
+  default:   { color: '#3b82f6', bg: '#eff6ff', icon: '📄', name: 'Nguồn Tin', label: 'Tin Tức' },
 };
 
 function getSourceInfo(bm) {
@@ -20,6 +20,9 @@ function getSourceInfo(bm) {
   const type = bm.source_type || '';
   const lowerName = name.toLowerCase();
 
+  if (lowerName.includes('báo')) {
+    return { ...SOURCE_STYLE.press, name: name };
+  }
   if (type === 'adb' || lowerName.includes('adb')) {
     return { ...SOURCE_STYLE.adb, name: name || 'ADB' };
   }
