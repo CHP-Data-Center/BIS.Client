@@ -1,6 +1,6 @@
 // src/pages/BookmarksPage.jsx
 import { useState, useEffect } from 'react';
-import { Bookmark, Trash2, ExternalLink, Calendar, Loader2, Eye, LayoutGrid, List, Tag } from 'lucide-react';
+import { Bookmark, Trash2, ExternalLink, Calendar, Loader2, Eye, LayoutGrid, List } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { articlesService } from '../services/articles';
 import NewsCard from '../components/NewsCard';
@@ -20,19 +20,154 @@ function getSourceInfo(bm) {
   const type = bm.source_type || '';
   const lowerName = name.toLowerCase();
 
-  if (lowerName.includes('adb')) {
+  if (type === 'adb' || lowerName.includes('adb')) {
     return { ...SOURCE_STYLE.adb, name: name || 'ADB' };
   }
-  if (lowerName.includes('world bank') || lowerName.includes('wb')) {
+  if (type === 'worldbank' || lowerName.includes('world bank') || lowerName.includes('wb')) {
     return { ...SOURCE_STYLE.worldbank, name: name || 'World Bank' };
   }
-  if (type === 'gov' || lowerName.includes('thầu') || lowerName.includes('egp')) {
+  if (type === 'gov' || type === 'procurement' || lowerName.includes('thầu') || lowerName.includes('egp')) {
     return { ...SOURCE_STYLE.gov, name: name || 'Mua Sắm Công / Đấu Thầu' };
   }
   if (type === 'press' || name) {
     return { ...SOURCE_STYLE.press, name: name || 'Báo Chí' };
   }
   return { ...SOURCE_STYLE.default, name: 'Nguồn tin' };
+}
+
+function formatProjectAmount(val, sourceType) {
+  if (val === null || val === undefined || val === '') return null;
+
+  const isGov = sourceType === 'gov' || sourceType === 'procurement' || sourceType === 'dauthau';
+
+  if (isGov) {
+    if (typeof val === 'number' || (typeof val === 'string' && /^\d+$/.test(val.trim()))) {
+      return `${val} gói thầu`;
+    }
+    return String(val);
+  }
+
+  // ODA projects (worldbank / adb)
+  if (typeof val === 'number') {
+    if (val >= 1000000000) return `$${(val / 1000000000).toFixed(1)} B USD`;
+    if (val >= 1000000) return `$${(val / 1000000).toFixed(1)} M USD`;
+    return `$${val.toLocaleString()} USD`;
+  }
+  if (typeof val === 'string') {
+    if (val.includes('USD') || val.includes('M') || val.includes('B')) return val;
+    const num = parseFloat(val.replace(/[^0-9.]/g, ''));
+    if (!isNaN(num)) {
+      if (num >= 1000000000) return `$${(num / 1000000000).toFixed(1)} B USD`;
+      if (num >= 1000000) return `$${(num / 1000000).toFixed(1)} M USD`;
+      return `$${num.toLocaleString()} USD`;
+    }
+  }
+  return String(val);
+}
+
+function getStatusStyle(statusStr) {
+  if (!statusStr) return { bg: '#f3f4f6', color: '#4b5563', border: '#e5e7eb' };
+  const lower = statusStr.toLowerCase();
+  if (lower.includes('approved') || lower.includes('active') || lower.includes('duyệt')) {
+    return { bg: '#ecfdf5', color: '#059669', border: '#a7f3d0' };
+  }
+  if (lower.includes('pipeline') || lower.includes('proposed') || lower.includes('dự thảo')) {
+    return { bg: '#fffbeb', color: '#d97706', border: '#fde68a' };
+  }
+  if (lower.includes('thầu') || lower.includes('mới')) {
+    return { bg: '#f5f3ff', color: '#7c3aed', border: '#ddd6fe' };
+  }
+  return { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' };
+}
+
+function getLocalBookmarks() {
+  const localBms = [];
+
+  try {
+    const wbSaved = JSON.parse(localStorage.getItem('saved_worldbank_projects') || '[]');
+    wbSaved.forEach((item) => {
+      localBms.push({
+        id: `wb_${item.id}`,
+        article_id: `wb_${item.id}`,
+        is_local_project: true,
+        local_key: 'saved_worldbank_projects',
+        original_id: item.id,
+        project_code: item.id,
+        article_title: item.project_name || `Dự án World Bank #${item.id}`,
+        article_url: item.rawUrl || `https://projects.worldbank.org/en/projects-operations/project-detail/${item.id}`,
+        article_image_url: null,
+        source_name: 'World Bank',
+        source_type: 'worldbank',
+        country: item.countryshortname,
+        status: item.projectstatusdisplay,
+        amount: item.totalCommitmentAmount,
+        stage: item.last_stage_reached_name,
+        published_at: item.boardapprovaldate || item.saved_at,
+        created_at: item.saved_at,
+        matched_keywords: ['World Bank', item.last_stage_reached_name].filter(Boolean),
+      });
+    });
+  } catch (e) {
+    console.warn('Error reading saved_worldbank_projects:', e);
+  }
+
+  try {
+    const adbSaved = JSON.parse(localStorage.getItem('saved_adb_projects') || '[]');
+    adbSaved.forEach((item) => {
+      localBms.push({
+        id: `adb_${item.id}`,
+        article_id: `adb_${item.id}`,
+        is_local_project: true,
+        local_key: 'saved_adb_projects',
+        original_id: item.id,
+        project_code: item.id,
+        article_title: item.project_name || `Dự án ADB #${item.id}`,
+        article_url: item.rawUrl || `https://www.adb.org/projects/${item.id}/main`,
+        article_image_url: null,
+        source_name: 'ADB',
+        source_type: 'adb',
+        country: item.countryshortname,
+        status: item.projectstatusdisplay,
+        amount: item.totalCommitmentAmount,
+        stage: item.last_stage_reached_name,
+        published_at: item.boardapprovaldate || item.saved_at,
+        created_at: item.saved_at,
+        matched_keywords: ['ADB', item.last_stage_reached_name].filter(Boolean),
+      });
+    });
+  } catch (e) {
+    console.warn('Error reading saved_adb_projects:', e);
+  }
+
+  try {
+    const procSaved = JSON.parse(localStorage.getItem('saved_procurement_items') || '[]');
+    procSaved.forEach((item) => {
+      localBms.push({
+        id: `proc_${item.id}`,
+        article_id: `proc_${item.id}`,
+        is_local_project: true,
+        local_key: 'saved_procurement_items',
+        original_id: item.id,
+        project_code: item.id,
+        article_title: item.project_name || `Thông báo thầu #${item.id}`,
+        article_url: item.rawUrl || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(item.id)}`,
+        article_image_url: null,
+        source_name: 'Mua Sắm Công',
+        source_type: 'gov',
+        country: item.countryshortname,
+        status: item.projectstatusdisplay,
+        amount: item.totalCommitmentAmount,
+        stage: item.last_stage_reached_name,
+        published_at: item.boardapprovaldate || item.saved_at,
+        created_at: item.saved_at,
+        matched_keywords: ['Đấu Thầu', item.last_stage_reached_name].filter(Boolean),
+      });
+    });
+  } catch (e) {
+    console.warn('Error reading saved_procurement_items:', e);
+  }
+
+  return localBms;
 }
 
 export default function BookmarksPage() {
@@ -44,16 +179,37 @@ export default function BookmarksPage() {
 
   useEffect(() => {
     articlesService.getBookmarks()
-      .then(setBookmarks)
-      .catch(() => setBookmarks([]))
+      .then((serverBms) => {
+        const localBms = getLocalBookmarks();
+        const combined = [...(serverBms || []), ...localBms];
+        combined.sort((a, b) => new Date(b.created_at || b.published_at || 0) - new Date(a.created_at || a.published_at || 0));
+        setBookmarks(combined);
+      })
+      .catch(() => {
+        setBookmarks(getLocalBookmarks());
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const handleRemove = async (articleId) => {
     setRemoving(articleId);
     try {
-      await articlesService.removeBookmark(articleId);
-      setBookmarks((prev) => prev.filter((b) => b.article_id !== articleId));
+      const target = bookmarks.find((b) => b.article_id === articleId || b.id === articleId);
+      if (target && target.is_local_project) {
+        try {
+          const raw = localStorage.getItem(target.local_key);
+          if (raw) {
+            const list = JSON.parse(raw);
+            const updated = list.filter((p) => p.id !== target.original_id);
+            localStorage.setItem(target.local_key, JSON.stringify(updated));
+          }
+        } catch (e) {
+          console.error('Error removing local project bookmark:', e);
+        }
+      } else {
+        await articlesService.removeBookmark(articleId);
+      }
+      setBookmarks((prev) => prev.filter((b) => b.article_id !== articleId && b.id !== articleId));
     } catch {
       // silent
     } finally {
@@ -61,8 +217,17 @@ export default function BookmarksPage() {
     }
   };
 
+  const handleViewDetail = (bm, e) => {
+    if (e) e.stopPropagation();
+    if (bm.is_local_project && bm.article_url) {
+      window.open(bm.article_url, '_blank');
+    } else {
+      nav(`/article/${bm.article_id}`);
+    }
+  };
+
   const mapBookmarkToArticle = (bm) => ({
-    id: bm.article_id,
+    id: bm.article_id || bm.id,
     title: bm.article_title || `Bài viết #${bm.article_id}`,
     url: bm.article_url,
     image_url: bm.article_image_url || bm.image_url,
@@ -70,7 +235,12 @@ export default function BookmarksPage() {
     source: bm.source_type || (bm.source_name?.toLowerCase().includes('thầu') ? 'gov' : 'press'),
     excerpt: bm.excerpt,
     published_at: bm.published_at || bm.created_at,
+    matched_keywords: bm.matched_keywords || [],
     is_bookmarked: true,
+    is_local_project: bm.is_local_project,
+    local_key: bm.local_key,
+    original_id: bm.original_id,
+    amount: bm.amount ? formatProjectAmount(bm.amount, bm.source_type) : null,
   });
 
   return (
@@ -90,7 +260,7 @@ export default function BookmarksPage() {
             Bài Viết Đã Lưu
           </div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            Danh sách bài viết bạn đã đánh dấu lưu lại.
+            Danh sách bài viết và dự án bạn đã đánh dấu lưu lại.
           </p>
         </div>
 
@@ -138,7 +308,7 @@ export default function BookmarksPage() {
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Bookmark của tôi</span>
           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: 'var(--brand-50)', color: 'var(--brand-700)', border: '1px solid var(--brand-200)' }}>
-            {bookmarks.length} bài
+            {bookmarks.length} mục
           </span>
         </div>
 
@@ -151,7 +321,7 @@ export default function BookmarksPage() {
           <div className="empty-state" style={{ minHeight: 200 }}>
             <div className="empty-icon">🔖</div>
             <div className="empty-title">Chưa có bookmark nào</div>
-            <div className="empty-sub">Khi đọc bài viết, bấm "Lưu lại" để bookmark xuất hiện ở đây.</div>
+            <div className="empty-sub">Khi đọc bài viết hoặc dự án, bấm "Lưu lại" để bookmark xuất hiện ở đây.</div>
             <button className="btn btn-primary" onClick={() => nav('/news/all')} style={{ marginTop: 12 }}>
               Xem tin tức
             </button>
@@ -172,114 +342,207 @@ export default function BookmarksPage() {
                 : bm.created_at
                   ? new Date(bm.created_at).toLocaleDateString('vi-VN')
                   : null;
+              const formattedAmt = formatProjectAmount(bm.amount, bm.source_type);
+              const statusStyle = getStatusStyle(bm.status);
+              const isProcurement = bm.source_type === 'gov' || bm.source_type === 'procurement' || bm.source_type === 'dauthau';
 
               return (
                 <div
                   key={bm.id}
                   className="bookmark-row-card"
-                  onClick={() => nav(`/article/${bm.article_id}`)}
+                  onClick={(e) => handleViewDetail(bm, e)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 16,
-                    padding: '16px 20px',
+                    display: 'flex', alignItems: 'flex-start', gap: 16,
+                    padding: '18px 20px',
                     borderBottom: i < bookmarks.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                     cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
                   }}
                 >
-                  {/* Article Image / Icon Container */}
-                  <div
-                    style={{
-                      width: 120, height: 85, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
-                      background: imageUrl ? 'none' : `linear-gradient(135deg, ${srcInfo.bg}, #ffffff)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: '1px solid var(--border-subtle)',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                    }}
-                  >
-                    {imageUrl ? (
+                  {/* Article Image Container (Only if real photo exists) */}
+                  {imageUrl ? (
+                    <div
+                      style={{
+                        width: 120, height: 85, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
+                        border: '1px solid var(--border-subtle)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.04)', marginTop: 2,
+                      }}
+                    >
                       <img
                         src={imageUrl}
                         alt={bm.article_title}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
                       />
-                    ) : (
-                      <span style={{ fontSize: 32, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}>
-                        {srcInfo.icon}
-                      </span>
-                    )}
-                  </div>
+                    </div>
+                  ) : null}
 
-                  {/* Info */}
+                  {/* Main Content Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Tags row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                      {/* Tag thuộc nguồn nào (Source Tag) */}
-                      <span className="news-source-tag" style={{ background: srcInfo.color }}>
-                        <span style={{ fontSize: 10 }}>{srcInfo.icon}</span>
+                    {/* Header Badges Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                      {/* Source Tag */}
+                      <span className="news-source-tag" style={{ background: srcInfo.color, fontWeight: 700 }}>
+                        <span style={{ fontSize: 11 }}>{srcInfo.icon}</span>
                         {srcInfo.name}
                       </span>
 
-                      {/* Source Type / Label badge */}
-                      <span style={{
-                        fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
-                        background: srcInfo.bg, color: srcInfo.color,
-                        border: `1px solid ${srcInfo.color}35`,
-                      }}>
-                        {srcInfo.label}
-                      </span>
+                      {/* Status Badge */}
+                      {bm.status && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 12,
+                          background: statusStyle.bg, color: statusStyle.color,
+                          border: `1px solid ${statusStyle.border}`,
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                        }}>
+                          ● {bm.status}
+                        </span>
+                      )}
+
+                      {/* Project Code / ID Badge */}
+                      {bm.project_code && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                          background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
+                          border: '1px solid var(--border)', fontFamily: 'monospace',
+                        }}>
+                          ID: {bm.project_code}
+                        </span>
+                      )}
 
                       {/* Folder tag */}
                       {bm.folder && bm.folder !== 'default' && (
                         <span style={{
                           fontSize: 10.5, fontWeight: 600, background: 'var(--bg-surface-2)',
-                          padding: '1px 8px', borderRadius: 10, border: '1px solid var(--border)',
+                          padding: '2px 8px', borderRadius: 10, border: '1px solid var(--border)',
                           color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 4,
                         }}>
                           📁 {bm.folder}
                         </span>
                       )}
+
+                      {/* Keyword tags */}
+                      {bm.matched_keywords && bm.matched_keywords.length > 0 && bm.matched_keywords.map((kw) => (
+                        <span key={kw} style={{
+                          fontSize: 10.5, fontWeight: 600, padding: '1px 8px', borderRadius: 10,
+                          background: 'var(--brand-50)', color: 'var(--brand-600)',
+                          border: '1px solid var(--brand-200)',
+                        }}>
+                          #{kw}
+                        </span>
+                      ))}
                     </div>
 
                     {/* Title */}
                     <div className="bookmark-card-title" style={{
-                      fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4,
-                      lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                      fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8,
+                      lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                       overflow: 'hidden', transition: 'color 0.2s ease',
                     }}>
                       {bm.article_title || `Bài viết #${bm.article_id}`}
                     </div>
 
-                    {/* Excerpt if present */}
-                    {bm.excerpt && (
+                    {/* Structured Metadata Bar for Projects */}
+                    {bm.is_local_project ? (
                       <div style={{
-                        fontSize: 12.5, color: 'var(--text-secondary)', marginBottom: 6,
-                        lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
+                        display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                        padding: '8px 12px', background: 'var(--bg-surface-2)', borderRadius: 10,
+                        border: '1px solid var(--border-subtle)', marginTop: 8, fontSize: 12, color: 'var(--text-secondary)',
                       }}>
-                        {bm.excerpt}
-                      </div>
-                    )}
+                        {isProcurement ? (
+                          /* Mua Sắm Công / Đấu Thầu Layout */
+                          <>
+                            {bm.country && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ color: 'var(--text-muted)' }}>🏛️ Bên mời thầu:</span>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{bm.country}</strong>
+                              </div>
+                            )}
 
-                    {/* Date */}
-                    {displayDate && (
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Calendar size={11} />
-                        <span>{displayDate}</span>
+                            {formattedAmt && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ color: 'var(--text-muted)' }}>📦 Số lượng gói thầu:</span>
+                                <strong style={{ color: '#7c3aed', fontWeight: 800, background: '#f5f3ff', padding: '1px 8px', borderRadius: 4, border: '1px solid #ddd6fe' }}>
+                                  {formattedAmt}
+                                </strong>
+                              </div>
+                            )}
+
+                            {bm.stage && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ color: 'var(--text-muted)' }}>📑 Phân loại:</span>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bm.stage}</strong>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          /* World Bank / ADB Projects Layout */
+                          <>
+                            {bm.country && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ color: 'var(--text-muted)' }}>📍 Quốc gia:</span>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{bm.country}</strong>
+                              </div>
+                            )}
+
+                            {formattedAmt && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ color: 'var(--text-muted)' }}>💰 Cam kết ODA:</span>
+                                <strong style={{ color: '#059669', fontWeight: 800, background: '#ecfdf5', padding: '1px 8px', borderRadius: 4, border: '1px solid #a7f3d0' }}>
+                                  {formattedAmt}
+                                </strong>
+                              </div>
+                            )}
+
+                            {bm.stage && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ color: 'var(--text-muted)' }}>📑 Giai đoạn:</span>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bm.stage}</strong>
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {displayDate && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+                            <Calendar size={12} style={{ color: 'var(--text-muted)' }} />
+                            <span style={{ color: 'var(--text-muted)', fontSize: 11.5 }}>
+                              {isProcurement ? 'Ngày đăng: ' : 'Phê duyệt: '}
+                              {displayDate}
+                            </span>
+                          </div>
+                        )}
                       </div>
+                    ) : (
+                      /* Excerpt & Date for News Articles */
+                      <>
+                        {bm.excerpt && (
+                          <div style={{
+                            fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6,
+                            lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}>
+                            {bm.excerpt}
+                          </div>
+                        )}
+                        {displayDate && (
+                          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                            <Calendar size={12} />
+                            <span>{displayDate}</span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center', marginTop: 4 }}>
                     <button
                       className="btn btn-ghost btn-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        nav(`/article/${bm.article_id}`);
-                      }}
+                      onClick={(e) => handleViewDetail(bm, e)}
                       title="Xem chi tiết"
                       style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
                     >
-                      <Eye size={14} />
+                      <Eye size={15} />
                     </button>
                     {bm.article_url && (
                       <a
@@ -291,23 +554,23 @@ export default function BookmarksPage() {
                         title="Xem bài gốc"
                         style={{ padding: '6px 10px', display: 'flex', alignItems: 'center' }}
                       >
-                        <ExternalLink size={14} />
+                        <ExternalLink size={15} />
                       </a>
                     )}
                     <button
                       className="btn btn-ghost btn-sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRemove(bm.article_id);
+                        handleRemove(bm.article_id || bm.id);
                       }}
                       title="Bỏ bookmark"
-                      id={`btn-remove-bm-${bm.article_id}`}
-                      disabled={removing === bm.article_id}
+                      id={`btn-remove-bm-${bm.article_id || bm.id}`}
+                      disabled={removing === (bm.article_id || bm.id)}
                       style={{ padding: '6px 10px', color: '#ef4444' }}
                     >
-                      {removing === bm.article_id
-                        ? <Loader2 size={14} style={{ animation: 'spin 0.6s linear infinite' }} />
-                        : <Trash2 size={14} />}
+                      {removing === (bm.article_id || bm.id)
+                        ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} />
+                        : <Trash2 size={15} />}
                     </button>
                   </div>
                 </div>

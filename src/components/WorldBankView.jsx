@@ -1,27 +1,107 @@
 // src/components/WorldBankView.jsx
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Globe, Search, Filter, RotateCcw, ArrowUpDown, ChevronUp, ChevronDown,
+  Globe, Building2, ShoppingBag, Search, Filter, RotateCcw, ArrowUpDown, ChevronUp, ChevronDown,
   Bookmark, BookmarkCheck, ExternalLink, Download, LayoutGrid, List,
-  DollarSign, Layers, CheckCircle2, Copy, AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight
+  DollarSign, Layers, CheckCircle2, AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
+import { odaService } from '../services/oda';
 
 const DEFAULT_PAGE_SIZE = 20;
 
-const HEADERS_CONFIG = [
-  { key: 'bookmark', display: 'Lưu', sortable: false, width: '60px' },
-  { key: 'project_name', display: 'Tên Dự Án (Project Title)', sortable: true },
-  { key: 'countryshortname', display: 'Quốc Gia', sortable: true, width: '130px' },
-  { key: 'id', display: 'Mã Dự Án (ID)', sortable: true, width: '110px' },
-  { key: 'totalCommitmentAmount', display: 'Cam Kết (USD)', sortable: true, width: '150px' },
-  { key: 'projectstatusdisplay', display: 'Trạng Thái', sortable: true, width: '120px' },
-  { key: 'boardapprovaldate', display: 'Ngày Phê Duyệt', sortable: true, width: '130px' },
-  { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
-  { key: 'last_stage_reached_name', display: 'Giai Đoạn Cuối', sortable: true, width: '150px' },
-];
+const CONFIG_MAP = {
+  worldbank: {
+    title: 'World Bank Projects & Operations',
+    subtitle: 'Quản lý, tìm kiếm và tra cứu dữ liệu dự án Ngân hàng Thế giới (World Bank) toàn cầu',
+    icon: Globe,
+    brandColor: '#10b981',
+    bannerBg: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.05))',
+    bannerBorder: '1px solid rgba(16, 185, 129, 0.2)',
+    exportBtnBg: 'linear-gradient(135deg, #10b981, #047857)',
+    savedKey: 'saved_worldbank_projects',
+    entityLabel: 'dự án',
+    orgLabel: 'Quốc Gia',
+    amountLabel: 'Cam Kết (USD)',
+    date1Label: 'Ngày Phê Duyệt',
+    date2Label: 'Cập Nhật Cuối',
+    stageLabel: 'Giai Đoạn Cuối',
+    headers: [
+      { key: 'bookmark', display: 'Lưu', sortable: false, width: '60px' },
+      { key: 'project_name', display: 'Tên Dự Án (Project Title)', sortable: true },
+      { key: 'countryshortname', display: 'Quốc Gia', sortable: true, width: '130px' },
+      { key: 'id', display: 'Mã Dự Án (ID)', sortable: true, width: '110px' },
+      { key: 'totalCommitmentAmount', display: 'Cam Kết (USD)', sortable: true, width: '150px' },
+      { key: 'projectstatusdisplay', display: 'Trạng Thái', sortable: true, width: '120px' },
+      { key: 'boardapprovaldate', display: 'Ngày Phê Duyệt', sortable: true, width: '130px' },
+      { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
+      { key: 'last_stage_reached_name', display: 'Giai Đoạn Cuối', sortable: true, width: '150px' },
+    ],
+    getUrl: (id) => `https://projects.worldbank.org/en/projects-operations/project-detail/${id}`,
+  },
+  adb: {
+    title: 'ADB Projects & Operations',
+    subtitle: 'Quản lý, tìm kiếm và tra cứu dữ liệu dự án Ngân hàng Phát triển Châu Á (ADB)',
+    icon: Building2,
+    brandColor: '#f59e0b',
+    bannerBg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.05))',
+    bannerBorder: '1px solid rgba(245, 158, 11, 0.2)',
+    exportBtnBg: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    savedKey: 'saved_adb_projects',
+    entityLabel: 'dự án',
+    orgLabel: 'Quốc Gia / Khu Vực',
+    amountLabel: 'Cam Kết (USD)',
+    date1Label: 'Ngày Phê Duyệt',
+    date2Label: 'Cập Nhật Cuối',
+    stageLabel: 'Giai Đoạn / Lĩnh Vực',
+    headers: [
+      { key: 'bookmark', display: 'Lưu', sortable: false, width: '60px' },
+      { key: 'project_name', display: 'Tên Dự Án (ADB Project)', sortable: true },
+      { key: 'countryshortname', display: 'Quốc Gia', sortable: true, width: '140px' },
+      { key: 'id', display: 'Mã Dự Án (ID)', sortable: true, width: '110px' },
+      { key: 'totalCommitmentAmount', display: 'Cam Kết (USD)', sortable: true, width: '150px' },
+      { key: 'projectstatusdisplay', display: 'Trạng Thái', sortable: true, width: '120px' },
+      { key: 'boardapprovaldate', display: 'Ngày Phê Duyệt', sortable: true, width: '130px' },
+      { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
+      { key: 'last_stage_reached_name', display: 'Lĩnh Vực / Giai Đoạn', sortable: true, width: '150px' },
+    ],
+    getUrl: (id) => `https://www.adb.org/projects/${id}/main`,
+  },
+  procurement: {
+    title: 'Mua Sắm Công & Đấu Thầu Quốc Gia',
+    subtitle: 'Quản lý, tìm kiếm và tra cứu thông báo mời thầu (TBMT) và kế hoạch lựa chọn nhà thầu (KHLCNT)',
+    icon: ShoppingBag,
+    brandColor: '#8b5cf6',
+    bannerBg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(124, 58, 237, 0.05))',
+    bannerBorder: '1px solid rgba(139, 92, 246, 0.2)',
+    exportBtnBg: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+    savedKey: 'saved_procurement_items',
+    entityLabel: 'mục thầu',
+    orgLabel: 'Bên Mời Thầu',
+    amountLabel: 'Gói Thầu',
+    date1Label: 'Ngày Đăng Tải',
+    date2Label: 'Hạn Đóng Thầu',
+    stageLabel: 'Phân Loại',
+    headers: [
+      { key: 'bookmark', display: 'Lưu', sortable: false, width: '60px' },
+      { key: 'project_name', display: 'Tên Thông Báo / Kế Hoạch', sortable: true },
+      { key: 'countryshortname', display: 'Bên Mời Thầu', sortable: true, width: '220px' },
+      { key: 'id', display: 'Mã TBMT/KHLCNT', sortable: true, width: '130px' },
+      { key: 'totalCommitmentAmount', display: 'Gói Thầu', sortable: true, width: '110px' },
+      { key: 'projectstatusdisplay', display: 'Trạng Thái', sortable: true, width: '120px' },
+      { key: 'boardapprovaldate', display: 'Ngày Đăng Tải', sortable: true, width: '140px' },
+      { key: 'proj_last_upd_date', display: 'Đóng Thầu', sortable: true, width: '140px' },
+      { key: 'last_stage_reached_name', display: 'Phân Loại / Lĩnh Vực', sortable: true, width: '160px' },
+    ],
+    getUrl: (id) => `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(id)}`,
+  },
+};
 
-export default function WorldBankView() {
+export default function WorldBankView({ type = 'worldbank' }) {
+  const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
+  const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
+  const HeaderIcon = config.icon;
+
   // === STATE ===
   const [allProjects, setAllProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +117,7 @@ export default function WorldBankView() {
   const [sortOrder, setSortOrder] = useState('desc');
 
   // Filters
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
@@ -49,73 +130,132 @@ export default function WorldBankView() {
 
   // Dropdown open states
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
-  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [stageDropdownOpen, setStageDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
   // Show Toast
-  const showToast = (msg, type = 'info') => {
-    setToastMessage({ msg, type });
+  const showToast = (msg, toastType = 'info') => {
+    setToastMessage({ msg, type: toastType });
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Load Initial Data
+  // Helper for saved items in localStorage
+  const getSavedProjects = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(config.savedKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }, [config.savedKey]);
+
+  // Load Data
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await worldBankService.fetchProjects();
+      let data = [];
+      if (normType === 'worldbank') {
+        data = await worldBankService.fetchProjects();
+      } else if (normType === 'adb') {
+        const res = await odaService.getProjects({ source: 'adb', size: 5000 });
+        const items = res?.items || [];
+        data = items.map((p) => {
+          const totalAmt = p.amount_usd || (typeof p.amount === 'string' ? parseFloat(p.amount.replace(/[^0-9.]/g, '')) : p.amount) || 0;
+          return {
+            id: p.external_id || String(p.id),
+            project_name: p.title_vi ? `${p.title} (${p.title_vi})` : (p.title || 'N/A'),
+            countryshortname: p.country || 'N/A',
+            totalamt: totalAmt,
+            totalCommitmentAmount: totalAmt,
+            projectstatusdisplay: p.status || 'Active',
+            boardapprovaldate: p.approval_date || null,
+            proj_last_upd_date: p.last_updated_date || null,
+            last_stage_reached_name: p.last_stage || p.sector || 'N/A',
+            ai_summary: p.ai_summary || null,
+            rawUrl: p.url || `https://www.adb.org/projects/${p.external_id || p.id}/main`,
+          };
+        });
+      } else if (normType === 'procurement') {
+        const res = await odaService.getProcurement({ size: 5000 });
+        const items = res?.items || [];
+        data = items.map((p) => {
+          const pkgCount = p.package_count || 0;
+          return {
+            id: p.id,
+            project_name: p.title || 'N/A',
+            countryshortname: p.procuring_entity || 'Việt Nam',
+            totalamt: pkgCount,
+            totalCommitmentAmount: pkgCount,
+            projectstatusdisplay: p.status || 'Đang đăng tải',
+            boardapprovaldate: p.publish_date || null,
+            proj_last_upd_date: p.close_date || null,
+            last_stage_reached_name: p.kind === 'notice' ? 'TBMT (Mời thầu)' : 'KHLCNT (Kế hoạch)',
+            sector: p.sector || 'Chưa phân loại',
+            ai_summary: null,
+            rawUrl: `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`,
+          };
+        });
+      }
       setAllProjects(data);
 
-      const savedList = worldBankService.getSavedProjects();
+      const savedList = getSavedProjects();
       setSavedIds(new Set(savedList.map((p) => p.id)));
     } catch (err) {
-      console.error('World Bank load error:', err);
-      setError(err.message || 'Không thể tải dữ liệu dự án World Bank');
+      console.error(`${normType} load error:`, err);
+      setError(err.message || `Không thể tải dữ liệu ${config.title}`);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  // Handle Refresh & Trigger Server Ingest into DB
-  const handleRefresh = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      showToast('Đang cào dữ liệu mới từ World Bank và lưu vào Cơ sở dữ liệu...', 'info');
-      await worldBankService.crawlProjects(500);
-      const data = await worldBankService.fetchProjects();
-      setAllProjects(data);
-      const savedList = worldBankService.getSavedProjects();
-      setSavedIds(new Set(savedList.map((p) => p.id)));
-      showToast(`Đã đồng bộ ${data.length} dự án vào Cơ sở dữ liệu thành công!`, 'success');
-    } catch (err) {
-      console.error('World Bank refresh error:', err);
-      await loadData();
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [normType, config, getSavedProjects]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Handle Save / Bookmark
+  // Handle Save / Bookmark Toggle
   const handleToggleSave = (project, e) => {
     if (e) e.stopPropagation();
-    const { isSaved } = worldBankService.toggleSaveProject(project);
+    const saved = getSavedProjects();
+    const existsIndex = saved.findIndex((p) => p.id === project.id);
+    let updated;
+    let isSavedNow;
+
+    if (existsIndex >= 0) {
+      updated = saved.filter((p) => p.id !== project.id);
+      isSavedNow = false;
+    } else {
+      updated = [
+        ...saved,
+        {
+          id: project.id,
+          project_name: project.project_name,
+          countryshortname: project.countryshortname,
+          totalCommitmentAmount: project.totalCommitmentAmount,
+          projectstatusdisplay: project.projectstatusdisplay,
+          boardapprovaldate: project.boardapprovaldate,
+          proj_last_upd_date: project.proj_last_upd_date,
+          last_stage_reached_name: project.last_stage_reached_name,
+          rawUrl: project.rawUrl || config.getUrl(project.id),
+          saved_at: new Date().toISOString(),
+        },
+      ];
+      isSavedNow = true;
+    }
+
+    localStorage.setItem(config.savedKey, JSON.stringify(updated));
+
     setSavedIds((prev) => {
       const next = new Set(prev);
-      if (isSaved) next.add(project.id);
+      if (isSavedNow) next.add(project.id);
       else next.delete(project.id);
       return next;
     });
+
     showToast(
-      isSaved
-        ? `Đã lưu dự án "${project.project_name?.slice(0, 30)}..."`
-        : `Đã bỏ lưu dự án "${project.id}"`,
-      isSaved ? 'success' : 'info'
+      isSavedNow
+        ? `Đã lưu ${config.entityLabel} "${project.project_name?.slice(0, 30)}..."`
+        : `Đã bỏ lưu ${config.entityLabel} "${project.id}"`,
+      isSavedNow ? 'success' : 'info'
     );
   };
 
@@ -141,10 +281,8 @@ export default function WorldBankView() {
     const updTo = updatedDateTo ? new Date(updatedDateTo).setHours(23, 59, 59, 999) : Infinity;
 
     return allProjects.filter((p) => {
-      // Saved filter
       if (onlySaved && !savedIds.has(p.id)) return false;
 
-      // Text search
       if (term) {
         const titleMatch = p.project_name?.toLowerCase().includes(term);
         const idMatch = p.id?.toLowerCase().includes(term);
@@ -152,7 +290,6 @@ export default function WorldBankView() {
         if (!titleMatch && !idMatch && !countryMatch) return false;
       }
 
-      // Multi-select filters
       if (selectedCountries.length > 0 && !selectedCountries.includes(p.countryshortname)) {
         return false;
       }
@@ -163,7 +300,6 @@ export default function WorldBankView() {
         return false;
       }
 
-      // Date Range Filters
       if (p.boardapprovaldate) {
         const appTime = new Date(p.boardapprovaldate).getTime();
         if (appTime < appFrom || appTime > appTo) return false;
@@ -181,17 +317,8 @@ export default function WorldBankView() {
       return true;
     });
   }, [
-    allProjects,
-    searchTerm,
-    selectedCountries,
-    selectedStatuses,
-    selectedStages,
-    approvalDateFrom,
-    approvalDateTo,
-    updatedDateFrom,
-    updatedDateTo,
-    onlySaved,
-    savedIds,
+    allProjects, searchTerm, selectedCountries, selectedStatuses, selectedStages,
+    approvalDateFrom, approvalDateTo, updatedDateFrom, updatedDateTo, onlySaved, savedIds,
   ]);
 
   // Sorting Logic
@@ -224,7 +351,7 @@ export default function WorldBankView() {
     return list;
   }, [filteredProjects, sortBy, sortOrder]);
 
-  // Paginated Projects
+  // Paginated Items
   const totalFiltered = sortedProjects.length;
   const totalPages = Math.ceil(totalFiltered / pageSize) || 1;
   const paginatedProjects = useMemo(() => {
@@ -236,19 +363,10 @@ export default function WorldBankView() {
   useEffect(() => {
     setCurrentPage(1);
   }, [
-    searchTerm,
-    selectedCountries,
-    selectedStatuses,
-    selectedStages,
-    approvalDateFrom,
-    approvalDateTo,
-    updatedDateFrom,
-    updatedDateTo,
-    onlySaved,
-    pageSize,
+    searchTerm, selectedCountries, selectedStatuses, selectedStages,
+    approvalDateFrom, approvalDateTo, updatedDateFrom, updatedDateTo, onlySaved, pageSize,
   ]);
 
-  // Sort toggle handler
   const handleSort = (key) => {
     if (sortBy === key) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -258,8 +376,8 @@ export default function WorldBankView() {
     }
   };
 
-  // Reset Filters
   const handleClearFilters = () => {
+    setSearchInput('');
     setSearchTerm('');
     setSelectedCountries([]);
     setSelectedStatuses([]);
@@ -277,27 +395,30 @@ export default function WorldBankView() {
   // Calculate Key Summary Statistics
   const stats = useMemo(() => {
     const totalCommitmentUSD = filteredProjects.reduce(
-      (sum, p) => sum + (p.totalCommitmentAmount || 0),
-      0
+      (sum, p) => sum + (p.totalCommitmentAmount || 0), 0
     );
-    const countryCount = new Set(filteredProjects.map((p) => p.countryshortname).filter(Boolean)).size;
+    const orgCount = new Set(filteredProjects.map((p) => p.countryshortname).filter(Boolean)).size;
 
     return {
       totalProjects: filteredProjects.length,
       totalCommitmentUSD,
-      countryCount,
+      orgCount,
       savedCount: savedIds.size,
     };
   }, [filteredProjects, savedIds]);
 
   // Formatters
-  const formatCurrency = (amount) => {
+  const formatAmountDisplay = (amount) => {
+    if (normType === 'procurement') {
+      if (!amount || amount <= 0) return 'Thông báo';
+      return `${amount} gói thầu`;
+    }
     if (!amount || amount <= 0) return 'N/A';
     if (amount >= 1e9) {
-      return `$${(amount / 1e9).toFixed(2)} Billion`;
+      return `$${(amount / 1e9).toFixed(2)} B`;
     }
     if (amount >= 1e6) {
-      return `$${(amount / 1e6).toFixed(1)} Million`;
+      return `$${(amount / 1e6).toFixed(1)} M`;
     }
     return `$${amount.toLocaleString('en-US')}`;
   };
@@ -306,9 +427,7 @@ export default function WorldBankView() {
     if (!dateStr) return 'N/A';
     try {
       return new Date(dateStr).toLocaleDateString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
+        day: '2-digit', month: '2-digit', year: 'numeric',
       });
     } catch {
       return dateStr;
@@ -318,19 +437,38 @@ export default function WorldBankView() {
   // Status Badge Helper
   const getStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
-    if (s.includes('active') || s.includes('implementation')) {
+    if (s.includes('active') || s.includes('approved') || s.includes('đang') || s.includes('mời thầu')) {
       return { bg: '#ecfdf5', color: '#059669', border: '#a7f3d0', label: status || 'Active' };
     }
-    if (s.includes('closed') || s.includes('completed')) {
+    if (s.includes('closed') || s.includes('completed') || s.includes('đóng')) {
       return { bg: '#f3f4f6', color: '#4b5563', border: '#e5e7eb', label: status || 'Closed' };
     }
-    if (s.includes('pipeline') || s.includes('concept')) {
+    if (s.includes('pipeline') || s.includes('concept') || s.includes('proposed') || s.includes('kế hoạch')) {
       return { bg: '#fffbeb', color: '#d97706', border: '#fde68a', label: status || 'Pipeline' };
     }
     return { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: status || 'N/A' };
   };
 
-  // Export CSV Functionality
+  // Refresh
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      showToast(`Đang làm mới dữ liệu ${config.title}...`, 'info');
+      if (normType === 'worldbank') {
+        await worldBankService.crawlProjects(500);
+      }
+      await loadData();
+      showToast(`Đã làm mới dữ liệu thành công!`, 'success');
+    } catch (err) {
+      console.error(`${normType} refresh error:`, err);
+      await loadData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Export CSV
   const handleExportCSV = () => {
     if (filteredProjects.length === 0) {
       showToast('Không có dữ liệu để xuất CSV', 'warning');
@@ -338,30 +476,24 @@ export default function WorldBankView() {
     }
 
     const headers = [
-      'Project ID',
-      'Project Name',
-      'Country',
-      'Commitment Amount (USD)',
-      'Status',
-      'Approval Date',
-      'Last Updated Date',
-      'Last Stage Reached',
-      'URL',
+      'ID', 'Name / Title', config.orgLabel, config.amountLabel,
+      'Status', config.date1Label, config.date2Label, config.stageLabel, 'URL',
     ];
 
     const csvRows = [
       headers.join(','),
       ...filteredProjects.map((p) => {
+        const itemUrl = p.rawUrl || config.getUrl(p.id);
         const row = [
           `"${p.id}"`,
           `"${(p.project_name || '').replace(/"/g, '""')}"`,
-          `"${p.countryshortname || ''}"`,
+          `"${(p.countryshortname || '').replace(/"/g, '""')}"`,
           `"${p.totalCommitmentAmount || 0}"`,
           `"${p.projectstatusdisplay || ''}"`,
           `"${p.boardapprovaldate || ''}"`,
           `"${p.proj_last_upd_date || ''}"`,
           `"${p.last_stage_reached_name || ''}"`,
-          `"https://projects.worldbank.org/en/projects-operations/project-detail/${p.id}"`,
+          `"${itemUrl}"`,
         ];
         return row.join(',');
       }),
@@ -371,12 +503,12 @@ export default function WorldBankView() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `WorldBank_Projects_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `${normType.toUpperCase()}_Projects_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    showToast(`Đã xuất ${filteredProjects.length} dự án ra tệp CSV`, 'success');
+    showToast(`Đã xuất ${filteredProjects.length} ${config.entityLabel} ra tệp CSV`, 'success');
   };
 
   return (
@@ -385,21 +517,11 @@ export default function WorldBankView() {
       {toastMessage && (
         <div
           style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            zIndex: 9999,
-            padding: '12px 20px',
-            borderRadius: 12,
+            position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+            padding: '12px 20px', borderRadius: 12,
             background: toastMessage.type === 'success' ? '#10b981' : toastMessage.type === 'warning' ? '#f59e0b' : '#3b82f6',
-            color: 'white',
-            fontWeight: 600,
-            fontSize: 13,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            animation: 'fadeIn 0.3s ease',
+            color: 'white', fontWeight: 600, fontSize: 13,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: 10,
           }}
         >
           <CheckCircle2 size={16} />
@@ -407,12 +529,12 @@ export default function WorldBankView() {
         </div>
       )}
 
-      {/* Header Banner (Compact to save vertical screen space) */}
+      {/* Header Banner */}
       <div
         style={{
           flex: '0 0 auto',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.05))',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
+          background: config.bannerBg,
+          border: config.bannerBorder,
           borderRadius: 14,
           padding: '10px 16px',
           display: 'flex',
@@ -425,24 +547,20 @@ export default function WorldBankView() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
+              width: 34, height: 34, borderRadius: 10,
+              background: config.brandColor,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: `0 4px 12px ${config.brandColor}44`,
             }}
           >
-            <Globe size={18} color="white" />
+            <HeaderIcon size={18} color="white" />
           </div>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              World Bank Projects & Operations
+              {config.title}
             </h1>
             <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
-              Quản lý, tìm kiếm và tra cứu dữ liệu dự án Ngân hàng Thế giới (World Bank) toàn cầu
+              {config.subtitle}
             </p>
           </div>
         </div>
@@ -460,7 +578,7 @@ export default function WorldBankView() {
           <button
             className="btn btn-primary btn-sm"
             onClick={handleExportCSV}
-            style={{ gap: 6, display: 'flex', alignItems: 'center', background: 'linear-gradient(135deg, #10b981, #047857)', border: 'none', fontSize: 12, padding: '4px 10px' }}
+            style={{ gap: 6, display: 'flex', alignItems: 'center', background: config.exportBtnBg, border: 'none', fontSize: 12, padding: '4px 10px' }}
           >
             <Download size={14} />
             Xuất Excel / CSV
@@ -471,7 +589,7 @@ export default function WorldBankView() {
       {/* 2-COLUMN LAYOUT: Sidebar (Filters + Stats) | Main Content (Table) */}
       <div style={{ display: 'flex', gap: 14, flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
 
-        {/* LEFT SIDEBAR FILTERS (Width 300px, Full height inner scroll) */}
+        {/* LEFT SIDEBAR FILTERS */}
         <aside style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto', paddingRight: 2 }}>
 
           {/* Compact Stats Box */}
@@ -488,18 +606,18 @@ export default function WorldBankView() {
             }}
           >
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tổng Dự Án</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TỔNG {config.entityLabel.toUpperCase()}</div>
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalProjects.toLocaleString()}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Quốc Gia</div>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#3b82f6' }}>{stats.countryCount}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{config.orgLabel.toUpperCase()}</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: config.brandColor }}>{stats.orgCount}</div>
             </div>
             <div style={{ gridColumn: 'span 2' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <DollarSign size={11} color="#10b981" /> Tổng Cam Kết (USD)
+                <DollarSign size={11} color={config.brandColor} /> TỔNG {config.amountLabel.toUpperCase()}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981' }}>{formatCurrency(stats.totalCommitmentUSD)}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: config.brandColor }}>{formatAmountDisplay(stats.totalCommitmentUSD)}</div>
             </div>
           </div>
 
@@ -518,8 +636,8 @@ export default function WorldBankView() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Filter size={14} color="var(--brand-500)" />
-                Bộ Lọc Dự Án
+                <Filter size={14} color={config.brandColor} />
+                Bộ Lọc Dữ Liệu
               </div>
               <button
                 className="btn btn-ghost btn-xs"
@@ -541,7 +659,7 @@ export default function WorldBankView() {
                 padding: '6px 12px',
                 borderRadius: 8,
                 border: onlySaved ? 'none' : '1px solid var(--border)',
-                background: onlySaved ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'var(--bg-surface-2)',
+                background: onlySaved ? config.brandColor : 'var(--bg-surface-2)',
                 color: onlySaved ? 'white' : 'var(--text-secondary)',
                 fontWeight: 600,
                 fontSize: 12,
@@ -550,7 +668,7 @@ export default function WorldBankView() {
               }}
             >
               <Bookmark size={13} />
-              {onlySaved ? 'Đang hiện: Dự án đã lưu' : 'Chỉ dự án đã lưu'}
+              {onlySaved ? `Đang hiện: ${config.entityLabel} đã lưu` : `Chỉ ${config.entityLabel} đã lưu`}
               {savedIds.size > 0 && (
                 <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.3)', padding: '1px 6px', borderRadius: 10 }}>
                   {savedIds.size}
@@ -558,7 +676,7 @@ export default function WorldBankView() {
               )}
             </button>
 
-            {/* Search Bar with dedicated Search Button */}
+            {/* Search Bar */}
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <div style={{ position: 'relative', flex: 1 }}>
                 <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -566,36 +684,37 @@ export default function WorldBankView() {
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: 30, paddingRight: 26, fontSize: 12, height: 36, width: '100%' }}
-                  placeholder="Tìm Tên, ID, Quốc gia..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={`Tìm Tên, ID, ${config.orgLabel}...`}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setSearchTerm(searchInput);
                       setCurrentPage(1);
                     }
                   }}
                 />
-                {searchTerm && (
+                {searchInput && (
                   <X
                     size={13}
                     style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'var(--text-muted)' }}
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => {
+                      setSearchInput('');
+                      setSearchTerm('');
+                    }}
                   />
                 )}
               </div>
               <button
                 className="btn btn-primary btn-sm"
-                onClick={() => setCurrentPage(1)}
+                onClick={() => {
+                  setSearchTerm(searchInput);
+                  setCurrentPage(1);
+                }}
                 style={{
-                  height: 36,
-                  padding: '0 12px',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  whiteSpace: 'nowrap',
-                  borderRadius: 8,
+                  height: 36, padding: '0 12px', fontSize: 12, fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', borderRadius: 8,
+                  background: config.brandColor, border: 'none',
                 }}
                 title="Bấm để tìm kiếm"
               >
@@ -604,26 +723,21 @@ export default function WorldBankView() {
               </button>
             </div>
 
-            {/* Country Dropdown Filter */}
+            {/* Org / Country Dropdown Filter */}
             <div style={{ position: 'relative' }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Quốc gia:</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{config.orgLabel}:</label>
               <div
                 className="form-input"
                 onClick={() => setCountryDropdownOpen((v) => !v)}
                 style={{
-                  minHeight: 38,
-                  padding: '6px 10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  fontSize: 12,
+                  minHeight: 38, padding: '6px 10px', display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', cursor: 'pointer', fontSize: 12,
                   color: selectedCountries.length ? 'var(--text-primary)' : 'var(--text-muted)',
                   fontWeight: selectedCountries.length ? 600 : 400,
                 }}
               >
                 <span>
-                  {selectedCountries.length > 0 ? `Quốc gia (${selectedCountries.length})` : 'Tất cả Quốc gia'}
+                  {selectedCountries.length > 0 ? `${config.orgLabel} (${selectedCountries.length})` : `Tất cả ${config.orgLabel}`}
                 </span>
                 <ChevronDown size={14} />
               </div>
@@ -631,25 +745,15 @@ export default function WorldBankView() {
               {countryDropdownOpen && (
                 <div
                   style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    zIndex: 100,
-                    marginTop: 4,
-                    background: 'var(--bg-surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 10,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                    padding: 8,
-                    maxHeight: 220,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, marginTop: 4,
+                    background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 10,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)', padding: 8, maxHeight: 220,
+                    display: 'flex', flexDirection: 'column',
                   }}
                 >
                   <input
                     type="text"
-                    placeholder="Lọc quốc gia..."
+                    placeholder={`Lọc ${config.orgLabel.toLowerCase()}...`}
                     value={countrySearch}
                     onChange={(e) => setCountrySearch(e.target.value)}
                     style={{ width: '100%', padding: '4px 8px', fontSize: 11, marginBottom: 6, borderRadius: 6, border: '1px solid var(--border)' }}
@@ -699,14 +803,14 @@ export default function WorldBankView() {
 
             {/* Stage Dropdown Filter */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Giai đoạn:</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{config.stageLabel}:</label>
               <select
                 className="form-input"
                 style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
                 value={selectedStages[0] || ''}
                 onChange={(e) => setSelectedStages(e.target.value ? [e.target.value] : [])}
               >
-                <option value="">Tất cả Giai Đoạn</option>
+                <option value="">Tất cả {config.stageLabel}</option>
                 {uniqueStages.map((stg) => (
                   <option key={stg} value={stg}>
                     {stg}
@@ -718,7 +822,7 @@ export default function WorldBankView() {
             {/* Date Filters */}
             <div style={{ paddingTop: 8, borderTop: '1px dashed var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>Phê Duyệt:</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{config.date1Label}:</span>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
                     type="date"
@@ -739,7 +843,7 @@ export default function WorldBankView() {
               </div>
 
               <div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>Cập Nhật:</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{config.date2Label}:</span>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
                     type="date"
@@ -763,25 +867,19 @@ export default function WorldBankView() {
           </div>
         </aside>
 
-        {/* RIGHT MAIN CONTENT AREA (Flex 1, Height 100%) */}
+        {/* RIGHT MAIN CONTENT AREA */}
         <main
           style={{
-            flex: '1 1 0%',
-            minWidth: 0,
-            background: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 14,
-            overflow: 'hidden',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
+            flex: '1 1 0%', minWidth: 0,
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            borderRadius: 14, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+            display: 'flex', flexDirection: 'column', height: '100%',
           }}
         >
-          {/* Results Control Header (Fixed top of card) */}
+          {/* Results Control Header */}
           <div style={{ flex: '0 0 auto', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Hiển thị <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{filteredProjects.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> - <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{Math.min(currentPage * pageSize, filteredProjects.length)}</span> trên tổng <span style={{ color: 'var(--brand-600)', fontWeight: 800 }}>{filteredProjects.length.toLocaleString()}</span> dự án
+              Hiển thị <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{filteredProjects.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> - <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{Math.min(currentPage * pageSize, filteredProjects.length)}</span> trên tổng <span style={{ color: config.brandColor, fontWeight: 800 }}>{filteredProjects.length.toLocaleString()}</span> {config.entityLabel}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -790,17 +888,10 @@ export default function WorldBankView() {
                 <button
                   onClick={() => setViewMode('table')}
                   style={{
-                    padding: '3px 8px',
-                    borderRadius: 6,
-                    border: 'none',
+                    padding: '3px 8px', borderRadius: 6, border: 'none',
                     background: viewMode === 'table' ? 'var(--bg-surface)' : 'transparent',
-                    color: viewMode === 'table' ? 'var(--brand-600)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontSize: 11,
-                    fontWeight: 600,
+                    color: viewMode === 'table' ? config.brandColor : 'var(--text-muted)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
                   }}
                 >
                   <List size={13} /> Bảng
@@ -808,17 +899,10 @@ export default function WorldBankView() {
                 <button
                   onClick={() => setViewMode('grid')}
                   style={{
-                    padding: '3px 8px',
-                    borderRadius: 6,
-                    border: 'none',
+                    padding: '3px 8px', borderRadius: 6, border: 'none',
                     background: viewMode === 'grid' ? 'var(--bg-surface)' : 'transparent',
-                    color: viewMode === 'grid' ? 'var(--brand-600)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontSize: 11,
-                    fontWeight: 600,
+                    color: viewMode === 'grid' ? config.brandColor : 'var(--text-muted)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
                   }}
                 >
                   <LayoutGrid size={13} /> Thẻ
@@ -843,14 +927,13 @@ export default function WorldBankView() {
             </div>
           </div>
 
-          {/* INNER SCROLLABLE CONTENT (Table/Grid Body) */}
+          {/* INNER SCROLLABLE CONTENT */}
           <div style={{ flex: '1 1 auto', overflowY: 'auto', overflowX: 'auto', position: 'relative' }}>
-            {/* Loading State */}
             {loading ? (
               <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
-                <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 12px', display: 'block', color: 'var(--brand-500)' }} />
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Đang tải dữ liệu World Bank...</div>
-                <div style={{ fontSize: 12, marginTop: 4 }}>Quá trình tải danh sách dự án có thể mất vài giây</div>
+                <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 12px', display: 'block', color: config.brandColor }} />
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Đang tải dữ liệu {config.title}...</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Quá trình tải danh sách có thể mất vài giây</div>
               </div>
             ) : error ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
@@ -862,8 +945,8 @@ export default function WorldBankView() {
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="empty-state" style={{ minHeight: 250 }}>
-                <div className="empty-icon">🌍</div>
-                <div className="empty-title">Không tìm thấy dự án nào</div>
+                <div className="empty-icon">📭</div>
+                <div className="empty-title">Không tìm thấy {config.entityLabel} nào</div>
                 <div className="empty-sub">Hãy thử thay đổi từ khóa tìm kiếm hoặc xóa bớt các bộ lọc.</div>
                 <button className="btn btn-secondary btn-sm" onClick={handleClearFilters} style={{ marginTop: 12 }}>
                   Xóa bộ lọc
@@ -875,261 +958,238 @@ export default function WorldBankView() {
                 <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-surface-2)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                     <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {HEADERS_CONFIG.map((h) => {
-                    const isSorted = sortBy === h.key;
-                    return (
-                      <th
-                        key={h.key || h.display}
-                        onClick={() => h.sortable && handleSort(h.key)}
-                        style={{
-                          padding: '12px 14px',
-                          textAlign: h.key === 'bookmark' ? 'center' : 'left',
-                          cursor: h.sortable ? 'pointer' : 'default',
-                          userSelect: 'none',
-                          fontWeight: 700,
-                          color: isSorted ? 'var(--brand-600)' : 'var(--text-secondary)',
-                          whiteSpace: 'nowrap',
-                          width: h.width || 'auto',
-                        }}
-                      >
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                          {h.display}
-                          {h.sortable && (
-                            <span style={{ opacity: isSorted ? 1 : 0.4 }}>
-                              {isSorted ? (
-                                sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-                              ) : (
-                                <ArrowUpDown size={12} />
+                      {config.headers.map((h) => {
+                        const isSorted = sortBy === h.key;
+                        return (
+                          <th
+                            key={h.key || h.display}
+                            onClick={() => h.sortable && handleSort(h.key)}
+                            style={{
+                              padding: '12px 14px',
+                              textAlign: h.key === 'bookmark' ? 'center' : 'left',
+                              cursor: h.sortable ? 'pointer' : 'default',
+                              userSelect: 'none',
+                              fontWeight: 700,
+                              color: isSorted ? config.brandColor : 'var(--text-secondary)',
+                              whiteSpace: 'nowrap',
+                              width: h.width || 'auto',
+                            }}
+                          >
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              {h.display}
+                              {h.sortable && (
+                                <span style={{ opacity: isSorted ? 1 : 0.4 }}>
+                                  {isSorted ? (
+                                    sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                                  ) : (
+                                    <ArrowUpDown size={12} />
+                                  )}
+                                </span>
                               )}
+                            </div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedProjects.map((p, idx) => {
+                      const isSaved = savedIds.has(p.id);
+                      const statusInfo = getStatusBadge(p.projectstatusdisplay);
+                      const itemUrl = p.rawUrl || config.getUrl(p.id);
+
+                      return (
+                        <tr
+                          key={p.id || idx}
+                          style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background-color 0.15s ease' }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          {/* Save Button */}
+                          <td style={{ textAlign: 'center', padding: '10px 14px' }}>
+                            <button
+                              onClick={(e) => handleToggleSave(p, e)}
+                              title={isSaved ? `Bỏ lưu ${config.entityLabel}` : `Lưu ${config.entityLabel}`}
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer',
+                                color: isSaved ? config.brandColor : 'var(--text-muted)', padding: 4, borderRadius: 4,
+                              }}
+                            >
+                              {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+                            </button>
+                          </td>
+
+                          {/* Title */}
+                          <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
+                            <a
+                              href={itemUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: config.brandColor, textDecoration: 'none',
+                                display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                              }}
+                            >
+                              <span>{p.project_name}</span>
+                              <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                            </a>
+                          </td>
+
+                          {/* Org / Country */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 500, color: 'var(--text-primary)' }}>
+                            {p.countryshortname || 'N/A'}
+                          </td>
+
+                          {/* ID */}
+                          <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: 'var(--text-secondary)' }}>
+                            {p.id}
+                          </td>
+
+                          {/* Amount */}
+                          <td style={{ padding: '10px 14px', fontWeight: 700, color: config.brandColor, whiteSpace: 'nowrap' }}>
+                            {formatAmountDisplay(p.totalCommitmentAmount)}
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                            <span
+                              style={{
+                                fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 12,
+                                background: statusInfo.bg, color: statusInfo.color, border: `1px solid ${statusInfo.border}`,
+                              }}
+                            >
+                              {statusInfo.label}
                             </span>
-                          )}
-                        </div>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedProjects.map((p, idx) => {
+                          </td>
+
+                          {/* Date 1 */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontSize: 12 }}>
+                            {formatDate(p.boardapprovaldate)}
+                          </td>
+
+                          {/* Date 2 */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontSize: 12 }}>
+                            {formatDate(p.proj_last_upd_date)}
+                          </td>
+
+                          {/* Stage */}
+                          <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 12 }}>
+                            {p.last_stage_reached_name || 'N/A'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* GRID CARD VIEW */
+              <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
+                {paginatedProjects.map((p) => {
                   const isSaved = savedIds.has(p.id);
                   const statusInfo = getStatusBadge(p.projectstatusdisplay);
+                  const itemUrl = p.rawUrl || config.getUrl(p.id);
 
                   return (
-                    <tr
-                      key={p.id || idx}
+                    <div
+                      key={p.id}
                       style={{
-                        borderBottom: '1px solid var(--border-subtle)',
-                        transition: 'background-color 0.15s ease',
+                        background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+                        borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column',
+                        justifyContent: 'space-between', gap: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        transition: 'transform 0.2s, boxShadow 0.2s',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      {/* Save Button */}
-                      <td style={{ textAlign: 'center', padding: '10px 14px' }}>
-                        <button
-                          onClick={(e) => handleToggleSave(p, e)}
-                          title={isSaved ? 'Bỏ lưu dự án' : 'Lưu dự án'}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: isSaved ? '#10b981' : 'var(--text-muted)',
-                            padding: 4,
-                            borderRadius: 4,
-                          }}
-                        >
-                          {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-                        </button>
-                      </td>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: statusInfo.bg, color: statusInfo.color }}>
+                            {statusInfo.label}
+                          </span>
+                          <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+                            {p.id}
+                          </span>
+                        </div>
 
-                      {/* Project Title */}
-                      <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
-                        <a
-                          href={`https://projects.worldbank.org/en/projects-operations/project-detail/${p.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: 'var(--brand-600)',
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'flex-start',
-                            gap: 6,
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          <span>{p.project_name}</span>
-                          <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
-                        </a>
-                      </td>
+                        <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
+                          <a
+                            href={itemUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: 'inherit', textDecoration: 'none' }}
+                          >
+                            {p.project_name}
+                          </a>
+                        </h4>
 
-                      {/* Country */}
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 500, color: 'var(--text-primary)' }}>
-                        {p.countryshortname || 'N/A'}
-                      </td>
+                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                          🏢 <strong>{config.orgLabel}:</strong> {p.countryshortname || 'N/A'}
+                        </div>
 
-                      {/* ID */}
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', fontSize: 12, color: 'var(--text-secondary)' }}>
-                        {p.id}
-                      </td>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: config.brandColor, marginBottom: 6 }}>
+                          💵 {config.amountLabel}: {formatAmountDisplay(p.totalCommitmentAmount)}
+                        </div>
+                      </div>
 
-                      {/* Commitment Amount */}
-                      <td style={{ padding: '10px 14px', fontWeight: 700, color: '#10b981', whiteSpace: 'nowrap' }}>
-                        {formatCurrency(p.totalCommitmentAmount)}
-                      </td>
-
-                      {/* Status */}
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            padding: '3px 8px',
-                            borderRadius: 12,
-                            background: statusInfo.bg,
-                            color: statusInfo.color,
-                            border: `1px solid ${statusInfo.border}`,
-                          }}
-                        >
-                          {statusInfo.label}
+                      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          {config.date1Label}: {formatDate(p.boardapprovaldate)}
                         </span>
-                      </td>
 
-                      {/* Approval Date */}
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontSize: 12 }}>
-                        {formatDate(p.boardapprovaldate)}
-                      </td>
-
-                      {/* Last Updated Date */}
-                      <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontSize: 12 }}>
-                        {formatDate(p.proj_last_upd_date)}
-                      </td>
-
-                      {/* Last Stage Reached */}
-                      <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 12 }}>
-                        {p.last_stage_reached_name || 'N/A'}
-                      </td>
-                    </tr>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button
+                            onClick={(e) => handleToggleSave(p, e)}
+                            style={{
+                              background: 'none', border: 'none', cursor: 'pointer',
+                              color: isSaved ? config.brandColor : 'var(--text-muted)', padding: 4,
+                            }}
+                          >
+                            {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+                          </button>
+                          <a
+                            href={itemUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: config.brandColor, padding: 4 }}
+                          >
+                            <ExternalLink size={18} />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          /* GRID CARD VIEW */
-          <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-            {paginatedProjects.map((p) => {
-              const isSaved = savedIds.has(p.id);
-              const statusInfo = getStatusBadge(p.projectstatusdisplay);
-
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    background: 'var(--bg-surface-2)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 16,
-                    padding: 18,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justify: 'space-between',
-                    gap: 12,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                    transition: 'transform 0.2s, boxShadow 0.2s',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: statusInfo.bg, color: statusInfo.color }}>
-                        {statusInfo.label}
-                      </span>
-                      <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                        {p.id}
-                      </span>
-                    </div>
-
-                    <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
-                      <a
-                        href={`https://projects.worldbank.org/en/projects-operations/project-detail/${p.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: 'inherit', textDecoration: 'none' }}
-                      >
-                        {p.project_name}
-                      </a>
-                    </h4>
-
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                      🌍 <strong>Quốc gia:</strong> {p.countryshortname || 'N/A'}
-                    </div>
-
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#10b981', marginBottom: 6 }}>
-                      💵 Cam kết: {formatCurrency(p.totalCommitmentAmount)}
-                    </div>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                      Phê duyệt: {formatDate(p.boardapprovaldate)}
-                    </span>
-
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button
-                        onClick={(e) => handleToggleSave(p, e)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: isSaved ? '#10b981' : 'var(--text-muted)',
-                          padding: 4,
-                        }}
-                      >
-                        {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-                      </button>
-                      <a
-                        href={`https://projects.worldbank.org/en/projects-operations/project-detail/${p.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: 'var(--brand-600)', padding: 4 }}
-                      >
-                        <ExternalLink size={18} />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            )}
           </div>
 
-        {/* Pagination Footer (Fixed at bottom of main card) */}
-        {totalPages > 1 && (
-          <div style={{ flex: '0 0 auto', padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 15 }}>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              style={{ gap: 4 }}
-            >
-              <ChevronLeft size={14} /> Trước
-            </button>
+          {/* Pagination Footer */}
+          {totalPages > 1 && (
+            <div style={{ flex: '0 0 auto', padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 15 }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ gap: 4 }}
+              >
+                <ChevronLeft size={14} /> Trước
+              </button>
 
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Trang <strong style={{ color: 'var(--text-primary)' }}>{currentPage}</strong> / {totalPages}
-            </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Trang <strong style={{ color: 'var(--text-primary)' }}>{currentPage}</strong> / {totalPages}
+              </span>
 
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              style={{ gap: 4 }}
-            >
-              Sau <ChevronRight size={14} />
-            </button>
-          </div>
-        )}
-      </main>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{ gap: 4 }}
+              >
+                Sau <ChevronRight size={14} />
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
-  </div>
-);
+  );
 }

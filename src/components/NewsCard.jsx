@@ -51,7 +51,20 @@ export default function NewsCard({ article, index = 0 }) {
     setBkLoading(true);
     try {
       if (bookmarked) {
-        if (typeof article.id === 'number') await articlesService.removeBookmark(article.id);
+        if (article.is_local_project) {
+          try {
+            const raw = localStorage.getItem(article.local_key);
+            if (raw) {
+              const list = JSON.parse(raw);
+              const updated = list.filter((p) => p.id !== article.original_id);
+              localStorage.setItem(article.local_key, JSON.stringify(updated));
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        } else if (typeof article.id === 'number') {
+          await articlesService.removeBookmark(article.id);
+        }
         setBookmarked(false);
       } else {
         if (typeof article.id === 'number') await articlesService.addBookmark(article.id);
@@ -65,7 +78,11 @@ export default function NewsCard({ article, index = 0 }) {
   };
 
   const handleClick = () => {
-    nav(`/article/${article.id}`, { state: { article } });
+    if (article.is_local_project && article.url) {
+      window.open(article.url, '_blank');
+    } else {
+      nav(`/article/${article.id}`, { state: { article } });
+    }
   };
 
   return (
