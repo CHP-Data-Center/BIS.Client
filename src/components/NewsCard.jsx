@@ -79,7 +79,7 @@ export default function NewsCard({ article, index = 0 }) {
       <div
         className="news-card-img"
         style={{
-          overflow: 'hidden', flexShrink: 0, height: 170,
+          overflow: 'hidden', flexShrink: 0, height: 150,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: article.image_url
             ? 'none'
@@ -93,8 +93,6 @@ export default function NewsCard({ article, index = 0 }) {
             src={article.image_url}
             alt={titleText}
             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.06)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           />
         ) : (
           <span style={{ fontSize: 48, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.12))', display: 'block' }}>
@@ -198,13 +196,42 @@ export default function NewsCard({ article, index = 0 }) {
             style={{
               background: 'none', border: 'none', cursor: bkLoading ? 'wait' : 'pointer',
               color: bookmarked ? '#f59e0b' : 'var(--text-muted)',
-              padding: 2, borderRadius: 4, display: 'flex', alignItems: 'center',
-              transition: 'color 0.15s',
+              padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center',
+              transition: 'color 0.15s, background-color 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
-            {bookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+            {bookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
           </button>
-          <ExternalLink size={11} style={{ color: 'var(--text-muted)' }} />
+          {article.url && (
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title="Xem bài gốc"
+              style={{
+                color: 'var(--text-muted)',
+                padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center',
+                transition: 'color 0.15s, background-color 0.15s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = 'var(--brand-600)';
+                e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = 'var(--text-muted)';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <ExternalLink size={18} />
+            </a>
+          )}
         </div>
       </div>
     </article>

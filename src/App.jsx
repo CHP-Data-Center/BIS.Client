@@ -14,6 +14,7 @@ import BookmarksPage from './pages/BookmarksPage';
 import AiPage from './pages/AiPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminPage from './pages/AdminPage';
+import WorldBankView from './components/WorldBankView';
 
 // Error Boundary cho React
 class ErrorBoundary extends Component {
@@ -133,6 +134,12 @@ export default function App() {
           <Route path="/news/:source" element={
             <ProtectedRoute>
               <AppLayout><NewsPage /></AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/worldbank" element={
+            <ProtectedRoute>
+              <AppLayout><WorldBankView /></AppLayout>
             </ProtectedRoute>
           } />
 
