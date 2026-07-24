@@ -42,6 +42,38 @@ export function adaptProcurement(p) {
   };
 }
 
+/** Một dự án ODA -> shape thẻ NewsCard (trang list ADB/World Bank). */
+export function adaptOdaToCard(p) {
+  const bits = [p.country, p.status].filter(Boolean).join(' · ');
+  return {
+    id: `${p.source_org}-${p.id}`, // chuỗi -> NewsCard bỏ qua bookmark an toàn
+    source: p.source_org, // 'adb' | 'worldbank' -> SOURCE_STYLE
+    title: p.title,
+    titleVi: p.title_vi || p.title,
+    excerpt: bits || undefined,
+    amount: p.amount,
+    aiSummary: p.ai_summary,
+    date: p.approval_date,
+  };
+}
+
+/** Một gói mua sắm công -> shape thẻ NewsCard (trang Đấu Thầu Công). */
+export function adaptProcToCard(p) {
+  const bits = [
+    p.procuring_entity,
+    p.package_count ? `${p.package_count} gói` : null,
+    p.status,
+  ].filter(Boolean).join(' · ');
+  return {
+    id: `proc-${p.id}`,
+    source: 'gov',
+    title: p.title,
+    titleVi: p.title,
+    excerpt: bits || undefined,
+    date: p.publish_date,
+  };
+}
+
 /** Gộp oda + procurement thành mảng item bản đồ; chỉ giữ item có toạ độ. */
 export function buildMapItems(odaItems = [], procItems = []) {
   return [

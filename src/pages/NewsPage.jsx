@@ -3,19 +3,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, ChevronRight, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper } from 'lucide-react';
 import { articlesService } from '../services/articles';
+import { odaService } from '../services/oda';
+import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
 
 const PAGE_SIZE = 18;
 
-// Source type mapping based on URL param
+// Ánh xạ URL param -> nguồn. api: 'articles' (tin bài) | 'oda' (ADB/WB) | 'proc' (đấu thầu).
+// ADB/WB nằm ở bảng oda_projects, đấu thầu ở procurement_items — KHÔNG phải /articles.
 const SOURCE_MAP = {
-  all:       { label: 'Tất Cả Tin Tức & Dự Án', type: null, icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  press:     { label: 'Tin Tức Báo Chí', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  gov:       { label: 'Mua Sắm Công / Đấu Thầu', type: 'gov', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
-  tintuc:    { label: 'Tin Tức Báo Chí', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  adb:       { label: 'Dự Án & Đấu Thầu ADB (Châu Á)', query: 'ADB', mockKey: 'adb', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
-  worldbank: { label: 'Dự Án & Đấu Thầu World Bank', query: 'World Bank', mockKey: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
-  dauthau:   { label: 'Mua Sắm Công Quốc Gia', type: 'gov', mockKey: 'dauthau', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  all:       { label: 'Tất Cả Tin Tức & Dự Án', api: 'articles', type: null, icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  press:     { label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  tintuc:    { label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  adb:       { label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
+  worldbank: { label: 'Dự Án World Bank', api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
+  gov:       { label: 'Mua Sắm Công / Đấu Thầu', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  dauthau:   { label: 'Mua Sắm Công Quốc Gia', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
 };
 
 function SkeletonCard() {
@@ -76,21 +79,38 @@ export default function NewsPage() {
   const fetchArticles = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const params = {
-        page: p,
-        size: PAGE_SIZE,
-        sort: sortBy,
-        only_my_keywords: onlyMyKw,
-      };
-      const queryVal = search.trim() || srcConfig.query || '';
-      if (queryVal)          params.q           = queryVal;
-      if (srcConfig.type)    params.source_type = srcConfig.type;
-      if (dateFrom)          params.date_from   = dateFrom;
-      if (dateTo)            params.date_to     = dateTo;
+      const q = search.trim();
+      let items = [];
+      let tot = 0;
 
-      const data = await articlesService.getArticles(params);
-      setArticles(data.items || []);
-      setTotal(data.total || 0);
+      if (srcConfig.api === 'oda') {
+        // Dự án ADB / World Bank (bảng oda_projects).
+        const res = await odaService.getProjects({
+          source: srcConfig.odaSource, page: p, size: PAGE_SIZE, ...(q ? { q } : {}),
+        });
+        items = (res.items || []).map(adaptOdaToCard);
+        tot = res.total || 0;
+      } else if (srcConfig.api === 'proc') {
+        // Mua sắm công / đấu thầu (bảng procurement_items).
+        const res = await odaService.getProcurement({
+          page: p, size: PAGE_SIZE, ...(q ? { q } : {}),
+        });
+        items = (res.items || []).map(adaptProcToCard);
+        tot = res.total || 0;
+      } else {
+        // Tin bài (bảng articles).
+        const params = { page: p, size: PAGE_SIZE, sort: sortBy, only_my_keywords: onlyMyKw };
+        if (q)              params.q           = q;
+        if (srcConfig.type) params.source_type = srcConfig.type;
+        if (dateFrom)       params.date_from   = dateFrom;
+        if (dateTo)         params.date_to     = dateTo;
+        const res = await articlesService.getArticles(params);
+        items = res.items || [];
+        tot = res.total || 0;
+      }
+
+      setArticles(items);
+      setTotal(tot);
     } catch (e) {
       console.warn('NewsPage fetch error:', e);
       setArticles([]);
