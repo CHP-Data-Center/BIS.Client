@@ -558,24 +558,50 @@ export default function WorldBankView() {
               )}
             </button>
 
-            {/* Search Bar */}
-            <div style={{ position: 'relative' }}>
-              <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
-                type="text"
-                className="form-input"
-                style={{ paddingLeft: 30, paddingRight: 26, fontSize: 12, height: 36 }}
-                placeholder="Tìm Tên, ID, Quốc gia..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <X
-                  size={13}
-                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'var(--text-muted)' }}
-                  onClick={() => setSearchTerm('')}
+            {/* Search Bar with dedicated Search Button */}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ paddingLeft: 30, paddingRight: 26, fontSize: 12, height: 36, width: '100%' }}
+                  placeholder="Tìm Tên, ID, Quốc gia..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setCurrentPage(1);
+                    }
+                  }}
                 />
-              )}
+                {searchTerm && (
+                  <X
+                    size={13}
+                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'var(--text-muted)' }}
+                    onClick={() => setSearchTerm('')}
+                  />
+                )}
+              </div>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => setCurrentPage(1)}
+                style={{
+                  height: 36,
+                  padding: '0 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  whiteSpace: 'nowrap',
+                  borderRadius: 8,
+                }}
+                title="Bấm để tìm kiếm"
+              >
+                <Search size={13} />
+                Tìm kiếm
+              </button>
             </div>
 
             {/* Country Dropdown Filter */}
