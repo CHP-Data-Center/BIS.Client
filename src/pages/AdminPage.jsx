@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
-  Sliders, Search, ArrowUpRight, Check, X, Server
+  Sliders, Search, ArrowUpRight, Check, X, Server, Edit
 } from 'lucide-react';
 import { adminService } from '../services/admin';
 
@@ -19,6 +19,9 @@ export default function AdminPage() {
   const [crawlLogs, setCrawlLogs] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
   const [whitelist, setWhitelist] = useState([]);
+
+  // Edit User state
+  const [editingUser, setEditingUser] = useState(null);
 
   // New item forms
   const [newUser, setNewUser]           = useState({ email: '', password: '', display_name: '', role: 'user' });
@@ -105,6 +108,48 @@ export default function AdminPage() {
       showAlert('success', 'Đã xóa tài khoản thành công.');
     } catch (e) {
       showAlert('error', 'Lỗi khi xóa tài khoản.');
+    }
+  };
+
+  const handleOpenEditUser = (u) => {
+    setEditingUser({
+      id: u.id,
+      email: u.email || '',
+      display_name: u.display_name || '',
+      role: u.role || 'user',
+      password: '',
+      is_active: u.is_active ?? true,
+      email_digest_enabled: u.email_digest_enabled ?? true,
+      digest_hour: u.digest_hour ?? 7,
+      timezone: u.timezone || 'Asia/Ho_Chi_Minh',
+    });
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setActionLoading(true);
+    try {
+      const payload = {
+        email: editingUser.email,
+        display_name: editingUser.display_name,
+        role: editingUser.role,
+        is_active: editingUser.is_active,
+        email_digest_enabled: editingUser.email_digest_enabled,
+        digest_hour: parseInt(editingUser.digest_hour, 10),
+        timezone: editingUser.timezone,
+      };
+      if (editingUser.password && editingUser.password.trim() !== '') {
+        payload.password = editingUser.password.trim();
+      }
+      const updated = await adminService.updateUser(editingUser.id, payload);
+      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+      setEditingUser(null);
+      showAlert('success', `Đã cập nhật thông tin tài khoản ${updated.email}!`);
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi cập nhật tài khoản.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -498,6 +543,7 @@ export default function AdminPage() {
                       <th style={{ padding: '12px 20px' }}>Họ &amp; Tên</th>
                       <th style={{ padding: '12px 20px' }}>Email</th>
                       <th style={{ padding: '12px 20px' }}>Vai Trò</th>
+                      <th style={{ padding: '12px 20px' }}>Trạng Thái</th>
                       <th style={{ padding: '12px 20px' }}>Ngày Khởi Tạo</th>
                       <th style={{ padding: '12px 20px', textAlign: 'right' }}>Hành Động</th>
                     </tr>
@@ -505,6 +551,7 @@ export default function AdminPage() {
                   <tbody>
                     {users.map(u => {
                       const isAdminRole = u.role === 'admin';
+                      const isActive = u.is_active !== false;
                       return (
                         <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                           <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -531,17 +578,38 @@ export default function AdminPage() {
                               {isAdminRole ? '👑 ADMIN' : '👤 USER'}
                             </span>
                           </td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <span style={{
+                              fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
+                              background: isActive ? '#ecfdf5' : '#fef2f2',
+                              color: isActive ? '#047857' : '#b91c1c',
+                              border: `1px solid ${isActive ? '#a7f3d0' : '#fca5a5'}`,
+                            }}>
+                              {isActive ? '🟢 HOẠT ĐỘNG' : '🔴 ĐÃ KHÓA'}
+                            </span>
+                          </td>
                           <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12 }}>
                             {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '-'}
                           </td>
                           <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              onClick={() => handleDeleteUser(u.id)}
-                              style={{ color: '#ef4444', padding: '6px 10px' }}
-                            >
-                              <Trash2 size={14} /> Xóa
-                            </button>
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleOpenEditUser(u)}
+                                style={{ color: '#2563eb', padding: '6px 10px' }}
+                                title="Chỉnh sửa tài khoản"
+                              >
+                                <Edit size={14} /> Sửa
+                              </button>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleDeleteUser(u.id)}
+                                style={{ color: '#ef4444', padding: '6px 10px' }}
+                                title="Xóa tài khoản"
+                              >
+                                <Trash2 size={14} /> Xóa
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -657,6 +725,148 @@ export default function AdminPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Edit User Modal ── */}
+      {editingUser && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 580,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.3)', position: 'relative',
+            animation: 'fadeIn 0.2s ease-out',
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+                  <Edit size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                    Chỉnh Sửa Tài Khoản Người Dùng
+                  </h3>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Cập nhật phân quyền, mật khẩu và cài đặt cá nhân</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, borderRadius: 8 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleUpdateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+              <div>
+                <label className="form-label">Email tài khoản *</label>
+                <input
+                  className="form-input"
+                  type="email"
+                  value={editingUser.email}
+                  onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Họ và tên hiển thị</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  value={editingUser.display_name}
+                  onChange={e => setEditingUser({ ...editingUser, display_name: e.target.value })}
+                  placeholder="Họ và tên"
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Phân quyền vai trò</label>
+                <select
+                  className="form-input"
+                  value={editingUser.role}
+                  onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
+                >
+                  <option value="user">👤 User (Người dùng)</option>
+                  <option value="admin">👑 Admin (Quản trị viên)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">Trạng thái tài khoản</label>
+                <select
+                  className="form-input"
+                  value={editingUser.is_active ? 'true' : 'false'}
+                  onChange={e => setEditingUser({ ...editingUser, is_active: e.target.value === 'true' })}
+                >
+                  <option value="true">🟢 Hoạt động</option>
+                  <option value="false">🔴 Đã khóa tài khoản</option>
+                </select>
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Mật khẩu mới (Đặt lại mật khẩu)</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={editingUser.password}
+                  onChange={e => setEditingUser({ ...editingUser, password: e.target.value })}
+                  placeholder="Để trống nếu không muốn đổi mật khẩu (Mật khẩu cần ≥8 ký tự, có chữ hoa, số & ký tự đặc biệt)"
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Bản tin Email Digest</label>
+                <select
+                  className="form-input"
+                  value={editingUser.email_digest_enabled ? 'true' : 'false'}
+                  onChange={e => setEditingUser({ ...editingUser, email_digest_enabled: e.target.value === 'true' })}
+                >
+                  <option value="true">📧 Bật nhận Email Digest</option>
+                  <option value="false">🔕 Tắt Email Digest</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">Giờ nhận Digest (0 - 23h)</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={editingUser.digest_hour}
+                  onChange={e => setEditingUser({ ...editingUser, digest_hour: e.target.value })}
+                />
+              </div>
+
+              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setEditingUser(null)}
+                  style={{ padding: '10px 20px', borderRadius: 12 }}
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={actionLoading}
+                  style={{ padding: '10px 24px', borderRadius: 12, gap: 8, fontWeight: 800 }}
+                >
+                  {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
+                  Lưu Thay Đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

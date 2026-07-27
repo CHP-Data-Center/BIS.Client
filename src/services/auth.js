@@ -8,6 +8,15 @@ export const authService = {
     return data;
   },
 
+  /** Đăng nhập bằng Google (credential hoặc access_token) */
+  async googleLogin(credential, accessToken = null) {
+    const { data } = await api.post('/auth/google', {
+      credential: credential || null,
+      access_token: accessToken || null,
+    });
+    return data;
+  },
+
   /** Lấy thông tin user hiện tại (cần token) */
   async getMe() {
     const { data } = await api.get('/auth/me');

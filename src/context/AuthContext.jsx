@@ -43,6 +43,24 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const loginWithGoogle = useCallback(async (credential, accessToken = null) => {
+    setLoginError('');
+    try {
+      const res = await authService.googleLogin(credential, accessToken);
+      localStorage.setItem('bis_token', res.access_token);
+      setToken(res.access_token);
+
+      const me = await authService.getMe();
+      setUser(me);
+      setLoginError('');
+      return true;
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Đăng nhập Google thất bại.';
+      setLoginError(msg);
+      return false;
+    }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('bis_token');
     localStorage.removeItem('bis_user');
@@ -75,6 +93,7 @@ export function AuthProvider({ children }) {
         user: augmentedUser,
         token,
         login,
+        loginWithGoogle,
         logout,
         loginError,
         setLoginError,

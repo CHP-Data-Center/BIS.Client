@@ -1,20 +1,32 @@
 // src/pages/LoginPage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Cpu } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
 
-// Random floating particles
+// Google Icon Component
+function GoogleIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
+// Floating particles background
 function Particles() {
-  const items = Array.from({ length: 18 }, (_, i) => ({
+  const items = Array.from({ length: 22 }, (_, i) => ({
     id: i,
-    left:  `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
     delay: `${Math.random() * 8}s`,
-    duration: `${6 + Math.random() * 8}s`,
-    size:  `${3 + Math.random() * 5}px`,
-    opacity: 0.15 + Math.random() * 0.35,
+    duration: `${6 + Math.random() * 10}s`,
+    size: `${3 + Math.random() * 5}px`,
+    opacity: 0.15 + Math.random() * 0.45,
   }));
   return (
     <div className="particles">
@@ -34,16 +46,18 @@ function Particles() {
 }
 
 export default function LoginPage() {
-  const { login, loginError, setLoginError, isLoggedIn } = useAuth();
+  const { login, loginWithGoogle, loginError, setLoginError, isLoggedIn } = useAuth();
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => { setLoginError(''); }, []);
 
-  // Nếu đã đăng nhập → redirect dashboard
+  // Redirect if logged in
   useEffect(() => {
     if (isLoggedIn) nav('/dashboard', { replace: true });
   }, [isLoggedIn]);
@@ -56,6 +70,71 @@ export default function LoginPage() {
     if (ok) nav('/dashboard');
   };
 
+  const handleGoogleLogin = async () => {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    setLoginError('');
+
+    if (!googleClientId) {
+      setLoginError('Chưa cấu hình VITE_GOOGLE_CLIENT_ID trong môi trường.');
+      return;
+    }
+
+    if (!window.google?.accounts) {
+      setLoginError('Thư viện Google OAuth đang tải, vui lòng thử lại sau giây lát.');
+      return;
+    }
+
+    setGoogleLoading(true);
+
+    try {
+      if (window.google.accounts.oauth2) {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: 'email profile openid',
+          callback: async (response) => {
+            if (response && response.access_token) {
+              const ok = await loginWithGoogle(null, response.access_token);
+              setGoogleLoading(false);
+              if (ok) nav('/dashboard');
+            } else {
+              setGoogleLoading(false);
+              if (response?.error !== 'popup_closed_by_user') {
+                setLoginError('Đăng nhập Google không thành công.');
+              }
+            }
+          },
+          error_callback: (err) => {
+            setGoogleLoading(false);
+            setLoginError('Đã xảy ra lỗi khi mở đăng nhập Google.');
+          },
+        });
+        tokenClient.requestAccessToken();
+      } else if (window.google.accounts.id) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response) => {
+            if (response && response.credential) {
+              const ok = await loginWithGoogle(response.credential, null);
+              setGoogleLoading(false);
+              if (ok) nav('/dashboard');
+            } else {
+              setGoogleLoading(false);
+              setLoginError('Không lấy được credential từ Google.');
+            }
+          },
+        });
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setGoogleLoading(false);
+          }
+        });
+      }
+    } catch (err) {
+      setGoogleLoading(false);
+      setLoginError('Lỗi Google Sign-In: ' + (err.message || err));
+    }
+  };
+
   const fillDemo = () => {
     setEmail('admin@ckjvn.vn');
     setPassword('Admin@12345');
@@ -65,21 +144,21 @@ export default function LoginPage() {
     <div className="login-page">
       <Particles />
 
-      {/* Orbs */}
+      {/* Dynamic Ambient Background Orbs */}
       <div className="login-bg-orb" style={{
-        width: 400, height: 400, top: -100, left: -100,
-        background: 'radial-gradient(circle, rgba(37,99,235,0.3) 0%, transparent 70%)',
-        animationDelay: '0s', animationDuration: '7s'
+        width: 480, height: 480, top: -140, left: -140,
+        background: 'radial-gradient(circle, rgba(59,130,246,0.35) 0%, rgba(37,99,235,0.05) 60%, transparent 70%)',
+        animationDelay: '0s', animationDuration: '8s'
       }} />
       <div className="login-bg-orb" style={{
-        width: 300, height: 300, bottom: -80, right: -60,
-        background: 'radial-gradient(circle, rgba(13,148,136,0.25) 0%, transparent 70%)',
-        animationDelay: '3s', animationDuration: '8s'
+        width: 380, height: 380, bottom: -100, right: -80,
+        background: 'radial-gradient(circle, rgba(20,184,166,0.3) 0%, rgba(13,148,136,0.05) 60%, transparent 70%)',
+        animationDelay: '3s', animationDuration: '9s'
       }} />
       <div className="login-bg-orb" style={{
-        width: 200, height: 200, top: '40%', right: '10%',
-        background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)',
-        animationDelay: '1.5s', animationDuration: '6s'
+        width: 260, height: 260, top: '35%', right: '8%',
+        background: 'radial-gradient(circle, rgba(168,85,247,0.25) 0%, rgba(139,92,246,0.05) 60%, transparent 70%)',
+        animationDelay: '1.5s', animationDuration: '7s'
       }} />
 
       {/* Theme toggle top-right */}
@@ -87,60 +166,79 @@ export default function LoginPage() {
         <ThemeToggle />
       </div>
 
-      {/* Card */}
+      {/* Main Glassmorphism Card */}
       <div className="login-card">
-        {/* Logo */}
+        {/* Logo Header */}
         <div className="login-logo">
-          <img src="/logo.png" alt="BIS Logo" style={{ width: 64, height: 64, objectFit: 'contain', marginBottom: 'var(--space-4)', filter: 'drop-shadow(0 4px 12px rgba(37,99,235,0.3))' }} />
+          <div className="login-logo-container">
+            <img
+              src="/logo.png"
+              alt="BIS Logo"
+              className="login-logo-img"
+            />
+          </div>
           <div className="login-title">Bidding Intelligence System</div>
-          <div className="login-subtitle">Hệ Thống Thông Tin Đấu Thầu · Đăng nhập để tiếp tục</div>
+          <div className="login-subtitle">Hệ Thống Thông Tin Đấu Thầu Thông Minh</div>
         </div>
 
-        {/* AI badge */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '8px 14px',
-          background: 'linear-gradient(135deg, rgba(244,114,182,0.1), rgba(167,139,250,0.1))',
-          border: '1px solid rgba(167,139,250,0.3)',
-          borderRadius: 'var(--radius-md)',
-          marginBottom: 20,
-        }}>
-          <Cpu size={13} style={{ color: '#a78bfa' }} />
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-            Hệ thống AI Crawler đang hoạt động · Dữ liệu cập nhật mỗi 4h
+        {/* AI Status Badge */}
+        <div className="login-ai-badge">
+          <div className="ai-badge-icon">
+            <Cpu size={14} style={{ color: '#818cf8' }} />
+          </div>
+          <span className="ai-badge-text">
+            Crawler AI đang hoạt động · Cập nhật tự động 4h/lần
           </span>
-          <span style={{
-            marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%',
-            background: '#10b981', boxShadow: '0 0 6px #10b981', flexShrink: 0,
-            animation: 'pulse 2s infinite'
-          }} />
+          <span className="ai-badge-pulse" />
+        </div>
+
+        {/* Google Sign-In Button */}
+        <button
+          type="button"
+          className="login-btn-google"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loading}
+          id="btn-google-login"
+        >
+          {googleLoading ? (
+            <><span className="spinner spinner-dark" /> Đang kết nối Google...</>
+          ) : (
+            <><GoogleIcon /> <span>Đăng nhập bằng Google</span></>
+          )}
+        </button>
+
+        {/* Divider */}
+        <div className="auth-divider">
+          <span>hoặc tiếp tục với email</span>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" htmlFor="input-email">Email</label>
-            <input
-              id="input-email"
-              type="email"
-              className="form-input"
-              placeholder="admin@ckjvn.vn"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              autoComplete="username"
-            />
+            <label className="form-label" htmlFor="input-email">Email công việc</label>
+            <div className="form-input-wrapper">
+              <Mail className="form-input-icon" size={17} />
+              <input
+                id="input-email"
+                type="email"
+                className="form-input form-input-has-icon"
+                placeholder="admin@ckjvn.vn"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="username"
+              />
+            </div>
           </div>
 
           <div className="form-group">
             <label className="form-label" htmlFor="input-password">Mật khẩu</label>
-            <div style={{ position: 'relative' }}>
+            <div className="form-input-wrapper">
+              <Lock className="form-input-icon" size={17} />
               <input
                 id="input-password"
                 type={showPw ? 'text' : 'password'}
-                className="form-input"
+                className="form-input form-input-has-icon"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -152,28 +250,31 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPw(s => !s)}
                 id="btn-toggle-password"
-                style={{
-                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)', padding: 4, borderRadius: 4,
-                  transition: 'color 0.15s',
-                }}
+                className="btn-toggle-pw"
+                title={showPw ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
+          {/* Options: Remember me & Forgot PW */}
+          <div className="form-options">
+            <label className="remember-me-label">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+              />
+              <span>Ghi nhớ đăng nhập</span>
+            </label>
+            <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ Quản trị viên hệ thống để khôi phục mật khẩu.'); }} className="forgot-link">
+              Quên mật khẩu?
+            </a>
+          </div>
+
           {loginError && (
-            <div style={{
-              padding: '10px 14px',
-              background: '#fff1f2',
-              border: '1px solid #fecdd3',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 13,
-              color: '#e11d48',
-              marginBottom: 12,
-              fontWeight: 500,
-            }}>
+            <div className="login-error-alert">
               ⚠️ {loginError}
             </div>
           )}
@@ -182,36 +283,34 @@ export default function LoginPage() {
             type="submit"
             className="login-btn"
             id="btn-login-submit"
-            disabled={loading}
+            disabled={loading || googleLoading}
           >
-            {loading
-              ? <><span className="spinner" /> Đang đăng nhập...</>
-              : <><LogIn size={16} /> Đăng nhập hệ thống</>}
+            {loading ? (
+              <><span className="spinner" /> Đang xác thực...</>
+            ) : (
+              <><LogIn size={17} /> <span>Đăng nhập hệ thống</span></>
+            )}
           </button>
         </form>
 
-        {/* Demo hint */}
+        {/* Demo Fast Login Shortcut */}
         <div className="login-demo-hint">
-          <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-secondary)', fontSize: 11 }}>
-            🔑 TÀI KHOẢN MẶC ĐỊNH
+          <div className="demo-hint-title">
+            <ShieldCheck size={13} style={{ color: 'var(--brand-600)' }} />
+            <span>TÀI KHOẢN DÙNG THỬ</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={fillDemo}
-              id="btn-demo-admin"
-              style={{
-                fontSize: 11, padding: '4px 12px',
-                background: 'var(--brand-100)', color: 'var(--brand-700)',
-                borderRadius: 'var(--radius-full)', fontWeight: 600,
-                border: '1px solid var(--brand-200)', cursor: 'pointer',
-              }}
-            >
-              Admin: admin@ckjvn.vn / Admin@12345
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={fillDemo}
+            id="btn-demo-admin"
+            className="demo-account-pill"
+          >
+            <Sparkles size={12} />
+            <span>Admin: admin@ckjvn.vn / Admin@12345</span>
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
