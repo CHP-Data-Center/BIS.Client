@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
-  Sliders, Search, ArrowUpRight, Check, X, Server, Edit
+  Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle
 } from 'lucide-react';
 import { adminService } from '../services/admin';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminPage() {
+  const { user, isSuperAdmin, isRegionalAdmin, userRegion } = useAuth();
   const [activeTab, setActiveTab] = useState('crawl');
   const [loading, setLoading]     = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -16,6 +18,7 @@ export default function AdminPage() {
   // Data states
   const [users, setUsers]         = useState([]);
   const [sources, setSources]     = useState([]);
+  const [pendingSources, setPendingSources] = useState([]);
   const [crawlLogs, setCrawlLogs] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
   const [whitelist, setWhitelist] = useState([]);
@@ -24,7 +27,20 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState(null);
 
   // New item forms
-  const [newUser, setNewUser]           = useState({ email: '', password: '', display_name: '', role: 'user' });
+  const [newUser, setNewUser]           = useState({
+    email: '',
+    password: '',
+    display_name: '',
+    role: 'user',
+    region: userRegion || 'Toàn quốc',
+    permissions: {
+      can_view_press: true,
+      can_view_bidding: true,
+      can_view_oda: true,
+      can_manage_keywords: true,
+      can_export_data: true,
+    },
+  });
   const [newSource, setNewSource]       = useState({ name: '', source_type: 'press', url: '', parser_type: 'rss' });
   const [newBlacklist, setNewBlacklist] = useState('');
   const [newWhitelist, setNewWhitelist] = useState('');
@@ -37,15 +53,17 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [u, s, logs, bl, wl] = await Promise.all([
+      const [u, s, pending, logs, bl, wl] = await Promise.all([
         adminService.getUsers().catch(() => []),
         adminService.getSources().catch(() => []),
+        isSuperAdmin ? adminService.getPendingSources().catch(() => []) : Promise.resolve([]),
         adminService.getCrawlLogs().catch(() => []),
         adminService.getBlacklist().catch(() => []),
         adminService.getWhitelist().catch(() => []),
       ]);
       setUsers(u);
       setSources(s);
+      setPendingSources(pending);
       setCrawlLogs(logs);
       setBlacklist(bl);
       setWhitelist(wl);
@@ -63,10 +81,41 @@ export default function AdminPage() {
     setActionLoading(true);
     try {
       const res = await adminService.crawlNow();
-      showAlert('success', `⚡ Kích hoạt Crawl thành công! Đã lưu ${res.total_saved} bài mới / tổng ${res.total_items} tin tìm thấy.`);
-      loadData();
+      if (res.status === 'already_running') {
+        showAlert('error', '⚡ Hệ thống đang tiến hành crawl dữ liệu. Vui lòng chờ tiến trình hoàn tất!');
+      } else {
+        showAlert('success', `⚡ Kích hoạt Crawl thành công! Đã lưu ${res.total_saved || 0} bài mới / tổng ${res.total_items || 0} tin tìm thấy.`);
+        loadData();
+      }
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi kích hoạt crawl.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApproveSource = async (sourceId) => {
+    setActionLoading(true);
+    try {
+      const approved = await adminService.approveSource(sourceId);
+      setPendingSources(prev => prev.filter(s => s.id !== sourceId));
+      setSources(prev => [...prev, approved]);
+      showAlert('success', `Đã duyệt nguồn tin "${approved.name}"!`);
+    } catch (e) {
+      showAlert('error', 'Lỗi khi duyệt nguồn.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectSource = async (sourceId) => {
+    setActionLoading(true);
+    try {
+      await adminService.rejectSource(sourceId);
+      setPendingSources(prev => prev.filter(s => s.id !== sourceId));
+      showAlert('success', 'Đã từ chối đề xuất nguồn tin.');
+    } catch (e) {
+      showAlert('error', 'Lỗi khi từ chối đề xuất nguồn.');
     } finally {
       setActionLoading(false);
     }
@@ -89,9 +138,26 @@ export default function AdminPage() {
     if (!newUser.email || !newUser.password) return;
     setActionLoading(true);
     try {
-      const created = await adminService.createUser(newUser);
+      const payload = {
+        ...newUser,
+        region: isRegionalAdmin ? userRegion : newUser.region,
+      };
+      const created = await adminService.createUser(payload);
       setUsers(prev => [...prev, created]);
-      setNewUser({ email: '', password: '', display_name: '', role: 'user' });
+      setNewUser({
+        email: '',
+        password: '',
+        display_name: '',
+        role: 'user',
+        region: userRegion || 'Toàn quốc',
+        permissions: {
+          can_view_press: true,
+          can_view_bidding: true,
+          can_view_oda: true,
+          can_manage_keywords: true,
+          can_export_data: true,
+        },
+      });
       showAlert('success', `Đã tạo tài khoản ${created.email}!`);
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Không thể tạo user.');
@@ -117,6 +183,14 @@ export default function AdminPage() {
       email: u.email || '',
       display_name: u.display_name || '',
       role: u.role || 'user',
+      region: u.region || userRegion || 'Toàn quốc',
+      permissions: u.permissions || {
+        can_view_press: true,
+        can_view_bidding: true,
+        can_view_oda: true,
+        can_manage_keywords: true,
+        can_export_data: true,
+      },
       password: '',
       is_active: u.is_active ?? true,
       email_digest_enabled: u.email_digest_enabled ?? true,
@@ -134,6 +208,8 @@ export default function AdminPage() {
         email: editingUser.email,
         display_name: editingUser.display_name,
         role: editingUser.role,
+        region: editingUser.region,
+        permissions: editingUser.permissions,
         is_active: editingUser.is_active,
         email_digest_enabled: editingUser.email_digest_enabled,
         digest_hour: parseInt(editingUser.digest_hour, 10),
@@ -159,9 +235,13 @@ export default function AdminPage() {
     setActionLoading(true);
     try {
       const created = await adminService.createSource(newSource);
-      setSources(prev => [...prev, created]);
+      if (isRegionalAdmin || created.status === 'pending') {
+        showAlert('success', `⚡ Đã gửi đề xuất nguồn tin "${created.name}" tới Super Admin chờ duyệt!`);
+      } else {
+        setSources(prev => [...prev, created]);
+        showAlert('success', `Đã thêm nguồn tin "${created.name}"!`);
+      }
       setNewSource({ name: '', source_type: 'press', url: '', parser_type: 'rss' });
-      showAlert('success', `Đã thêm nguồn tin "${created.name}"!`);
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi thêm nguồn tin.');
     } finally {
@@ -363,6 +443,57 @@ export default function AdminPage() {
           {/* TAB 1: CRAWLER & SOURCES */}
           {activeTab === 'crawl' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {/* Super Admin: Pending Sources Review Section */}
+              {isSuperAdmin && pendingSources.length > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                  border: '1.5px solid #fde68a', borderRadius: 20, padding: '22px 24px',
+                  boxShadow: '0 6px 24px rgba(245,158,11,0.12)',
+                }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: '#92400e', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <AlertCircle size={20} style={{ color: '#d97706' }} />
+                    📥 Nguồn Tin Đề Xuất Chờ Super Admin Duyệt ({pendingSources.length})
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {pendingSources.map(ps => (
+                      <div key={ps.id} style={{
+                        background: 'white', border: '1px solid #fef3c7', borderRadius: 14, padding: '14px 18px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+                      }}>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: 14, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span>{ps.type === 'gov' ? '📋' : '📰'}</span>
+                            {ps.name}
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12, background: '#eff6ff', color: '#2563eb' }}>
+                              Phân vùng: {ps.region || 'Không xác định'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                            Target URL: <a href={ps.url} target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>{ps.url}</a>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => handleApproveSource(ps.id)}
+                            style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 10, padding: '6px 14px', fontWeight: 800, gap: 4 }}
+                          >
+                            <CheckCircle size={14} /> Duyệt Nguồn
+                          </button>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => handleRejectSource(ps.id)}
+                            style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 10, padding: '6px 14px', fontWeight: 800, gap: 4 }}
+                          >
+                            <XCircle size={14} /> Từ Chối
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Add Source Form Card */}
               <div style={{
                 background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
@@ -372,7 +503,7 @@ export default function AdminPage() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
                     <Plus size={16} />
                   </div>
-                  Thêm Nguồn Crawl Tự Động Mới
+                  {isSuperAdmin ? 'Thêm Nguồn Crawl Tự Động Mới' : `Đề Xuất Nguồn Crawl Mới (${userRegion || 'Phân Vùng'})`}
                 </div>
 
                 <form onSubmit={handleCreateSource} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
@@ -393,7 +524,7 @@ export default function AdminPage() {
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
-                    Thêm Nguồn
+                    {isSuperAdmin ? 'Thêm Nguồn' : 'Gửi Đề Xuất'}
                   </button>
                 </form>
               </div>
@@ -463,14 +594,18 @@ export default function AdminPage() {
                             {s.last_crawled_at ? new Date(s.last_crawled_at).toLocaleString('vi-VN') : 'Vừa khởi tạo'}
                           </td>
                           <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              onClick={() => handleDeleteSource(s.id)}
-                              title="Xóa nguồn"
-                              style={{ color: '#ef4444', padding: '6px 10px' }}
-                            >
-                              <Trash2 size={14} /> Xóa
-                            </button>
+                            {isSuperAdmin ? (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => handleDeleteSource(s.id)}
+                                title="Xóa nguồn"
+                                style={{ color: '#ef4444', padding: '6px 10px' }}
+                              >
+                                <Trash2 size={14} /> Xóa
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Chỉ Super Admin mới được xóa</span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -496,7 +631,7 @@ export default function AdminPage() {
                   Tạo Tài Khoản Người Dùng Mới
                 </div>
 
-                <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, alignItems: 'end' }}>
+                <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, alignItems: 'end' }}>
                   <div>
                     <label className="form-label">Email tài khoản *</label>
                     <input className="form-input" type="email" placeholder="user@ckjvn.vn" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} required />
@@ -509,14 +644,33 @@ export default function AdminPage() {
                     <label className="form-label">Họ và tên hiển thị</label>
                     <input className="form-input" placeholder="Nguyễn Văn A" value={newUser.display_name} onChange={e => setNewUser({ ...newUser, display_name: e.target.value })} />
                   </div>
+
                   <div>
                     <label className="form-label">Phân quyền vai trò</label>
-                    <select className="form-input" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
-                      <option value="user">👤 User (Người dùng)</option>
-                      <option value="admin">👑 Admin (Quản trị viên)</option>
+                    <select
+                      className="form-input"
+                      value={newUser.role}
+                      disabled={isRegionalAdmin}
+                      onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                    >
+                      {isSuperAdmin && <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>}
+                      {isSuperAdmin && <option value="admin">🔰 Admin Phân Vùng</option>}
+                      <option value="user">👤 User (Nhân viên)</option>
                     </select>
                   </div>
-                  <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gridColumn: 'span 4', width: 'fit-content', gap: 6, padding: '9px 22px' }}>
+
+                  <div>
+                    <label className="form-label">Phân vùng hoạt động</label>
+                    <input
+                      className="form-input"
+                      value={isRegionalAdmin ? userRegion : newUser.region}
+                      disabled={isRegionalAdmin}
+                      onChange={e => setNewUser({ ...newUser, region: e.target.value })}
+                      placeholder="vd: Miền Bắc, Miền Nam, Hà Nội..."
+                    />
+                  </div>
+
+                  <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
                     Tạo Tài Khoản Mới
                   </button>
@@ -569,14 +723,19 @@ export default function AdminPage() {
                           </td>
                           <td style={{ padding: '14px 20px', color: 'var(--text-secondary)' }}>{u.email}</td>
                           <td style={{ padding: '14px 20px' }}>
-                            <span style={{
-                              fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
-                              background: isAdminRole ? '#fef3c7' : '#f1f5f9',
-                              color: isAdminRole ? '#92400e' : '#475569',
-                              border: `1px solid ${isAdminRole ? '#fde68a' : '#e2e8f0'}`,
-                            }}>
-                              {isAdminRole ? '👑 ADMIN' : '👤 USER'}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <span style={{
+                                fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20, width: 'fit-content',
+                                background: u.role === 'super_admin' ? '#fef3c7' : u.role === 'admin' ? '#eff6ff' : '#f1f5f9',
+                                color: u.role === 'super_admin' ? '#92400e' : u.role === 'admin' ? '#1d4ed8' : '#475569',
+                                border: `1px solid ${u.role === 'super_admin' ? '#fde68a' : u.role === 'admin' ? '#bfdbfe' : '#e2e8f0'}`,
+                              }}>
+                                {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NHÂN VIÊN'}
+                              </span>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+                                📍 {u.region || 'Toàn quốc'}
+                              </span>
+                            </div>
                           </td>
                           <td style={{ padding: '14px 20px' }}>
                             <span style={{
@@ -791,11 +950,24 @@ export default function AdminPage() {
                 <select
                   className="form-input"
                   value={editingUser.role}
+                  disabled={isRegionalAdmin && editingUser.id !== user?.id}
                   onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
                 >
-                  <option value="user">👤 User (Người dùng)</option>
-                  <option value="admin">👑 Admin (Quản trị viên)</option>
+                  {isSuperAdmin && <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>}
+                  {isSuperAdmin && <option value="admin">🔰 Admin Phân Vùng</option>}
+                  <option value="user">👤 User (Nhân viên)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="form-label">Phân vùng hoạt động</label>
+                <input
+                  className="form-input"
+                  value={editingUser.region || ''}
+                  disabled={isRegionalAdmin}
+                  onChange={e => setEditingUser({ ...editingUser, region: e.target.value })}
+                  placeholder="vd: Miền Bắc, Miền Nam..."
+                />
               </div>
 
               <div>
@@ -808,6 +980,38 @@ export default function AdminPage() {
                   <option value="true">🟢 Hoạt động</option>
                   <option value="false">🔴 Đã khóa tài khoản</option>
                 </select>
+              </div>
+
+              {/* Granular Staff Permissions Section */}
+              <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                <label className="form-label" style={{ marginBottom: 10, fontWeight: 800, display: 'block', color: 'var(--text-primary)' }}>
+                  🔑 Phân Quyền Mô-đun Xem/Sử Dụng Cho Nhân Viên
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, fontSize: 12.5 }}>
+                  {[
+                    { key: 'can_view_press', label: '📰 Xem Tin Báo Chí' },
+                    { key: 'can_view_bidding', label: '📋 Xem Gói Thầu GOV' },
+                    { key: 'can_view_oda', label: '🌐 Xem Dự Án ODA & WB' },
+                    { key: 'can_manage_keywords', label: '🏷️ Đăng Ký Từ Khóa Lọc' },
+                    { key: 'can_export_data', label: '📥 Xuất Báo Cáo Data' },
+                  ].map(p => (
+                    <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600 }}>
+                      <input
+                        type="checkbox"
+                        checked={editingUser.permissions?.[p.key] !== false}
+                        onChange={e => setEditingUser({
+                          ...editingUser,
+                          permissions: {
+                            ...(editingUser.permissions || {}),
+                            [p.key]: e.target.checked,
+                          },
+                        })}
+                        style={{ width: 16, height: 16, accentColor: '#2563eb' }}
+                      />
+                      {p.label}
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div style={{ gridColumn: 'span 2' }}>

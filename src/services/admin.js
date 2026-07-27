@@ -24,6 +24,17 @@ export const adminService = {
     const { data } = await api.get('/admin/sources');
     return data;
   },
+  async getPendingSources() {
+    const { data } = await api.get('/admin/sources/pending');
+    return data;
+  },
+  async approveSource(sourceId) {
+    const { data } = await api.post(`/admin/sources/${sourceId}/approve`);
+    return data;
+  },
+  async rejectSource(sourceId) {
+    await api.post(`/admin/sources/${sourceId}/reject`);
+  },
   async createSource(payload) {
     const { data } = await api.post('/admin/sources', payload);
     return data;

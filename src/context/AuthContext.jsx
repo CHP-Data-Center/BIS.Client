@@ -69,8 +69,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isGuest  = !user;
-  const isAdmin  = user?.role === 'admin';
+  const isSuperAdmin = user?.role === 'super_admin';
+  const isRegionalAdmin = user?.role === 'admin';
+  const isAdmin = isSuperAdmin || isRegionalAdmin;
   const isLoggedIn = !!user;
+  const userRegion = user?.region || 'Toàn quốc';
+
+  const hasPermission = useCallback((permissionKey) => {
+    if (!user) return false;
+    if (user.role === 'super_admin' || user.role === 'admin') return true;
+    if (!user.permissions) return true; // Mặc định đầy đủ nếu chưa gán giới hạn
+    return user.permissions[permissionKey] !== false;
+  }, [user]);
 
   // Tên viết tắt (avatar initials)
   const initials = user
@@ -99,6 +109,10 @@ export function AuthProvider({ children }) {
         setLoginError,
         isGuest,
         isAdmin,
+        isSuperAdmin,
+        isRegionalAdmin,
+        userRegion,
+        hasPermission,
         isLoggedIn,
         loading,
       }}
