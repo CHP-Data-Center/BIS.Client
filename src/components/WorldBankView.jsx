@@ -515,7 +515,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
   };
 
   return (
-    <div style={{ width: '100%', height: 'calc(100vh - 128px)', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+    <div className="wb-container" style={{ width: '100%', height: 'calc(100vh - 128px)', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -590,10 +590,10 @@ export default function WorldBankView({ type = 'worldbank' }) {
       </div>
 
       {/* 2-COLUMN LAYOUT: Sidebar (Filters + Stats) | Main Content (Table) */}
-      <div style={{ display: 'flex', gap: 14, flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
+      <div className="wb-layout" style={{ display: 'flex', gap: 14, flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
 
         {/* LEFT SIDEBAR FILTERS */}
-        <aside style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto', paddingRight: 2 }}>
+        <aside className="wb-sidebar" style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto', paddingRight: 2 }}>
 
           {/* Compact Stats Box */}
           <div
@@ -876,6 +876,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
 
         {/* RIGHT MAIN CONTENT AREA */}
         <main
+          className="wb-main"
           style={{
             flex: '1 1 0%', minWidth: 0,
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
@@ -961,8 +962,8 @@ export default function WorldBankView({ type = 'worldbank' }) {
               </div>
             ) : viewMode === 'table' ? (
               /* TABLE VIEW */
-              <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <div className="table-responsive" style={{ overflowX: 'auto', width: '100%' }}>
+                <table className="table" style={{ width: '100%', minWidth: 980, borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-surface-2)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                     <tr style={{ borderBottom: '1px solid var(--border)' }}>
                       {config.headers.map((h) => {
@@ -1170,31 +1171,54 @@ export default function WorldBankView({ type = 'worldbank' }) {
           </div>
 
           {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div style={{ flex: '0 0 auto', padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, zIndex: 15 }}>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                style={{ gap: 4 }}
-              >
-                <ChevronLeft size={14} /> Trước
-              </button>
+          {totalPages > 1 && (() => {
+            const pages = [];
+            for (let i = 1; i <= totalPages; i++) {
+              if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) pages.push(i);
+              else if (pages[pages.length - 1] !== '...') pages.push('...');
+            }
 
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Trang <strong style={{ color: 'var(--text-primary)' }}>{currentPage}</strong> / {totalPages}
-              </span>
+            return (
+              <div className="pagination" style={{ flex: '0 0 auto', marginTop: 12, marginBottom: 12, justifyContent: 'center' }}>
+                <button
+                  className="page-btn"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  id="btn-wb-prev"
+                  title="Trang trước"
+                >
+                  <ChevronLeft size={15} />
+                </button>
 
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                style={{ gap: 4 }}
-              >
-                Sau <ChevronRight size={14} />
-              </button>
-            </div>
-          )}
+                {pages.map((p, i) => (
+                  p === '...'
+                    ? <span key={`ellipsis-${i}`} style={{ padding: '0 4px', color: 'var(--text-muted)' }}>…</span>
+                    : <button
+                        key={p}
+                        className={`page-btn ${p === currentPage ? 'active' : ''}`}
+                        onClick={() => setCurrentPage(p)}
+                        id={`btn-wb-page-${p}`}
+                      >
+                        {p}
+                      </button>
+                ))}
+
+                <span className="page-info">
+                  {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredProjects.length)} / {filteredProjects.length}
+                </span>
+
+                <button
+                  className="page-btn"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  id="btn-wb-next"
+                  title="Trang sau"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            );
+          })()}
         </main>
       </div>
     </div>

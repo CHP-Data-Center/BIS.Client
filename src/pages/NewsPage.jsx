@@ -8,7 +8,7 @@ import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
 import WorldBankView from '../components/WorldBankView';
 
-const PAGE_SIZE = 18;
+const PAGE_SIZE = 12;
 
 // Ánh xạ URL param -> nguồn. api: 'articles' (tin bài) | 'oda' (ADB/WB) | 'proc' (đấu thầu).
 // ADB/WB nằm ở bảng oda_projects, đấu thầu ở procurement_items — KHÔNG phải /articles.
@@ -42,15 +42,48 @@ function Pagination({ page, total, pageSize, onChange }) {
   const totalPages = Math.ceil(total / pageSize);
   if (totalPages <= 1) return null;
 
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) pages.push(i);
+    else if (pages[pages.length - 1] !== '...') pages.push('...');
+  }
+
   return (
     <div className="pagination" style={{ marginTop: 20, marginBottom: 12 }}>
-      <button className="page-btn" onClick={() => onChange(page - 1)} disabled={page === 1} id="btn-news-prev">
+      <button
+        className="page-btn"
+        onClick={() => onChange(page - 1)}
+        disabled={page === 1}
+        id="btn-news-prev"
+        title="Trang trước"
+      >
         <ChevronLeft size={15} />
       </button>
-      <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, padding: '0 8px' }}>
-        Trang {page} / {totalPages} — {total} bài
+
+      {pages.map((p, i) => (
+        p === '...'
+          ? <span key={`ellipsis-${i}`} style={{ padding: '0 4px', color: 'var(--text-muted)' }}>…</span>
+          : <button
+              key={p}
+              className={`page-btn ${p === page ? 'active' : ''}`}
+              onClick={() => onChange(p)}
+              id={`btn-news-page-${p}`}
+            >
+              {p}
+            </button>
+      ))}
+
+      <span className="page-info">
+        {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} / {total}
       </span>
-      <button className="page-btn" onClick={() => onChange(page + 1)} disabled={page === totalPages} id="btn-news-next">
+
+      <button
+        className="page-btn"
+        onClick={() => onChange(page + 1)}
+        disabled={page === totalPages}
+        id="btn-news-next"
+        title="Trang sau"
+      >
         <ChevronRight size={15} />
       </button>
     </div>
@@ -475,9 +508,9 @@ export default function NewsPage() {
             paddingBottom: 16,
           }}
         >
-          <div className="news-grid">
+          <div className="news-grid news-page-grid">
             {isPageLoading
-              ? Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)
+              ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonCard key={i} />)
               : displayedArticles.length === 0
                 ? (
                   <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 300 }}>

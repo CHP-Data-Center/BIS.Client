@@ -59,12 +59,25 @@ class ErrorBoundary extends Component {
   }
 }
 
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
 // Layout wrapper cho các trang cần header + sidebar
 function AppLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="app-layout">
-      <Header />
-      <Sidebar />
+      <Header onToggleSidebar={() => setSidebarOpen(v => !v)} isSidebarOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
       <main className="main-content">
         {children}
       </main>

@@ -25,11 +25,11 @@ const toolItems = [
   { to: '/ai-chat',   icon: <Bot size={16} />,      label: 'Trợ Lý AI',  badge: null, highlight: true },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, isAdmin } = useAuth();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Main Nav */}
       <div className="sidebar-section">
         <div className="sidebar-label">Chính</div>
@@ -38,6 +38,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+            onClick={() => onClose?.()}
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             {item.icon}
@@ -57,6 +58,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+            onClick={() => onClose?.()}
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             <span style={{ color: item.color }}>{item.icon}</span>
@@ -75,6 +77,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+            onClick={() => onClose?.()}
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
             style={item.highlight ? { position: 'relative' } : {}}
           >
@@ -97,6 +100,7 @@ export default function Sidebar() {
           <NavLink
             to="/admin"
             id="sidebar-admin"
+            onClick={() => onClose?.()}
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
             style={{ color: '#2563eb', fontWeight: 700, marginTop: 4 }}
           >

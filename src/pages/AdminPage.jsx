@@ -23,6 +23,19 @@ export default function AdminPage() {
   const [blacklist, setBlacklist] = useState([]);
   const [whitelist, setWhitelist] = useState([]);
 
+  // Region dropdown states
+  const [customRegions, setCustomRegions] = useState([]);
+  const [isAddingNewRegion, setIsAddingNewRegion] = useState(false);
+  const [isAddingEditRegion, setIsAddingEditRegion] = useState(false);
+  const [isAddingSourceEditRegion, setIsAddingSourceEditRegion] = useState(false);
+  const [newCustomRegionInput, setNewCustomRegionInput] = useState('');
+
+  const allRegions = Array.from(new Set([
+    'Toàn quốc', 'Miền Bắc', 'Miền Nam', 'Miền Trung', 'Hà Nội', 'TP.HCM',
+    ...customRegions,
+    ...users.map(u => u.region).filter(Boolean),
+  ]));
+
   // Edit User state
   const [editingUser, setEditingUser] = useState(null);
 
@@ -42,6 +55,7 @@ export default function AdminPage() {
     },
   });
   const [newSource, setNewSource]       = useState({ name: '', source_type: 'press', url: '', parser_type: 'rss' });
+  const [editingSource, setEditingSource] = useState(null);
   const [newBlacklist, setNewBlacklist] = useState('');
   const [newWhitelist, setNewWhitelist] = useState('');
 
@@ -61,14 +75,16 @@ export default function AdminPage() {
         adminService.getBlacklist().catch(() => []),
         adminService.getWhitelist().catch(() => []),
       ]);
-      setUsers(u);
-      setSources(s);
-      setPendingSources(pending);
-      setCrawlLogs(logs);
-      setBlacklist(bl);
-      setWhitelist(wl);
+      setUsers(u || []);
+      const approvedOnly = (s || []).filter(item => !item.status || item.status === 'approved');
+      setSources(approvedOnly);
+      setPendingSources(pending || []);
+      setCrawlLogs(logs || []);
+      setBlacklist(bl || []);
+      setWhitelist(wl || []);
     } catch (e) {
       console.warn('Admin load error:', e);
+      showAlert('error', e.response?.data?.detail || 'Phiên làm việc hết hạn hoặc lỗi kết nối.');
     } finally {
       setLoading(false);
     }
@@ -99,7 +115,13 @@ export default function AdminPage() {
     try {
       const approved = await adminService.approveSource(sourceId);
       setPendingSources(prev => prev.filter(s => s.id !== sourceId));
-      setSources(prev => [...prev, approved]);
+      setSources(prev => {
+        const exists = prev.some(s => s.id === sourceId);
+        if (exists) {
+          return prev.map(s => s.id === sourceId ? approved : s);
+        }
+        return [...prev, approved];
+      });
       showAlert('success', `Đã duyệt nguồn tin "${approved.name}"!`);
     } catch (e) {
       showAlert('error', 'Lỗi khi duyệt nguồn.');
@@ -113,6 +135,7 @@ export default function AdminPage() {
     try {
       await adminService.rejectSource(sourceId);
       setPendingSources(prev => prev.filter(s => s.id !== sourceId));
+      setSources(prev => prev.filter(s => s.id !== sourceId));
       showAlert('success', 'Đã từ chối đề xuất nguồn tin.');
     } catch (e) {
       showAlert('error', 'Lỗi khi từ chối đề xuất nguồn.');
@@ -244,6 +267,42 @@ export default function AdminPage() {
       setNewSource({ name: '', source_type: 'press', url: '', parser_type: 'rss' });
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi thêm nguồn tin.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleOpenEditSource = (s) => {
+    setEditingSource({
+      id: s.id,
+      name: s.name || '',
+      source_type: s.source_type || s.type || 'press',
+      url: s.url || s.rss_url || s.base_url || '',
+      parser_type: s.crawl_strategy || 'rss',
+      region: s.region || userRegion || 'Toàn quốc',
+    });
+  };
+
+  const handleUpdateSource = async (e) => {
+    e.preventDefault();
+    if (!editingSource || !editingSource.name || !editingSource.url) return;
+    setActionLoading(true);
+    try {
+      const updated = await adminService.updateSource(editingSource.id, editingSource);
+      if (isRegionalAdmin || updated.status === 'pending') {
+        setSources(prev => prev.filter(s => s.id !== updated.id));
+        setPendingSources(prev => {
+          const exists = prev.some(p => p.id === updated.id);
+          return exists ? prev.map(p => p.id === updated.id ? updated : p) : [...prev, updated];
+        });
+        showAlert('success', `⚡ Đã cập nhật nguồn tin "${updated.name}"! Đề xuất đã được gửi tới Super Admin chờ duyệt lại.`);
+      } else {
+        setSources(prev => prev.map(s => s.id === updated.id ? updated : s));
+        showAlert('success', `Đã cập nhật nguồn tin "${updated.name}" thành công!`);
+      }
+      setEditingSource(null);
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi cập nhật nguồn tin.');
     } finally {
       setActionLoading(false);
     }
@@ -506,7 +565,7 @@ export default function AdminPage() {
                   {isSuperAdmin ? 'Thêm Nguồn Crawl Tự Động Mới' : `Đề Xuất Nguồn Crawl Mới (${userRegion || 'Phân Vùng'})`}
                 </div>
 
-                <form onSubmit={handleCreateSource} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
+                <form onSubmit={handleCreateSource} className="responsive-grid-form" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
                   <div>
                     <label className="form-label">Tên nguồn tin *</label>
                     <input className="form-input" placeholder="vd: VnExpress Kinh Doanh" value={newSource.name} onChange={e => setNewSource({ ...newSource, name: e.target.value })} required />
@@ -594,18 +653,28 @@ export default function AdminPage() {
                             {s.last_crawled_at ? new Date(s.last_crawled_at).toLocaleString('vi-VN') : 'Vừa khởi tạo'}
                           </td>
                           <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                            {isSuperAdmin ? (
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
                               <button
                                 className="btn btn-ghost btn-sm"
-                                onClick={() => handleDeleteSource(s.id)}
-                                title="Xóa nguồn"
-                                style={{ color: '#ef4444', padding: '6px 10px' }}
+                                onClick={() => handleOpenEditSource(s)}
+                                style={{ color: '#2563eb', padding: '6px 10px' }}
+                                title="Chỉnh sửa nguồn tin"
                               >
-                                <Trash2 size={14} /> Xóa
+                                <Edit size={14} /> Sửa
                               </button>
-                            ) : (
-                              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Chỉ Super Admin mới được xóa</span>
-                            )}
+                              {isSuperAdmin ? (
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  onClick={() => handleDeleteSource(s.id)}
+                                  title="Xóa nguồn"
+                                  style={{ color: '#ef4444', padding: '6px 10px' }}
+                                >
+                                  <Trash2 size={14} /> Xóa
+                                </button>
+                              ) : (
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Chỉ Super Admin được xóa</span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -661,13 +730,65 @@ export default function AdminPage() {
 
                   <div>
                     <label className="form-label">Phân vùng hoạt động</label>
-                    <input
-                      className="form-input"
-                      value={isRegionalAdmin ? userRegion : newUser.region}
-                      disabled={isRegionalAdmin}
-                      onChange={e => setNewUser({ ...newUser, region: e.target.value })}
-                      placeholder="vd: Miền Bắc, Miền Nam, Hà Nội..."
-                    />
+                    {isAddingNewRegion ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          className="form-input"
+                          placeholder="Nhập tên phân vùng mới..."
+                          value={newCustomRegionInput}
+                          onChange={e => {
+                            setNewCustomRegionInput(e.target.value);
+                            setNewUser({ ...newUser, region: e.target.value });
+                          }}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => {
+                            if (newCustomRegionInput.trim()) {
+                              setCustomRegions(prev => [...prev, newCustomRegionInput.trim()]);
+                            }
+                            setIsAddingNewRegion(false);
+                          }}
+                          title="Xác nhận"
+                          style={{ padding: '0 10px', color: '#10b981', fontWeight: 800 }}
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => {
+                            setIsAddingNewRegion(false);
+                            setNewUser({ ...newUser, region: 'Toàn quốc' });
+                          }}
+                          title="Hủy"
+                          style={{ padding: '0 8px', color: '#ef4444' }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        className="form-input"
+                        value={newUser.region}
+                        disabled={isRegionalAdmin}
+                        onChange={e => {
+                          if (e.target.value === '__add_new__') {
+                            setIsAddingNewRegion(true);
+                            setNewCustomRegionInput('');
+                          } else {
+                            setNewUser({ ...newUser, region: e.target.value });
+                          }
+                        }}
+                      >
+                        {allRegions.map(r => (
+                          <option key={r} value={r}>📍 {r}</option>
+                        ))}
+                        <option value="__add_new__">➕ Thêm phân vùng mới...</option>
+                      </select>
+                    )}
                   </div>
 
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
@@ -961,13 +1082,58 @@ export default function AdminPage() {
 
               <div>
                 <label className="form-label">Phân vùng hoạt động</label>
-                <input
-                  className="form-input"
-                  value={editingUser.region || ''}
-                  disabled={isRegionalAdmin}
-                  onChange={e => setEditingUser({ ...editingUser, region: e.target.value })}
-                  placeholder="vd: Miền Bắc, Miền Nam..."
-                />
+                {isAddingEditRegion ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      className="form-input"
+                      placeholder="Nhập tên phân vùng mới..."
+                      value={editingUser.region || ''}
+                      onChange={e => setEditingUser({ ...editingUser, region: e.target.value })}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        if (editingUser.region && editingUser.region.trim()) {
+                          setCustomRegions(prev => [...prev, editingUser.region.trim()]);
+                        }
+                        setIsAddingEditRegion(false);
+                      }}
+                      title="Xác nhận"
+                      style={{ padding: '0 10px', color: '#10b981', fontWeight: 800 }}
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setIsAddingEditRegion(false)}
+                      title="Hủy"
+                      style={{ padding: '0 8px', color: '#ef4444' }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    className="form-input"
+                    value={allRegions.includes(editingUser.region) ? editingUser.region : '__add_new__'}
+                    disabled={isRegionalAdmin}
+                    onChange={e => {
+                      if (e.target.value === '__add_new__') {
+                        setIsAddingEditRegion(true);
+                      } else {
+                        setEditingUser({ ...editingUser, region: e.target.value });
+                      }
+                    }}
+                  >
+                    {allRegions.map(r => (
+                      <option key={r} value={r}>📍 {r}</option>
+                    ))}
+                    <option value="__add_new__">➕ Thêm phân vùng mới...</option>
+                  </select>
+                )}
               </div>
 
               <div>
@@ -1066,6 +1232,168 @@ export default function AdminPage() {
                 >
                   {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
                   Lưu Thay Đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ── Edit Source Modal ── */}
+      {editingSource && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 540,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.3)', position: 'relative',
+            animation: 'fadeIn 0.2s ease-out',
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+                  <Edit size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                    Chỉnh Sửa Nguồn Crawl Dữ Liệu
+                  </h3>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {isSuperAdmin ? 'Cập nhật cấu hình nguồn crawl trực tiếp' : 'Chỉnh sửa nguồn (cần Super Admin duyệt lại)'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingSource(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4, borderRadius: 8 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleUpdateSource} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Tên nguồn tin *</label>
+                <input
+                  className="form-input"
+                  value={editingSource.name}
+                  onChange={e => setEditingSource({ ...editingSource, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Loại nguồn *</label>
+                <select
+                  className="form-input"
+                  value={editingSource.source_type}
+                  onChange={e => setEditingSource({ ...editingSource, source_type: e.target.value })}
+                >
+                  <option value="press">📰 Báo Chí (press)</option>
+                  <option value="gov">📋 Đấu Thầu (gov)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">Phương thức Crawl *</label>
+                <select
+                  className="form-input"
+                  value={editingSource.parser_type}
+                  onChange={e => setEditingSource({ ...editingSource, parser_type: e.target.value })}
+                >
+                  <option value="rss">📡 RSS Feed</option>
+                  <option value="html">🌐 HTML Web Scraping</option>
+                </select>
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Đường dẫn URL / RSS Endpoint *</label>
+                <input
+                  className="form-input"
+                  value={editingSource.url}
+                  onChange={e => setEditingSource({ ...editingSource, url: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Phân vùng áp dụng</label>
+                {isAddingSourceEditRegion ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      className="form-input"
+                      placeholder="Nhập tên phân vùng mới..."
+                      value={editingSource.region || ''}
+                      onChange={e => setEditingSource({ ...editingSource, region: e.target.value })}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        if (editingSource.region && editingSource.region.trim()) {
+                          setCustomRegions(prev => [...prev, editingSource.region.trim()]);
+                        }
+                        setIsAddingSourceEditRegion(false);
+                      }}
+                      title="Xác nhận"
+                      style={{ padding: '0 10px', color: '#10b981', fontWeight: 800 }}
+                    >
+                      <Check size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setIsAddingSourceEditRegion(false)}
+                      title="Hủy"
+                      style={{ padding: '0 8px', color: '#ef4444' }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    className="form-input"
+                    value={allRegions.includes(editingSource.region) ? editingSource.region : '__add_new__'}
+                    disabled={isRegionalAdmin}
+                    onChange={e => {
+                      if (e.target.value === '__add_new__') {
+                        setIsAddingSourceEditRegion(true);
+                      } else {
+                        setEditingSource({ ...editingSource, region: e.target.value });
+                      }
+                    }}
+                  >
+                    {allRegions.map(r => (
+                      <option key={r} value={r}>📍 {r}</option>
+                    ))}
+                    <option value="__add_new__">➕ Thêm phân vùng mới...</option>
+                  </select>
+                )}
+              </div>
+
+              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setEditingSource(null)}
+                  style={{ padding: '10px 20px', borderRadius: 12 }}
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={actionLoading}
+                  style={{ padding: '10px 24px', borderRadius: 12, gap: 8, fontWeight: 800 }}
+                >
+                  {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
+                  {isSuperAdmin ? 'Lưu Thay Đổi' : 'Gửi Đề Xuất Cập Nhật'}
                 </button>
               </div>
             </form>

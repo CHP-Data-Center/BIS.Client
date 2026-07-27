@@ -62,25 +62,25 @@ function highlightText(text, query) {
 
 function getSourceStyle(article) {
   const sourceName = article.sources?.[0]?.source_name || '';
-  if (sourceName.toLowerCase().includes('báo')) {
-    return { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: sourceName };
+  const lowerName = sourceName.toLowerCase();
+
+  if (lowerName.includes('adb')) {
+    return { color: '#d97706', bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.25)', icon: '🏦', name: sourceName || 'ADB' };
+  }
+  if (lowerName.includes('world bank') || lowerName.includes('wb')) {
+    return { color: '#047857', bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.25)', icon: '🌍', name: sourceName || 'World Bank' };
+  }
+  if (lowerName.includes('thầu') || lowerName.includes('egp')) {
+    return { color: '#6d28d9', bg: 'rgba(139, 92, 246, 0.08)', border: 'rgba(139, 92, 246, 0.25)', icon: '📋', name: sourceName || 'Đấu Thầu' };
+  }
+  if (lowerName.includes('báo')) {
+    return { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: sourceName };
   }
   if (article.source && SOURCE_STYLE[article.source]) {
     const base = SOURCE_STYLE[article.source];
-    if (sourceName) {
-      return { ...base, name: sourceName };
-    }
-    return base;
+    return { ...base, color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', name: sourceName || base.name };
   }
-  if (sourceName.toLowerCase().includes('adb'))
-    return { ...SOURCE_STYLE.adb, name: sourceName };
-  if (sourceName.toLowerCase().includes('world bank') || sourceName.toLowerCase().includes('wb'))
-    return { ...SOURCE_STYLE.worldbank, name: sourceName };
-  if (sourceName.toLowerCase().includes('egp') || sourceName.toLowerCase().includes('thầu'))
-    return { ...SOURCE_STYLE.gov, name: sourceName };
-  if (sourceName)
-    return { ...SOURCE_STYLE.press, name: sourceName };
-  return { ...SOURCE_STYLE.default, name: 'Nguồn tin' };
+  return { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: sourceName || 'Nguồn tin' };
 }
 
 export default function NewsCard({ article, index = 0 }) {
@@ -161,7 +161,7 @@ export default function NewsCard({ article, index = 0 }) {
   return (
     <article
       className="news-card"
-      style={{ animationDelay: `${index * 60}ms`, overflow: 'visible' }}
+      style={{ animationDelay: `${index * 60}ms` }}
       onClick={handleClick}
       id={`news-card-${article.id}`}
     >
@@ -169,7 +169,7 @@ export default function NewsCard({ article, index = 0 }) {
       <div
         className="news-card-img"
         style={{
-          overflow: 'hidden', flexShrink: 0, height: 150,
+          overflow: 'hidden', flexShrink: 0, height: 135,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)',
           background: article.image_url
@@ -186,25 +186,29 @@ export default function NewsCard({ article, index = 0 }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
           />
         ) : (
-          <span style={{ fontSize: 48, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.12))', display: 'block' }}>
+          <span style={{ fontSize: 42, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.12))', display: 'block' }}>
             {article.coverEmoji || src.icon}
           </span>
         )}
       </div>
 
       {/* Body */}
-      <div className="news-card-body" style={{ overflow: 'visible', position: 'relative' }}>
-        <div className="news-card-meta">
-          <span className="news-source-tag" style={{ background: src.color }}>
+      <div className="news-card-body" style={{ padding: '12px 14px 8px 14px', gap: 6, flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div className="news-card-meta" style={{ gap: 6, marginBottom: 2 }}>
+          <span className="news-source-tag" style={{
+            background: src.bg,
+            color: src.color,
+            border: `1px solid ${src.border}`,
+          }}>
             <span style={{ fontSize: 10 }}>{src.icon}</span>
-            {src.name}
+            <span>{src.name}</span>
           </span>
 
           {article.amount && (
             <span style={{
-              fontSize: 11, fontWeight: 800, color: src.color,
-              background: src.bg, padding: '2px 8px', borderRadius: 12,
-              border: `1px solid ${src.color}40`,
+              fontSize: 10.5, fontWeight: 700, color: src.color,
+              background: src.bg, padding: '2px 7px', borderRadius: 6,
+              border: `1px solid ${src.border}`,
             }}>
               💰 {article.amount}
             </span>
@@ -212,28 +216,29 @@ export default function NewsCard({ article, index = 0 }) {
 
           {article.sources?.length > 1 && (
             <span style={{
-              fontSize: 10.5, fontWeight: 700, padding: '2px 7px',
-              borderRadius: 'var(--radius-full)',
+              fontSize: 10, fontWeight: 600, padding: '2px 6px',
+              borderRadius: 6,
               background: 'var(--bg-surface-2)', color: 'var(--text-muted)',
-              border: '1px solid var(--border)',
+              border: '1px solid var(--border-subtle)',
             }}>
               +{article.sources.length - 1} nguồn
             </span>
           )}
 
           {article.is_read && (
-            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic' }}>✓ Đã đọc</span>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic', marginLeft: 'auto' }}>✓ Đã đọc</span>
           )}
         </div>
 
-        <h3 className="news-card-title">{highlightText(titleText, currentQ)}</h3>
+        <h3 className="news-card-title" style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.38, marginBottom: 2 }}>
+          {highlightText(titleText, currentQ)}
+        </h3>
 
         {excerptText && (
           <p style={{
-            fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55,
+            fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.45,
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-            overflow: 'hidden', flex: '1',
-            maxHeight: '3.1em', marginTop: 0,
+            overflow: 'hidden', flex: '1', marginTop: 0, marginBottom: 4,
           }}>
             {highlightText(excerptText, currentQ)}
           </p>

@@ -1,9 +1,10 @@
 // src/components/Header.jsx
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck } from 'lucide-react';
+import { Menu, X, Search, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import NotificationDropdown from './NotificationDropdown';
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -12,7 +13,7 @@ function LiveClock() {
     return () => clearInterval(t);
   }, []);
   return (
-    <div style={{
+    <div className="live-clock" style={{
       display: 'flex', alignItems: 'center', gap: 5,
       padding: '4px 10px',
       background: 'var(--bg-surface-2)',
@@ -29,7 +30,7 @@ function LiveClock() {
   );
 }
 
-export default function Header() {
+export default function Header({ onToggleSidebar, isSidebarOpen }) {
   const { user, logout, isGuest, isAdmin } = useAuth();
   const nav = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -61,6 +62,23 @@ export default function Header() {
     <header className="header">
       {/* Left */}
       <div className="header-left">
+        <button
+          className="mobile-menu-btn"
+          onClick={onToggleSidebar}
+          aria-label="Toggle Navigation Menu"
+          style={{
+            display: 'none',
+            background: 'none',
+            border: 'none',
+            padding: 6,
+            cursor: 'pointer',
+            color: 'var(--text-primary)',
+            borderRadius: 6,
+          }}
+        >
+          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+
         <div className="header-logo" onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>
           <img src="/logo.png" alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div className="logo-text">
@@ -69,7 +87,7 @@ export default function Header() {
           </div>
         </div>
 
-        <div style={{ width: 1, height: 28, background: 'var(--border)', margin: '0 4px' }} />
+        <div className="header-divider" style={{ width: 1, height: 28, background: 'var(--border)', margin: '0 4px' }} />
 
         <LiveClock />
       </div>
@@ -93,10 +111,7 @@ export default function Header() {
         <ThemeToggle />
 
         {/* Notification */}
-        <button className="notif-btn" id="btn-notifications" title="Thông báo">
-          <Bell size={16} />
-          <span className="notif-dot" />
-        </button>
+        <NotificationDropdown />
 
         {/* Guest CTA OR User menu */}
         {isGuest ? (

@@ -1289,7 +1289,7 @@ export default function DashboardPage() {
         </div>
 
         {/* News grid */}
-        <div className="news-grid">
+        <div className="news-grid dashboard-news-grid">
           {loading
             ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonCard key={i} />)
             : articles.length === 0
@@ -1340,7 +1340,7 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="responsive-grid-form" style={{ gap: 16 }}>
             {Object.entries(SOURCE_CONFIG).map(([key, src]) => {
               let count = 0;
               if (key === 'gov') count = govCount;
