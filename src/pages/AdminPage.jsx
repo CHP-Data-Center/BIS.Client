@@ -1086,11 +1086,15 @@ export default function AdminPage() {
                 <select
                   className="form-input"
                   value={editingUser.role}
-                  disabled={isRegionalAdmin && editingUser.id !== user?.id}
+                  disabled={isRegionalAdmin}
                   onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
                 >
-                  {isSuperAdmin && <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>}
-                  {isSuperAdmin && <option value="admin">🔰 Admin Phân Vùng</option>}
+                  {(isSuperAdmin || editingUser.role === 'super_admin') && (
+                    <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>
+                  )}
+                  {(isSuperAdmin || editingUser.role === 'admin') && (
+                    <option value="admin">🔰 Admin Phân Vùng</option>
+                  )}
                   <option value="user">👤 User (Nhân viên)</option>
                 </select>
               </div>

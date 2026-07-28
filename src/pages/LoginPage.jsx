@@ -299,15 +299,33 @@ export default function LoginPage() {
             <ShieldCheck size={13} style={{ color: 'var(--brand-600)' }} />
             <span>TÀI KHOẢN DÙNG THỬ</span>
           </div>
-          <button
-            type="button"
-            onClick={fillDemo}
-            id="btn-demo-admin"
-            className="demo-account-pill"
-          >
-            <Sparkles size={12} />
-            <span>Admin: admin@ckjvn.vn / Admin@12345</span>
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('superadmin@ckjvn.vn');
+                setPassword('SuperAdmin@12345');
+              }}
+              id="btn-demo-superadmin"
+              className="demo-account-pill"
+              style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(236,72,153,0.15))', borderColor: 'rgba(168,85,247,0.3)', color: '#9333ea' }}
+            >
+              <Sparkles size={12} />
+              <span>👑 Super Admin: superadmin@ckjvn.vn / SuperAdmin@12345</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@ckjvn.vn');
+                setPassword('Admin@12345');
+              }}
+              id="btn-demo-admin"
+              className="demo-account-pill"
+            >
+              <Sparkles size={12} />
+              <span>🔰 Admin Phân Vùng: admin@ckjvn.vn / Admin@12345</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
