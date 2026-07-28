@@ -863,6 +863,7 @@ export default function AdminPage() {
                     {users.map(u => {
                       const isAdminRole = u.role === 'admin';
                       const isActive = u.is_active !== false;
+                      const isMe = user && (u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase()));
                       return (
                         <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                           <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -875,7 +876,14 @@ export default function AdminPage() {
                               }}>
                                 {(u.display_name || u.email).slice(0, 2).toUpperCase()}
                               </div>
-                              {u.display_name || u.email}
+                              <span>
+                                {u.display_name || u.email}
+                                {isMe && (
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 6 }}>
+                                    (bạn)
+                                  </span>
+                                )}
+                              </span>
                             </div>
                           </td>
                           <td style={{ padding: '14px 20px', color: 'var(--text-secondary)' }}>{u.email}</td>

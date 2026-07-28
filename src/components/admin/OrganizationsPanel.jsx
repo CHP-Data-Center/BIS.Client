@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Building2, Plus, Loader2, ShieldCheck, Users, Sliders, UserPlus, CheckCircle, Pencil, Trash2, X, Check, AlertTriangle } from 'lucide-react';
 import { orgService } from '../../services/organizations';
+import { useAuth } from '../../context/AuthContext';
 import ScopePanel from './ScopePanel';
 
 export default function OrganizationsPanel({ sources = [], allUsers = [], onMessage, onUserUpdated }) {
+  const { user: currentUser } = useAuth();
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -334,18 +336,24 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
               <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 18 }}>
                 {orgUsers.length === 0 ? (
                   <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Chưa có người dùng trong tổ chức này.</div>
-                ) : orgUsers.map(u => (
-                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{u.display_name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                ) : orgUsers.map(u => {
+                  const isMe = currentUser && (u.id === currentUser.id || (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()));
+                  return (
+                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>
+                          {u.display_name}
+                          {isMe && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 6 }}>(bạn)</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                        background: u.role === 'admin' ? '#ede9fe' : '#f1f5f9', color: u.role === 'admin' ? '#6d28d9' : '#475569' }}>
+                        {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NHÂN VIÊN'}
+                      </span>
                     </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
-                      background: u.role === 'admin' ? '#ede9fe' : '#f1f5f9', color: u.role === 'admin' ? '#6d28d9' : '#475569' }}>
-                      {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NHÂN VIÊN'}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -367,19 +375,22 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 10 }}>
-                      {orgUsers.filter(u => u.role === 'admin').map(u => (
-                        <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-surface-2)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ede9fe', color: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
-                            {(u.display_name || u.email || 'A')[0].toUpperCase()}
-                          </div>
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {u.display_name || u.email}
+                      {orgUsers.filter(u => u.role === 'admin').map(u => {
+                        const isMe = currentUser && (u.id === currentUser.id || (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()));
+                        return (
+                          <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-surface-2)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#ede9fe', color: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+                              {(u.display_name || u.email || 'A')[0].toUpperCase()}
                             </div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {u.email}
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {u.display_name || u.email}
+                                {isMe && <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 4 }}>(bạn)</span>}
+                              </div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {u.email}
+                              </div>
                             </div>
-                          </div>
                           <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 6px', borderRadius: 6, background: '#ede9fe', color: '#6d28d9', flexShrink: 0 }}>
                             ADMIN
                           </span>
