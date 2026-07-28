@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
-  Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle
+  Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2
 } from 'lucide-react';
 import { adminService } from '../services/admin';
 import { useAuth } from '../context/AuthContext';
+import OrganizationsPanel from '../components/admin/OrganizationsPanel';
+import ScopePanel from '../components/admin/ScopePanel';
 
 export default function AdminPage() {
   const { user, isSuperAdmin, isRegionalAdmin, userRegion } = useAuth();
@@ -348,6 +350,9 @@ export default function AdminPage() {
   const tabs = [
     { id: 'crawl',     label: 'Nguồn & Crawler', icon: <Database size={16} />, badge: sources.length },
     { id: 'users',     label: 'Tài Khoản User',  icon: <Users size={16} />,    badge: users.length },
+    // Đa tổ chức (ADR-005): super admin quản tổ chức; org admin đặt phạm vi tổ chức mình.
+    ...(isSuperAdmin ? [{ id: 'orgs', label: 'Tổ Chức', icon: <Building2 size={16} /> }] : []),
+    ...(isRegionalAdmin ? [{ id: 'scope', label: 'Phạm Vi Dữ Liệu', icon: <Sliders size={16} /> }] : []),
     { id: 'filters',   label: 'Bộ Lọc Từ Khóa', icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
     { id: 'digest',    label: 'Email Digest',    icon: <Mail size={16} /> },
   ];
@@ -898,6 +903,16 @@ export default function AdminPage() {
                 </table>
               </div>
             </div>
+          )}
+
+          {/* TAB: TỔ CHỨC (super admin) — ADR-005 */}
+          {activeTab === 'orgs' && (
+            <OrganizationsPanel sources={sources} onMessage={showAlert} />
+          )}
+
+          {/* TAB: PHẠM VI DỮ LIỆU (org admin đặt cho tổ chức mình) — ADR-005 */}
+          {activeTab === 'scope' && (
+            <ScopePanel sources={sources} onMessage={showAlert} />
           )}
 
           {/* TAB 3: BLACK & WHITE LIST */}
