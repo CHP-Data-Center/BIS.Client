@@ -37,7 +37,36 @@ export function AuthProvider({ children }) {
       setLoginError('');
       return true;
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Email hoặc mật khẩu không đúng.';
+      let msg = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.';
+      if (err.response) {
+        const status = err.response.status;
+        const detail = err.response.data?.detail;
+        if (status === 401) {
+          msg = typeof detail === 'string' ? detail : 'Email hoặc mật khẩu không chính xác.';
+        } else if (status === 403) {
+          msg = typeof detail === 'string' ? detail : 'Tài khoản đã bị khóa hoặc tạm dừng. Vui lòng liên hệ Quản trị viên.';
+        } else if (detail) {
+          if (typeof detail === 'string') {
+            if (detail === 'Dữ liệu không hợp lệ.') {
+              msg = 'Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại email và mật khẩu.';
+            } else {
+              msg = detail;
+            }
+          } else if (Array.isArray(detail) && detail.length > 0) {
+            const first = detail[0];
+            const loc = first?.loc || [];
+            if (loc.includes('email')) {
+              msg = 'Định dạng email không hợp lệ.';
+            } else if (loc.includes('password')) {
+              msg = 'Vui lòng nhập mật khẩu đầy đủ.';
+            } else {
+              msg = first?.msg || 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.';
+            }
+          }
+        }
+      } else if (err.request) {
+        msg = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.';
+      }
       setLoginError(msg);
       return false;
     }
@@ -55,7 +84,7 @@ export function AuthProvider({ children }) {
       setLoginError('');
       return true;
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Đăng nhập Google thất bại.';
+      const msg = err.response?.data?.detail || 'Đăng nhập Google không thành công. Vui lòng thử lại.';
       setLoginError(msg);
       return false;
     }

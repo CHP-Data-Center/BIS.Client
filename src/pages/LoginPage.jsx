@@ -54,6 +54,7 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
 
   useEffect(() => { setLoginError(''); }, []);
 
@@ -64,8 +65,41 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoginError('');
+    setFieldErrors({ email: '', password: '' });
+
+    const trimmedEmail = email.trim();
+    let hasError = false;
+    const newFieldErrors = { email: '', password: '' };
+
+    if (!trimmedEmail) {
+      newFieldErrors.email = 'Vui lòng nhập email công việc.';
+      hasError = true;
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        newFieldErrors.email = 'Định dạng email không hợp lệ.';
+        hasError = true;
+      }
+    }
+
+    if (!password) {
+      newFieldErrors.password = 'Vui lòng nhập mật khẩu.';
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFieldErrors(newFieldErrors);
+      if (newFieldErrors.email && newFieldErrors.password) {
+        setLoginError('Vui lòng điền đầy đủ email và mật khẩu.');
+      } else {
+        setLoginError(newFieldErrors.email || newFieldErrors.password);
+      }
+      return;
+    }
+
     setLoading(true);
-    const ok = await login(email, password);
+    const ok = await login(trimmedEmail, password);
     setLoading(false);
     if (ok) nav('/dashboard');
   };
@@ -73,6 +107,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     setLoginError('');
+    setFieldErrors({ email: '', password: '' });
 
     if (!googleClientId) {
       setLoginError('Chưa cấu hình VITE_GOOGLE_CLIENT_ID trong môi trường.');
@@ -119,7 +154,9 @@ export default function LoginPage() {
               if (ok) nav('/dashboard');
             } else {
               setGoogleLoading(false);
-              setLoginError('Không lấy được credential từ Google.');
+              if (response?.error !== 'popup_closed_by_user') {
+                setLoginError('Không lấy được thông tin đăng nhập từ Google.');
+              }
             }
           },
         });
@@ -131,11 +168,13 @@ export default function LoginPage() {
       }
     } catch (err) {
       setGoogleLoading(false);
-      setLoginError('Lỗi Google Sign-In: ' + (err.message || err));
+      setLoginError('Lỗi Đăng nhập Google: ' + (err.message || err));
     }
   };
 
   const fillDemo = () => {
+    setLoginError('');
+    setFieldErrors({ email: '', password: '' });
     setEmail('admin@ckjvn.vn');
     setPassword('Admin@12345');
   };
@@ -213,7 +252,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="input-email">Email công việc</label>
             <div className="form-input-wrapper">
@@ -221,14 +260,21 @@ export default function LoginPage() {
               <input
                 id="input-email"
                 type="email"
-                className="form-input form-input-has-icon"
+                className={`form-input form-input-has-icon ${fieldErrors.email ? 'form-input-error' : ''}`}
                 placeholder="admin@ckjvn.vn"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
+                onInvalid={(e) => e.preventDefault()}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+                  if (loginError) setLoginError('');
+                }}
                 autoComplete="username"
               />
             </div>
+            {fieldErrors.email && (
+              <div className="field-error-text">⚠️ {fieldErrors.email}</div>
+            )}
           </div>
 
           <div className="form-group">
@@ -238,11 +284,15 @@ export default function LoginPage() {
               <input
                 id="input-password"
                 type={showPw ? 'text' : 'password'}
-                className="form-input form-input-has-icon"
+                className={`form-input form-input-has-icon ${fieldErrors.password ? 'form-input-error' : ''}`}
                 placeholder="••••••••"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
+                onInvalid={(e) => e.preventDefault()}
+                onChange={e => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+                  if (loginError) setLoginError('');
+                }}
                 autoComplete="current-password"
                 style={{ paddingRight: 44 }}
               />
@@ -256,6 +306,9 @@ export default function LoginPage() {
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {fieldErrors.password && (
+              <div className="field-error-text">⚠️ {fieldErrors.password}</div>
+            )}
           </div>
 
           {/* Options: Remember me & Forgot PW */}
