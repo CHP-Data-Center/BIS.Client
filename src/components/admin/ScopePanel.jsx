@@ -45,7 +45,14 @@ function TagInput({ label, icon, values, onChange, placeholder }) {
 export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [scope, setScope] = useState({ sources: [], countries: [], keywords: [] });
+  const [scope, setScope] = useState({ sources: [], countries: [], keywords: [], article_types: [], categories: [] });
+
+  const ARTICLE_TYPE_OPTIONS = [
+    { id: 'press', label: 'Báo chí', icon: '📰' },
+    { id: 'adb', label: 'Dự án ADB', icon: '🏛️' },
+    { id: 'worldbank', label: 'World Bank', icon: '🌍' },
+    { id: 'procurement', label: 'Đấu thầu & Mua sắm công', icon: '📜' },
+  ];
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,6 +62,8 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
         sources: data.sources || [],
         countries: data.countries || [],
         keywords: data.keywords || [],
+        article_types: data.article_types || [],
+        categories: data.categories || [],
       });
     } catch (e) {
       onMessage?.('error', e.response?.data?.detail || 'Không tải được phạm vi.');
@@ -72,13 +81,26 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
     }));
   };
 
+  const toggleArticleType = (id) => {
+    setScope(s => ({
+      ...s,
+      article_types: s.article_types.includes(id) ? s.article_types.filter(x => x !== id) : [...s.article_types, id],
+    }));
+  };
+
   const save = async () => {
     setSaving(true);
     try {
-      const payload = { sources: scope.sources, countries: scope.countries, keywords: scope.keywords };
+      const payload = {
+        sources: scope.sources,
+        countries: scope.countries,
+        keywords: scope.keywords,
+        article_types: scope.article_types,
+        categories: scope.categories,
+      };
       if (orgId) await orgService.setOrgScopeSuper(orgId, payload);
       else await orgService.setMyScope(payload);
-      onMessage?.('success', 'Đã lưu phạm vi dữ liệu.');
+      onMessage?.('success', 'Đã lưu phạm vi dữ liệu phân vùng thành công.');
     } catch (e) {
       onMessage?.('error', e.response?.data?.detail || 'Lưu phạm vi thất bại.');
     } finally {
@@ -93,17 +115,43 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 24 }}>
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0, marginBottom: 20, lineHeight: 1.5 }}>
-        Giới hạn dữ liệu tổ chức được thấy. <strong>Để trống một mục = không giới hạn theo mục đó</strong> (thấy tất cả).
-        Người dùng trong tổ chức chỉ thấy tin/dự án khớp phạm vi này.
+        Cấu hình dữ liệu phân vùng cho phép Admin phân vùng chọn **Loại bài** (Báo chí, ADB, World Bank, Đấu thầu), **Loại từ khóa**, **Từ khóa** và **Quốc gia**.
+        <br />
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>* Để trống một mục = Không giới hạn theo mục đó (nhân viên xem được tất cả).</span>
       </p>
 
-      {/* Nguồn dữ liệu */}
-      <div style={{ marginBottom: 20 }}>
+      {/* 1. Loại bài / Nguồn thông tin */}
+      <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
-          <Database size={14} /> Nguồn dữ liệu
-          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>(bỏ chọn tất cả = thấy mọi nguồn)</span>
+          <Tag size={14} /> Loại bài & Nguồn dữ liệu chính
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>(bỏ chọn tất cả = xem mọi loại bài)</span>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {ARTICLE_TYPE_OPTIONS.map(opt => {
+            const on = scope.article_types.includes(opt.id);
+            return (
+              <button key={opt.id} type="button" onClick={() => toggleArticleType(opt.id)}
+                style={{
+                  fontSize: 13, fontWeight: 600, padding: '8px 16px', borderRadius: 20, cursor: 'pointer',
+                  background: on ? 'var(--brand-500)' : 'var(--bg-surface-2)',
+                  color: on ? 'white' : 'var(--text-secondary)',
+                  border: `1px solid ${on ? 'var(--brand-500)' : 'var(--border)'}`,
+                  display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all 0.15s ease'
+                }}>
+                <span>{opt.icon}</span> {on ? '✓ ' : ''}{opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 2. Nguồn dữ liệu cụ thể */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
+          <Database size={14} /> Nguồn báo chí cụ thể
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>(bỏ chọn tất cả = xem mọi nguồn báo chí)</span>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
           {sources.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Không có nguồn nào.</span>}
           {sources.map(s => {
             const on = scope.sources.includes(s.id);
@@ -122,13 +170,20 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
         </div>
       </div>
 
-      <TagInput label="Quốc gia (dự án ODA)" icon={<Globe size={14} />} values={scope.countries}
-        onChange={v => setScope(s => ({ ...s, countries: v }))} placeholder="VD: Vietnam, Thailand…" />
-      <TagInput label="Từ khóa" icon={<Tag size={14} />} values={scope.keywords}
-        onChange={v => setScope(s => ({ ...s, keywords: v }))} placeholder="VD: cầu, đường sắt, ODA…" />
+      {/* 3. Loại từ khóa / Lĩnh vực */}
+      <TagInput label="Loại từ khóa / Lĩnh vực" icon={<Tag size={14} />} values={scope.categories}
+        onChange={v => setScope(s => ({ ...s, categories: v }))} placeholder="VD: Giao thông, Cầu, Đường sắt, ODA, Đấu thầu…" />
 
-      <button className="btn btn-primary" onClick={save} disabled={saving} style={{ gap: 8, marginTop: 8 }}>
-        {saving ? <Loader2 size={15} className="spin" /> : <Save size={15} />} Lưu phạm vi
+      {/* 4. Quốc gia */}
+      <TagInput label="Quốc gia (dự án ODA & Tin tức)" icon={<Globe size={14} />} values={scope.countries}
+        onChange={v => setScope(s => ({ ...s, countries: v }))} placeholder="VD: Vietnam, Thailand, Philippines…" />
+
+      {/* 5. Từ khóa chi tiết */}
+      <TagInput label="Từ khóa chi tiết" icon={<Tag size={14} />} values={scope.keywords}
+        onChange={v => setScope(s => ({ ...s, keywords: v }))} placeholder="VD: cao tốc, đấu thầu, tín dụng, khoản vay…" />
+
+      <button className="btn btn-primary" onClick={save} disabled={saving} style={{ gap: 8, marginTop: 12, width: '100%', justifyContent: 'center' }}>
+        {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />} Lưu cấu hình phạm vi dữ liệu phân vùng
       </button>
     </div>
   );
