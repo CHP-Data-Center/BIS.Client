@@ -395,7 +395,8 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                             ADMIN
                           </span>
                         </div>
-                      ))}
+                      );
+                    })}
                     </div>
                   )}
                 </div>
