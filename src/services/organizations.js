@@ -16,9 +16,16 @@ export const orgService = {
     const { data } = await api.put(`/admin/organizations/${orgId}`, payload); // { name?, is_active? }
     return data;
   },
+  async deleteOrganization(orgId) {
+    await api.delete(`/admin/organizations/${orgId}`);
+  },
   async createOrgAdmin(orgId, payload) {
     const { data } = await api.post(`/admin/organizations/${orgId}/admins`, payload);
     return data; // UserOut (role=admin)
+  },
+  async assignOrgAdmin(orgId, userId) {
+    const { data } = await api.post(`/admin/organizations/${orgId}/assign-admin/${userId}`);
+    return data;
   },
   async listOrgUsers(orgId) {
     const { data } = await api.get(`/admin/organizations/${orgId}/users`);

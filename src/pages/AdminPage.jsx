@@ -6,6 +6,7 @@ import {
   Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2
 } from 'lucide-react';
 import { adminService } from '../services/admin';
+import { orgService } from '../services/organizations';
 import { useAuth } from '../context/AuthContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import ScopePanel from '../components/admin/ScopePanel';
@@ -24,6 +25,7 @@ export default function AdminPage() {
   const [crawlLogs, setCrawlLogs] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
   const [whitelist, setWhitelist] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
 
   // Region dropdown states
   const [customRegions, setCustomRegions] = useState([]);
@@ -47,6 +49,7 @@ export default function AdminPage() {
     password: '',
     display_name: '',
     role: 'user',
+    organization_id: null,
     region: userRegion || 'Toàn quốc',
     permissions: {
       can_view_press: true,
@@ -69,13 +72,14 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [u, s, pending, logs, bl, wl] = await Promise.all([
+      const [u, s, pending, logs, bl, wl, orgs] = await Promise.all([
         adminService.getUsers().catch(() => []),
         adminService.getSources().catch(() => []),
         isSuperAdmin ? adminService.getPendingSources().catch(() => []) : Promise.resolve([]),
         adminService.getCrawlLogs().catch(() => []),
         adminService.getBlacklist().catch(() => []),
         adminService.getWhitelist().catch(() => []),
+        orgService.listOrganizations().catch(() => []),
       ]);
       setUsers(u || []);
       const approvedOnly = (s || []).filter(item => !item.status || item.status === 'approved');
@@ -84,6 +88,7 @@ export default function AdminPage() {
       setCrawlLogs(logs || []);
       setBlacklist(bl || []);
       setWhitelist(wl || []);
+      setOrganizations(orgs || []);
     } catch (e) {
       console.warn('Admin load error:', e);
       showAlert('error', e.response?.data?.detail || 'Phiên làm việc hết hạn hoặc lỗi kết nối.');
@@ -165,6 +170,7 @@ export default function AdminPage() {
     try {
       const payload = {
         ...newUser,
+        organization_id: newUser.organization_id || null,
         region: isRegionalAdmin ? userRegion : newUser.region,
       };
       const created = await adminService.createUser(payload);
@@ -174,6 +180,7 @@ export default function AdminPage() {
         password: '',
         display_name: '',
         role: 'user',
+        organization_id: null,
         region: userRegion || 'Toàn quốc',
         permissions: {
           can_view_press: true,
@@ -208,6 +215,7 @@ export default function AdminPage() {
       email: u.email || '',
       display_name: u.display_name || '',
       role: u.role || 'user',
+      organization_id: u.organization_id || null,
       region: u.region || userRegion || 'Toàn quốc',
       permissions: u.permissions || {
         can_view_press: true,
@@ -233,6 +241,7 @@ export default function AdminPage() {
         email: editingUser.email,
         display_name: editingUser.display_name,
         role: editingUser.role,
+        organization_id: editingUser.organization_id || null,
         region: editingUser.region,
         permissions: editingUser.permissions,
         is_active: editingUser.is_active,
@@ -777,20 +786,42 @@ export default function AdminPage() {
                     ) : (
                       <select
                         className="form-input"
-                        value={newUser.region}
+                        value={newUser.organization_id ? `org_${newUser.organization_id}` : newUser.region}
                         disabled={isRegionalAdmin}
                         onChange={e => {
-                          if (e.target.value === '__add_new__') {
+                          const val = e.target.value;
+                          if (val.startsWith('org_')) {
+                            const orgId = parseInt(val.replace('org_', ''), 10);
+                            const selectedOrg = organizations.find(o => o.id === orgId);
+                            setNewUser({
+                              ...newUser,
+                              organization_id: orgId,
+                              region: selectedOrg ? selectedOrg.name : newUser.region,
+                            });
+                          } else if (val === '__add_new__') {
                             setIsAddingNewRegion(true);
                             setNewCustomRegionInput('');
                           } else {
-                            setNewUser({ ...newUser, region: e.target.value });
+                            setNewUser({
+                              ...newUser,
+                              organization_id: null,
+                              region: val,
+                            });
                           }
                         }}
                       >
-                        {allRegions.map(r => (
-                          <option key={r} value={r}>📍 {r}</option>
-                        ))}
+                        {organizations.length > 0 && (
+                          <optgroup label="🏢 Tổ chức / Phân vùng chính thức">
+                            {organizations.map(o => (
+                              <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {o.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="📍 Vùng địa lý mặc định">
+                          {allRegions.map(r => (
+                            <option key={r} value={r}>📍 {r}</option>
+                          ))}
+                        </optgroup>
                         <option value="__add_new__">➕ Thêm phân vùng mới...</option>
                       </select>
                     )}
@@ -907,7 +938,7 @@ export default function AdminPage() {
 
           {/* TAB: TỔ CHỨC (super admin) — ADR-005 */}
           {activeTab === 'orgs' && (
-            <OrganizationsPanel sources={sources} onMessage={showAlert} />
+            <OrganizationsPanel sources={sources} allUsers={users} onMessage={showAlert} onUserUpdated={loadData} />
           )}
 
           {/* TAB: PHẠM VI DỮ LIỆU (org admin đặt cho tổ chức mình) — ADR-005 */}
@@ -1137,19 +1168,41 @@ export default function AdminPage() {
                 ) : (
                   <select
                     className="form-input"
-                    value={allRegions.includes(editingUser.region) ? editingUser.region : '__add_new__'}
+                    value={editingUser.organization_id ? `org_${editingUser.organization_id}` : editingUser.region}
                     disabled={isRegionalAdmin}
                     onChange={e => {
-                      if (e.target.value === '__add_new__') {
+                      const val = e.target.value;
+                      if (val.startsWith('org_')) {
+                        const orgId = parseInt(val.replace('org_', ''), 10);
+                        const selectedOrg = organizations.find(o => o.id === orgId);
+                        setEditingUser({
+                          ...editingUser,
+                          organization_id: orgId,
+                          region: selectedOrg ? selectedOrg.name : editingUser.region,
+                        });
+                      } else if (val === '__add_new__') {
                         setIsAddingEditRegion(true);
                       } else {
-                        setEditingUser({ ...editingUser, region: e.target.value });
+                        setEditingUser({
+                          ...editingUser,
+                          organization_id: null,
+                          region: val,
+                        });
                       }
                     }}
                   >
-                    {allRegions.map(r => (
-                      <option key={r} value={r}>📍 {r}</option>
-                    ))}
+                    {organizations.length > 0 && (
+                      <optgroup label="🏢 Tổ chức / Phân vùng chính thức">
+                        {organizations.map(o => (
+                          <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {o.name}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <optgroup label="📍 Vùng địa lý mặc định">
+                      {allRegions.map(r => (
+                        <option key={r} value={r}>📍 {r}</option>
+                      ))}
+                    </optgroup>
                     <option value="__add_new__">➕ Thêm phân vùng mới...</option>
                   </select>
                 )}
