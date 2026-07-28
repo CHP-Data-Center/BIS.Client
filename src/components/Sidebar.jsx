@@ -1,11 +1,10 @@
-// src/components/Sidebar.jsx
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag,
-  TrendingUp, BookOpen, Settings, HelpCircle, Cpu,
-  Tag, Bookmark, Bot, ShieldCheck
+  Settings, Tag, Bookmark, Bot, ShieldCheck, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCrawl } from '../context/CrawlContext';
 
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard', badge: null },
@@ -27,6 +26,7 @@ const toolItems = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, isAdmin } = useAuth();
+  const { isCrawling } = useCrawl();
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -130,19 +130,43 @@ export default function Sidebar({ isOpen, onClose }) {
         <div style={{
           marginTop: 12,
           padding: '10px 12px',
-          background: 'var(--bg-surface-2)',
+          background: isCrawling ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-surface-2)',
           borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-subtle)',
+          border: isCrawling ? '1px solid rgba(129, 140, 248, 0.4)' : '1px solid var(--border-subtle)',
+          transition: 'all 0.3s ease',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            {isCrawling ? (
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%', background: '#818cf8',
+                animation: 'crawlPulse 1.5s infinite', display: 'inline-block'
+              }} />
+            ) : (
+              <span style={{
+                width: 7, height: 7, borderRadius: '50%', background: '#10b981',
+                boxShadow: '0 0 6px #10b981', animation: 'pulse 2s infinite'
+              }} />
+            )}
             <span style={{
-              width: 7, height: 7, borderRadius: '50%', background: '#10b981',
-              boxShadow: '0 0 6px #10b981', animation: 'pulse 2s infinite'
-            }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>Hệ thống hoạt động</span>
+              fontSize: 11,
+              fontWeight: 700,
+              color: isCrawling ? '#818cf8' : 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}>
+              {isCrawling ? (
+                <>
+                  <Loader2 size={12} style={{ animation: 'spin 0.8s linear infinite', color: '#818cf8' }} />
+                  Đang crawl dữ liệu...
+                </>
+              ) : (
+                'Hệ thống hoạt động'
+              )}
+            </span>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-            AI Crawler: Online · Crawl mỗi 4h
+          <div style={{ fontSize: 10, color: isCrawling ? '#a5b4fc' : 'var(--text-muted)', fontWeight: isCrawling ? 600 : 400 }}>
+            {isCrawling ? 'Đang quét Báo chí, WB, ADB & Đấu thầu...' : 'AI Crawler: Online · Crawl mỗi 4h'}
           </div>
           {user && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>

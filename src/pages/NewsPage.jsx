@@ -195,7 +195,7 @@ export default function NewsPage() {
 
   const queryQ = searchParams.get('q') || '';
 
-  // Đồng bộ + fetch khi source hoặc từ khóa tìm kiếm trên URL (q) thay đổi
+  // Synchronize + fetch when source or query parameter changes
   useEffect(() => {
     setPage(1);
     setSearchInput(queryQ);
@@ -204,9 +204,15 @@ export default function NewsPage() {
     fetchArticles(1, queryQ);
   }, [source, queryQ]);
 
-  // Fetch khi trang thay đổi
+  // Fetch when page changes & listen for global background crawl finish event
   useEffect(() => {
     fetchArticles(page);
+
+    const onDataUpdated = () => {
+      fetchArticles(page);
+    };
+    window.addEventListener('bis:data_updated', onDataUpdated);
+    return () => window.removeEventListener('bis:data_updated', onDataUpdated);
   }, [page]);
 
   const handleSearch = (e) => {

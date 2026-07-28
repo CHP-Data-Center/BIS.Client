@@ -48,7 +48,11 @@ export const adminService = {
   },
   async crawlNow() {
     const { data } = await api.post('/admin/sources/crawl-now');
-    return data; // { total_items, total_saved }
+    return data; // { status, message }
+  },
+  async getCrawlStatus() {
+    const { data } = await api.get('/admin/sources/status');
+    return data; // { is_crawling: boolean }
   },
   async getCrawlLogs() {
     const { data } = await api.get('/admin/sources/logs');

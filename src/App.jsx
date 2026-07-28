@@ -2,6 +2,7 @@
 import { Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { CrawlProvider } from './context/CrawlContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ScrollToTop from './components/ScrollToTop';
@@ -132,89 +133,91 @@ function ComingSoon({ title }) {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
+      <CrawlProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected — tất cả cần đăng nhập */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <AppLayout><DashboardPage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            {/* Protected — tất cả cần đăng nhập */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <AppLayout><DashboardPage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/news/:source" element={
-            <ProtectedRoute>
-              <AppLayout><NewsPage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/news/:source" element={
+              <ProtectedRoute>
+                <AppLayout><NewsPage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/worldbank" element={
-            <ProtectedRoute>
-              <AppLayout><WorldBankView /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/worldbank" element={
+              <ProtectedRoute>
+                <AppLayout><WorldBankView /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/article/:id" element={
-            <ProtectedRoute>
-              <AppLayout><ArticlePage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/article/:id" element={
+              <ProtectedRoute>
+                <AppLayout><ArticlePage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/keywords" element={
-            <ProtectedRoute>
-              <AppLayout><KeywordsPage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/keywords" element={
+              <ProtectedRoute>
+                <AppLayout><KeywordsPage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/bookmarks" element={
-            <ProtectedRoute>
-              <AppLayout><BookmarksPage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/bookmarks" element={
+              <ProtectedRoute>
+                <AppLayout><BookmarksPage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/ai-chat" element={
-            <ProtectedRoute>
-              <AppLayout><AiPage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/ai-chat" element={
+              <ProtectedRoute>
+                <AppLayout><AiPage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <AppLayout><SettingsPage /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <AppLayout><SettingsPage /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/admin" element={
-            <AdminRoute>
-              <AppLayout><AdminPage /></AppLayout>
-            </AdminRoute>
-          } />
+            <Route path="/admin" element={
+              <AdminRoute>
+                <AppLayout><AdminPage /></AppLayout>
+              </AdminRoute>
+            } />
 
-          <Route path="/trending" element={
-            <ProtectedRoute>
-              <AppLayout><ComingSoon title="Xu Hướng & Analytics" /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/trending" element={
+              <ProtectedRoute>
+                <AppLayout><ComingSoon title="Xu Hướng & Analytics" /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/reports" element={
-            <ProtectedRoute>
-              <AppLayout><ComingSoon title="Báo Cáo AI" /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/reports" element={
+              <ProtectedRoute>
+                <AppLayout><ComingSoon title="Báo Cáo AI" /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/help" element={
-            <ProtectedRoute>
-              <AppLayout><ComingSoon title="Trung Tâm Hỗ Trợ" /></AppLayout>
-            </ProtectedRoute>
-          } />
+            <Route path="/help" element={
+              <ProtectedRoute>
+                <AppLayout><ComingSoon title="Trung Tâm Hỗ Trợ" /></AppLayout>
+              </ProtectedRoute>
+            } />
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </CrawlProvider>
     </ErrorBoundary>
   );
 }

@@ -3550,5 +3550,26 @@ html, body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
+/* --- Global Crawl Toast & Pulse Animations --- */
+@keyframes toastSlideDown {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
 
-
+@keyframes crawlPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.8);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(129, 140, 248, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(129, 140, 248, 0);
+  }
+}

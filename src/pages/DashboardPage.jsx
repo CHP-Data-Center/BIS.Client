@@ -1113,11 +1113,19 @@ export default function DashboardPage() {
     }
   };
 
-  // Initial load
+  // Initial load & data update listener
   useEffect(() => {
     fetchOverview();
     fetchTrending();
     fetchArticles('all', 1);
+
+    const onDataUpdated = () => {
+      fetchOverview();
+      fetchTrending();
+      fetchArticles(activeFilter, page);
+    };
+    window.addEventListener('bis:data_updated', onDataUpdated);
+    return () => window.removeEventListener('bis:data_updated', onDataUpdated);
   }, []);
 
   // Khi filter/page thay đổi

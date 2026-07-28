@@ -8,11 +8,13 @@ import {
 import { adminService } from '../services/admin';
 import { orgService } from '../services/organizations';
 import { useAuth } from '../context/AuthContext';
+import { useCrawl } from '../context/CrawlContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import ScopePanel from '../components/admin/ScopePanel';
 
 export default function AdminPage() {
   const { user, isSuperAdmin, isRegionalAdmin, userRegion } = useAuth();
+  const { isCrawling, triggerCrawl } = useCrawl();
   const [activeTab, setActiveTab] = useState('crawl');
   const [loading, setLoading]     = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -103,15 +105,10 @@ export default function AdminPage() {
   const handleCrawlNow = async () => {
     setActionLoading(true);
     try {
-      const res = await adminService.crawlNow();
-      if (res.status === 'already_running') {
-        showAlert('error', '⚡ Hệ thống đang tiến hành crawl dữ liệu. Vui lòng chờ tiến trình hoàn tất!');
-      } else {
-        showAlert('success', `⚡ Kích hoạt Crawl thành công! Đã lưu ${res.total_saved || 0} bài mới / tổng ${res.total_items || 0} tin tìm thấy.`);
-        loadData();
-      }
+      await triggerCrawl();
+      loadData();
     } catch (e) {
-      showAlert('error', e.response?.data?.detail || 'Lỗi khi kích hoạt crawl.');
+      console.warn('Crawl now error:', e);
     } finally {
       setActionLoading(false);
     }
@@ -409,20 +406,21 @@ export default function AdminPage() {
             <button
               className="btn"
               onClick={handleCrawlNow}
-              disabled={actionLoading}
+              disabled={actionLoading || isCrawling}
               id="btn-admin-crawl-now"
               style={{
                 background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
                 color: 'white', border: 'none', borderRadius: 12,
                 padding: '10px 22px', fontSize: 13, fontWeight: 800, gap: 8,
-                boxShadow: '0 6px 20px rgba(99,102,241,0.45)', cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(99,102,241,0.45)', cursor: isCrawling ? 'not-allowed' : 'pointer',
                 transition: 'transform 0.15s, boxShadow 0.15s',
+                opacity: isCrawling ? 0.8 : 1,
               }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseEnter={e => !isCrawling && (e.currentTarget.style.transform = 'translateY(-2px)')}
               onMouseLeave={e => e.currentTarget.style.transform = 'none'}
             >
-              {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Zap size={15} style={{ color: '#fef08a' }} />}
-              ⚡ Kích Hoạt Crawl Ngay
+              {actionLoading || isCrawling ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Zap size={15} style={{ color: '#fef08a' }} />}
+              {isCrawling ? 'Đang Crawl Dữ Liệu...' : '⚡ Kích Hoạt Crawl Ngay'}
             </button>
           </div>
         </div>
@@ -436,7 +434,7 @@ export default function AdminPage() {
             { label: 'Nguồn Crawler', val: sources.length, icon: <Database size={15} style={{ color: '#818cf8' }} />, sub: 'Nguồn tự động' },
             { label: 'Tài Khoản', val: users.length, icon: <Users size={15} style={{ color: '#38bdf8' }} />, sub: 'Người dùng' },
             { label: 'Từ Khóa Lọc', val: blacklist.length + whitelist.length, icon: <ShieldAlert size={15} style={{ color: '#f472b6' }} />, sub: `${blacklist.length} cấm · ${whitelist.length} ưu tiên` },
-            { label: 'Trạng Thái', val: 'Online', icon: <Activity size={15} style={{ color: '#4ade80' }} />, sub: 'Crawler mỗi 4h' },
+            { label: 'Trạng Thái', val: isCrawling ? 'Crawling...' : 'Online', icon: <Activity size={15} style={{ color: isCrawling ? '#818cf8' : '#4ade80' }} />, sub: isCrawling ? 'Đang quét dữ liệu...' : 'Crawler mỗi 4h' },
           ].map((st, idx) => (
             <div key={idx} style={{
               background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 16px',
