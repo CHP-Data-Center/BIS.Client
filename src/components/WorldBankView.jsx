@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Globe, Building2, ShoppingBag, Search, Filter, RotateCcw, ArrowUpDown, ChevronUp, ChevronDown,
   Bookmark, BookmarkCheck, ExternalLink, Download, LayoutGrid, List,
-  DollarSign, Layers, CheckCircle2, AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight
+  DollarSign, Layers, CheckCircle2, AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, FileText
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
@@ -618,7 +618,12 @@ export default function WorldBankView({ type = 'worldbank' }) {
             </div>
             <div style={{ gridColumn: 'span 2' }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <DollarSign size={11} color={config.brandColor} /> TỔNG {config.amountLabel.toUpperCase()}
+                {normType === 'procurement' ? (
+                  <FileText size={11} color={config.brandColor} />
+                ) : (
+                  <DollarSign size={11} color={config.brandColor} />
+                )}
+                TỔNG {config.amountLabel.toUpperCase()}
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: config.brandColor }}>{formatAmountDisplay(stats.totalCommitmentUSD)}</div>
             </div>
