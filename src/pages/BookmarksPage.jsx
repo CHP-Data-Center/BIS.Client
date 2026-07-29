@@ -348,7 +348,7 @@ export default function BookmarksPage() {
             </button>
           </div>
         ) : viewMode === 'grid' ? (
-          <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+          <div className="bookmark-grid-container">
             {bookmarks.map((bm, i) => (
               <NewsCard key={bm.id} article={mapBookmarkToArticle(bm)} index={i} />
             ))}
@@ -373,22 +373,12 @@ export default function BookmarksPage() {
                   className="bookmark-row-card"
                   onClick={(e) => handleViewDetail(bm, e)}
                   style={{
-                    display: 'flex', alignItems: 'flex-start', gap: 16,
-                    padding: '18px 20px',
                     borderBottom: i < bookmarks.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.15s ease',
                   }}
                 >
                   {/* Article Image Container (Only if real photo exists) */}
                   {imageUrl ? (
-                    <div
-                      style={{
-                        width: 120, height: 85, borderRadius: 10, overflow: 'hidden', flexShrink: 0,
-                        border: '1px solid var(--border-subtle)',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.04)', marginTop: 2,
-                      }}
-                    >
+                    <div className="bookmark-card-img" style={{ width: 120, height: 85, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid var(--border-subtle)', boxShadow: '0 2px 6px rgba(0,0,0,0.04)', marginTop: 2 }}>
                       <img
                         src={imageUrl}
                         alt={bm.article_title}
@@ -398,82 +388,124 @@ export default function BookmarksPage() {
                   ) : null}
 
                   {/* Main Content Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Header Badges Row */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-                      {/* Source Tag */}
-                      <span className="news-source-tag" style={{ background: srcInfo.color, fontWeight: 700 }}>
-                        <span style={{ fontSize: 11 }}>{srcInfo.icon}</span>
-                        {srcInfo.name}
-                      </span>
-
-                      {/* Status Badge */}
-                      {bm.status && (
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 12,
-                          background: statusStyle.bg, color: statusStyle.color,
-                          border: `1px solid ${statusStyle.border}`,
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                        }}>
-                          ● {bm.status}
+                  <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+                    {/* Header Badges & Actions Row */}
+                    <div className="bookmark-card-header">
+                      <div className="bookmark-badges">
+                        {/* Source Tag */}
+                        <span className="news-source-tag" style={{ background: srcInfo.color, fontWeight: 700 }}>
+                          <span style={{ fontSize: 11 }}>{srcInfo.icon}</span>
+                          {srcInfo.name}
                         </span>
-                      )}
 
-                      {/* Project Code / ID Badge */}
-                      {bm.project_code && (
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
-                          background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
-                          border: '1px solid var(--border)', fontFamily: 'monospace',
-                        }}>
-                          ID: {bm.project_code}
-                        </span>
-                      )}
-
-                      {/* Folder tag */}
-                      {bm.folder && bm.folder !== 'default' && (
-                        <span style={{
-                          fontSize: 10.5, fontWeight: 600, background: 'var(--bg-surface-2)',
-                          padding: '2px 8px', borderRadius: 10, border: '1px solid var(--border)',
-                          color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 4,
-                        }}>
-                          📁 {bm.folder}
-                        </span>
-                      )}
-
-                      {/* Keyword tags */}
-                      {bm.matched_keywords && bm.matched_keywords.length > 0 && bm.matched_keywords.map((kw) => {
-                        const matched = isTagMatched(kw, currentQ);
-                        return (
-                          <span
-                            key={kw}
-                            onClick={() => nav(`/news/all?q=${encodeURIComponent(kw)}`)}
-                            style={{
-                              fontSize: 10.5,
-                              fontWeight: matched ? 700 : 600,
-                              padding: '1px 8px',
-                              borderRadius: 10,
-                              background: matched
-                                ? 'linear-gradient(135deg, #2563eb, #1d4ed8)'
-                                : 'var(--brand-50)',
-                              color: matched ? '#ffffff' : 'var(--brand-600)',
-                              border: matched ? '1px solid #1d4ed8' : '1px solid var(--brand-200)',
-                              cursor: 'pointer',
-                              boxShadow: matched
-                                ? '0 2px 6px rgba(37, 99, 235, 0.35)'
-                                : 'none',
-                              transition: 'all 0.15s ease',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 3,
-                            }}
-                            title={`Bấm để tìm bài viết với từ khóa #${kw}`}
-                          >
-                            {matched && <span style={{ fontSize: 9 }}>⚡</span>}
-                            #{kw}
+                        {/* Status Badge */}
+                        {bm.status && (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 12,
+                            background: statusStyle.bg, color: statusStyle.color,
+                            border: `1px solid ${statusStyle.border}`,
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                          }}>
+                            ● {bm.status}
                           </span>
-                        );
-                      })}
+                        )}
+
+                        {/* Project Code / ID Badge */}
+                        {bm.project_code && (
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                            background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
+                            border: '1px solid var(--border)', fontFamily: 'monospace',
+                          }}>
+                            ID: {bm.project_code}
+                          </span>
+                        )}
+
+                        {/* Folder tag */}
+                        {bm.folder && bm.folder !== 'default' && (
+                          <span style={{
+                            fontSize: 10.5, fontWeight: 600, background: 'var(--bg-surface-2)',
+                            padding: '2px 8px', borderRadius: 10, border: '1px solid var(--border)',
+                            color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 4,
+                          }}>
+                            📁 {bm.folder}
+                          </span>
+                        )}
+
+                        {/* Keyword tags */}
+                        {bm.matched_keywords && bm.matched_keywords.length > 0 && bm.matched_keywords.map((kw) => {
+                          const matched = isTagMatched(kw, currentQ);
+                          return (
+                            <span
+                              key={kw}
+                              onClick={() => nav(`/news/all?q=${encodeURIComponent(kw)}`)}
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: matched ? 700 : 600,
+                                padding: '1px 8px',
+                                borderRadius: 10,
+                                background: matched
+                                  ? 'linear-gradient(135deg, #2563eb, #1d4ed8)'
+                                  : 'var(--brand-50)',
+                                color: matched ? '#ffffff' : 'var(--brand-600)',
+                                border: matched ? '1px solid #1d4ed8' : '1px solid var(--brand-200)',
+                                cursor: 'pointer',
+                                boxShadow: matched
+                                  ? '0 2px 6px rgba(37, 99, 235, 0.35)'
+                                  : 'none',
+                                transition: 'all 0.15s ease',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3,
+                              }}
+                              title={`Bấm để tìm bài viết với từ khóa #${kw}`}
+                            >
+                              {matched && <span style={{ fontSize: 9 }}>⚡</span>}
+                              #{kw}
+                            </span>
+                          );
+                        })}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="bookmark-actions">
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={(e) => handleViewDetail(bm, e)}
+                          title="Xem chi tiết"
+                          style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <Eye size={15} />
+                        </button>
+                        {bm.article_url && (
+                          <a
+                            className="btn btn-ghost btn-sm"
+                            href={bm.article_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Xem bài gốc"
+                            style={{ padding: '6px 10px', display: 'flex', alignItems: 'center' }}
+                          >
+                            <ExternalLink size={15} />
+                          </a>
+                        )}
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemove(bm.article_id || bm.id);
+                          }}
+                          title="Bỏ bookmark"
+                          id={`btn-remove-bm-${bm.article_id || bm.id}`}
+                          disabled={removing === (bm.article_id || bm.id)}
+                          style={{ padding: '6px 10px', color: '#ef4444' }}
+                        >
+                          {removing === (bm.article_id || bm.id)
+                            ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} />
+                            : <Trash2 size={15} />}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Title */}
@@ -487,11 +519,7 @@ export default function BookmarksPage() {
 
                     {/* Structured Metadata Bar for Projects */}
                     {bm.is_local_project ? (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-                        padding: '8px 12px', background: 'var(--bg-surface-2)', borderRadius: 10,
-                        border: '1px solid var(--border-subtle)', marginTop: 8, fontSize: 12, color: 'var(--text-secondary)',
-                      }}>
+                      <div className="bookmark-metadata-box">
                         {isProcurement ? (
                           /* Mua Sắm Công / Đấu Thầu Layout */
                           <>
@@ -547,7 +575,7 @@ export default function BookmarksPage() {
                         )}
 
                         {displayDate && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+                          <div className="bookmark-metadata-date">
                             <Calendar size={12} style={{ color: 'var(--text-muted)' }} />
                             <span style={{ color: 'var(--text-muted)', fontSize: 11.5 }}>
                               {isProcurement ? 'Ngày đăng: ' : 'Phê duyệt: '}
@@ -576,46 +604,6 @@ export default function BookmarksPage() {
                         )}
                       </>
                     )}
-                  </div>
-
-                  {/* Actions */}
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center', marginTop: 4 }}>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={(e) => handleViewDetail(bm, e)}
-                      title="Xem chi tiết"
-                      style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
-                    >
-                      <Eye size={15} />
-                    </button>
-                    {bm.article_url && (
-                      <a
-                        className="btn btn-ghost btn-sm"
-                        href={bm.article_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        title="Xem bài gốc"
-                        style={{ padding: '6px 10px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <ExternalLink size={15} />
-                      </a>
-                    )}
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(bm.article_id || bm.id);
-                      }}
-                      title="Bỏ bookmark"
-                      id={`btn-remove-bm-${bm.article_id || bm.id}`}
-                      disabled={removing === (bm.article_id || bm.id)}
-                      style={{ padding: '6px 10px', color: '#ef4444' }}
-                    >
-                      {removing === (bm.article_id || bm.id)
-                        ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} />
-                        : <Trash2 size={15} />}
-                    </button>
                   </div>
                 </div>
               );
