@@ -5,6 +5,7 @@ import { Building2, Plus, Loader2, ShieldCheck, Users, Sliders, UserPlus, CheckC
 import { orgService } from '../../services/organizations';
 import { useAuth } from '../../context/AuthContext';
 import ScopePanel from './ScopePanel';
+import ConfirmModal from '../common/ConfirmModal';
 
 export default function OrganizationsPanel({ sources = [], allUsers = [], onMessage, onUserUpdated }) {
   const { user: currentUser } = useAuth();
@@ -484,58 +485,18 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
       </div>
 
       {/* ── Modal xác nhận xóa tổ chức ── */}
-      {deletingOrg && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: 20,
-        }}>
-          <div style={{
-            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: '24px 28px', width: '100%', maxWidth: 450,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.3)', position: 'relative',
-            animation: 'fadeIn 0.2s ease-out',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', flexShrink: 0 }}>
-                <AlertTriangle size={22} />
-              </div>
-              <div>
-                <h3 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: 0, marginBottom: 6 }}>
-                  Xác nhận xóa tổ chức
-                </h3>
-                <p style={{ fontSize: 13.5, color: 'var(--text-primary)', fontWeight: 600, margin: '0 0 6px 0' }}>
-                  Bạn có chắc chắn muốn xóa tổ chức "{deletingOrg.name}"?
-                </p>
-                <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-                  Tất cả người dùng thuộc tổ chức này sẽ được tự động chuyển thành chưa thuộc tổ chức.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
-              <button
-                className="btn btn-ghost"
-                onClick={() => setDeletingOrg(null)}
-                disabled={deleting}
-                style={{ fontSize: 13, fontWeight: 700 }}
-              >
-                Hủy
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={confirmDeleteOrg}
-                disabled={deleting}
-                style={{ background: '#ef4444', borderColor: '#ef4444', color: '#fff', gap: 6, fontSize: 13, fontWeight: 700 }}
-              >
-                {deleting ? <Loader2 size={15} className="spin" /> : <Trash2 size={15} />}
-                Xóa tổ chức
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!deletingOrg}
+        title="Xóa Tổ Chức"
+        message="Tất cả người dùng thuộc tổ chức này sẽ được tự động chuyển thành chưa thuộc tổ chức."
+        itemName={deletingOrg?.name}
+        confirmText="Xóa Tổ Chức"
+        cancelText="Hủy Bỏ"
+        type="danger"
+        loading={deleting}
+        onConfirm={confirmDeleteOrg}
+        onClose={() => setDeletingOrg(null)}
+      />
     </div>
   );
 }

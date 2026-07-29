@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCrawl } from '../context/CrawlContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import ScopePanel from '../components/admin/ScopePanel';
+import ConfirmModal from '../components/common/ConfirmModal';
 
 export default function AdminPage() {
   const { user, isSuperAdmin, isRegionalAdmin, userRegion } = useAuth();
@@ -28,6 +29,7 @@ export default function AdminPage() {
   const [blacklist, setBlacklist] = useState([]);
   const [whitelist, setWhitelist] = useState([]);
   const [organizations, setOrganizations] = useState([]);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   // Region dropdown states
   const [customRegions, setCustomRegions] = useState([]);
@@ -195,15 +197,15 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!confirm('Bạn có chắc muốn xóa tài khoản này?')) return;
-    try {
-      await adminService.deleteUser(userId);
-      setUsers(prev => prev.filter(u => u.id !== userId));
-      showAlert('success', 'Đã xóa tài khoản thành công.');
-    } catch (e) {
-      showAlert('error', 'Lỗi khi xóa tài khoản.');
-    }
+  const handleDeleteUser = (u) => {
+    setDeleteConfirm({
+      type: 'user',
+      item: u,
+      title: 'Xóa Tài Khoản Người Dùng',
+      message: 'Bạn có chắc chắn muốn xóa tài khoản này khỏi hệ thống?',
+      itemName: u.email,
+      itemSub: u.display_name ? `Họ tên: ${u.display_name}` : ''
+    });
   };
 
   const handleOpenEditUser = (u) => {
@@ -316,14 +318,44 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteSource = async (id) => {
-    if (!confirm('Xóa nguồn tin này khỏi hệ thống?')) return;
+  const handleDeleteSource = (s) => {
+    setDeleteConfirm({
+      type: 'source',
+      item: s,
+      title: 'Xóa Nguồn Tin',
+      message: 'Bạn có chắc chắn muốn xóa nguồn tin này khỏi hệ thống?',
+      itemName: s.name,
+      itemSub: s.url
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm) return;
+    const { type, item } = deleteConfirm;
+    setActionLoading(true);
     try {
-      await adminService.deleteSource(id);
-      setSources(prev => prev.filter(s => s.id !== id));
-      showAlert('success', 'Đã xóa nguồn tin.');
+      if (type === 'user') {
+        await adminService.deleteUser(item.id);
+        setUsers(prev => prev.filter(u => u.id !== item.id));
+        showAlert('success', `Đã xóa tài khoản "${item.email}" thành công.`);
+      } else if (type === 'source') {
+        await adminService.deleteSource(item.id);
+        setSources(prev => prev.filter(s => s.id !== item.id));
+        showAlert('success', `Đã xóa nguồn tin "${item.name}".`);
+      } else if (type === 'blacklist') {
+        await adminService.deleteBlacklist(item.id);
+        setBlacklist(prev => prev.filter(x => x.id !== item.id));
+        showAlert('success', 'Đã xóa từ khóa khỏi Blacklist.');
+      } else if (type === 'whitelist') {
+        await adminService.deleteWhitelist(item.id);
+        setWhitelist(prev => prev.filter(x => x.id !== item.id));
+        showAlert('success', 'Đã xóa từ khóa khỏi Whitelist.');
+      }
+      setDeleteConfirm(null);
     } catch (e) {
-      showAlert('error', 'Không thể xóa nguồn tin.');
+      showAlert('error', e.response?.data?.detail || 'Thao tác xóa thất bại.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -677,7 +709,7 @@ export default function AdminPage() {
                               {isSuperAdmin ? (
                                 <button
                                   className="btn btn-ghost btn-sm"
-                                  onClick={() => handleDeleteSource(s.id)}
+                                  onClick={() => handleDeleteSource(s)}
                                   title="Xóa nguồn"
                                   style={{ color: '#ef4444', padding: '6px 10px' }}
                                 >
@@ -925,7 +957,7 @@ export default function AdminPage() {
                               </button>
                               <button
                                 className="btn btn-ghost btn-sm"
-                                onClick={() => handleDeleteUser(u.id)}
+                                onClick={() => handleDeleteUser(u)}
                                 style={{ color: '#ef4444', padding: '6px 10px' }}
                                 title="Xóa tài khoản"
                               >
@@ -983,7 +1015,17 @@ export default function AdminPage() {
                       display: 'flex', alignItems: 'center', gap: 8,
                     }}>
                       {b.term}
-                      <button onClick={async () => { await adminService.deleteBlacklist(b.id); setBlacklist(prev => prev.filter(x => x.id !== b.id)); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e11d48', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
+                      <button 
+                        onClick={() => setDeleteConfirm({
+                          type: 'blacklist',
+                          item: b,
+                          title: 'Xóa Từ Khóa Blacklist',
+                          message: 'Bạn có chắc chắn muốn xóa từ khóa cấm này?',
+                          itemName: b.term
+                        })} 
+                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e11d48', padding: 0, fontSize: 14, lineHeight: 1 }}
+                        title="Xóa khỏi Blacklist"
+                      >×</button>
                     </span>
                   ))}
                 </div>
@@ -1017,7 +1059,17 @@ export default function AdminPage() {
                       display: 'flex', alignItems: 'center', gap: 8,
                     }}>
                       {w.term}
-                      <button onClick={async () => { await adminService.deleteWhitelist(w.id); setWhitelist(prev => prev.filter(x => x.id !== w.id)); }} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#047857', padding: 0, fontSize: 14, lineHeight: 1 }}>×</button>
+                      <button 
+                        onClick={() => setDeleteConfirm({
+                          type: 'whitelist',
+                          item: w,
+                          title: 'Xóa Từ Khóa Whitelist',
+                          message: 'Bạn có chắc chắn muốn xóa từ khóa ưu tiên này?',
+                          itemName: w.term
+                        })} 
+                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#047857', padding: 0, fontSize: 14, lineHeight: 1 }}
+                        title="Xóa khỏi Whitelist"
+                      >×</button>
                     </span>
                   ))}
                 </div>
@@ -1478,6 +1530,21 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        title={deleteConfirm?.title || 'Xác Nhận Xóa'}
+        message={deleteConfirm?.message || ''}
+        itemName={deleteConfirm?.itemName || ''}
+        itemSub={deleteConfirm?.itemSub || ''}
+        confirmText="Xác Nhận Xóa"
+        cancelText="Hủy Bỏ"
+        type="danger"
+        loading={actionLoading}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }
