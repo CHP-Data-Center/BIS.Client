@@ -1,7 +1,7 @@
 // src/pages/NewsPage.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Filter, ChevronRight, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, X } from 'lucide-react';
+import { Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, X } from 'lucide-react';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
@@ -121,6 +121,7 @@ export default function NewsPage() {
   const [dateFrom, setDateFrom]       = useState('');
   const [dateTo, setDateTo]           = useState('');
   const [onlyMyKw, setOnlyMyKw]       = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const srcConfig = SOURCE_MAP[source] || SOURCE_MAP.all;
 
@@ -255,28 +256,35 @@ export default function NewsPage() {
     : articles.filter(a => a.is_bookmarked).length;
 
   return (
-    <div style={{
-      display: 'flex',
-      gap: 20,
-      alignItems: 'stretch',
-      height: 'calc(100vh - var(--header-h) - 48px)',
-      overflow: 'hidden',
-    }}>
+    <div className="news-page-container">
+      {/* Nút ẩn/hiện Bộ Lọc cho Mobile */}
+      <button
+        className="news-mobile-filter-btn"
+        onClick={() => setMobileFilterOpen(v => !v)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Filter size={16} color="var(--brand-500)" />
+          <span>{srcConfig.api === 'oda' ? 'Bộ Lọc Dự Án' : srcConfig.api === 'proc' ? 'Bộ Lọc Đấu Thầu' : 'Bộ Lọc Tin Tức'}</span>
+          {(search || dateFrom || dateTo || onlyMyKw || onlyBookmarked) && (
+            <span className="filter-active-dot" title="Đang áp dụng bộ lọc" />
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            {mobileFilterOpen ? 'Thu gọn' : 'Mở bộ lọc'}
+          </span>
+          <ChevronDown
+            size={16}
+            style={{
+              transform: mobileFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease',
+            }}
+          />
+        </div>
+      </button>
+
       {/* ── Filter sidebar (Đồng bộ UI gọn gàng theo dung lượng nội dung) ── */}
-      <div style={{
-        width: 280,
-        flexShrink: 0,
-        alignSelf: 'flex-start',
-        maxHeight: '100%',
-        background: 'var(--bg-surface)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 14,
-        padding: 14,
-        display: 'flex', flexDirection: 'column',
-        gap: 12,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-        overflowY: 'auto',
-      }}>
+      <div className={`news-filter-sidebar ${mobileFilterOpen ? 'mobile-open' : ''}`}>
         {/* Header với nút Đặt lại góc trên phải */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -438,9 +446,9 @@ export default function NewsPage() {
         )}
       </div>
 
-      {/* ── Main content (Phần khung bên ngoài cố định) ── */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-        {/* Header & Breadcrumb (Cố định phía trên) */}
+      {/* ── Main content ── */}
+      <div className="news-main-content">
+        {/* Header & Breadcrumb */}
         <div style={{ flexShrink: 0, marginBottom: 10 }}>
           <div className="section-header" style={{ marginBottom: 8 }}>
             <div className="section-title">
@@ -507,12 +515,7 @@ export default function NewsPage() {
         {/* ── CHỈ PHẦN NÀY ĐƯỢC PHÉP SCROLL (Khung danh sách thẻ tin) ── */}
         <div
           ref={scrollContainerRef}
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            paddingRight: 6,
-            paddingBottom: 16,
-          }}
+          className="news-scroll-area"
         >
           <div className="news-grid news-page-grid">
             {isPageLoading

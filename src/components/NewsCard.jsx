@@ -263,7 +263,7 @@ export default function NewsCard({ article, index = 0 }) {
         )}
 
         {sortedKeywords.length > 0 && (
-          <div style={{
+          <div className="news-card-tags" style={{
             display: 'flex', gap: 4, flexWrap: 'nowrap', marginTop: 6,
             alignItems: 'center', overflow: 'visible', width: '100%',
           }}>

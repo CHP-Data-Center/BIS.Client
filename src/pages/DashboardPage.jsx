@@ -646,13 +646,13 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
   );
 }
 
-// ── Project Distribution Map (Original state: Floating Filter Panel & fitBounds) ──────
 function ProjectDistributionMap() {
   const [selSources,   setSelSources]   = useState(new Set());
   const [selCountries, setSelCountries] = useState(new Set());
   const [selStatuses,  setSelStatuses]  = useState(new Set());
   const [selSectors,   setSelSectors]   = useState(new Set());
   const [realItems,    setRealItems]    = useState(null); // null = chưa có -> dùng mock
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(true);
 
   // Lấy dự án ODA + mua sắm công THẬT từ backend; lỗi/rỗng -> giữ null (fallback mock).
   useEffect(() => {
@@ -768,41 +768,44 @@ function ProjectDistributionMap() {
   return (
     <div style={{ marginBottom: 'var(--space-8)' }}>
       {/* ── Section Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="dashboard-map-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             width: 40, height: 40, borderRadius: '12px',
             background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: '0 4px 14px rgba(59,130,246,0.4)',
+            flexShrink: 0,
           }}>
             <Globe size={20} color="white" />
           </div>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              Bản Đồ Phân Bố Dự Án ODA &amp; Đấu Thầu
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span>Bàn Đồ Phân Bố Dự Án ODA &amp; Đấu Thầu</span>
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
                 background: usingReal ? '#dcfce7' : '#fef3c7',
                 color: usingReal ? '#166534' : '#92400e',
                 border: `1px solid ${usingReal ? '#bbf7d0' : '#fde68a'}`,
+                whiteSpace: 'nowrap',
               }}>
                 {usingReal ? '🟢 Dữ liệu thật' : '📌 Dữ liệu mẫu minh họa'}
               </span>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 1 }}>
-              <Cpu size={11} style={{ color: '#a855f7' }} />
-              AI Powered · {filteredItems.length} dự án trên bản đồ ({locationGroupList.length} địa điểm)
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+              <Cpu size={11} style={{ color: '#a855f7', flexShrink: 0 }} />
+              <span>AI Powered · {filteredItems.length} dự án ({locationGroupList.length} địa điểm)</span>
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="dashboard-map-source-pills">
           {Object.entries(sourceConfig).map(([key, cfg]) => (
             <div key={key} style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '5px 10px', borderRadius: 20,
               background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)',
-              fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)'
+              fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
+              whiteSpace: 'nowrap', flexShrink: 0,
             }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 6px ${cfg.glow}` }} />
               {cfg.icon} {cfg.label} · <strong style={{ color: cfg.color }}>{allItems.filter(i=>i.source===key).length}</strong>
@@ -888,29 +891,28 @@ function ProjectDistributionMap() {
           </div>
         )}
 
-        {/* ── Floating Filter Panel (Pre-opened / Always visible overlay on top right) ── */}
-        <div style={{
-          position: 'absolute', top: 12, right: 12, zIndex: 1000,
-          width: 228,
-          background: 'rgba(255,255,255,0.94)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(255,255,255,0.7)',
-          borderRadius: 14,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
-            padding: '9px 12px', borderRadius: '13px 13px 0 0',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: 'white' }}>🗺️ Bộ lọc</span>
+        {/* ── Floating Filter Panel ── */}
+        <div className={`dashboard-map-filter-panel ${mobileFilterOpen ? 'expanded' : 'collapsed'}`}>
+          <div
+            onClick={() => setMobileFilterOpen(v => !v)}
+            style={{
+              background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)',
+              padding: '9px 12px',
+              borderRadius: mobileFilterOpen ? '13px 13px 0 0' : '13px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}>
+              🗺️ Bộ lọc <span className="mobile-filter-toggle-hint" style={{ fontSize: 10, opacity: 0.85, fontWeight: 600 }}>({mobileFilterOpen ? '▲ Thu gọn' : '▼ Mở lọc'})</span>
+            </span>
             <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: 'white' }}>
               {filteredItems.length}/{allItems.length}
             </span>
           </div>
 
-          <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {mobileFilterOpen && (
+            <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Nguồn dữ liệu</div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -1012,24 +1014,18 @@ function ProjectDistributionMap() {
               </button>
             )}
           </div>
+          )}
         </div>
+      </div>
 
-        {/* ── Bottom legend bar ── */}
-        <div style={{
-          position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 1000, display: 'flex', gap: 10,
-          background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.7)', borderRadius: 20,
-          padding: '5px 16px', boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
-          whiteSpace: 'nowrap',
-        }}>
-          {Object.entries(sourceConfig).map(([key, cfg]) => (
-            <div key={key} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, color:'#475569' }}>
-              <div style={{ width:9, height:9, borderRadius:'50%', background:cfg.color, boxShadow:`0 0 5px ${cfg.glow}` }} />
-              {cfg.icon} {cfg.label} <strong style={{ color:cfg.color }}>{allItems.filter(i=>i.source===key).length}</strong>
-            </div>
-          ))}
-        </div>
+      {/* ── Bottom legend bar ── */}
+      <div className="dashboard-map-bottom-legend">
+        {Object.entries(sourceConfig).map(([key, cfg]) => (
+          <div key={key} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, color:'#475569' }}>
+            <div style={{ width:9, height:9, borderRadius:'50%', background:cfg.color, boxShadow:`0 0 5px ${cfg.glow}` }} />
+            {cfg.icon} {cfg.label} <strong style={{ color:cfg.color }}>{allItems.filter(i=>i.source===key).length}</strong>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1248,19 +1244,20 @@ export default function DashboardPage() {
 
       {/* ── News Section ── */}
       <div ref={gridRef}>
-        <div className="section-header">
+        <div className="section-header dashboard-news-section-header">
           <div className="section-title">
             <span className="dot" />
-            Tin Tức Mới Nhất
+            <span style={{ whiteSpace: 'nowrap', fontWeight: 800 }}>Tin Tức Mới Nhất</span>
             <span style={{
               fontSize: 12, fontWeight: 600, color: 'var(--text-muted)',
               padding: '2px 8px', background: 'var(--bg-surface-2)',
               borderRadius: 'var(--radius-full)', border: '1px solid var(--border)',
+              whiteSpace: 'nowrap',
             }}>
               {totalArticles} bài
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="dashboard-news-actions">
             <button className="btn btn-ghost btn-sm" onClick={handleRefresh} id="btn-refresh" style={{ gap: 5 }}>
               {refreshing
                 ? <Loader2 size={13} style={{ animation: 'spin 0.7s linear infinite' }} />

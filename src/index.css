@@ -2503,7 +2503,8 @@ html, body {
 /* Small Mobile (< 576px) */
 @media (max-width: 576px) {
   .stats-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 
   .search-bar {
@@ -3545,6 +3546,201 @@ html, body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18) !important;
   padding: 4px !important;
 }
+.map-tooltip-title {
+  font-weight: 700;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.map-tooltip-meta {
+  display: flex;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.map-tooltip-ai {
+  margin-top: 4px;
+  background: rgba(168, 85, 247, 0.05);
+  border: 1.5px dashed rgba(168, 85, 247, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.map-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.map-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.map-filter-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.map-select {
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.map-select:focus {
+  border-color: var(--brand-500);
+}
+
+.map-stats-mini {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.map-stats-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.map-stats-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.procurement-tab-radio.active input[type="radio"]::before {
+  transform: scale(1);
+}
+
+/* ============================================================
+   Leaflet Map – Custom Popup & Control Overrides
+   ============================================================ */
+
+/* Reset leaflet popup default white chrome */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  width: 260px !important;
+}
+
+.leaflet-popup-tip-container {
+  margin-top: -1px;
+}
+
+.leaflet-popup-tip {
+  box-shadow: none !important;
+}
+
+.leaflet-popup-close-button {
+  top: 8px !important;
+  right: 10px !important;
+  color: #94a3b8 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #0f172a !important;
+}
+
+/* Map filter select override */
+.map-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+.map-select:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* Compact select for floating map filter panel */
+.map-select-sm {
+  width: 100%;
+  padding: 6px 28px 6px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.85);
+  color: #334155;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-color: rgba(255,255,255,0.85);
+}
+
+.map-select-sm:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+/* Fix Leaflet map tile repeating & background styling & z-index isolation */
+.leaflet-container {
+  z-index: 1 !important;
+  background: #cbd5e1 !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
+}
+
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-pane,
+.leaflet-control-container {
+  z-index: 400 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18) !important;
+  padding: 4px !important;
+}
 
 .leaflet-popup-tip {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
@@ -3573,3 +3769,569 @@ html, body {
     box-shadow: 0 0 0 0 rgba(129, 140, 248, 0);
   }
 }
+
+/* ============================================================
+   Comprehensive Mobile & Tablet Responsive Design System
+   ============================================================ */
+
+/* Mobile Overlay for Drawer Sidebar */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 899;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Tablet & Mobile Breakpoint (<= 768px) */
+@media (max-width: 768px) {
+  :root {
+    --header-h: 56px;
+  }
+
+  .header {
+    padding: 0 12px;
+    height: 56px;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--bg-surface-2) !important;
+    border: 1px solid var(--border) !important;
+    margin-right: 4px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+
+  .header-divider {
+    display: none !important;
+  }
+
+  .live-clock {
+    display: none !important;
+  }
+
+  .search-bar {
+    max-width: 140px;
+  }
+
+  .search-bar input {
+    font-size: 11px;
+    padding-left: 28px;
+  }
+
+  .logo-title {
+    font-size: 13.5px;
+  }
+
+  .logo-sub {
+    display: none;
+  }
+
+  /* Sidebar Drawer on Mobile */
+  .sidebar {
+    top: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    width: 280px;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Main content layout adjustment */
+  .main-content {
+    margin-left: 0 !important;
+    margin-top: 56px !important;
+    max-width: 100vw !important;
+    padding: 16px 12px !important;
+  }
+
+  /* Stats grid responsive columns */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Tables horizontal scroll container */
+  .table-responsive,
+  .admin-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  /* Modals responsive width */
+  .confirm-modal-box,
+  .modal-dialog {
+    max-width: calc(100vw - 24px) !important;
+    padding: 20px 16px !important;
+  }
+}
+
+/* Small Phone Screens Breakpoint (<= 480px) */
+@media (max-width: 480px) {
+  .header-right {
+    gap: 6px;
+  }
+
+  .search-bar {
+    display: none;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .stats-card {
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .stats-card-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+  }
+
+  .stats-card-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .stats-value {
+    font-size: 20px !important;
+    margin-top: 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .stats-label {
+    font-size: 11px !important;
+  }
+
+  .stats-sub {
+    font-size: 10px !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .avatar-name {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Dashboard Specific Mobile Enhancements
+   ============================================================ */
+.dashboard-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.dashboard-map-source-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dashboard-map-filter-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  width: 228px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  transition: all 0.25s ease;
+}
+
+.dashboard-news-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: var(--space-6);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chips .chip {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dashboard-map-bottom-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  padding: 5px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .leaflet-container {
+    touch-action: pan-y !important;
+  }
+
+  .trending-strip {
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .trending-strip-header {
+    flex-wrap: wrap !important;
+    gap: 6px 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .trending-strip-title {
+    white-space: nowrap !important;
+    font-size: 11.5px !important;
+  }
+
+  .trending-hint {
+    display: none !important;
+  }
+
+  .dashboard-map-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .dashboard-map-source-pills {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-map-filter-panel {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 210px;
+  }
+
+  .dashboard-map-bottom-legend {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin: 14px auto 0;
+    width: fit-content;
+    border-color: var(--border-subtle);
+    background: var(--bg-surface);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  .dashboard-news-section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-news-section-header .section-title {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 16.5px !important;
+    white-space: nowrap !important;
+  }
+
+  .dashboard-news-actions {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+}
+
+/* Modern Mobile News Section & Cards Styling (<= 640px) */
+@media (max-width: 640px) {
+  .dashboard-news-grid,
+  .news-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .filter-chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding: 4px 2px 10px 2px !important;
+    margin-bottom: var(--space-5) !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .filter-chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .filter-chips .chip {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    border-radius: 20px !important;
+    padding: 6px 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+  }
+
+  .news-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: auto !important;
+    border-radius: 16px !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden !important;
+  }
+
+  .news-card-img {
+    width: 100% !important;
+    height: 155px !important;
+    border-radius: 16px 16px 0 0 !important;
+    flex-shrink: 0 !important;
+    object-fit: cover !important;
+  }
+
+  .news-card-body {
+    padding: 12px 14px 10px 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    flex: 1 !important;
+  }
+
+  .news-card-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    margin-bottom: 2px !important;
+    color: var(--text-primary) !important;
+  }
+
+  .news-card-body p {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 4px !important;
+  }
+
+  .news-card-tags {
+    display: flex !important;
+    gap: 5px !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    padding-bottom: 4px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .news-card-tags::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .news-card-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    font-size: 11.5px !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* ============================================================
+   News Page & Project Views Responsive Mobile Architecture
+   ============================================================ */
+
+.news-page-container {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  height: calc(100vh - var(--header-h) - 48px);
+  overflow: hidden;
+}
+
+.news-mobile-filter-btn {
+  display: none;
+}
+
+.news-filter-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  max-height: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  overflow-y: auto;
+  transition: all 0.25s ease;
+}
+
+.news-main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.news-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  padding-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .news-page-container {
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    gap: 12px !important;
+  }
+
+  .news-mobile-filter-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: 10px 14px !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .filter-active-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--brand-500);
+    display: inline-block;
+  }
+
+  .news-filter-sidebar {
+    width: 100% !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    display: none !important;
+    border-radius: 12px !important;
+  }
+
+  .news-filter-sidebar.mobile-open {
+    display: flex !important;
+    animation: fadeDown 0.2s ease-out;
+  }
+
+  .news-main-content {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .news-scroll-area {
+    overflow-y: visible !important;
+    padding-right: 0 !important;
+  }
+
+  .section-title {
+    font-size: 16px !important;
+    flex-wrap: wrap !important;
+    line-height: 1.3 !important;
+  }
+
+  .wb-container {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .wb-layout {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .wb-sidebar {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+}
+
+
+
