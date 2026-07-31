@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import { ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck, Share2, ChevronRight, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { articlesService } from '../services/articles';
+import { getSourceStyle } from '../utils/sourceStyle';
 
 function stripAccents(str = '') {
   return str
@@ -19,13 +20,6 @@ function isTagMatched(tag, query) {
   const normQ = stripAccents(query.trim());
   return normTag.includes(normQ);
 }
-
-// Source color/icon fallback table (nếu backend không trả source name)
-const SOURCE_COLORS = {
-  gov:   { color: '#8b5cf6', bg: '#f5f3ff', icon: '📋', name: 'Mua Sắm Công' },
-  press: { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: 'Báo Chí' },
-};
-const DEFAULT_SRC = { color: '#6b7280', bg: '#f9fafb', icon: '📄', name: 'Nguồn tin' };
 
 export default function ArticlePage() {
   const { id } = useParams();
@@ -51,16 +45,17 @@ export default function ArticlePage() {
       setLoading(false);
     } else {
       setLoading(true);
-      articlesService.getArticles({ only_my_keywords: false, size: 100, page: 1 })
-        .then((data) => {
-          const found = data.items?.find((a) => String(a.id) === String(id));
+      articlesService.getArticle(id)
+        .then((found) => {
           if (found) {
             setArticle(found);
             setBookmarked(found.is_bookmarked);
             articlesService.markRead(found.id).catch(() => {});
           }
         })
-        .catch(() => {})
+        .catch((err) => {
+          console.warn('Failed to load article detail:', err);
+        })
         .finally(() => setLoading(false));
     }
   }, [id, location.state]);
@@ -165,12 +160,11 @@ export default function ArticlePage() {
     );
   }
 
-  // Lấy source info từ article.sources[0] nếu có
-  const firstSource = article.sources?.[0];
-  const srcName = firstSource?.source_name || DEFAULT_SRC.name;
-  const srcColor = DEFAULT_SRC.color;
-  const srcBg    = DEFAULT_SRC.bg;
-  const srcIcon  = DEFAULT_SRC.icon;
+  // Lấy source info thống nhất từ getSourceStyle
+  const src = getSourceStyle(article);
+  const srcName = src.name;
+  const srcIcon = src.icon;
+  const srcColor = src.color;
 
   const publishedDate = article.published_at
     ? new Date(article.published_at).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
@@ -213,8 +207,15 @@ export default function ArticlePage() {
 
             {/* Meta */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              <span className="news-source-tag" style={{ background: srcColor }}>
-                {srcIcon} {srcName}
+              <span
+                className="news-source-tag"
+                style={{
+                  backgroundColor: src.bg,
+                  color: src.color,
+                  border: `1px solid ${src.border}`,
+                }}
+              >
+                {src.icon} {src.name}
               </span>
               {article.matched_keywords?.length > 0 && article.matched_keywords.map((kw) => {
                 const matched = isTagMatched(kw, currentQ);

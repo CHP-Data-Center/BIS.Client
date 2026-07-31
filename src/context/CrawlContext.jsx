@@ -1,6 +1,7 @@
 // src/context/CrawlContext.jsx
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { adminService } from '../services/admin';
+import { useAuth } from './AuthContext';
 import { Zap, AlertCircle, X } from 'lucide-react';
 
 const CrawlContext = createContext(null);
@@ -9,6 +10,7 @@ export function CrawlProvider({ children }) {
   const [isCrawling, setIsCrawling] = useState(false);
   const [toast, setToast] = useState(null); // { id, type: 'success' | 'error', message }
   const isCrawlingRef = useRef(isCrawling);
+  const { user, isAdmin } = useAuth() || {};
 
   useEffect(() => {
     isCrawlingRef.current = isCrawling;
@@ -22,8 +24,10 @@ export function CrawlProvider({ children }) {
     }, 6000);
   };
 
-  // Poll backend to sync crawl status
+  // Poll backend to sync crawl status (chỉ cho Admin & khi tab đang active)
   const checkStatus = async () => {
+    if (!user || !isAdmin || document.hidden) return false;
+
     try {
       const res = await adminService.getCrawlStatus();
       const active = Boolean(res?.is_crawling);
@@ -42,16 +46,26 @@ export function CrawlProvider({ children }) {
   };
 
   useEffect(() => {
-    // Initial check on mount
+    if (!user || !isAdmin) return;
+
     checkStatus();
 
-    // Interval polling: every 3s when crawling, 15s when idle
     const timer = setInterval(() => {
-      checkStatus();
+      if (!document.hidden) {
+        checkStatus();
+      }
     }, isCrawling ? 3000 : 15000);
 
-    return () => clearInterval(timer);
-  }, [isCrawling]);
+    const handleVisibility = () => {
+      if (!document.hidden) checkStatus();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [isCrawling, user, isAdmin]);
 
   const triggerCrawl = async () => {
     if (isCrawling) {

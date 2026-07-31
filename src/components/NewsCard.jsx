@@ -3,16 +3,7 @@ import { Calendar, ExternalLink, Bookmark, BookmarkCheck, Cpu } from 'lucide-rea
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { articlesService } from '../services/articles';
-
-// Dynamic source styles
-const SOURCE_STYLE = {
-  adb:       { color: '#f59e0b', bg: '#fffbeb', icon: '🏦', name: 'ADB' },
-  worldbank: { color: '#10b981', bg: '#ecfdf5', icon: '🌍', name: 'World Bank' },
-  dauthau:   { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Đấu Thầu' },
-  gov:       { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Mua Sắm Công' },
-  press:     { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: 'Báo Chí' },
-  default:   { color: '#3b82f6', bg: '#eff6ff', icon: '📄', name: 'Nguồn tin' },
-};
+import { getSourceStyle } from '../utils/sourceStyle';
 
 function stripAccents(str = '') {
   return str
@@ -58,29 +49,6 @@ function highlightText(text, query) {
   } catch {
     return text;
   }
-}
-
-function getSourceStyle(article) {
-  const sourceName = article.sources?.[0]?.source_name || '';
-  const lowerName = sourceName.toLowerCase();
-
-  if (lowerName.includes('adb')) {
-    return { color: '#d97706', bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.25)', icon: '🏦', name: sourceName || 'ADB' };
-  }
-  if (lowerName.includes('world bank') || lowerName.includes('wb')) {
-    return { color: '#047857', bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.25)', icon: '🌍', name: sourceName || 'World Bank' };
-  }
-  if (lowerName.includes('thầu') || lowerName.includes('egp')) {
-    return { color: '#6d28d9', bg: 'rgba(139, 92, 246, 0.08)', border: 'rgba(139, 92, 246, 0.25)', icon: '📋', name: sourceName || 'Đấu Thầu' };
-  }
-  if (lowerName.includes('báo')) {
-    return { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: sourceName };
-  }
-  if (article.source && SOURCE_STYLE[article.source]) {
-    const base = SOURCE_STYLE[article.source];
-    return { ...base, color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', name: sourceName || base.name };
-  }
-  return { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: sourceName || 'Nguồn tin' };
 }
 
 export default function NewsCard({ article, index = 0 }) {

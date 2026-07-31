@@ -92,16 +92,6 @@ function Pagination({ page, total, pageSize, onChange }) {
 
 export default function NewsPage() {
   const { source = 'all' } = useParams();
-
-  if (source === 'worldbank') {
-    return <WorldBankView type="worldbank" />;
-  }
-  if (source === 'adb') {
-    return <WorldBankView type="adb" />;
-  }
-  if (source === 'gov' || source === 'dauthau') {
-    return <WorldBankView type="procurement" />;
-  }
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const scrollContainerRef = useRef(null);
@@ -195,19 +185,27 @@ export default function NewsPage() {
   }, [onlyBookmarked]);
 
   const queryQ = searchParams.get('q') || '';
+  const isFirstRender = useRef(true);
 
   // Synchronize + fetch when source or query parameter changes
   useEffect(() => {
-    setPage(1);
     setSearchInput(queryQ);
     setSearch(queryQ);
     setOnlyBookmarked(false);
-    fetchArticles(1, queryQ);
+    if (page !== 1) {
+      setPage(1);
+    } else {
+      fetchArticles(1, queryQ);
+    }
   }, [source, queryQ]);
 
   // Fetch when page changes & listen for global background crawl finish event
   useEffect(() => {
-    fetchArticles(page);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+    } else {
+      fetchArticles(page);
+    }
 
     const onDataUpdated = () => {
       fetchArticles(page);
@@ -254,6 +252,16 @@ export default function NewsPage() {
   const bookmarkedCount = onlyBookmarked
     ? bookmarkedArticles.length
     : articles.filter(a => a.is_bookmarked).length;
+
+  if (source === 'worldbank') {
+    return <WorldBankView type="worldbank" />;
+  }
+  if (source === 'adb') {
+    return <WorldBankView type="adb" />;
+  }
+  if (source === 'gov' || source === 'dauthau') {
+    return <WorldBankView type="procurement" />;
+  }
 
   return (
     <div className="news-page-container">

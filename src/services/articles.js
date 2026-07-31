@@ -11,6 +11,12 @@ export const articlesService = {
     return data; // ArticlePage: { items, total, page, size }
   },
 
+  /** Lấy chi tiết 1 bài viết theo ID */
+  async getArticle(articleId) {
+    const { data } = await api.get(`/articles/${articleId}`);
+    return data; // ArticleCard
+  },
+
   /** Lấy danh sách bookmark của user */
   async getBookmarks() {
     const { data } = await api.get('/articles/bookmarks');

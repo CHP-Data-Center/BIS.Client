@@ -1113,11 +1113,10 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchOverview();
     fetchTrending();
-    fetchArticles('all', 1);
 
     const onDataUpdated = () => {
-      fetchOverview();
-      fetchTrending();
+      fetchOverview(true);
+      fetchTrending(15, true);
       fetchArticles(activeFilter, page);
     };
     window.addEventListener('bis:data_updated', onDataUpdated);
@@ -1131,7 +1130,7 @@ export default function DashboardPage() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchOverview(), fetchTrending(), fetchArticles(activeFilter, page)]);
+    await Promise.all([fetchOverview(true), fetchTrending(15, true), fetchArticles(activeFilter, page)]);
     setRefreshing(false);
   };
 
