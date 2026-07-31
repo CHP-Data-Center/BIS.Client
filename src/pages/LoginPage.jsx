@@ -56,12 +56,20 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
 
-  useEffect(() => { setLoginError(''); }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('session_expired') === '1') {
+      setLoginError('Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.');
+    } else {
+      setLoginError('');
+    }
+  }, []);
 
   // Redirect if logged in
   useEffect(() => {
     if (isLoggedIn) nav('/dashboard', { replace: true });
   }, [isLoggedIn]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

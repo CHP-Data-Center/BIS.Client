@@ -18,22 +18,32 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Response: Retry tự động cho GET + 401 logout ──────────────────
+// ── Response: Retry tự động với Exponential Backoff + 429 & 401 handler ──
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
     const config = err.config;
 
-    // Retry tự động tối đa 2 lần với phương thức GET khi gặp 502/503/504 hoặc lỗi mạng
+    // Chuẩn hóa thông báo lỗi thân thiện cho UI
+    if (err.response?.status === 429) {
+      err.userMessage = 'Hệ thống đang quá tải hoặc nhận quá nhiều yêu cầu. Vui lòng thử lại sau vài giây.';
+    } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+      err.userMessage = 'Yêu cầu phản hồi quá lâu (hết thời gian chờ). Vui lòng thử lại.';
+    } else if (!err.response) {
+      err.userMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.';
+    }
+
+    // Retry tự động tối đa 2 lần với phương thức GET khi gặp 502/503/504 hoặc lỗi mạng/timeout
+    const isNetworkOrServerError = !err.response || [502, 503, 504].includes(err.response.status) || err.code === 'ECONNABORTED';
     if (
       config &&
       config.method === 'get' &&
-      (!err.response || [502, 503, 504].includes(err.response.status)) &&
+      isNetworkOrServerError &&
       (!config._retryCount || config._retryCount < 2) &&
       !axios.isCancel(err)
     ) {
       config._retryCount = (config._retryCount || 0) + 1;
-      const delay = config._retryCount * 1000;
+      const delay = Math.pow(2, config._retryCount) * 500; // Exponential backoff: 1000ms, 2000ms
       await new Promise((resolve) => setTimeout(resolve, delay));
       return api(config);
     }
@@ -41,14 +51,18 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('bis_token');
       localStorage.removeItem('bis_user');
-      // Tránh vòng lặp redirect khi đã ở login
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      // Tránh vòng lặp redirect khi đang ở login hoặc khi gọi API login
+      const isLoginRequest = config?.url?.includes('/auth/login');
+      const isAlreadyOnLoginPage = window.location.pathname.includes('/login');
+      if (!isLoginRequest && !isAlreadyOnLoginPage) {
+        window.location.href = '/login?session_expired=1';
       }
     }
+
     return Promise.reject(err);
   }
 );
 
 export default api;
+
 
