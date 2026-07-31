@@ -799,18 +799,23 @@ function ProjectDistributionMap() {
           </div>
         </div>
         <div className="dashboard-map-source-pills">
-          {Object.entries(sourceConfig).map(([key, cfg]) => (
-            <div key={key} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '5px 10px', borderRadius: 20,
-              background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)',
-              fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
-              whiteSpace: 'nowrap', flexShrink: 0,
-            }}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 6px ${cfg.glow}` }} />
-              {cfg.icon} {cfg.label} · <strong style={{ color: cfg.color }}>{allItems.filter(i=>i.source===key).length}</strong>
-            </div>
-          ))}
+          {Object.entries(sourceConfig).map(([key, cfg]) => {
+            const count = allItems.filter(i => i.source === key).length;
+            const unit = key === 'dauthau' ? 'gói thầu' : 'dự án';
+            return (
+              <div key={key} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '5px 12px', borderRadius: 20,
+                background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)',
+                fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
+                whiteSpace: 'nowrap', flexShrink: 0,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+              }}>
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 6px ${cfg.glow}` }} />
+                {cfg.icon} {cfg.label} · <strong style={{ color: cfg.color }}>{count} {unit}</strong>
+              </div>
+            );
+          })}
         </div>
       </div>
 

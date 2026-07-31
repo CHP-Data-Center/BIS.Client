@@ -3944,12 +3944,14 @@ html, body {
   justify-content: space-between;
   margin-bottom: 16px;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .dashboard-map-source-pills {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .dashboard-map-filter-panel {
