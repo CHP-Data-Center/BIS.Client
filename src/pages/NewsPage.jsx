@@ -142,7 +142,6 @@ export default function NewsPage() {
         if (q)              params.q           = q;
         if (srcConfig.type) params.source_type = srcConfig.type;
         if (dateFrom)       params.date_from   = dateFrom;
-        if (dateTo)         params.date_to     = dateTo;
         const res = await articlesService.getArticles(params);
         items = res.items || [];
         tot = res.total || 0;
@@ -159,30 +158,34 @@ export default function NewsPage() {
     }
   }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw]);
 
-  // Fetch bookmarks khi lọc "Bài đã lưu"
-  useEffect(() => {
-    if (onlyBookmarked) {
-      setLoadingBookmarks(true);
-      articlesService.getBookmarks()
-        .then((bms) => {
-          const mapped = (bms || []).map((bm) => ({
-            id: bm.article_id,
-            title: bm.article_title || `Bài viết #${bm.article_id}`,
-            url: bm.article_url,
-            image_url: bm.article_image_url || bm.image_url,
-            sources: bm.source_name ? [{ source_name: bm.source_name }] : [],
-            source: bm.source_type || (bm.source_name?.toLowerCase().includes('thầu') ? 'gov' : 'press'),
-            excerpt: bm.excerpt,
-            published_at: bm.published_at || bm.created_at,
-            matched_keywords: bm.matched_keywords || [],
-            is_bookmarked: true,
-          }));
-          setBookmarkedArticles(mapped);
-        })
-        .catch(() => setBookmarkedArticles([]))
-        .finally(() => setLoadingBookmarks(false));
+  const fetchBookmarks = useCallback(async () => {
+    setLoadingBookmarks(true);
+    try {
+      const bms = await articlesService.getBookmarks();
+      const mapped = (bms || []).map((bm) => ({
+        id: bm.article_id,
+        title: bm.article_title || `Bài viết #${bm.article_id}`,
+        url: bm.article_url,
+        image_url: bm.article_image_url || bm.image_url,
+        sources: bm.source_name ? [{ source_name: bm.source_name }] : [],
+        source: bm.source_type || (bm.source_name?.toLowerCase().includes('thầu') ? 'gov' : 'press'),
+        excerpt: bm.excerpt,
+        published_at: bm.published_at || bm.created_at,
+        matched_keywords: bm.matched_keywords || [],
+        is_bookmarked: true,
+      }));
+      setBookmarkedArticles(mapped);
+    } catch {
+      setBookmarkedArticles([]);
+    } finally {
+      setLoadingBookmarks(false);
     }
-  }, [onlyBookmarked]);
+  }, []);
+
+  // Fetch bookmarks ngay khi mount
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
 
   const queryQ = searchParams.get('q') || '';
   const isFirstRender = useRef(true);
@@ -199,7 +202,7 @@ export default function NewsPage() {
     }
   }, [source, queryQ]);
 
-  // Fetch when page changes & listen for global background crawl finish event
+  // Fetch when page changes & listen for global background crawl/bookmark finish event
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -209,10 +212,11 @@ export default function NewsPage() {
 
     const onDataUpdated = () => {
       fetchArticles(page);
+      fetchBookmarks();
     };
     window.addEventListener('bis:data_updated', onDataUpdated);
     return () => window.removeEventListener('bis:data_updated', onDataUpdated);
-  }, [page]);
+  }, [page, fetchBookmarks]);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
@@ -249,9 +253,7 @@ export default function NewsPage() {
   const displayedArticles = onlyBookmarked ? bookmarkedArticles : articles;
   const effectiveTotal = onlyBookmarked ? bookmarkedArticles.length : total;
   const isPageLoading = onlyBookmarked ? loadingBookmarks : loading;
-  const bookmarkedCount = onlyBookmarked
-    ? bookmarkedArticles.length
-    : articles.filter(a => a.is_bookmarked).length;
+  const bookmarkedCount = bookmarkedArticles.length;
 
   if (source === 'worldbank') {
     return <WorldBankView type="worldbank" />;
@@ -311,7 +313,10 @@ export default function NewsPage() {
 
         {/* Nút lọc "Bài đã lưu" / "Dự án đã lưu" */}
         <button
-          onClick={() => setOnlyBookmarked(v => !v)}
+          onClick={() => {
+            setOnlyBookmarked(v => !v);
+            fetchBookmarks();
+          }}
           id="btn-filter-bookmarked"
           style={{
             display: 'flex',
@@ -336,16 +341,15 @@ export default function NewsPage() {
           {onlyBookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
           {onlyBookmarked
             ? (srcConfig.api === 'oda' ? 'Đang hiện: Dự án đã lưu' : 'Đang hiện: Bài đã lưu')
-            : (srcConfig.api === 'oda' ? 'Chỉ dự án đã lưu' : 'Chỉ bài đã lưu')}
-          {bookmarkedCount > 0 && (
-            <span style={{
-              fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 10,
-              background: onlyBookmarked ? 'rgba(255,255,255,0.25)' : 'var(--brand-100)',
-              color: onlyBookmarked ? 'white' : 'var(--brand-700)',
-            }}>
-              {bookmarkedCount}
-            </span>
-          )}
+            : (srcConfig.api === 'oda' ? 'Chỉ bài đã lưu' : 'Chỉ bài đã lưu')}
+          <span style={{
+            fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 10,
+            background: onlyBookmarked ? 'rgba(255,255,255,0.25)' : '#dbeafe',
+            color: onlyBookmarked ? 'white' : '#1d4ed8',
+            marginLeft: 2,
+          }}>
+            {bookmarkedCount}
+          </span>
         </button>
 
         {/* Ô tìm kiếm + Nút Tìm kiếm hàng ngang */}

@@ -13,6 +13,7 @@ import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
 import { buildMapItems, adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import { mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
+import { apiCache } from '../utils/apiCache';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -20,7 +21,25 @@ const PAGE_SIZE = 6;
 
 // ── Trending marquee strip ───────────────────────────────────
 function TrendingStrip({ keywords, onSelectKeyword }) {
-  if (!keywords || keywords.length === 0) return null;
+  if (!keywords || keywords.length === 0) {
+    return (
+      <div className="trending-strip" style={{ opacity: 0.75 }}>
+        <div className="trending-strip-header">
+          <div className="trending-strip-title">
+            <Zap size={15} style={{ color: '#f59e0b' }} />
+            <span>Từ Khóa Đang Nổi Bật</span>
+          </div>
+          <span className="hot-badge" style={{ animation: 'pulse 1.5s infinite' }}>⏳ ĐANG TẢI...</span>
+        </div>
+        <div style={{ height: 32, display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden' }}>
+          <div className="skeleton" style={{ height: 28, width: 110, borderRadius: 20 }} />
+          <div className="skeleton" style={{ height: 28, width: 130, borderRadius: 20 }} />
+          <div className="skeleton" style={{ height: 28, width: 95, borderRadius: 20 }} />
+          <div className="skeleton" style={{ height: 28, width: 140, borderRadius: 20 }} />
+        </div>
+      </div>
+    );
+  }
 
   // Duplicate keywords so each half has at least 15 items for seamless 0% -> -50% infinite looping without blank gaps
   const repeatCount = Math.max(2, Math.ceil(15 / keywords.length));
@@ -651,7 +670,7 @@ function ProjectDistributionMap() {
   const [selCountries, setSelCountries] = useState(new Set());
   const [selStatuses,  setSelStatuses]  = useState(new Set());
   const [selSectors,   setSelSectors]   = useState(new Set());
-  const [realItems,    setRealItems]    = useState(null); // null = chưa có -> dùng mock
+  const [realItems,    setRealItems]    = useState(() => apiCache.get('oda:map_items'));
   const [mobileFilterOpen, setMobileFilterOpen] = useState(true);
 
   // Lấy dự án ODA + mua sắm công THẬT từ backend; lỗi/rỗng -> giữ null (fallback mock).
@@ -664,7 +683,10 @@ function ProjectDistributionMap() {
           odaService.getProcurement(),
         ]);
         const items = buildMapItems(oda?.items || [], proc?.items || []);
-        if (alive && items.length > 0) setRealItems(items);
+        if (alive && items.length > 0) {
+          setRealItems(items);
+          apiCache.set('oda:map_items', items, 120000);
+        }
       } catch (e) {
         console.warn('ODA map data error (dùng mock):', e);
       }
@@ -756,7 +778,7 @@ function ProjectDistributionMap() {
     filteredItems.reduce((acc, item) => {
       const rawCoords = coordsOf(item);
       if (!rawCoords) return acc;
-      const key = `${rawCoords[0].toFixed(3)},${rawCoords[1].toFixed(3)}`;
+      const key = `${rawCoords[0].toFixed(1)},${rawCoords[1].toFixed(1)}`;
       if (!acc[key]) {
         acc[key] = { key, baseCoords: rawCoords, items: [] };
       }
@@ -789,12 +811,12 @@ function ProjectDistributionMap() {
                 border: `1px solid ${usingReal ? '#bbf7d0' : '#fde68a'}`,
                 whiteSpace: 'nowrap',
               }}>
-                {usingReal ? '🟢 Dữ liệu thật' : '📌 Dữ liệu mẫu minh họa'}
+                {usingReal ? '🟢 Dữ liệu thật (Top 400 mới nhất)' : '📌 Dữ liệu mẫu minh họa'}
               </span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
               <Cpu size={11} style={{ color: '#a855f7', flexShrink: 0 }} />
-              <span>AI Powered · {filteredItems.length} dự án ({locationGroupList.length} địa điểm)</span>
+              <span>AI Powered · {filteredItems.length} dự án ({locationGroupList.length} điểm cụm)</span>
             </div>
           </div>
         </div>
@@ -909,7 +931,7 @@ function ProjectDistributionMap() {
             }}
           >
             <span style={{ fontSize: 12, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}>
-              🗺️ Bộ lọc <span className="mobile-filter-toggle-hint" style={{ fontSize: 10, opacity: 0.85, fontWeight: 600 }}>({mobileFilterOpen ? '▲ Thu gọn' : '▼ Mở lọc'})</span>
+              🗺️ Bộ lọc <span className="mobile-filter-toggle-hint" style={{ fontSize: 10, opacity: 0.85, fontWeight: 600 }}>(400 mới nhất)</span>
             </span>
             <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: 'white' }}>
               {filteredItems.length}/{allItems.length}
@@ -1022,16 +1044,6 @@ function ProjectDistributionMap() {
           )}
         </div>
       </div>
-
-      {/* ── Bottom legend bar ── */}
-      <div className="dashboard-map-bottom-legend">
-        {Object.entries(sourceConfig).map(([key, cfg]) => (
-          <div key={key} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:600, color:'#475569' }}>
-            <div style={{ width:9, height:9, borderRadius:'50%', background:cfg.color, boxShadow:`0 0 5px ${cfg.glow}` }} />
-            {cfg.icon} {cfg.label} <strong style={{ color:cfg.color }}>{allItems.filter(i=>i.source===key).length}</strong>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -1053,16 +1065,16 @@ export default function DashboardPage() {
   const [page, setPage]               = useState(1);
   const gridRef = useRef(null);
 
-  // API data
-  const [overview, setOverview]   = useState(null);
-  const [trending, setTrending]   = useState([]);
+  // API data - lấy từ cache để F5 giữ nguyên dữ liệu tức thì
+  const [overview, setOverview]   = useState(() => apiCache.get('stats:overview'));
+  const [trending, setTrending]   = useState(() => apiCache.get('stats:trending:15') || []);
   const [articles, setArticles]   = useState([]);
   const [totalArticles, setTotal] = useState(0);
 
   // Fetch stats overview
-  const fetchOverview = async () => {
+  const fetchOverview = async (force = false) => {
     try {
-      const data = await statsService.getOverview();
+      const data = await statsService.getOverview(force);
       setOverview(data);
     } catch (e) {
       console.warn('Stats overview error:', e);
@@ -1070,10 +1082,10 @@ export default function DashboardPage() {
   };
 
   // Fetch trending keywords
-  const fetchTrending = async () => {
+  const fetchTrending = async (limit = 15, force = false) => {
     try {
-      const data = await statsService.getTrending(15);
-      setTrending(data);
+      const data = await statsService.getTrending(limit, force);
+      setTrending(data || []);
     } catch (e) {
       console.warn('Trending error:', e);
     }
@@ -1193,6 +1205,7 @@ export default function DashboardPage() {
       {/* ── Stats Grid ── */}
       <div className="stats-grid">
         <StatsCard
+          loading={!overview}
           icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
           label="Tổng Bài Viết"
           value={totalCount}
@@ -1201,6 +1214,7 @@ export default function DashboardPage() {
           accentColor="#3b82f6" iconBg="var(--brand-50)"
         />
         <StatsCard
+          loading={!overview}
           icon={<Building2 size={20} style={{ color: '#f59e0b' }} />}
           label="ADB"
           value={adbCount}
@@ -1208,6 +1222,7 @@ export default function DashboardPage() {
           accentColor="#f59e0b" iconBg="#fffbeb"
         />
         <StatsCard
+          loading={!overview}
           icon={<Globe size={20} style={{ color: '#10b981' }} />}
           label="World Bank"
           value={wbCount}
@@ -1215,6 +1230,7 @@ export default function DashboardPage() {
           accentColor="#10b981" iconBg="#ecfdf5"
         />
         <StatsCard
+          loading={!overview}
           icon={<ShoppingBag size={20} style={{ color: '#8b5cf6' }} />}
           label="Đấu Thầu Công"
           value={govCount}
@@ -1222,6 +1238,7 @@ export default function DashboardPage() {
           accentColor="#8b5cf6" iconBg="#f5f3ff"
         />
         <StatsCard
+          loading={!overview}
           icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
           label="Báo Chí"
           value={pressCount}
@@ -1229,6 +1246,7 @@ export default function DashboardPage() {
           accentColor="#3b82f6" iconBg="#eff6ff"
         />
         <StatsCard
+          loading={!overview}
           icon={<Cpu size={20} style={{ color: '#ec4899' }} />}
           label="AI Đã Xử Lý"
           value={aiProcessed}
@@ -1324,103 +1342,101 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Source Breakdown (4-Column Grid) ── */}
-      {overview && (
-        <div style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 18,
-          padding: '22px 24px',
-          marginTop: 'var(--space-8)',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
-              <div style={{
-                width: 30, height: 30, borderRadius: 8,
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
-              }}>
-                <TrendingUp size={16} />
-              </div>
-              Phân Bổ Theo Nguồn Dữ Liệu
+      <div style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 18,
+        padding: '22px 24px',
+        marginTop: 'var(--space-8)',
+        boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
+            }}>
+              <TrendingUp size={16} />
             </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
-              {totalCount} bài viết tổng
-            </span>
+            Phân Bổ Theo Nguồn Dữ Liệu
           </div>
-
-          <div className="responsive-grid-form" style={{ gap: 16 }}>
-            {Object.entries(SOURCE_CONFIG).map(([key, src]) => {
-              let count = 0;
-              if (key === 'gov') count = govCount;
-              else if (key === 'press') count = pressCount;
-              else if (key === 'adb') count = adbCount;
-              else if (key === 'worldbank') count = wbCount;
-
-              const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
-              return (
-                <div
-                  key={key}
-                  onClick={() => handleFilter(key)}
-                  style={{
-                    background: 'var(--bg-surface-2)',
-                    border: '1.5px solid var(--border-subtle)',
-                    borderRadius: 14, padding: '16px 18px',
-                    position: 'relative', overflow: 'hidden',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = `0 12px 28px ${src.color}25`;
-                    e.currentTarget.style.borderColor = src.color;
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
-                    e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                  }}
-                >
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${src.color}, ${src.color}dd)` }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{
-                        width: 34, height: 34, borderRadius: 10,
-                        background: src.bg, border: `1px solid ${src.color}30`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 17, flexShrink: 0, boxShadow: `0 3px 10px ${src.color}20`,
-                      }}>
-                        {src.icon}
-                      </span>
-                      {src.label}
-                    </span>
-                    <span style={{ fontSize: 22, fontWeight: 900, color: src.color, letterSpacing: '-0.5px' }}>
-                      {count}
-                    </span>
-                  </div>
-                  <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 20, overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(0,0,0,0.05)' }}>
-                    <div style={{
-                      height: '100%', width: `${pct}%`,
-                      background: `linear-gradient(90deg, ${src.color}aa, ${src.color})`,
-                      borderRadius: 20, boxShadow: `0 0 10px ${src.color}66`,
-                      transition: 'width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 10.5, fontWeight: 700, color: src.color, background: `${src.color}15`, padding: '2px 8px', borderRadius: 12 }}>
-                      {pct}% tổng số
-                    </span>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                      {count} bài viết
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
+            {overview ? `${totalCount} bài viết tổng` : 'Đang tải...'}
+          </span>
         </div>
-      )}
+
+        <div className="responsive-grid-form" style={{ gap: 16 }}>
+          {Object.entries(SOURCE_CONFIG).map(([key, src]) => {
+            let count = 0;
+            if (key === 'gov') count = govCount;
+            else if (key === 'press') count = pressCount;
+            else if (key === 'adb') count = adbCount;
+            else if (key === 'worldbank') count = wbCount;
+
+            const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+            return (
+              <div
+                key={key}
+                onClick={() => handleFilter(key)}
+                style={{
+                  background: 'var(--bg-surface-2)',
+                  border: '1.5px solid var(--border-subtle)',
+                  borderRadius: 14, padding: '16px 18px',
+                  position: 'relative', overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = `0 12px 28px ${src.color}25`;
+                  e.currentTarget.style.borderColor = src.color;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
+                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${src.color}, ${src.color}dd)` }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      width: 34, height: 34, borderRadius: 10,
+                      background: src.bg, border: `1px solid ${src.color}30`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 17, flexShrink: 0, boxShadow: `0 3px 10px ${src.color}20`,
+                    }}>
+                      {src.icon}
+                    </span>
+                    {src.label}
+                  </span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: src.color, letterSpacing: '-0.5px' }}>
+                    {overview ? count : <span className="skeleton" style={{ display: 'inline-block', width: 40, height: 24, borderRadius: 6 }} />}
+                  </span>
+                </div>
+                <div style={{ height: 8, background: 'var(--bg-surface)', borderRadius: 20, overflow: 'hidden', marginBottom: 8, border: '1px solid rgba(0,0,0,0.05)' }}>
+                  <div style={{
+                    height: '100%', width: overview ? `${pct}%` : '0%',
+                    background: `linear-gradient(90deg, ${src.color}aa, ${src.color})`,
+                    borderRadius: 20, boxShadow: `0 0 10px ${src.color}66`,
+                    transition: 'width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: src.color, background: `${src.color}15`, padding: '2px 8px', borderRadius: 12 }}>
+                    {overview ? `${pct}% tổng số` : '---'}
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {overview ? `${count} bài viết` : '---'}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

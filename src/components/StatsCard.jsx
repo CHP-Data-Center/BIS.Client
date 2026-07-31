@@ -22,7 +22,7 @@ function AnimatedNumber({ target }) {
 }
 
 export default function StatsCard({
-  icon, label, value, sub, trend, trendDir = 'up', accentColor, iconBg, onClick
+  icon, label, value, sub, trend, trendDir = 'up', accentColor, iconBg, onClick, loading = false
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -53,7 +53,7 @@ export default function StatsCard({
         >
           {icon}
         </div>
-        {trend && (
+        {trend && !loading && (
           <div className={`stats-card-trend ${trendDir === 'down' ? 'down' : ''}`}>
             {trendDir === 'up'
               ? <TrendingUp size={12} />
@@ -64,11 +64,15 @@ export default function StatsCard({
       </div>
 
       <div className="stats-value">
-        <AnimatedNumber target={typeof value === 'number' ? value : parseInt(value) || 0} />
+        {loading ? (
+          <div className="skeleton" style={{ height: 32, width: 70, borderRadius: 8, margin: '4px 0' }} />
+        ) : (
+          <AnimatedNumber target={typeof value === 'number' ? value : parseInt(value) || 0} />
+        )}
       </div>
 
       <div className="stats-label">{label}</div>
-      {sub && <div className="stats-sub">{sub}</div>}
+      {sub && <div className="stats-sub">{loading ? <div className="skeleton" style={{ height: 12, width: '60%', borderRadius: 4 }} /> : sub}</div>}
 
       {/* Bottom accent bar animation */}
       <div style={{

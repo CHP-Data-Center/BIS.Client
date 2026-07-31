@@ -52,9 +52,12 @@ function AppLayout({ children }) {
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
-      <main className="main-content">
+      <main className="main-content" style={{ position: 'relative' }}>
+        <div key={`loader-${location.pathname}`} className="route-top-loader" />
         <Suspense fallback={<PageLoader />}>
-          {children}
+          <div key={location.pathname} className="page-transition">
+            {children}
+          </div>
         </Suspense>
       </main>
       <ScrollToTop />

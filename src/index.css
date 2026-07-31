@@ -4450,6 +4450,73 @@ html, body {
   }
 }
 
+/* ── Smooth Page Transition Animations ──────────────────── */
+.page-transition {
+  animation: pageFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+  width: 100%;
+}
+
+@keyframes pageFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.992);
+    filter: blur(3px);
+  }
+  60% {
+    opacity: 0.9;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Glowing route top progress loader line */
+.route-top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981, #f59e0b);
+  z-index: 99999;
+  animation: routeLoaderProgress 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 16px rgba(139, 92, 246, 0.6);
+  pointer-events: none;
+}
+
+@keyframes routeLoaderProgress {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+  65% {
+    width: 85%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+/* Staggered entrance helper classes */
+.animate-stagger-1 {
+  animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+}
+
+.animate-stagger-2 {
+  animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.animate-stagger-3 {
+  animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
+
+
 
 
 

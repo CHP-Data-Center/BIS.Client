@@ -534,6 +534,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
 
       {/* Header Banner */}
       <div
+        className="animate-stagger-1"
         style={{
           flex: '0 0 auto',
           background: config.bannerBg,
@@ -593,7 +594,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
       <div className="wb-layout" style={{ display: 'flex', gap: 14, flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
 
         {/* LEFT SIDEBAR FILTERS */}
-        <aside className="wb-sidebar" style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto', paddingRight: 2 }}>
+        <aside className="wb-sidebar animate-stagger-2" style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 10, height: '100%', overflowY: 'auto', paddingRight: 2 }}>
 
           {/* Compact Stats Box */}
           <div
@@ -881,7 +882,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
 
         {/* RIGHT MAIN CONTENT AREA */}
         <main
-          className="wb-main"
+          className="wb-main animate-stagger-3"
           style={{
             flex: '1 1 0%', minWidth: 0,
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',

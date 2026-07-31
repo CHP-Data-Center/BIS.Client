@@ -11,7 +11,7 @@ export const statsService = {
       if (cached) return cached;
     }
     const { data } = await api.get('/stats/overview');
-    apiCache.set(cacheKey, data, 30000); // cache 30 giây
+    apiCache.set(cacheKey, data, 600000); // cache 10 phút (localStorage + memory)
     return data; // StatsOverview
   },
 
@@ -23,7 +23,7 @@ export const statsService = {
       if (cached) return cached;
     }
     const { data } = await api.get('/stats/trending', { params: { limit } });
-    apiCache.set(cacheKey, data, 30000); // cache 30 giây
+    apiCache.set(cacheKey, data, 600000); // cache 10 phút (localStorage + memory)
     return data; // TrendingTerm[]
   },
 };
