@@ -179,14 +179,6 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
-              {/* Test Error Boundary Preview */}
-              <Route path="/test-error" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    {(() => { throw new Error('Demo Error Boundary UI: Đã kích hoạt lỗi thử nghiệm giao diện!'); })()}
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
 
               {/* Default redirect */}
 
