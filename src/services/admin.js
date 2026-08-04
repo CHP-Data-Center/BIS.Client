@@ -1,5 +1,6 @@
 // src/services/admin.js
 import api from './api';
+import { apiCache } from '../utils/apiCache';
 
 export const adminService = {
   // ── Users ──────────────────────────────────────────────────────
@@ -20,44 +21,70 @@ export const adminService = {
   },
 
   // ── Sources ─────────────────────────────────────────────────────
-  async getSources() {
+  async getSources(force = false) {
+    const cacheKey = 'admin:sources';
+    if (!force) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
     const { data } = await api.get('/admin/sources');
+    apiCache.set(cacheKey, data, 5000);
     return data;
   },
-  async getPendingSources() {
+  async getPendingSources(force = false) {
+    const cacheKey = 'admin:sources:pending';
+    if (!force) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
     const { data } = await api.get('/admin/sources/pending');
+    apiCache.set(cacheKey, data, 5000);
     return data;
   },
   async approveSource(sourceId) {
+    apiCache.clear('admin:sources:pending');
+    apiCache.clear('admin:sources');
     const { data } = await api.post(`/admin/sources/${sourceId}/approve`);
     return data;
   },
   async rejectSource(sourceId) {
+    apiCache.clear('admin:sources:pending');
+    apiCache.clear('admin:sources');
     await api.post(`/admin/sources/${sourceId}/reject`);
   },
   async createSource(payload) {
+    apiCache.clear('admin:sources');
     const { data } = await api.post('/admin/sources', payload);
     return data;
   },
   async updateSource(sourceId, payload) {
+    apiCache.clear('admin:sources');
     const { data } = await api.put(`/admin/sources/${sourceId}`, payload);
     return data;
   },
   async deleteSource(sourceId) {
+    apiCache.clear('admin:sources');
     await api.delete(`/admin/sources/${sourceId}`);
   },
   async crawlNow() {
     const { data } = await api.post('/admin/sources/crawl-now');
     return data; // { status, message }
   },
-  async getCrawlStatus() {
+  async getCrawlStatus(force = false) {
+    const cacheKey = 'admin:sources:status';
+    if (!force) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
     const { data } = await api.get('/admin/sources/status');
+    apiCache.set(cacheKey, data, 3000);
     return data; // { is_crawling: boolean }
   },
   async getCrawlLogs() {
     const { data } = await api.get('/admin/sources/logs');
     return data;
   },
+
 
   // ── Blacklist ───────────────────────────────────────────────────
   async getBlacklist() {

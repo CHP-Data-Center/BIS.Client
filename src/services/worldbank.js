@@ -28,13 +28,18 @@ export const worldBankService = {
    * Fetch World Bank projects exclusively from local Server Database.
    * Direct fetching from World Bank in browser is disabled to preserve historical data in DB.
    */
-  async fetchProjects(params = {}) {
+  async fetchProjects(params = {}, force = false) {
+    const cacheKey = `worldbank:projects:${JSON.stringify(params)}`;
+    if (!force) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
     try {
       const res = await api.get('/oda-projects', {
         params: { source: 'worldbank', size: 5000, ...params },
       });
       const items = res.data?.items || [];
-      return items.map((p) => {
+      const mapped = items.map((p) => {
         const totalAmt = p.amount_usd || (typeof p.amount === 'string' ? parseFloat(p.amount.replace(/[^0-9.]/g, '')) : p.amount) || 0;
         return {
           id: p.external_id || String(p.id),
@@ -50,11 +55,14 @@ export const worldBankService = {
           ai_summary: p.ai_summary || null,
         };
       });
+      apiCache.set(cacheKey, mapped, 60000); // cache 60s
+      return mapped;
     } catch (e) {
       console.error('Lỗi khi lấy dữ liệu World Bank từ Database:', e);
       throw new Error('Không thể tải dữ liệu từ CSDL Server. Vui lòng thử lại sau.');
     }
   },
+
 
   /**
    * Get saved projects from localStorage / server

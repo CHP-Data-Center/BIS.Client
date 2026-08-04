@@ -63,6 +63,25 @@ api.interceptors.response.use(
   }
 );
 
+// ── In-Flight GET Request Deduplication ─────────────────────────────
+const pendingGetRequests = new Map();
+const originalGet = api.get.bind(api);
+
+api.get = function (url, config = {}) {
+  // Chỉ deduplicate các GET request không bị force bypass
+  const requestKey = `${url}?${JSON.stringify(config.params || {})}`;
+  if (pendingGetRequests.has(requestKey)) {
+    return pendingGetRequests.get(requestKey);
+  }
+
+  const promise = originalGet(url, config).finally(() => {
+    pendingGetRequests.delete(requestKey);
+  });
+
+  pendingGetRequests.set(requestKey, promise);
+  return promise;
+};
+
 export default api;
 
 
