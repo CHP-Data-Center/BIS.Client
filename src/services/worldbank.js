@@ -1,5 +1,6 @@
 // src/services/worldbank.js
 import api from './api';
+import { apiCache } from '../utils/apiCache';
 
 const WB_SAVED_KEY = 'saved_worldbank_projects';
 const WB_PUBLIC_API = 'https://search.worldbank.org/api/v2/projects';
