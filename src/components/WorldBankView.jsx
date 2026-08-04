@@ -86,7 +86,7 @@ const CONFIG_MAP = {
     headers: [
       { key: 'bookmark', display: 'Lưu', sortable: false, width: '60px' },
       { key: 'project_name', display: 'Tên Thông Báo / Kế Hoạch', sortable: true },
-      { key: 'countryshortname', display: 'Bên Mời Thầu', sortable: true, width: '220px' },
+      { key: 'countryshortname', display: 'Bên Mời Thầu', sortable: true, width: '170px' },
       { key: 'id', display: 'Mã TBMT/KHLCNT', sortable: true, width: '130px' },
       { key: 'totalCommitmentAmount', display: 'Gói Thầu', sortable: true, width: '110px' },
       { key: 'projectstatusdisplay', display: 'Trạng Thái', sortable: true, width: '120px' },
@@ -1050,7 +1050,19 @@ export default function WorldBankView({ type = 'worldbank' }) {
                           </td>
 
                           {/* Org / Country */}
-                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', fontWeight: 500, color: 'var(--text-primary)' }}>
+                          <td
+                            title={p.countryshortname || 'N/A'}
+                            style={{
+                              padding: '10px 14px',
+                              whiteSpace: 'nowrap',
+                              fontWeight: 500,
+                              color: 'var(--text-primary)',
+                              maxWidth: normType === 'procurement' ? 170 : 130,
+                              width: normType === 'procurement' ? 170 : 130,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
                             {p.countryshortname || 'N/A'}
                           </td>
 
