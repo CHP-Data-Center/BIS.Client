@@ -5,12 +5,24 @@
  * Hỗ trợ lưu persistent localStorage để khi F5 trang web không bị nháy/mất dữ liệu.
  */
 
-const STORAGE_PREFIX = 'bis_apicache_';
+const STORAGE_PREFIX = 'bis_apicache_v2_';
 
 class ApiCache {
   constructor() {
     this.cache = new Map();
+    // Auto-purge legacy v1 cache keys from localStorage
+    try {
+      const legacyKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('bis_apicache_') && !k.startsWith(STORAGE_PREFIX)) {
+          legacyKeys.push(k);
+        }
+      }
+      legacyKeys.forEach((k) => localStorage.removeItem(k));
+    } catch (e) { /* ignore */ }
   }
+
 
   /**
    * Lấy giá trị từ cache (Memory -> localStorage) nếu chưa hết hạn
