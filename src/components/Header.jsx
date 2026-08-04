@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import NotificationDropdown from './NotificationDropdown';
+import logoImg from '../assets/logo.png';
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -80,7 +81,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
         </button>
 
         <div className="header-logo" onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <img src={logoImg} alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div className="logo-text">
             <span className="logo-title">Hệ Thống BIS</span>
             <span className="logo-sub">Bidding Intelligence System</span>

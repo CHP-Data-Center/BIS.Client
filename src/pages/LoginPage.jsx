@@ -5,6 +5,7 @@ import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles } from 'luci
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+import logoImg from '../assets/logo.png';
 
 // Google Icon Component
 function GoogleIcon() {
@@ -219,7 +220,7 @@ export default function LoginPage() {
         <div className="login-logo">
           <div className="login-logo-container">
             <img
-              src={`${import.meta.env.BASE_URL}logo.png`}
+              src={logoImg}
               alt="BIS Logo"
               className="login-logo-img"
             />
