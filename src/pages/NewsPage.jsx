@@ -182,41 +182,33 @@ export default function NewsPage() {
     }
   }, []);
 
-  // Fetch bookmarks ngay khi mount
-  useEffect(() => {
-    fetchBookmarks();
-  }, [fetchBookmarks]);
-
   const queryQ = searchParams.get('q') || '';
-  const isFirstRender = useRef(true);
 
-  // Synchronize + fetch when source or query parameter changes
+  // Synchronize search inputs when URL search params change
   useEffect(() => {
     setSearchInput(queryQ);
     setSearch(queryQ);
     setOnlyBookmarked(false);
-    if (page !== 1) {
-      setPage(1);
-    } else {
-      fetchArticles(1, queryQ);
-    }
+    setPage(1);
   }, [source, queryQ]);
 
-  // Fetch when page changes & listen for global background crawl/bookmark finish event
+  // Main data fetch effect: triggers when source, search, page, sort, or date filters change
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-    } else {
-      fetchArticles(page);
-    }
+    fetchArticles(page);
+  }, [source, search, page, sortBy, dateFrom, dateTo, onlyMyKw]);
+
+  // Bookmarks & background update event listener
+  useEffect(() => {
+    fetchBookmarks();
 
     const onDataUpdated = () => {
-      fetchArticles(page);
-      fetchBookmarks();
+      fetchArticles(page, null, true);
+      fetchBookmarks(true);
     };
     window.addEventListener('bis:data_updated', onDataUpdated);
     return () => window.removeEventListener('bis:data_updated', onDataUpdated);
-  }, [page, fetchBookmarks]);
+  }, [fetchBookmarks]);
+
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
