@@ -195,7 +195,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
             last_stage_reached_name: p.kind === 'notice' ? 'TBMT (Mời thầu)' : 'KHLCNT (Kế hoạch)',
             sector: p.sector || 'Chưa phân loại',
             ai_summary: null,
-            rawUrl: `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`,
+            rawUrl: p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`,
           };
         });
       }
