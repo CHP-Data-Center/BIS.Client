@@ -1184,7 +1184,7 @@ export default function DashboardPage() {
       <div className="dashboard-banner">
         <div className="banner-aurora-1" />
         <div className="banner-aurora-2" />
-        <img src="/logo.png" alt="" className="banner-logo-watermark" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="banner-logo-watermark" />
 
         <div className="banner-content">
           <div className="banner-title" style={{ animation: 'slideInLeft 0.5s ease both' }}>

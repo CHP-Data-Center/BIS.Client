@@ -113,7 +113,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '227924702568-q0kmobftaj5crfve5vu9tmr6kkl2vvec.apps.googleusercontent.com';
     setLoginError('');
     setFieldErrors({ email: '', password: '' });
 
@@ -219,7 +219,7 @@ export default function LoginPage() {
         <div className="login-logo">
           <div className="login-logo-container">
             <img
-              src="/logo.png"
+              src={`${import.meta.env.BASE_URL}logo.png`}
               alt="BIS Logo"
               className="login-logo-img"
             />

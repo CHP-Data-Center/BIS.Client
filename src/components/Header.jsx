@@ -80,7 +80,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
         </button>
 
         <div className="header-logo" onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>
-          <img src="/logo.png" alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div className="logo-text">
             <span className="logo-title">Hệ Thống BIS</span>
             <span className="logo-sub">Bidding Intelligence System</span>
