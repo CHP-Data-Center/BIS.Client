@@ -55,7 +55,7 @@ api.interceptors.response.use(
       const isLoginRequest = config?.url?.includes('/auth/login');
       const isAlreadyOnLoginPage = window.location.pathname.includes('/login');
       if (!isLoginRequest && !isAlreadyOnLoginPage) {
-        window.location.href = '/login?session_expired=1';
+        window.location.href = `${import.meta.env.BASE_URL}login?session_expired=1`;
       }
     }
 

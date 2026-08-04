@@ -100,7 +100,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <CrawlProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public */}
