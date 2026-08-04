@@ -1054,13 +1054,13 @@ export default function WorldBankView({ type = 'worldbank' }) {
                             title={p.countryshortname || 'N/A'}
                             style={{
                               padding: '10px 14px',
-                              whiteSpace: 'nowrap',
+                              whiteSpace: 'normal',
+                              wordBreak: 'break-word',
+                              lineHeight: 1.4,
                               fontWeight: 500,
                               color: 'var(--text-primary)',
                               maxWidth: normType === 'procurement' ? 170 : 130,
                               width: normType === 'procurement' ? 170 : 130,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
                             }}
                           >
                             {p.countryshortname || 'N/A'}
