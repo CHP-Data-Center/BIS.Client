@@ -391,8 +391,7 @@ export default function LoginPage() {
                   setPassword('SuperAdmin@12345');
                 }}
                 id="btn-demo-superadmin"
-                className="demo-account-pill"
-                style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(236,72,153,0.15))', borderColor: 'rgba(168,85,247,0.3)', color: '#9333ea' }}
+                className="demo-account-pill superadmin-pill"
               >
                 <Sparkles size={12} />
                 <span>👑 Super Admin: superadmin@ckjvn.vn / SuperAdmin@12345</span>
@@ -404,7 +403,7 @@ export default function LoginPage() {
                   setPassword('Admin@12345');
                 }}
                 id="btn-demo-admin"
-                className="demo-account-pill"
+                className="demo-account-pill admin-pill"
               >
                 <Sparkles size={12} />
                 <span>🔰 Admin Phân Vùng: admin@ckjvn.vn / Admin@12345</span>

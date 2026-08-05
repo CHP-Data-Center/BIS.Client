@@ -6,23 +6,18 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
 import { settingsService } from '../services/settings';
 
+import { getUserTheme, setUserTheme } from '../utils/theme';
+
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth();
   const nav = useNavigate();
 
   // Saved theme state
-  const [savedTheme, setSavedTheme] = useState(() => {
-    return localStorage.getItem('bis_saved_ui_theme') || 'basic';
-  });
+  const [savedTheme, setSavedTheme] = useState(() => getUserTheme(user));
 
   const handleApplySavedTheme = (themeKey) => {
     setSavedTheme(themeKey);
-    localStorage.setItem('bis_saved_ui_theme', themeKey);
-    if (themeKey === 'basic') {
-      document.documentElement.removeAttribute('data-ui-theme');
-    } else {
-      document.documentElement.setAttribute('data-ui-theme', themeKey);
-    }
+    setUserTheme(user, themeKey);
   };
 
   // Password state
@@ -187,17 +182,16 @@ export default function SettingsPage() {
       {/* ── 2-Column Grid Layout ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
         {/* Left Column: Password & Security */}
-        <div style={{
-          background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-          borderRadius: 20, padding: 28, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
+        <div className="card settings-card" style={{
+          borderRadius: 20, padding: 28,
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{
-                width: 42, height: 42, borderRadius: 12,
-                background: '#eff6ff', border: '1px solid #bfdbfe',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb',
+                width: 42, height: 42, borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-500)',
               }}>
                 <KeyRound size={22} />
               </div>
@@ -274,17 +268,16 @@ export default function SettingsPage() {
         </div>
 
         {/* Right Column: Email Digest Notifications */}
-        <div style={{
-          background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-          borderRadius: 20, padding: 28, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
+        <div className="card settings-card" style={{
+          borderRadius: 20, padding: 28,
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{
-                width: 42, height: 42, borderRadius: 12,
-                background: '#f0fdf4', border: '1px solid #bbf7d0',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a',
+                width: 42, height: 42, borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-500)',
               }}>
                 <BellRing size={22} />
               </div>
@@ -363,16 +356,15 @@ export default function SettingsPage() {
       </div>
 
       {/* ── 3rd Section: Persistent UI/UX Theme Selection ── */}
-      <div style={{
-        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-        borderRadius: 20, padding: 28, marginTop: 24, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
+      <div className="card settings-card" style={{
+        borderRadius: 20, padding: 28, marginTop: 24,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 42, height: 42, borderRadius: 12,
-              background: '#faf5ff', border: '1px solid #e9d5ff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333ea',
+              width: 42, height: 42, borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-500)',
             }}>
               <Palette size={22} />
             </div>
@@ -392,22 +384,22 @@ export default function SettingsPage() {
           {[
             { key: 'basic', title: 'BIS Modern Glassmorphism', desc: 'Giao diện mượt mà hiện đại mặc định.', colors: ['#3b82f6', '#10b981', '#ffffff'], tag: 'MẶC ĐỊNH' },
             { key: 'classic', title: 'Classic Y2K Japanese Web', desc: 'Phong cách Nhật Bản Y2K vuông phẳng 2000s.', colors: ['#e4e0d4', '#807868', '#8b4513'], tag: 'Y2K 2000s' },
-            { key: 'cyberpunk', title: 'Cyberpunk Neo-Tokyo', desc: 'Đêm Neon Futurist rực rỡ.', colors: ['#060814', '#00f0ff', '#ff007f'], tag: 'CYBERPUNK' },
-            { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Vàng Gold & Đen Obsidian xa xỉ.', colors: ['#111111', '#d4af37', '#f5f5f7'], tag: 'LUXURY' },
+            { key: 'cyberpunk', title: 'Cyberpunk Neo-Tokyo', desc: 'Sci-Fi Cyberpunk Đêm Neon — Góc cắt Futuristic, hiệu ứng Neon Pulse & Cyber Glow.', colors: ['#040814', '#00f0ff', '#ff007f'], tag: 'CYBERPUNK NEON' },
+            { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.', colors: ['#08080a', '#d4af37', '#fef1c9'], tag: 'LUXURY GOLD 24K' },
           ].map(theme => {
             const isUnlocked = user?.role === 'super_admin' || user?.role === 'admin' || theme.key === 'basic';
             const isCurrent = savedTheme === theme.key;
             return (
               <div key={theme.key} style={{
-                padding: 18, borderRadius: 14, border: isCurrent ? '2px solid var(--brand-500)' : '1px solid var(--border)',
+                padding: 18, borderRadius: 'var(--radius-lg)', border: isCurrent ? '2px solid var(--brand-500)' : '1px solid var(--border)',
                 background: 'var(--bg-surface-2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
               }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 6, background: isCurrent ? '#2563eb' : '#334155', color: '#ffffff' }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 6, background: isCurrent ? 'var(--brand-600)' : '#334155', color: '#ffffff' }}>
                       {theme.tag}
                     </span>
-                    {isCurrent && <span style={{ fontSize: 11, fontWeight: 800, color: '#10b981' }}>✓ ĐANG DÙNG</span>}
+                    {isCurrent && <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--brand-500)' }}>✓ ĐANG DÙNG</span>}
                   </div>
                   <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 4 }}>{theme.title}</div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: 12 }}>{theme.desc}</div>
@@ -422,7 +414,7 @@ export default function SettingsPage() {
                   disabled={!isUnlocked}
                   onClick={() => handleApplySavedTheme(theme.key)}
                   className={isCurrent ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
-                  style={{ width: '100%', fontSize: 12, fontWeight: 700, borderRadius: 8 }}
+                  style={{ width: '100%', fontSize: 12, fontWeight: 700 }}
                 >
                   {isCurrent ? '✓ Đang Áp Dụng' : isUnlocked ? 'Áp Dụng Giao Diện' : '🔒 Cần Nâng Cấp Gói'}
                 </button>

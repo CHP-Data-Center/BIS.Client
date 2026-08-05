@@ -145,12 +145,10 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
                 <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 4 }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{displayName}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{user?.email}</div>
-                  <div style={{
+                  <div className="user-role-badge" style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
-                    marginTop: 5, padding: '1px 8px',
-                    background: isPersonalUser ? '#fef3c7' : 'var(--brand-50)', color: isPersonalUser ? '#92400e' : 'var(--brand-700)',
-                    borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 700,
-                    border: `1px solid ${isPersonalUser ? '#fde68a' : 'var(--brand-200)'}`,
+                    marginTop: 5, padding: '2px 9px',
+                    borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 800,
                   }}>
                     <Zap size={9} /> {isPersonalUser ? 'NGƯỜI DÙNG CÁ NHÂN' : (user?.role || 'user').toUpperCase()}
                   </div>

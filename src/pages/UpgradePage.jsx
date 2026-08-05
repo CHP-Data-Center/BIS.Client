@@ -8,11 +8,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+import { getUserTheme, setUserTheme, syncUserTheme, applyTheme } from '../utils/theme';
+
 export default function UpgradePage() {
   const { user, isPersonalUser } = useAuth();
   const nav = useNavigate();
 
-  const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
+  const billingCycleState = useState('monthly');
+  const [billingCycle, setBillingCycle] = billingCycleState;
   const [selectedComboSources, setSelectedComboSources] = useState(['adb', 'worldbank']);
   const [showModal, setShowModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -21,39 +24,26 @@ export default function UpgradePage() {
 
   const isSuperAdmin = user?.role === 'super_admin' || user?.role === 'admin';
 
-  const [activeUiTheme, setActiveUiTheme] = useState('basic');
+  const [activeUiTheme, setActiveUiTheme] = useState(() => getUserTheme(user));
 
   const handleApplyTheme = (themeKey) => {
     setActiveUiTheme(themeKey);
     if (isSuperAdmin) {
-      localStorage.setItem('bis_saved_ui_theme', themeKey);
-    }
-    if (themeKey === 'basic') {
-      document.documentElement.removeAttribute('data-ui-theme');
+      setUserTheme(user, themeKey);
     } else {
-      document.documentElement.setAttribute('data-ui-theme', themeKey);
+      applyTheme(themeKey);
     }
   };
 
   useEffect(() => {
-    // Nếu là super_admin thì lấy saved theme nếu có, ngược lại reset về mặc định
-    const saved = localStorage.getItem('bis_saved_ui_theme');
-    if (saved && saved !== 'basic') {
-      document.documentElement.setAttribute('data-ui-theme', saved);
-      setActiveUiTheme(saved);
-    } else {
-      document.documentElement.removeAttribute('data-ui-theme');
-      setActiveUiTheme('basic');
-    }
+    const saved = getUserTheme(user);
+    setActiveUiTheme(saved);
+    applyTheme(saved);
+
     return () => {
-      const savedExit = localStorage.getItem('bis_saved_ui_theme');
-      if (savedExit && savedExit !== 'basic') {
-        document.documentElement.setAttribute('data-ui-theme', savedExit);
-      } else {
-        document.documentElement.removeAttribute('data-ui-theme');
-      }
+      syncUserTheme(user);
     };
-  }, []);
+  }, [user]);
 
   // Discount multiplier for yearly billing (20% off)
   const discount = billingCycle === 'yearly' ? 0.8 : 1.0;
@@ -637,17 +627,17 @@ export default function UpgradePage() {
               key: 'cyberpunk',
               title: 'Cyberpunk Neo-Tokyo',
               price: 149000,
-              desc: 'Giao diện Cyberpunk Đêm Neon — Màu xanh Cyan 00F0FF & Hồng Neon FF007F cực ngầu.',
-              colors: ['#060814', '#00f0ff', '#ff007f'],
+              desc: 'Phong cách Sci-Fi Cyberpunk Đêm Neon — Góc cắt Futuristic, hiệu ứng Neon Pulse & Cyber Glow.',
+              colors: ['#040814', '#00f0ff', '#ff007f'],
               tag: 'CYBERPUNK NEON'
             },
             {
               key: 'luxury',
               title: 'Bloomberg Luxury Executive',
               price: 199000,
-              desc: 'Giao diện Doanh Nhân Sang Trọng — Tông Vàng Gold D4AF37 & Đen Obsidian xa xỉ.',
-              colors: ['#111111', '#d4af37', '#f5f5f7'],
-              tag: 'LUXURY GOLD'
+              desc: 'Phong cách Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.',
+              colors: ['#08080a', '#d4af37', '#fef1c9'],
+              tag: 'LUXURY GOLD 24K'
             },
           ].map(theme => {
             const isActive = activeUiTheme === theme.key;

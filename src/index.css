@@ -97,27 +97,169 @@
   --shadow-glow:  0 0 60px rgba(59,130,246,0.2);
 }
 
-/* --- UI/UX Custom Themes (FR-UI/UX Shop) --- */
+:root[data-ui-theme="luxury"],
+html[data-ui-theme="luxury"],
+[data-theme][data-ui-theme="luxury"],
+[data-ui-theme="luxury"] {
+  --bg-page:        #08080a !important;
+  --bg-surface:     #121215 !important;
+  --bg-surface-2:   #1a1a20 !important;
+  --bg-header:      rgba(18, 18, 21, 0.96) !important;
+  --border:         rgba(212, 175, 55, 0.35) !important;
+  --border-subtle:  rgba(212, 175, 55, 0.18) !important;
+  --text-primary:   #f5f5f7 !important;
+  --text-secondary: #d4af37 !important;
+  --text-muted:     #8e8e99 !important;
+  --brand-600:      #d4af37 !important;
+  --brand-500:      #fef1c9 !important;
+  --radius-sm:      4px !important;
+  --radius-md:      8px !important;
+  --radius-lg:      12px !important;
+  --radius-xl:      16px !important;
+}
 
-/* 1. Classic Y2K 2000s Japanese Web Portal Style (Không bo tròn, phông Tahoma/MS Gothic, viền khung vuông) */
+[data-ui-theme="luxury"] body,
+[data-ui-theme="luxury"] .app-layout,
+[data-ui-theme="luxury"] .main-content,
+[data-ui-theme="luxury"] .login-page {
+  background-color: #08080a !important;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 85% 90%, rgba(212, 175, 55, 0.05) 0%, transparent 50%) !important;
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .sidebar,
+[data-ui-theme="luxury"] .header,
+[data-ui-theme="luxury"] .card,
+[data-ui-theme="luxury"] .stats-card,
+[data-ui-theme="luxury"] .news-card,
+[data-ui-theme="luxury"] .settings-card,
+[data-ui-theme="luxury"] .trending-strip,
+[data-ui-theme="luxury"] .upgrade-pricing-card,
+[data-ui-theme="luxury"] .user-profile-banner {
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  background: linear-gradient(145deg, rgba(22, 22, 27, 0.96) 0%, rgba(14, 14, 17, 0.98) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .sidebar {
+  border-right: 1px solid rgba(212, 175, 55, 0.35) !important;
+  background: linear-gradient(180deg, #121215 0%, #0a0a0c 100%) !important;
+}
+
+[data-ui-theme="luxury"] .header {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35) !important;
+  background: rgba(18, 18, 21, 0.96) !important;
+}
+
+[data-ui-theme="luxury"] .header .logo-title {
+  color: #fef1c9 !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="luxury"] .header .logo-sub {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .header .avatar-name {
+  color: #fef1c9 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.5) !important;
+}
+
+/* Luxury Header Action Buttons (24K Gold Sheen) */
+[data-ui-theme="luxury"] .header .theme-toggle,
+[data-ui-theme="luxury"] .header .notif-btn,
+[data-ui-theme="luxury"] .header .user-avatar-btn {
+  background: linear-gradient(145deg, #1c1c24 0%, #0d0d10 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  color: #fef1c9 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 243, 167, 0.2) !important;
+  transition: all 0.25s ease !important;
+}
+
+[data-ui-theme="luxury"] .header .user-avatar-btn .avatar {
+  background: linear-gradient(135deg, #d4af37 0%, #fff2b2 40%, #aa7c11 100%) !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4) !important;
+}
+
+[data-ui-theme="luxury"] .header .theme-toggle *,
+[data-ui-theme="luxury"] .header .notif-btn *,
+[data-ui-theme="luxury"] .header .user-avatar-btn * {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .header .theme-toggle:hover,
+[data-ui-theme="luxury"] .header .notif-btn:hover,
+[data-ui-theme="luxury"] .header .user-avatar-btn:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.28) 0%, rgba(28, 28, 36, 0.98) 100%) !important;
+  border-color: #fef1c9 !important;
+  box-shadow: 0 0 22px rgba(212, 175, 55, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-ui-theme="luxury"] .header .theme-toggle:hover *,
+[data-ui-theme="luxury"] .header .notif-btn:hover *,
+[data-ui-theme="luxury"] .header .user-avatar-btn:hover * {
+  color: #ffffff !important;
+}
+
+/* User Role Badges in Header Menu across all Themes */
+[data-ui-theme="luxury"] .user-role-badge {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.22) 0%, rgba(30, 30, 38, 0.95) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.6) !important;
+  color: #fef1c9 !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] .user-role-badge * {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="cyberpunk"] .user-role-badge {
+  background: rgba(0, 240, 255, 0.12) !important;
+  border: 1px solid #00f0ff !important;
+  color: #00f0ff !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
+}
+
+[data-ui-theme="cyberpunk"] .user-role-badge * {
+  color: #00f0ff !important;
+}
+
+[data-ui-theme="classic"] .user-role-badge {
+  background: #ece9d8 !important;
+  border: 1px solid #808080 !important;
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .user-role-badge * {
+  color: #000080 !important;
+}
+
+/* 1. Classic Y2K 2000s Japanese Web Portal Theme (Retro Windows 2000 / Yahoo Japan 2000s Aesthetic) */
 [data-ui-theme="classic"] {
-  --bg-page:        #e4e0d4;
-  --bg-surface:     #ffffff;
-  --bg-surface-2:   #f4f1ea;
-  --bg-header:      #d4cebe;
-  --border:         #807868;
-  --border-subtle:  #b8b2a4;
-  --text-primary:   #1a1a1a;
-  --text-secondary: #333333;
-  --text-muted:     #666666;
-  --brand-600:      #8b4513;
-  --brand-500:      #a0522d;
+  --bg-page:        #ece9d8 !important;
+  --bg-surface:     #ffffff !important;
+  --bg-surface-2:   #f4f1ea !important;
+  --bg-header:      #d4cebe !important;
+  --border:         #807868 !important;
+  --border-subtle:  #b8b2a4 !important;
+  --text-primary:   #000080 !important;
+  --text-secondary: #1a1a1a !important;
+  --text-muted:     #555555 !important;
+  --brand-600:      #000080 !important;
+  --brand-500:      #1084d0 !important;
   --radius-sm:      0px !important;
   --radius-md:      0px !important;
   --radius-lg:      0px !important;
   --radius-xl:      0px !important;
   --radius-full:    0px !important;
-  font-family: 'Tahoma', 'MS PGothic', 'Verdana', sans-serif !important;
+  font-family: 'Tahoma', 'MS PGothic', 'MS Gothic', 'Verdana', sans-serif !important;
 }
 
 [data-ui-theme="classic"] *,
@@ -127,102 +269,885 @@
   box-shadow: none !important;
 }
 
+[data-ui-theme="classic"] body,
+[data-ui-theme="classic"] .app-layout,
+[data-ui-theme="classic"] .login-page {
+  background-color: #ece9d8 !important;
+  background-image: none !important;
+  color: #1a1a1a !important;
+}
+
+/* Classic 2000s Web Portal Panels & Cards with 3D Bevel Outset Borders */
 [data-ui-theme="classic"] .sidebar,
 [data-ui-theme="classic"] .header,
-[data-ui-theme="classic"] .upgrade-pricing-card,
+[data-ui-theme="classic"] .card,
+[data-ui-theme="classic"] .stats-card,
 [data-ui-theme="classic"] .news-card,
+[data-ui-theme="classic"] .settings-card,
+[data-ui-theme="classic"] .trending-strip,
+[data-ui-theme="classic"] .upgrade-pricing-card,
+[data-ui-theme="classic"] .login-card,
+[data-ui-theme="classic"] .main-content > div {
+  border: 2px solid #808080 !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  background: #f4f1ea !important;
+  color: #1a1a1a !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+}
+
+[data-ui-theme="classic"] .sidebar {
+  border-right: 2px solid #808080 !important;
+  background: #d4cebe !important;
+}
+
+[data-ui-theme="classic"] .header {
+  border-bottom: 2px solid #808080 !important;
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%) !important;
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .header .logo-title,
+[data-ui-theme="classic"] .header .logo-sub,
+[data-ui-theme="classic"] .header .live-clock,
+[data-ui-theme="classic"] .header .live-clock * {
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .header .live-clock {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Header Action Buttons in Classic Theme (No white-on-white icons/text) */
+[data-ui-theme="classic"] .header .theme-toggle,
+[data-ui-theme="classic"] .header .notif-btn,
+[data-ui-theme="classic"] .header .user-avatar-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #ece9d8 100%) !important;
+  border: 2px solid #808080 !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  color: #000080 !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .header .theme-toggle *,
+[data-ui-theme="classic"] .header .notif-btn *,
+[data-ui-theme="classic"] .header .user-avatar-btn *,
+[data-ui-theme="classic"] .header .avatar-name,
+[data-ui-theme="classic"] .header .user-avatar-btn svg,
+[data-ui-theme="classic"] .header .theme-toggle svg,
+[data-ui-theme="classic"] .header .notif-btn svg {
+  color: #000080 !important;
+  font-weight: bold !important;
+}
+
+[data-ui-theme="classic"] .header .theme-toggle:hover,
+[data-ui-theme="classic"] .header .notif-btn:hover,
+[data-ui-theme="classic"] .header .user-avatar-btn:hover {
+  background: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .header .theme-toggle:active,
+[data-ui-theme="classic"] .header .notif-btn:active,
+[data-ui-theme="classic"] .header .user-avatar-btn:active {
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  background: #ece9d8 !important;
+}
+
+[data-ui-theme="classic"] .header .search-bar {
+  background: #ffffff !important;
+  border: 2px solid #808080 !important;
+}
+
+[data-ui-theme="classic"] .header .search-input {
+  color: #000000 !important;
+  background: transparent !important;
+}
+
+[data-ui-theme="classic"] .header .search-input::placeholder {
+  color: #666666 !important;
+}
+
+/* Fix Dropdown Menu in Header for Classic theme (no white-on-white text) */
+[data-ui-theme="classic"] .user-menu,
+[data-ui-theme="classic"] .notif-dropdown,
+[data-ui-theme="classic"] .dropdown-menu {
+  background: #f4f1ea !important;
+  border: 2px solid #808080 !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  color: #000000 !important;
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-ui-theme="classic"] .user-menu *,
+[data-ui-theme="classic"] .notif-dropdown *,
+[data-ui-theme="classic"] .dropdown-menu * {
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .user-menu-item:hover,
+[data-ui-theme="classic"] .notif-item:hover {
+  background: #000080 !important;
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .user-menu-item:hover *,
+[data-ui-theme="classic"] .notif-item:hover * {
+  color: #ffffff !important;
+}
+
+/* Edge-to-edge full width layout for Classic Web Portal */
+[data-ui-theme="classic"] .main-content {
+  padding: 16px 20px !important;
+}
+
+[data-ui-theme="classic"] .main-content > div,
+[data-ui-theme="classic"] .page-transition > div {
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+[data-ui-theme="classic"] .card,
+[data-ui-theme="classic"] .settings-card,
+[data-ui-theme="classic"] .stats-card,
+[data-ui-theme="classic"] .news-card {
+  padding: 20px 24px !important;
+}
+
+/* Classic 2000s Outset 3D Buttons */
 [data-ui-theme="classic"] .btn,
-[data-ui-theme="classic"] .form-input,
+[data-ui-theme="classic"] .btn-primary,
+[data-ui-theme="classic"] .btn-secondary,
+[data-ui-theme="classic"] .login-btn,
+[data-ui-theme="classic"] .login-btn-google {
+  background: linear-gradient(180deg, #ffffff 0%, #ece9d8 100%) !important;
+  color: #000000 !important;
+  font-weight: bold !important;
+  border: 2px solid #808080 !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  border-radius: 0px !important;
+  clip-path: none !important;
+  box-shadow: none !important;
+  font-family: 'Tahoma', sans-serif !important;
+  font-size: 12px !important;
+}
+
+[data-ui-theme="classic"] .btn:hover,
+[data-ui-theme="classic"] .btn-primary:hover,
+[data-ui-theme="classic"] .btn-secondary:hover,
+[data-ui-theme="classic"] .login-btn:hover,
+[data-ui-theme="classic"] .login-btn-google:hover {
+  background: #ffffff !important;
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .btn:active,
+[data-ui-theme="classic"] .btn-primary:active,
+[data-ui-theme="classic"] .btn-secondary:active,
+[data-ui-theme="classic"] .login-btn:active,
+[data-ui-theme="classic"] .login-btn-google:active {
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  background: #ece9d8 !important;
+}
+
+/* Classic 2000s Inset Form Inputs */
+[data-ui-theme="classic"] input,
+[data-ui-theme="classic"] select,
+[data-ui-theme="classic"] textarea,
+[data-ui-theme="classic"] .form-input {
+  background: #ffffff !important;
+  border: 2px solid #808080 !important;
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 0px !important;
+  clip-path: none !important;
+  font-family: 'Tahoma', sans-serif !important;
+}
+
+[data-ui-theme="classic"] input:focus,
+[data-ui-theme="classic"] select:focus,
+[data-ui-theme="classic"] textarea:focus,
+[data-ui-theme="classic"] .form-input:focus {
+  border-color: #000080 !important;
+  box-shadow: none !important;
+  outline: 1px dotted #000080 !important;
+}
+
+/* Classic 2000s Sidebar Navigation Items */
 [data-ui-theme="classic"] .sidebar-nav-item {
   border-radius: 0px !important;
-  border: 1px solid #807868 !important;
-  background: #ffffff !important;
-  color: #1a1a1a !important;
+  border: 1px solid transparent !important;
+  color: #000000 !important;
+  font-weight: bold !important;
 }
 
 [data-ui-theme="classic"] .sidebar-nav-item span {
-  color: #1a1a1a !important;
+  color: #000000 !important;
 }
 
-[data-ui-theme="classic"] .sidebar-nav-item.locked-item {
-  background: #ffffff !important;
-  color: #1a1a1a !important;
-}
-
-[data-ui-theme="classic"] .sidebar-nav-item.locked-item span {
-  color: #1a1a1a !important;
-}
-
-[data-ui-theme="classic"] .sidebar-nav-item .upgrade-badge {
-  background: #fef3c7 !important;
-  color: #92400e !important;
-  border: 1px solid #fde68a !important;
-  font-weight: 800 !important;
+[data-ui-theme="classic"] .sidebar-nav-item:hover {
+  background: #ece9d8 !important;
+  border: 1px solid #808080 !important;
+  color: #000080 !important;
 }
 
 [data-ui-theme="classic"] .sidebar-nav-item.active:not(.locked-item) {
-  background: #8b4513 !important;
+  background: #000080 !important;
   color: #ffffff !important;
-  border-left: 4px solid #d97706 !important;
+  border-left: 4px solid #ff6600 !important;
 }
 
 [data-ui-theme="classic"] .sidebar-nav-item.active:not(.locked-item) span {
   color: #ffffff !important;
 }
 
-[data-ui-theme="classic"] .btn-primary {
-  background: linear-gradient(180deg, #ffffff 0%, #ece9d8 100%) !important;
-  color: #000000 !important;
-  border: 2px outset #ffffff !important;
+/* Classic 2000s Login Page Details */
+[data-ui-theme="classic"] .login-title {
+  color: #000080 !important;
+  font-family: 'Tahoma', sans-serif !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="classic"] .login-subtitle {
+  color: #404040 !important;
+}
+
+[data-ui-theme="classic"] .login-ai-badge {
+  background: #e4e0d4 !important;
+  border: 1px solid #808080 !important;
+}
+
+[data-ui-theme="classic"] .ai-badge-text {
+  color: #000080 !important;
   font-weight: bold !important;
 }
 
-[data-ui-theme="classic"] .btn-primary:active {
-  border-style: inset !important;
+[data-ui-theme="classic"] .form-label {
+  color: #000080 !important;
+  font-weight: bold !important;
 }
 
-/* 2. Cyberpunk Neo-Tokyo Theme */
+[data-ui-theme="classic"] .remember-me {
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .forgot-link {
+  color: #0000ff !important;
+  text-decoration: underline !important;
+  font-weight: bold !important;
+}
+
+[data-ui-theme="classic"] .auth-divider span {
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .auth-divider::before,
+[data-ui-theme="classic"] .auth-divider::after {
+  border-bottom-color: #808080 !important;
+}
+
+[data-ui-theme="classic"] .demo-account-pill {
+  background: #ece9d8 !important;
+  border: 1px solid #808080 !important;
+  color: #000080 !important;
+  font-weight: bold !important;
+  border-radius: 0px !important;
+}
+
+/* 2. Cyberpunk Neo-Tokyo Theme (Sci-Fi Futuristic Neon Aesthetic) */
+@keyframes cyberpunkNeonPulse {
+  0% {
+    border-color: rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.22), inset 0 0 12px rgba(0, 240, 255, 0.05);
+  }
+  50% {
+    border-color: rgba(255, 0, 127, 0.7);
+    box-shadow: 0 0 26px rgba(255, 0, 127, 0.38), inset 0 0 16px rgba(255, 0, 127, 0.12);
+  }
+  100% {
+    border-color: rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.22), inset 0 0 12px rgba(0, 240, 255, 0.05);
+  }
+}
+
+@keyframes cyberpunkActiveSidebar {
+  0% {
+    border-left-color: #ff007f;
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.5), inset 0 0 10px rgba(0, 240, 255, 0.2);
+  }
+  50% {
+    border-left-color: #00f0ff;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.85), inset 0 0 14px rgba(255, 0, 127, 0.35);
+  }
+  100% {
+    border-left-color: #ff007f;
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.5), inset 0 0 10px rgba(0, 240, 255, 0.2);
+  }
+}
+
+:root[data-ui-theme="cyberpunk"],
+html[data-ui-theme="cyberpunk"],
+[data-theme][data-ui-theme="cyberpunk"],
 [data-ui-theme="cyberpunk"] {
-  --bg-page:        #060814;
-  --bg-surface:     #0c0f24;
-  --bg-surface-2:   #141936;
-  --bg-header:      rgba(12,15,36,0.95);
-  --border:         #00f0ff;
-  --border-subtle:  #1e295d;
-  --text-primary:   #00f0ff;
-  --text-secondary: #a0aec0;
-  --text-muted:     #4a5568;
-  --brand-600:      #ff007f;
-  --brand-500:      #00f0ff;
-  --radius-sm:      2px !important;
-  --radius-md:      2px !important;
-  --radius-lg:      4px !important;
-  --radius-xl:      4px !important;
-}
-
-[data-ui-theme="cyberpunk"] *,
-[data-ui-theme="cyberpunk"] *::before,
-[data-ui-theme="cyberpunk"] *::after {
-  border-radius: 2px !important;
-}
-
-/* 3. Luxury Minimalist Executive */
-[data-ui-theme="luxury"] {
-  --bg-page:        #111111;
-  --bg-surface:     #1a1a1a;
-  --bg-surface-2:   #242424;
-  --bg-header:      rgba(26,26,26,0.95);
-  --border:         #333333;
-  --border-subtle:  #2a2a2a;
-  --text-primary:   #f5f5f7;
-  --text-secondary: #a1a1a6;
-  --text-muted:     #6e6e73;
-  --brand-600:      #d4af37;
-  --brand-500:      #e5c158;
+  --bg-page:        #040814 !important;
+  --bg-surface:     #0a0f28 !important;
+  --bg-surface-2:   #12183b !important;
+  --bg-header:      rgba(10, 15, 40, 0.95) !important;
+  --border:         #00f0ff !important;
+  --border-subtle:  rgba(0, 240, 255, 0.35) !important;
+  --text-primary:   #00f0ff !important;
+  --text-secondary: #e0f7fa !important;
+  --text-muted:     #64748b !important;
+  --brand-600:      #ff007f !important;
+  --brand-500:      #00f0ff !important;
   --radius-sm:      0px !important;
   --radius-md:      2px !important;
   --radius-lg:      4px !important;
+  --radius-xl:      6px !important;
 }
+
+[data-ui-theme="cyberpunk"] body {
+  background-color: #040814 !important;
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.035) 1px, transparent 1px) !important;
+  background-size: 32px 32px !important;
+  color: #00f0ff !important;
+}
+
+/* Cyberpunk Card & Panel Animated Overrides */
+[data-ui-theme="cyberpunk"] .sidebar,
+[data-ui-theme="cyberpunk"] .header,
+[data-ui-theme="cyberpunk"] .card,
+[data-ui-theme="cyberpunk"] .stats-card,
+[data-ui-theme="cyberpunk"] .news-card,
+[data-ui-theme="cyberpunk"] .settings-card,
+[data-ui-theme="cyberpunk"] .trending-strip,
+[data-ui-theme="cyberpunk"] .upgrade-pricing-card,
+[data-ui-theme="cyberpunk"] .main-content > div {
+  border: 1px solid rgba(0, 240, 255, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  animation: cyberpunkNeonPulse 4.5s ease-in-out infinite !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-ui-theme="cyberpunk"] .stats-card:hover,
+[data-ui-theme="cyberpunk"] .news-card:hover,
+[data-ui-theme="cyberpunk"] .card:hover,
+[data-ui-theme="cyberpunk"] .trending-strip:hover {
+  transform: translateY(-4px) scale(1.015) !important;
+  border-color: #00f0ff !important;
+  box-shadow: 0 0 32px rgba(0, 240, 255, 0.75), inset 0 0 20px rgba(255, 0, 127, 0.3) !important;
+}
+
+[data-ui-theme="cyberpunk"] .stats-card:hover .stats-value {
+  color: #00f0ff !important;
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.9) !important;
+}
+
+[data-ui-theme="cyberpunk"] .sidebar {
+  border-right: 1px solid rgba(0, 240, 255, 0.5) !important;
+}
+
+[data-ui-theme="cyberpunk"] .header {
+  border-bottom: 1px solid rgba(0, 240, 255, 0.5) !important;
+}
+
+/* Cyberpunk Buttons with Angular Cut Corners & Pulsing Neon Glow */
+[data-ui-theme="cyberpunk"] .btn-primary {
+  background: linear-gradient(135deg, #00f0ff 0%, #ff007f 100%) !important;
+  color: #040814 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 1px solid #00f0ff !important;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px) !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.7), 0 0 30px rgba(255, 0, 127, 0.4) !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+}
+
+[data-ui-theme="cyberpunk"] .btn-primary:hover {
+  background: linear-gradient(135deg, #ff007f 0%, #00f0ff 100%) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.95), 0 0 35px rgba(255, 0, 127, 0.8) !important;
+  text-shadow: 0 0 8px #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .btn-primary:active {
+  transform: scale(0.97) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5) !important;
+}
+
+[data-ui-theme="cyberpunk"] .btn-secondary {
+  background: #090d29 !important;
+  border: 1px solid #00f0ff !important;
+  color: #00f0ff !important;
+  font-weight: 700 !important;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px) !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-ui-theme="cyberpunk"] .btn-secondary:hover {
+  background: rgba(0, 240, 255, 0.18) !important;
+  border-color: #ff007f !important;
+  color: #ff007f !important;
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.6) !important;
+}
+
+[data-ui-theme="cyberpunk"] .btn-ghost {
+  color: #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .btn-ghost:hover {
+  background: rgba(0, 240, 255, 0.15) !important;
+  color: #ff007f !important;
+}
+
+/* Cyberpunk Inputs & Form Controls */
+[data-ui-theme="cyberpunk"] input,
+[data-ui-theme="cyberpunk"] select,
+[data-ui-theme="cyberpunk"] textarea,
+[data-ui-theme="cyberpunk"] .form-input {
+  background-color: #080c21 !important;
+  border: 1px solid rgba(0, 240, 255, 0.6) !important;
+  color: #00f0ff !important;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px) !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="cyberpunk"] input:focus,
+[data-ui-theme="cyberpunk"] select:focus,
+[data-ui-theme="cyberpunk"] textarea:focus,
+[data-ui-theme="cyberpunk"] .form-input:focus {
+  border-color: #ff007f !important;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.7), inset 0 0 8px rgba(0, 240, 255, 0.3) !important;
+  outline: none !important;
+}
+
+/* Cyberpunk Sidebar Navigation Items */
+[data-ui-theme="cyberpunk"] .sidebar-nav-item {
+  border-radius: 2px !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-ui-theme="cyberpunk"] .sidebar-nav-item:hover {
+  background: rgba(0, 240, 255, 0.14) !important;
+  box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.25) !important;
+}
+
+[data-ui-theme="cyberpunk"] .sidebar-nav-item.active:not(.locked-item) {
+  background: linear-gradient(90deg, rgba(255, 0, 127, 0.35) 0%, rgba(0, 240, 255, 0.1) 100%) !important;
+  border-left: 3px solid #ff007f !important;
+  animation: cyberpunkActiveSidebar 3.5s ease-in-out infinite !important;
+}
+
+[data-ui-theme="cyberpunk"] .sidebar-nav-item.active:not(.locked-item) span {
+  color: #00f0ff !important;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.85) !important;
+  font-weight: 800 !important;
+}
+
+/* Cyberpunk Dropdown Menu Overrides */
+[data-ui-theme="cyberpunk"] .user-menu,
+[data-ui-theme="cyberpunk"] .notif-dropdown,
+[data-ui-theme="cyberpunk"] .dropdown-menu {
+  background: #080c21 !important;
+  border: 1px solid #00f0ff !important;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.4) !important;
+  color: #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .user-menu *,
+[data-ui-theme="cyberpunk"] .notif-dropdown *,
+[data-ui-theme="cyberpunk"] .dropdown-menu * {
+  color: #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .user-menu-item:hover,
+[data-ui-theme="cyberpunk"] .notif-item:hover {
+  background: rgba(0, 240, 255, 0.18) !important;
+  color: #ff007f !important;
+}
+
+[data-ui-theme="cyberpunk"] .user-menu-item:hover * {
+  color: #ff007f !important;
+}
+
+/* Luxury Dropdown Menu Overrides */
+[data-ui-theme="luxury"] .user-menu,
+[data-ui-theme="luxury"] .notif-dropdown,
+[data-ui-theme="luxury"] .dropdown-menu {
+  background: linear-gradient(145deg, #18181f 0%, #0d0d10 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.2) !important;
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .user-menu *,
+[data-ui-theme="luxury"] .notif-dropdown *,
+[data-ui-theme="luxury"] .dropdown-menu * {
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .user-menu-item:hover,
+[data-ui-theme="luxury"] .notif-item:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(26, 26, 32, 0.95) 100%) !important;
+  color: #ffffff !important;
+}
+
+/* 3. Bloomberg Luxury Executive Theme (Obsidian & 24K Metallic Sheen) */
+/* Cyberpunk Login Page Overrides */
+[data-ui-theme="cyberpunk"] .login-page {
+  background-color: #040814 !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-card {
+  background: rgba(10, 15, 40, 0.96) !important;
+  border: 1px solid rgba(0, 240, 255, 0.6) !important;
+  box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 20px rgba(0, 240, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 4px !important;
+  animation: cyberpunkNeonPulse 4.5s ease-in-out infinite !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-title {
+  color: #00f0ff !important;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.8) !important;
+  font-family: monospace, system-ui, sans-serif !important;
+  letter-spacing: 0.5px !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-subtitle {
+  color: #e0f7fa !important;
+  opacity: 0.9 !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-ai-badge {
+  background: rgba(0, 240, 255, 0.08) !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  border-radius: 2px !important;
+}
+
+[data-ui-theme="cyberpunk"] .ai-badge-text {
+  color: #00f0ff !important;
+  font-weight: 600 !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-btn-google {
+  background: #080c21 !important;
+  border: 1px solid #00f0ff !important;
+  color: #00f0ff !important;
+  font-weight: 700 !important;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px) !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25) !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-btn-google:hover {
+  background: rgba(0, 240, 255, 0.18) !important;
+  border-color: #ff007f !important;
+  color: #ff007f !important;
+  box-shadow: 0 0 20px rgba(255, 0, 127, 0.6) !important;
+}
+
+[data-ui-theme="cyberpunk"] .auth-divider span {
+  color: #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .auth-divider::before,
+[data-ui-theme="cyberpunk"] .auth-divider::after {
+  border-bottom-color: rgba(0, 240, 255, 0.5) !important;
+}
+
+[data-ui-theme="cyberpunk"] .form-label {
+  color: #00f0ff !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="cyberpunk"] .remember-me {
+  color: #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .forgot-link {
+  color: #ff007f !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="cyberpunk"] .forgot-link:hover {
+  text-shadow: 0 0 8px rgba(255, 0, 127, 0.8) !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-btn {
+  background: linear-gradient(135deg, #00f0ff 0%, #ff007f 100%) !important;
+  color: #040814 !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 1px solid #00f0ff !important;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px) !important;
+  border-radius: 0px !important;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.7), 0 0 35px rgba(255, 0, 127, 0.4) !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-ui-theme="cyberpunk"] .login-btn:hover {
+  background: linear-gradient(135deg, #ff007f 0%, #00f0ff 100%) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.95), 0 0 40px rgba(255, 0, 127, 0.8) !important;
+  text-shadow: 0 0 8px #00f0ff !important;
+}
+
+[data-ui-theme="cyberpunk"] .demo-account-pill {
+  background: rgba(0, 240, 255, 0.1) !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  color: #00f0ff !important;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px) !important;
+  border-radius: 0px !important;
+  transition: all 0.2s ease !important;
+}
+
+[data-ui-theme="cyberpunk"] .demo-account-pill:hover {
+  background: rgba(255, 0, 127, 0.2) !important;
+  border-color: #ff007f !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.5) !important;
+}
+
+/* Luxury Login Page Overrides */
+[data-ui-theme="luxury"] .login-page {
+  background-color: #08080a !important;
+}
+
+[data-ui-theme="luxury"] .login-card {
+  background: linear-gradient(145deg, rgba(22, 22, 27, 0.97) 0%, rgba(14, 14, 17, 0.99) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(212, 175, 55, 0.15), inset 0 1px 0 rgba(255, 243, 167, 0.2) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 16px !important;
+  animation: luxuryGoldBreathe 5.5s ease-in-out infinite !important;
+}
+
+[data-ui-theme="luxury"] .login-title {
+  color: #fef1c9 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="luxury"] .login-subtitle {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .login-ai-badge {
+  background: rgba(212, 175, 55, 0.1) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  border-radius: 8px !important;
+}
+
+[data-ui-theme="luxury"] .ai-badge-text {
+  color: #fef1c9 !important;
+  font-weight: 600 !important;
+}
+
+[data-ui-theme="luxury"] .login-btn-google {
+  background: linear-gradient(145deg, #18181f 0%, #0d0d10 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  color: #fef1c9 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+}
+
+[data-ui-theme="luxury"] .login-btn-google:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(26, 26, 32, 0.95) 100%) !important;
+  border-color: #d4af37 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.35) !important;
+}
+
+[data-ui-theme="luxury"] .auth-divider span {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .auth-divider::before,
+[data-ui-theme="luxury"] .auth-divider::after {
+  border-bottom-color: rgba(212, 175, 55, 0.35) !important;
+}
+
+[data-ui-theme="luxury"] .form-label {
+  color: #d4af37 !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="luxury"] .remember-me {
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .forgot-link {
+  color: #e6ca65 !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="luxury"] .forgot-link:hover {
+  color: #ffffff !important;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.6) !important;
+}
+
+[data-ui-theme="luxury"] .login-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #fff2b2 30%, #e6ca65 65%, #aa7c11 100%) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  border: 1px solid #ffe885 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 22px rgba(212, 175, 55, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-ui-theme="luxury"] .login-btn:hover {
+  background: linear-gradient(135deg, #f3c742 0%, #ffffff 35%, #fae287 70%, #c5971a 100%) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.65), inset 0 1px 0 #ffffff !important;
+}
+
+[data-ui-theme="luxury"] .demo-account-pill {
+  background: linear-gradient(145deg, #18181f 0%, #0d0d10 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  color: #fef1c9 !important;
+  border-radius: 8px !important;
+  transition: all 0.25s ease !important;
+}
+
+[data-ui-theme="luxury"] .demo-account-pill:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(26, 26, 32, 0.95) 100%) !important;
+  border-color: #d4af37 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] .header {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35) !important;
+}
+
+/* Luxury 24K Metallic Gold Buttons */
+[data-ui-theme="luxury"] .btn-primary {
+  background: linear-gradient(135deg, #d4af37 0%, #fff2b2 30%, #e6ca65 65%, #aa7c11 100%) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  border: 1px solid #ffe885 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 22px rgba(212, 175, 55, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+}
+
+[data-ui-theme="luxury"] .btn-primary:hover {
+  background: linear-gradient(135deg, #f3c742 0%, #ffffff 35%, #fae287 70%, #c5971a 100%) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.65), inset 0 1px 0 #ffffff !important;
+}
+
+[data-ui-theme="luxury"] .btn-primary:active {
+  transform: translateY(0) scale(0.99) !important;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.6) !important;
+}
+
+[data-ui-theme="luxury"] .btn-secondary {
+  background: linear-gradient(145deg, #18181f 0%, #0d0d10 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  color: #fef1c9 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212, 175, 55, 0.15) !important;
+  transition: all 0.25s ease !important;
+}
+
+[data-ui-theme="luxury"] .btn-secondary:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(26, 26, 32, 0.95) 100%) !important;
+  border-color: #d4af37 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.35) !important;
+}
+
+[data-ui-theme="luxury"] .btn-ghost {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .btn-ghost:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #fef1c9 !important;
+}
+
+/* Luxury Inputs & Form Controls */
+[data-ui-theme="luxury"] input,
+[data-ui-theme="luxury"] select,
+[data-ui-theme="luxury"] textarea,
+[data-ui-theme="luxury"] .form-input {
+  background-color: #0c0c0f !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  color: #f5f5f7 !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6) !important;
+}
+
+[data-ui-theme="luxury"] input:focus,
+[data-ui-theme="luxury"] select:focus,
+[data-ui-theme="luxury"] textarea:focus,
+[data-ui-theme="luxury"] .form-input:focus {
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.45), inset 0 1px 3px rgba(0,0,0,0.5) !important;
+  outline: none !important;
+}
+
+/* Luxury Sidebar Navigation Items */
+[data-ui-theme="luxury"] .sidebar-nav-item {
+  border-radius: 8px !important;
+  transition: all 0.25s ease !important;
+}
+
+[data-ui-theme="luxury"] .sidebar-nav-item:hover {
+  background: rgba(212, 175, 55, 0.12) !important;
+}
+
+[data-ui-theme="luxury"] .sidebar-nav-item.active:not(.locked-item) {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.25) 0%, rgba(20, 20, 25, 0) 100%) !important;
+  border-left: 3px solid #d4af37 !important;
+  animation: luxuryActiveSidebar 4s ease-in-out infinite !important;
+}
+
+[data-ui-theme="luxury"] .sidebar-nav-item.active:not(.locked-item) span {
+  color: #fef1c9 !important;
+  font-weight: 800 !important;
+}
+
+
 
 /* --- Reset & Base --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

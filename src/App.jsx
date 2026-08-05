@@ -7,6 +7,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { syncUserTheme } from './utils/theme';
 
 // Dynamic imports for route-level Code Splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -41,19 +42,15 @@ function PageLoader() {
 function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     setSidebarOpen(false);
-    // Khi di chuyển giữa các trang, khôi phục giao diện đã lưu từ Settings
+    // Khi di chuyển giữa các trang, đồng bộ giao diện của user đó
     if (location.pathname !== '/upgrade') {
-      const savedTheme = localStorage.getItem('bis_saved_ui_theme');
-      if (savedTheme && savedTheme !== 'basic') {
-        document.documentElement.setAttribute('data-ui-theme', savedTheme);
-      } else {
-        document.documentElement.removeAttribute('data-ui-theme');
-      }
+      syncUserTheme(user);
     }
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   return (
     <div className="app-layout">

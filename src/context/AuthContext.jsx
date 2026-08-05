@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/auth';
+import { syncUserTheme } from '../utils/theme';
 
 const AuthContext = createContext(null);
 
@@ -12,14 +13,22 @@ export function AuthProvider({ children }) {
 
   // Khởi tạo: nếu có token → gọi /auth/me để xác thực
   useEffect(() => {
-    if (!token) { setLoading(false); return; }
+    if (!token) {
+      syncUserTheme(null);
+      setLoading(false);
+      return;
+    }
     authService.getMe()
-      .then((me) => setUser(me))
+      .then((me) => {
+        setUser(me);
+        syncUserTheme(me);
+      })
       .catch(() => {
         // Token hết hạn hoặc không hợp lệ
         localStorage.removeItem('bis_token');
         localStorage.removeItem('bis_user');
         setToken(null);
+        syncUserTheme(null);
       })
       .finally(() => setLoading(false));
   }, []); // chỉ chạy khi mount
@@ -34,6 +43,7 @@ export function AuthProvider({ children }) {
       // Lấy thông tin user sau khi đăng nhập
       const me = await authService.getMe(res.access_token);
       setUser(me);
+      syncUserTheme(me);
       setLoginError('');
       return me;
     } catch (err) {
@@ -81,6 +91,7 @@ export function AuthProvider({ children }) {
 
       const me = await authService.getMe(res.access_token);
       setUser(me);
+      syncUserTheme(me);
       setLoginError('');
       return me;
     } catch (err) {
@@ -107,6 +118,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('bis_user');
     setToken(null);
     setUser(null);
+    syncUserTheme(null);
   }, []);
 
   const isGuest  = !user;
