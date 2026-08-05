@@ -3,8 +3,19 @@ import { useState, useEffect } from 'react';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
-  Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2
+  Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2,
+  ChevronDown
 } from 'lucide-react';
+
+// Nhóm nguồn theo tên miền (cha–con). Lấy URL từ nhiều field có thể có.
+const getSourceUrl = (s) => s.url || s.rss_url || s.base_url || '';
+const getSourceDomain = (s) => {
+  try {
+    return new URL(getSourceUrl(s)).hostname.replace(/^www\./, '');
+  } catch {
+    return 'khác';
+  }
+};
 import { adminService } from '../services/admin';
 import { orgService } from '../services/organizations';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +41,16 @@ export default function AdminPage() {
   const [whitelist, setWhitelist] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  // Danh sách nguồn: tìm kiếm + nhóm cha–con (Loại nguồn → Tên miền → feed), xổ ra/thu gọn.
+  const [sourceSearch, setSourceSearch] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set());
+  const toggleGroup = (key) =>
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   // Region dropdown states
   const [customRegions, setCustomRegions] = useState([]);
@@ -646,9 +667,21 @@ export default function AdminPage() {
                     <Database size={16} style={{ color: '#3b82f6' }} />
                     Danh Sách Nguồn Đang Theo Dõi ({sources.length})
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: '#ecfdf5', padding: '3px 10px', borderRadius: 20, border: '1px solid #a7f3d0' }}>
-                    🟢 Crawler Active
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative' }}>
+                      <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                      <input
+                        value={sourceSearch}
+                        onChange={e => setSourceSearch(e.target.value)}
+                        placeholder="Tìm nguồn theo tên / URL..."
+                        className="form-input"
+                        style={{ paddingLeft: 30, height: 34, fontSize: 12, width: 230 }}
+                      />
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: '#ecfdf5', padding: '3px 10px', borderRadius: 20, border: '1px solid #a7f3d0' }}>
+                      🟢 Crawler Active
+                    </span>
+                  </div>
                 </div>
 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -662,67 +695,152 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sources.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                          Chưa có nguồn tin nào. Thêm nguồn đầu tiên ở trên.
-                        </td>
-                      </tr>
-                    ) : sources.map(s => {
-                      const isGov = s.source_type === 'gov';
-                      return (
-                        <tr key={s.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>
-                          <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 16 }}>{isGov ? '📋' : '📰'}</span>
-                              {s.name}
-                            </div>
-                          </td>
-                          <td style={{ padding: '14px 20px' }}>
-                            <span style={{
-                              fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
-                              background: isGov ? '#f5f3ff' : '#eff6ff',
-                              color: isGov ? '#8b5cf6' : '#3b82f6',
-                              border: `1px solid ${isGov ? '#ddd6fe' : '#bfdbfe'}`,
-                            }}>
-                              {isGov ? 'ĐẤU THẦU (GOV)' : 'BÁO CHÍ (PRESS)'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '14px 20px', color: 'var(--text-muted)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-600)', textDecoration: 'none', fontWeight: 600 }}>
-                              {s.url}
-                            </a>
-                          </td>
-                          <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12 }}>
-                            {s.last_crawled_at ? new Date(s.last_crawled_at).toLocaleString('vi-VN') : 'Vừa khởi tạo'}
-                          </td>
-                          <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => handleOpenEditSource(s)}
-                                style={{ color: '#2563eb', padding: '6px 10px' }}
-                                title="Chỉnh sửa nguồn tin"
-                              >
-                                <Edit size={14} /> Sửa
-                              </button>
-                              {isSuperAdmin ? (
+                    {(() => {
+                      const q = sourceSearch.trim().toLowerCase();
+                      const filtered = q
+                        ? sources.filter(s =>
+                            (s.name || '').toLowerCase().includes(q) ||
+                            getSourceUrl(s).toLowerCase().includes(q))
+                        : sources;
+                      if (filtered.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                              {sources.length === 0
+                                ? 'Chưa có nguồn tin nào. Thêm nguồn đầu tiên ở trên.'
+                                : 'Không tìm thấy nguồn phù hợp.'}
+                            </td>
+                          </tr>
+                        );
+                      }
+                      // renderRow: 1 dòng feed, thụt lề theo cấp (px).
+                      const renderRow = (s, indent) => {
+                        const isGov = s.source_type === 'gov';
+                        return (
+                          <tr key={s.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>
+                            <td style={{ padding: '14px 20px', paddingLeft: indent, fontWeight: 700, color: 'var(--text-primary)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 16 }}>{isGov ? '📋' : '📰'}</span>
+                                {s.name}
+                              </div>
+                            </td>
+                            <td style={{ padding: '14px 20px' }}>
+                              <span style={{
+                                fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
+                                background: isGov ? '#f5f3ff' : '#eff6ff',
+                                color: isGov ? '#8b5cf6' : '#3b82f6',
+                                border: `1px solid ${isGov ? '#ddd6fe' : '#bfdbfe'}`,
+                              }}>
+                                {isGov ? 'ĐẤU THẦU (GOV)' : 'BÁO CHÍ (PRESS)'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '14px 20px', color: 'var(--text-muted)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <a href={getSourceUrl(s)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-600)', textDecoration: 'none', fontWeight: 600 }}>
+                                {getSourceUrl(s)}
+                              </a>
+                            </td>
+                            <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12 }}>
+                              {s.last_crawled_at ? new Date(s.last_crawled_at).toLocaleString('vi-VN') : 'Vừa khởi tạo'}
+                            </td>
+                            <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
                                 <button
                                   className="btn btn-ghost btn-sm"
-                                  onClick={() => handleDeleteSource(s)}
-                                  title="Xóa nguồn"
-                                  style={{ color: '#ef4444', padding: '6px 10px' }}
+                                  onClick={() => handleOpenEditSource(s)}
+                                  style={{ color: '#2563eb', padding: '6px 10px' }}
+                                  title="Chỉnh sửa nguồn tin"
                                 >
-                                  <Trash2 size={14} /> Xóa
+                                  <Edit size={14} /> Sửa
                                 </button>
-                              ) : (
-                                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Chỉ Super Admin được xóa</span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                                {isSuperAdmin ? (
+                                  <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={() => handleDeleteSource(s)}
+                                    title="Xóa nguồn"
+                                    style={{ color: '#ef4444', padding: '6px 10px' }}
+                                  >
+                                    <Trash2 size={14} /> Xóa
+                                  </button>
+                                ) : (
+                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Chỉ Super Admin được xóa</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      };
+
+                      // Cây 2 tầng: Loại nguồn → Tên miền → feed.
+                      const TYPE_META = {
+                        gov:   { label: 'Đấu Thầu (GOV)',  icon: '📋', color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
+                        press: { label: 'Báo Chí (Press)', icon: '📰', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
+                      };
+                      const byType = {};
+                      filtered.forEach(s => {
+                        const t = s.source_type || 'press';
+                        (byType[t] = byType[t] || []).push(s);
+                      });
+                      const typeOrder = [
+                        ...['gov', 'press'].filter(t => byType[t]),
+                        ...Object.keys(byType).filter(t => !['gov', 'press'].includes(t)),
+                      ];
+
+                      const rows = [];
+                      typeOrder.forEach(type => {
+                        const meta = TYPE_META[type] || { label: type, icon: '📄', color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' };
+                        const typeList = byType[type];
+                        const tKey = 't:' + type;
+                        const tOpen = expandedGroups.has(tKey) || !!q; // đang tìm kiếm thì mở hết
+                        rows.push(
+                          <tr key={tKey} onClick={() => toggleGroup(tKey)}
+                              style={{ cursor: 'pointer', background: meta.bg, borderBottom: `1px solid ${meta.border}` }}>
+                            <td colSpan={5} style={{ padding: '12px 20px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, color: meta.color }}>
+                                <ChevronDown size={16} style={{ transition: 'transform 0.15s', transform: tOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                                <span style={{ fontSize: 16 }}>{meta.icon}</span>
+                                {meta.label}
+                                <span style={{ fontSize: 11, fontWeight: 800, color: meta.color, background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: 12, border: `1px solid ${meta.border}` }}>
+                                  {typeList.length} nguồn
+                                </span>
+                                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>· {tOpen ? 'thu gọn' : 'xổ ra'}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                        if (!tOpen) return;
+                        // Trong mỗi loại: gom theo tên miền (giữ thứ tự).
+                        const domOrder = [];
+                        const byDom = {};
+                        typeList.forEach(s => {
+                          const d = getSourceDomain(s);
+                          if (!byDom[d]) { byDom[d] = []; domOrder.push(d); }
+                          byDom[d].push(s);
+                        });
+                        domOrder.forEach(domain => {
+                          const list = byDom[domain];
+                          if (list.length === 1) { rows.push(renderRow(list[0], 46)); return; }
+                          const dKey = 'd:' + type + ':' + domain;
+                          const dOpen = expandedGroups.has(dKey) || !!q;
+                          rows.push(
+                            <tr key={dKey} onClick={() => toggleGroup(dKey)}
+                                style={{ cursor: 'pointer', background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-subtle)' }}>
+                              <td colSpan={5} style={{ padding: '10px 20px', paddingLeft: 46 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, color: 'var(--text-primary)' }}>
+                                  <ChevronDown size={14} style={{ transition: 'transform 0.15s', transform: dOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                                  <Globe size={14} style={{ color: '#3b82f6' }} />
+                                  {domain}
+                                  <span style={{ fontSize: 10.5, fontWeight: 800, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: 12, border: '1px solid #bfdbfe' }}>
+                                    {list.length} feed
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                          if (dOpen) list.forEach(s => rows.push(renderRow(s, 72)));
+                        });
+                      });
+                      return rows;
+                    })()}
                   </tbody>
                 </table>
               </div>

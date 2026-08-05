@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag,
+  LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag, FileText, ChevronDown,
   Settings, Tag, Bookmark, Bot, ShieldCheck, Loader2, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -15,8 +16,18 @@ const sourceNavItems = [
   { to: '/news/press',     icon: <Newspaper size={16} />,   label: 'Báo Chí',           badge: null, color: '#3b82f6' },
   { to: '/news/adb',       icon: <Building2 size={16} />,   label: 'ADB (Châu Á)',      badge: null, color: '#f59e0b' },
   { to: '/news/worldbank', icon: <Globe size={16} />,        label: 'World Bank',        badge: null, color: '#10b981' },
-  { to: '/news/gov',       icon: <ShoppingBag size={16} />, label: 'Đấu Thầu Công',    badge: null, color: '#8b5cf6' },
 ];
+
+// Nhóm "Đấu Thầu Công" — bấm để XỔ RA 2 trang con (TBMT / KHLCNT).
+const procurementGroup = {
+  label: 'Đấu Thầu Công',
+  color: '#8b5cf6',
+  icon: <ShoppingBag size={16} />,
+  children: [
+    { to: '/news/tbmt',   icon: <ShoppingBag size={14} />, label: 'Thông Báo Mời Thầu (TBMT)' },
+    { to: '/news/khlcnt', icon: <FileText size={14} />,    label: 'Kế Hoạch LCNT (KHLCNT)' },
+  ],
+};
 
 const toolItems = [
   { to: '/keywords',  icon: <Tag size={16} />,      label: 'Từ Khóa',    badge: null },
@@ -34,6 +45,10 @@ export default function Sidebar({ isOpen, onClose }) {
     if (isPersonalUser && item.to === '/dashboard') return false;
     return true;
   });
+
+  const procActive = procurementGroup.children.some((c) => location.pathname.startsWith(c.to));
+  const [procOpen, setProcOpen] = useState(true);
+  const showProcChildren = procOpen || procActive;
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -72,17 +87,20 @@ export default function Sidebar({ isOpen, onClose }) {
           Báo Chí
         </NavLink>
 
-        {/* 2. Locked Sources (ADB, World Bank, Đấu Thầu) với hiệu ứng trượt mở/đóng mượt mà */}
+        {/* 2. Nguồn trả phí (ADB, World Bank, Đấu Thầu). Personal user: khóa (mở khi vào /upgrade). */}
         {isPersonalUser ? (
           <div style={{
-            maxHeight: isUpgradePage ? 200 : 0,
+            maxHeight: isUpgradePage ? 260 : 0,
             opacity: isUpgradePage ? 1 : 0,
             overflow: 'hidden',
             transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
             pointerEvents: isUpgradePage ? 'auto' : 'none',
             display: 'flex', flexDirection: 'column', gap: 2,
           }}>
-            {sourceNavItems.filter(s => s.to !== '/news/press').map(item => (
+            {[
+              ...sourceNavItems.filter(s => s.to !== '/news/press'),
+              { to: '/news/tbmt', icon: <ShoppingBag size={16} />, label: 'Đấu Thầu Công', color: '#8b5cf6' },
+            ].map(item => (
               <NavLink
                 key={item.to}
                 to="/upgrade"
@@ -111,18 +129,53 @@ export default function Sidebar({ isOpen, onClose }) {
             ))}
           </div>
         ) : (
-          sourceNavItems.filter(s => s.to !== '/news/press').map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
-              onClick={() => onClose?.()}
-              className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+          <>
+            {sourceNavItems.filter(s => s.to !== '/news/press').map(item => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+                onClick={() => onClose?.()}
+                className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+              >
+                <span style={{ color: item.color }}>{item.icon}</span>
+                {item.label}
+              </NavLink>
+            ))}
+
+            {/* Nhóm "Đấu Thầu Công" — bấm để xổ ra 2 trang con (TBMT/KHLCNT) */}
+            <button
+              type="button"
+              id="sidebar-proc-group"
+              onClick={() => setProcOpen(o => !o)}
+              className={`sidebar-nav-item ${procActive ? 'active' : ''}`}
+              style={{ width: '100%', background: 'none', border: 'none', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
             >
-              <span style={{ color: item.color }}>{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))
+              <span style={{ color: procurementGroup.color }}>{procurementGroup.icon}</span>
+              {procurementGroup.label}
+              <ChevronDown
+                size={14}
+                style={{
+                  marginLeft: 'auto',
+                  transition: 'transform 0.2s ease',
+                  transform: showProcChildren ? 'rotate(180deg)' : 'rotate(0deg)',
+                }}
+              />
+            </button>
+            {showProcChildren && procurementGroup.children.map(child => (
+              <NavLink
+                key={child.to}
+                to={child.to}
+                id={`sidebar-${child.to.replace(/\//g, '-').slice(1)}`}
+                onClick={() => onClose?.()}
+                className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+                style={{ paddingLeft: 32, fontSize: 12.5 }}
+              >
+                <span style={{ color: procurementGroup.color }}>{child.icon}</span>
+                {child.label}
+              </NavLink>
+            ))}
+          </>
         )}
       </div>
 

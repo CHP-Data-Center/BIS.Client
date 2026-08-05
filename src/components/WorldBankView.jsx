@@ -98,12 +98,20 @@ const CONFIG_MAP = {
   },
 };
 
-export default function WorldBankView({ type = 'worldbank' }) {
+export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const [searchParams] = useSearchParams();
   const initialQ = searchParams.get('q') || '';
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
   const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
   const HeaderIcon = config.icon;
+
+  // Tiêu đề riêng khi tách TBMT / KHLCNT thành 2 trang (dùng chung component procurement).
+  const pageTitle = kind === 'notice' ? 'Thông Báo Mời Thầu (TBMT)'
+    : kind === 'plan' ? 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)'
+    : config.title;
+  const pageSubtitle = kind
+    ? `Tra cứu ${kind === 'notice' ? 'thông báo mời thầu (TBMT)' : 'kế hoạch lựa chọn nhà thầu (KHLCNT)'} — bấm mã để mở trang chi tiết trên Hệ thống mạng đấu thầu quốc gia`
+    : config.subtitle;
 
   // === STATE ===
   const [allProjects, setAllProjects] = useState([]);
@@ -179,7 +187,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
           };
         });
       } else if (normType === 'procurement') {
-        const res = await odaService.getProcurement({ size: 5000 });
+        const res = await odaService.getProcurement({ size: 5000, ...(kind ? { kind } : {}) });
         const items = res?.items || [];
         data = items.map((p) => {
           const pkgCount = p.package_count || 0;
@@ -209,7 +217,7 @@ export default function WorldBankView({ type = 'worldbank' }) {
     } finally {
       setLoading(false);
     }
-  }, [normType, config, getSavedProjects]);
+  }, [normType, config, getSavedProjects, kind]);
 
   useEffect(() => {
     loadData();
@@ -561,10 +569,10 @@ export default function WorldBankView({ type = 'worldbank' }) {
           </div>
           <div>
             <h1 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              {config.title}
+              {pageTitle}
             </h1>
             <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
-              {config.subtitle}
+              {pageSubtitle}
             </p>
           </div>
         </div>

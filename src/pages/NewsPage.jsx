@@ -1,7 +1,7 @@
 // src/pages/NewsPage.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
-import { Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, X } from 'lucide-react';
+import { Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, FileText, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
@@ -21,6 +21,9 @@ const SOURCE_MAP = {
   worldbank: { label: 'Dự Án World Bank', api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
   gov:       { label: 'Mua Sắm Công / Đấu Thầu', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
   dauthau:   { label: 'Mua Sắm Công Quốc Gia', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  // Tách 2 trang riêng, cùng khu vực "Đấu Thầu Công" (kind lọc notice/plan).
+  tbmt:      { label: 'Thông Báo Mời Thầu (TBMT)', api: 'proc', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  khlcnt:    { label: 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)', api: 'proc', kind: 'plan', icon: <FileText size={18} style={{ color: '#8b5cf6' }} /> },
 };
 
 function SkeletonCard() {
@@ -138,7 +141,7 @@ export default function NewsPage() {
       } else if (srcConfig.api === 'proc') {
         // Mua sắm công / đấu thầu (bảng procurement_items).
         const res = await odaService.getProcurement({
-          page: p, size: PAGE_SIZE, ...(q ? { q } : {}),
+          page: p, size: PAGE_SIZE, ...(srcConfig.kind ? { kind: srcConfig.kind } : {}), ...(q ? { q } : {}),
         });
         items = (res.items || []).map(adaptProcToCard);
         tot = res.total || 0;
@@ -258,6 +261,12 @@ export default function NewsPage() {
   }
   if (source === 'adb') {
     return <WorldBankView type="adb" />;
+  }
+  if (source === 'tbmt') {
+    return <WorldBankView type="procurement" kind="notice" />;
+  }
+  if (source === 'khlcnt') {
+    return <WorldBankView type="procurement" kind="plan" />;
   }
   if (source === 'gov' || source === 'dauthau') {
     return <WorldBankView type="procurement" />;
