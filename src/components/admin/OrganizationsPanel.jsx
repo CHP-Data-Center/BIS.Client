@@ -350,7 +350,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                         background: u.role === 'admin' ? '#ede9fe' : '#f1f5f9', color: u.role === 'admin' ? '#6d28d9' : '#475569' }}>
-                        {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NHÂN VIÊN'}
+                        {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NGƯỜI DÙNG'}
                       </span>
                     </div>
                   );

@@ -117,7 +117,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0, marginBottom: 20, lineHeight: 1.5 }}>
         Cấu hình dữ liệu phân vùng cho phép Admin phân vùng chọn **Loại bài** (Báo chí, ADB, World Bank, Đấu thầu), **Loại từ khóa**, **Từ khóa** và **Quốc gia**.
         <br />
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>* Để trống một mục = Không giới hạn theo mục đó (nhân viên xem được tất cả).</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>* Để trống một mục = Không giới hạn theo mục đó (người dùng xem được tất cả).</span>
       </p>
 
       {/* 1. Loại bài / Nguồn thông tin */}

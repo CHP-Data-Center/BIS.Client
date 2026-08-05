@@ -768,7 +768,7 @@ export default function AdminPage() {
                     >
                       {isSuperAdmin && <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>}
                       {isSuperAdmin && <option value="admin">🔰 Admin Phân Vùng</option>}
-                      <option value="user">👤 User (Nhân viên)</option>
+                      <option value="user">👤 User (Người dùng)</option>
                     </select>
                   </div>
 
@@ -925,7 +925,7 @@ export default function AdminPage() {
                                 color: u.role === 'super_admin' ? '#92400e' : u.role === 'admin' ? '#1d4ed8' : '#475569',
                                 border: `1px solid ${u.role === 'super_admin' ? '#fde68a' : u.role === 'admin' ? '#bfdbfe' : '#e2e8f0'}`,
                               }}>
-                                {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NHÂN VIÊN'}
+                                {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NGƯỜI DÙNG'}
                               </span>
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
                                 📍 {u.region || 'Toàn quốc'}
@@ -1184,7 +1184,7 @@ export default function AdminPage() {
                   {(isSuperAdmin || editingUser.role === 'admin') && (
                     <option value="admin">🔰 Admin Phân Vùng</option>
                   )}
-                  <option value="user">👤 User (Nhân viên)</option>
+                  <option value="user">👤 User (Người dùng)</option>
                 </select>
               </div>
 
@@ -1281,7 +1281,7 @@ export default function AdminPage() {
               {/* Granular Staff Permissions Section */}
               <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
                 <label className="form-label" style={{ marginBottom: 10, fontWeight: 800, display: 'block', color: 'var(--text-primary)' }}>
-                  🔑 Phân Quyền Mô-đun Xem/Sử Dụng Cho Nhân Viên
+                  🔑 Phân Quyền Mô-đun Xem/Sử Dụng Cho Người Dùng
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, fontSize: 12.5 }}>
                   {[
