@@ -1122,9 +1122,10 @@ export default function AdminPage() {
         }}>
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 580,
-            boxShadow: '0 24px 60px rgba(0,0,0,0.3)', position: 'relative',
+            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 620,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
             animation: 'fadeIn 0.2s ease-out',
+            maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
           }}>
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
