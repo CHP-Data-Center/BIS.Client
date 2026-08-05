@@ -768,7 +768,8 @@ export default function AdminPage() {
                     >
                       {isSuperAdmin && <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>}
                       {isSuperAdmin && <option value="admin">🔰 Admin Phân Vùng</option>}
-                      <option value="user">👤 User (Người dùng)</option>
+                      <option value="staff">🧑‍💼 Nhân viên (Staff)</option>
+                      <option value="user">👤 Người dùng (User)</option>
                     </select>
                   </div>
 
@@ -921,11 +922,11 @@ export default function AdminPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <span style={{
                                 fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20, width: 'fit-content',
-                                background: u.role === 'super_admin' ? '#fef3c7' : u.role === 'admin' ? '#eff6ff' : '#f1f5f9',
-                                color: u.role === 'super_admin' ? '#92400e' : u.role === 'admin' ? '#1d4ed8' : '#475569',
-                                border: `1px solid ${u.role === 'super_admin' ? '#fde68a' : u.role === 'admin' ? '#bfdbfe' : '#e2e8f0'}`,
+                                background: u.role === 'super_admin' ? '#fef3c7' : u.role === 'admin' ? '#eff6ff' : u.role === 'staff' ? '#f0fdf4' : '#f1f5f9',
+                                color: u.role === 'super_admin' ? '#92400e' : u.role === 'admin' ? '#1d4ed8' : u.role === 'staff' ? '#166534' : '#475569',
+                                border: `1px solid ${u.role === 'super_admin' ? '#fde68a' : u.role === 'admin' ? '#bfdbfe' : u.role === 'staff' ? '#bbf7d0' : '#e2e8f0'}`,
                               }}>
-                                {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NGƯỜI DÙNG'}
+                                {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : u.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
                               </span>
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
                                 📍 {u.region || 'Toàn quốc'}
@@ -1184,7 +1185,8 @@ export default function AdminPage() {
                   {(isSuperAdmin || editingUser.role === 'admin') && (
                     <option value="admin">🔰 Admin Phân Vùng</option>
                   )}
-                  <option value="user">👤 User (Người dùng)</option>
+                  <option value="staff">🧑‍💼 Nhân viên (Staff)</option>
+                  <option value="user">👤 Người dùng (User)</option>
                 </select>
               </div>
 

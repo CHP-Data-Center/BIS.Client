@@ -349,8 +349,9 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
-                        background: u.role === 'admin' ? '#ede9fe' : '#f1f5f9', color: u.role === 'admin' ? '#6d28d9' : '#475569' }}>
-                        {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : '👤 NGƯỜI DÙNG'}
+                        background: u.role === 'admin' ? '#ede9fe' : u.role === 'staff' ? '#f0fdf4' : '#f1f5f9',
+                        color: u.role === 'admin' ? '#6d28d9' : u.role === 'staff' ? '#166534' : '#475569' }}>
+                        {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : u.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
                       </span>
                     </div>
                   );

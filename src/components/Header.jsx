@@ -150,7 +150,13 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
                     marginTop: 5, padding: '2px 9px',
                     borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 800,
                   }}>
-                    <Zap size={9} /> {isPersonalUser ? 'NGƯỜI DÙNG CÁ NHÂN' : (user?.role || 'user').toUpperCase()}
+                    <Zap size={9} /> {
+                      isPersonalUser ? 'NGƯỜI DÙNG CÁ NHÂN'
+                      : user?.role === 'super_admin' ? 'SUPER ADMIN'
+                      : user?.role === 'admin' ? 'ADMIN PHÂN VÙNG'
+                      : user?.role === 'staff' ? 'NHÂN VIÊN'
+                      : 'NGƯỜI DÙNG'
+                    }
                   </div>
                 </div>
                 {isAdmin && (
