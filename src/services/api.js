@@ -51,8 +51,8 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('bis_token');
       localStorage.removeItem('bis_user');
-      // Tránh vòng lặp redirect khi đang ở login hoặc khi gọi API login
-      const isLoginRequest = config?.url?.includes('/auth/login');
+      // Tránh vòng lặp redirect khi đang ở login hoặc khi gọi API login/google
+      const isLoginRequest = config?.url?.includes('/auth/login') || config?.url?.includes('/auth/google');
       const isAlreadyOnLoginPage = window.location.pathname.includes('/login');
       if (!isLoginRequest && !isAlreadyOnLoginPage) {
         window.location.href = `${import.meta.env.BASE_URL}login?session_expired=1`;

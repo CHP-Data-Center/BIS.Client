@@ -18,6 +18,7 @@ const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
 const AiPage = lazy(() => import('./pages/AiPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
+const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const WorldBankView = lazy(() => import('./components/WorldBankView'));
 
 function PageLoader() {
@@ -43,6 +44,15 @@ function AppLayout({ children }) {
 
   useEffect(() => {
     setSidebarOpen(false);
+    // Khi di chuyển giữa các trang, khôi phục giao diện đã lưu từ Settings
+    if (location.pathname !== '/upgrade') {
+      const savedTheme = localStorage.getItem('bis_saved_ui_theme');
+      if (savedTheme && savedTheme !== 'basic') {
+        document.documentElement.setAttribute('data-ui-theme', savedTheme);
+      } else {
+        document.documentElement.removeAttribute('data-ui-theme');
+      }
+    }
   }, [location.pathname]);
 
   return (
@@ -77,11 +87,29 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Route dành riêng cho Enterprise Users (Dashboard, ADB, WB, Đấu thầu, AI Assistant)
+function EnterpriseRoute({ children }) {
+  const { isLoggedIn, isPersonalUser, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (isPersonalUser) return <Navigate to="/news/press" replace />;
+  return children;
+}
+
+// Redirect mặc định theo vai trò người dùng
+function DefaultRedirect() {
+  const { isPersonalUser, isLoggedIn, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (isPersonalUser) return <Navigate to="/news/press" replace />;
+  return <Navigate to="/dashboard" replace />;
+}
+
 // Route dành riêng cho Admin
 function AdminRoute({ children }) {
   const { isLoggedIn, isAdmin, loading } = useAuth();
   if (loading) return <PageLoader />;
-  if (!isLoggedIn || !isAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isLoggedIn || !isAdmin) return <Navigate to="/news/press" replace />;
   return children;
 }
 
@@ -106,22 +134,29 @@ export default function App() {
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
 
-              {/* Protected — tất cả cần đăng nhập */}
+              {/* Protected — dành cho Enterprise */}
               <Route path="/dashboard" element={
-                <ProtectedRoute>
+                <EnterpriseRoute>
                   <AppLayout><DashboardPage /></AppLayout>
-                </ProtectedRoute>
-              } />
-
-              <Route path="/news/:source" element={
-                <ProtectedRoute>
-                  <AppLayout><NewsPage /></AppLayout>
-                </ProtectedRoute>
+                </EnterpriseRoute>
               } />
 
               <Route path="/worldbank" element={
-                <ProtectedRoute>
+                <EnterpriseRoute>
                   <AppLayout><WorldBankView /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+              <Route path="/ai-chat" element={
+                <EnterpriseRoute>
+                  <AppLayout><AiPage /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+              {/* Protected — tất cả người dùng hợp lệ */}
+              <Route path="/news/:source" element={
+                <ProtectedRoute>
+                  <AppLayout><NewsPage /></AppLayout>
                 </ProtectedRoute>
               } />
 
@@ -143,15 +178,15 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
-              <Route path="/ai-chat" element={
-                <ProtectedRoute>
-                  <AppLayout><AiPage /></AppLayout>
-                </ProtectedRoute>
-              } />
-
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <AppLayout><SettingsPage /></AppLayout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/upgrade" element={
+                <ProtectedRoute>
+                  <AppLayout><UpgradePage /></AppLayout>
                 </ProtectedRoute>
               } />
 
@@ -162,15 +197,15 @@ export default function App() {
               } />
 
               <Route path="/trending" element={
-                <ProtectedRoute>
+                <EnterpriseRoute>
                   <AppLayout><ComingSoon title="Xu Hướng & Analytics" /></AppLayout>
-                </ProtectedRoute>
+                </EnterpriseRoute>
               } />
 
               <Route path="/reports" element={
-                <ProtectedRoute>
+                <EnterpriseRoute>
                   <AppLayout><ComingSoon title="Báo Cáo AI" /></AppLayout>
-                </ProtectedRoute>
+                </EnterpriseRoute>
               } />
 
               <Route path="/help" element={
@@ -179,11 +214,9 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
-
               {/* Default redirect */}
-
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<DefaultRedirect />} />
+              <Route path="*" element={<DefaultRedirect />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

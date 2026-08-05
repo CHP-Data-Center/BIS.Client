@@ -1,7 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag,
-  Settings, Tag, Bookmark, Bot, ShieldCheck, Loader2
+  Settings, Tag, Bookmark, Bot, ShieldCheck, Loader2, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCrawl } from '../context/CrawlContext';
@@ -25,15 +25,22 @@ const toolItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isPersonalUser } = useAuth();
   const { isCrawling } = useCrawl();
+  const location = useLocation();
+  const isUpgradePage = location.pathname === '/upgrade';
+
+  const filteredNavItems = navItems.filter(item => {
+    if (isPersonalUser && item.to === '/dashboard') return false;
+    return true;
+  });
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Main Nav */}
       <div className="sidebar-section">
         <div className="sidebar-label">Chính</div>
-        {navItems.map(item => (
+        {filteredNavItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -53,18 +60,70 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Sources */}
       <div className="sidebar-section">
         <div className="sidebar-label">Nguồn Dữ Liệu</div>
-        {sourceNavItems.map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
-            onClick={() => onClose?.()}
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span style={{ color: item.color }}>{item.icon}</span>
-            {item.label}
-          </NavLink>
-        ))}
+
+        {/* 1. Unlocked Source: Báo Chí */}
+        <NavLink
+          to="/news/press"
+          id="sidebar-news-press"
+          onClick={() => onClose?.()}
+          className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+        >
+          <span style={{ color: '#3b82f6' }}><Newspaper size={16} /></span>
+          Báo Chí
+        </NavLink>
+
+        {/* 2. Locked Sources (ADB, World Bank, Đấu Thầu) với hiệu ứng trượt mở/đóng mượt mà */}
+        {isPersonalUser ? (
+          <div style={{
+            maxHeight: isUpgradePage ? 200 : 0,
+            opacity: isUpgradePage ? 1 : 0,
+            overflow: 'hidden',
+            transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            pointerEvents: isUpgradePage ? 'auto' : 'none',
+            display: 'flex', flexDirection: 'column', gap: 2,
+          }}>
+            {sourceNavItems.filter(s => s.to !== '/news/press').map(item => (
+              <NavLink
+                key={item.to}
+                to="/upgrade"
+                id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+                onClick={() => onClose?.()}
+                className={() => "sidebar-nav-item locked-item"}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
+                }}
+                title="Tính năng có phí — Bấm để xem gói nâng cấp"
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
+                  <span style={{ color: item.color, flexShrink: 0 }}>{item.icon}</span>
+                  <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>{item.label}</span>
+                </div>
+                <span className="upgrade-badge" style={{
+                  marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
+                  fontSize: 9, fontWeight: 800, padding: '2px 5px', height: 20,
+                  display: 'inline-flex', alignItems: 'center', gap: 2,
+                  borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
+                }}>
+                  🔒 NÂNG CẤP
+                </span>
+              </NavLink>
+            ))}
+          </div>
+        ) : (
+          sourceNavItems.filter(s => s.to !== '/news/press').map(item => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+              onClick={() => onClose?.()}
+              className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            >
+              <span style={{ color: item.color }}>{item.icon}</span>
+              {item.label}
+            </NavLink>
+          ))
+        )}
       </div>
 
       <div className="sidebar-divider" />
@@ -72,29 +131,73 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Tools */}
       <div className="sidebar-section">
         <div className="sidebar-label">Công Cụ</div>
-        {toolItems.map(item => (
+        
+        {/* Unlocked Tools: Từ Khóa, Đã Lưu */}
+        {toolItems.filter(t => t.to !== '/ai-chat').map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
             onClick={() => onClose?.()}
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-            style={item.highlight ? { position: 'relative' } : {}}
           >
-            {item.highlight ? (
-              <span style={{ color: '#a855f7' }}>{item.icon}</span>
-            ) : item.icon}
+            {item.icon}
             {item.label}
-            {item.highlight && (
-              <span style={{
-                marginLeft: 'auto',
-                fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8,
-                background: 'linear-gradient(135deg, #a855f7, #ec4899)',
-                color: 'white', letterSpacing: '0.3px',
-              }}>AI</span>
-            )}
           </NavLink>
         ))}
+
+        {/* Locked Tool: Trợ Lý AI với hiệu ứng trượt mở/đóng mượt mà */}
+        {isPersonalUser ? (
+          <div style={{
+            maxHeight: isUpgradePage ? 60 : 0,
+            opacity: isUpgradePage ? 1 : 0,
+            overflow: 'hidden',
+            transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+            pointerEvents: isUpgradePage ? 'auto' : 'none',
+          }}>
+            <NavLink
+              to="/upgrade"
+              id="sidebar-ai-chat"
+              onClick={() => onClose?.()}
+              className={() => "sidebar-nav-item locked-item"}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
+              }}
+              title="Tính năng có phí — Bấm để xem gói nâng cấp"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
+                <span style={{ color: '#a855f7', flexShrink: 0 }}><Bot size={16} /></span>
+                <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>Trợ Lý AI</span>
+              </div>
+              <span className="upgrade-badge" style={{
+                marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
+                fontSize: 9, fontWeight: 800, padding: '2px 5px', height: 20,
+                display: 'inline-flex', alignItems: 'center', gap: 2,
+                borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
+              }}>
+                🔒 NÂNG CẤP
+              </span>
+            </NavLink>
+          </div>
+        ) : (
+          <NavLink
+            to="/ai-chat"
+            id="sidebar-ai-chat"
+            onClick={() => onClose?.()}
+            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            style={{ position: 'relative' }}
+          >
+            <span style={{ color: '#a855f7' }}><Bot size={16} /></span>
+            Trợ Lý AI
+            <span style={{
+              marginLeft: 'auto',
+              fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8,
+              background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+              color: 'white', letterSpacing: '0.3px',
+            }}>AI</span>
+          </NavLink>
+        )}
 
         {isAdmin && (
           <NavLink
@@ -111,6 +214,28 @@ export default function Sidebar({ isOpen, onClose }) {
               fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,
               background: '#dbeafe', color: '#1d4ed8',
             }}>PRO</span>
+          </NavLink>
+        )}
+
+        {isPersonalUser && (
+          <NavLink
+            to="/upgrade"
+            id="sidebar-upgrade"
+            onClick={() => onClose?.()}
+            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            style={{
+              marginTop: 6, fontWeight: 800,
+              background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(236,72,153,0.12))',
+              border: '1px solid rgba(168,85,247,0.3)', color: '#9333ea',
+            }}
+          >
+            <Zap size={16} style={{ color: '#a855f7' }} />
+            Nâng Cấp Tính Năng
+            <span style={{
+              marginLeft: 'auto',
+              fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,
+              background: 'linear-gradient(135deg, #a855f7, #ec4899)', color: 'white',
+            }}>HOT</span>
           </NavLink>
         )}
       </div>
@@ -166,7 +291,7 @@ export default function Sidebar({ isOpen, onClose }) {
             </span>
           </div>
           <div style={{ fontSize: 10, color: isCrawling ? '#a5b4fc' : 'var(--text-muted)', fontWeight: isCrawling ? 600 : 400 }}>
-            {isCrawling ? 'Đang quét Báo chí, WB, ADB & Đấu thầu...' : 'AI Crawler: Online · Crawl mỗi 4h'}
+            {isCrawling ? (isPersonalUser ? 'Đang quét Báo chí...' : 'Đang quét Báo chí, WB, ADB & Đấu thầu...') : 'AI Crawler: Online · Crawl mỗi 4h'}
           </div>
           {user && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>

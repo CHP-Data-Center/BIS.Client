@@ -32,7 +32,7 @@ function LiveClock() {
 }
 
 export default function Header({ onToggleSidebar, isSidebarOpen }) {
-  const { user, logout, isGuest, isAdmin } = useAuth();
+  const { user, logout, isGuest, isAdmin, isPersonalUser } = useAuth();
   const nav = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
@@ -51,7 +51,8 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchVal.trim()) {
-      nav(`/news/all?q=${encodeURIComponent(searchVal.trim())}`);
+      const targetSource = isPersonalUser ? 'press' : 'all';
+      nav(`/news/${targetSource}?q=${encodeURIComponent(searchVal.trim())}`);
     }
   };
 
@@ -80,7 +81,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
-        <div className="header-logo" onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>
+        <div className="header-logo" onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
           <img src={logoImg} alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div className="logo-text">
             <span className="logo-title">Hệ Thống BIS</span>
@@ -147,16 +148,21 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
                   <div style={{
                     display: 'inline-flex', alignItems: 'center', gap: 4,
                     marginTop: 5, padding: '1px 8px',
-                    background: 'var(--brand-50)', color: 'var(--brand-700)',
+                    background: isPersonalUser ? '#fef3c7' : 'var(--brand-50)', color: isPersonalUser ? '#92400e' : 'var(--brand-700)',
                     borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 700,
-                    border: '1px solid var(--brand-200)',
+                    border: `1px solid ${isPersonalUser ? '#fde68a' : 'var(--brand-200)'}`,
                   }}>
-                    <Zap size={9} /> {(user?.role || 'user').toUpperCase()}
+                    <Zap size={9} /> {isPersonalUser ? 'NGƯỜI DÙNG CÁ NHÂN' : (user?.role || 'user').toUpperCase()}
                   </div>
                 </div>
                 {isAdmin && (
                   <div className="user-menu-item" onClick={() => { nav('/admin'); setUserMenuOpen(false); }} id="menu-admin" style={{ color: '#2563eb', fontWeight: 700 }}>
                     <ShieldCheck size={14} style={{ color: '#2563eb' }} /> Bảng Quản Trị Admin
+                  </div>
+                )}
+                {isPersonalUser && (
+                  <div className="user-menu-item" onClick={() => { nav('/upgrade'); setUserMenuOpen(false); }} id="menu-upgrade" style={{ color: '#9333ea', fontWeight: 700 }}>
+                    <Zap size={14} style={{ color: '#a855f7' }} /> Nâng Cấp Gói Dịch Vụ
                   </div>
                 )}
                 <div className="user-menu-item" onClick={() => { nav('/settings'); setUserMenuOpen(false); }} id="menu-settings">

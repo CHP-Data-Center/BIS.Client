@@ -47,7 +47,7 @@ function Particles() {
 }
 
 export default function LoginPage() {
-  const { login, loginWithGoogle, loginError, setLoginError, isLoggedIn } = useAuth();
+  const { user, login, loginWithGoogle, loginError, setLoginError, isLoggedIn } = useAuth();
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,8 +68,11 @@ export default function LoginPage() {
 
   // Redirect if logged in
   useEffect(() => {
-    if (isLoggedIn) nav('/dashboard', { replace: true });
-  }, [isLoggedIn]);
+    if (isLoggedIn) {
+      const target = user?.role === 'personal' ? '/news/press' : '/dashboard';
+      nav(target, { replace: true });
+    }
+  }, [isLoggedIn, user]);
 
 
   const handleSubmit = async (e) => {
@@ -108,9 +111,12 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const ok = await login(trimmedEmail, password);
+    const userObj = await login(trimmedEmail, password);
     setLoading(false);
-    if (ok) nav('/dashboard');
+    if (userObj) {
+      const target = userObj.role === 'personal' ? '/news/press' : '/dashboard';
+      nav(target, { replace: true });
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -137,9 +143,21 @@ export default function LoginPage() {
           scope: 'email profile openid',
           callback: async (response) => {
             if (response && response.access_token) {
-              const ok = await loginWithGoogle(null, response.access_token);
+              let userInfo = null;
+              try {
+                const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${response.access_token}` }
+                });
+                if (uRes.ok) userInfo = await uRes.json();
+              } catch (e) {
+                console.warn('Browser fetch userinfo error:', e);
+              }
+              const userObj = await loginWithGoogle(null, response.access_token, userInfo);
               setGoogleLoading(false);
-              if (ok) nav('/dashboard');
+              if (userObj) {
+                const target = userObj.role === 'personal' ? '/news/press' : '/dashboard';
+                nav(target, { replace: true });
+              }
             } else {
               setGoogleLoading(false);
               if (response?.error !== 'popup_closed_by_user') {
@@ -158,9 +176,12 @@ export default function LoginPage() {
           client_id: googleClientId,
           callback: async (response) => {
             if (response && response.credential) {
-              const ok = await loginWithGoogle(response.credential, null);
+              const userObj = await loginWithGoogle(response.credential, null);
               setGoogleLoading(false);
-              if (ok) nav('/dashboard');
+              if (userObj) {
+                const target = userObj.role === 'personal' ? '/news/press' : '/dashboard';
+                nav(target, { replace: true });
+              }
             } else {
               setGoogleLoading(false);
               if (response?.error !== 'popup_closed_by_user') {

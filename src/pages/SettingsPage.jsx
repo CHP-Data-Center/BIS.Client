@@ -1,6 +1,6 @@
 // src/pages/SettingsPage.jsx
 import { useState } from 'react';
-import { Settings, Lock, Mail, Clock, Loader2, Check, ShieldCheck, User, Sparkles, KeyRound, BellRing, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Settings, Lock, Mail, Clock, Loader2, Check, ShieldCheck, User, Sparkles, KeyRound, BellRing, CheckCircle2, AlertCircle, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
@@ -9,6 +9,21 @@ import { settingsService } from '../services/settings';
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth();
   const nav = useNavigate();
+
+  // Saved theme state
+  const [savedTheme, setSavedTheme] = useState(() => {
+    return localStorage.getItem('bis_saved_ui_theme') || 'basic';
+  });
+
+  const handleApplySavedTheme = (themeKey) => {
+    setSavedTheme(themeKey);
+    localStorage.setItem('bis_saved_ui_theme', themeKey);
+    if (themeKey === 'basic') {
+      document.documentElement.removeAttribute('data-ui-theme');
+    } else {
+      document.documentElement.setAttribute('data-ui-theme', themeKey);
+    }
+  };
 
   // Password state
   const [oldPw, setOldPw]       = useState('');
@@ -344,6 +359,76 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── 3rd Section: Persistent UI/UX Theme Selection ── */}
+      <div style={{
+        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+        borderRadius: 20, padding: 28, marginTop: 24, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: 12,
+              background: '#faf5ff', border: '1px solid #e9d5ff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333ea',
+            }}>
+              <Palette size={22} />
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>Tùy Chỉnh Giao Diện Hệ Thống (UI/UX Themes)</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Thay đổi giao diện làm việc cố định cho tài khoản của bạn</div>
+            </div>
+          </div>
+          {(user?.role === 'super_admin' || user?.role === 'admin') && (
+            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20, background: 'linear-gradient(135deg, #f59e0b, #ec4899)', color: 'white', boxShadow: '0 2px 8px rgba(245,158,11,0.3)' }}>
+              👑 SUPER ADMIN — UNLOCKED TOÀN BỘ THEMES
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+          {[
+            { key: 'basic', title: 'BIS Modern Glassmorphism', desc: 'Giao diện mượt mà hiện đại mặc định.', colors: ['#3b82f6', '#10b981', '#ffffff'], tag: 'MẶC ĐỊNH' },
+            { key: 'classic', title: 'Classic Y2K Japanese Web', desc: 'Phong cách Nhật Bản Y2K vuông phẳng 2000s.', colors: ['#e4e0d4', '#807868', '#8b4513'], tag: 'Y2K 2000s' },
+            { key: 'cyberpunk', title: 'Cyberpunk Neo-Tokyo', desc: 'Đêm Neon Futurist rực rỡ.', colors: ['#060814', '#00f0ff', '#ff007f'], tag: 'CYBERPUNK' },
+            { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Vàng Gold & Đen Obsidian xa xỉ.', colors: ['#111111', '#d4af37', '#f5f5f7'], tag: 'LUXURY' },
+          ].map(theme => {
+            const isUnlocked = user?.role === 'super_admin' || user?.role === 'admin' || theme.key === 'basic';
+            const isCurrent = savedTheme === theme.key;
+            return (
+              <div key={theme.key} style={{
+                padding: 18, borderRadius: 14, border: isCurrent ? '2px solid var(--brand-500)' : '1px solid var(--border)',
+                background: 'var(--bg-surface-2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 6, background: isCurrent ? '#2563eb' : '#334155', color: '#ffffff' }}>
+                      {theme.tag}
+                    </span>
+                    {isCurrent && <span style={{ fontSize: 11, fontWeight: 800, color: '#10b981' }}>✓ ĐANG DÙNG</span>}
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 4 }}>{theme.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: 12 }}>{theme.desc}</div>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+                    {theme.colors.map((c, i) => (
+                      <span key={i} style={{ flex: 1, height: 8, borderRadius: 3, background: c }} />
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={!isUnlocked}
+                  onClick={() => handleApplySavedTheme(theme.key)}
+                  className={isCurrent ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
+                  style={{ width: '100%', fontSize: 12, fontWeight: 700, borderRadius: 8 }}
+                >
+                  {isCurrent ? '✓ Đang Áp Dụng' : isUnlocked ? 'Áp Dụng Giao Diện' : '🔒 Cần Nâng Cấp Gói'}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

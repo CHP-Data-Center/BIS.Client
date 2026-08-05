@@ -1,7 +1,8 @@
 // src/pages/NewsPage.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
@@ -94,7 +95,12 @@ export default function NewsPage() {
   const { source = 'all' } = useParams();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
+  const { isPersonalUser } = useAuth();
   const scrollContainerRef = useRef(null);
+
+  if (isPersonalUser && (source === 'adb' || source === 'worldbank' || source === 'gov' || source === 'dauthau')) {
+    return <Navigate to="/news/press" replace />;
+  }
 
   const [loading, setLoading]                 = useState(true);
   const [articles, setArticles]               = useState([]);
@@ -510,7 +516,9 @@ export default function NewsPage() {
 
           {/* Breadcrumb */}
           <div className="breadcrumb">
-            <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>Dashboard</a>
+            <a onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
+              {isPersonalUser ? 'Trang Chủ' : 'Dashboard'}
+            </a>
             <ChevronRight size={12} className="breadcrumb-sep" />
             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{srcConfig.label}</span>
           </div>

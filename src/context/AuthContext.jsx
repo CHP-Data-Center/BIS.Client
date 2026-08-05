@@ -32,10 +32,10 @@ export function AuthProvider({ children }) {
       setToken(res.access_token);
 
       // Lấy thông tin user sau khi đăng nhập
-      const me = await authService.getMe();
+      const me = await authService.getMe(res.access_token);
       setUser(me);
       setLoginError('');
-      return true;
+      return me;
     } catch (err) {
       let msg = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.';
       if (err.response) {
@@ -68,25 +68,37 @@ export function AuthProvider({ children }) {
         msg = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.';
       }
       setLoginError(msg);
-      return false;
+      return null;
     }
   }, []);
 
-  const loginWithGoogle = useCallback(async (credential, accessToken = null) => {
+  const loginWithGoogle = useCallback(async (credential, accessToken = null, userInfo = null) => {
     setLoginError('');
     try {
-      const res = await authService.googleLogin(credential, accessToken);
+      const res = await authService.googleLogin(credential, accessToken, userInfo);
       localStorage.setItem('bis_token', res.access_token);
       setToken(res.access_token);
 
-      const me = await authService.getMe();
+      const me = await authService.getMe(res.access_token);
       setUser(me);
       setLoginError('');
-      return true;
+      return me;
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Đăng nhập Google không thành công. Vui lòng thử lại.';
+      let msg = 'Đăng nhập Google không thành công. Vui lòng thử lại.';
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        if (typeof detail === 'string') {
+          msg = detail;
+        } else if (Array.isArray(detail) && detail.length > 0) {
+          msg = detail[0]?.msg || 'Dữ liệu xác thực không hợp lệ.';
+        }
+      } else if (err.userMessage) {
+        msg = err.userMessage;
+      } else if (err.message) {
+        msg = err.message;
+      }
       setLoginError(msg);
-      return false;
+      return null;
     }
   }, []);
 
@@ -98,6 +110,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const isGuest  = !user;
+  const isPersonalUser = user?.role === 'personal';
+  const isEnterpriseUser = user && user.role !== 'personal';
   const isSuperAdmin = user?.role === 'super_admin';
   const isRegionalAdmin = user?.role === 'admin';
   const isAdmin = isSuperAdmin || isRegionalAdmin;
@@ -137,6 +151,8 @@ export function AuthProvider({ children }) {
         loginError,
         setLoginError,
         isGuest,
+        isPersonalUser,
+        isEnterpriseUser,
         isAdmin,
         isSuperAdmin,
         isRegionalAdmin,

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import { ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck, Share2, ChevronRight, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { articlesService } from '../services/articles';
+import { useAuth } from '../context/AuthContext';
 import { getSourceStyle } from '../utils/sourceStyle';
 
 function stripAccents(str = '') {
@@ -27,6 +28,7 @@ export default function ArticlePage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const currentQ = searchParams.get('q') || '';
+  const { isPersonalUser } = useAuth();
 
   // Article có thể được truyền qua navigation state (từ NewsCard click)
   const [article, setArticle] = useState(location.state?.article || null);
@@ -174,7 +176,9 @@ export default function ArticlePage() {
     <div>
       {/* Breadcrumb */}
       <div className="breadcrumb">
-        <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>Dashboard</a>
+        <a onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
+          {isPersonalUser ? 'Trang Chủ' : 'Dashboard'}
+        </a>
         <ChevronRight size={12} className="breadcrumb-sep" />
         <a onClick={() => nav(-1)} style={{ cursor: 'pointer' }}>Tin tức</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
