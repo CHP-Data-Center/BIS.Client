@@ -66,7 +66,7 @@ const CONFIG_MAP = {
       { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
       { key: 'last_stage_reached_name', display: 'Lĩnh Vực / Giai Đoạn', sortable: true, width: '150px' },
     ],
-    getUrl: (id) => `https://www.adb.org/projects/${id}/main`,
+    getUrl: (id) => `https://www.adb.org/projects?searchstax[query]=${encodeURIComponent(id)}`,
   },
   procurement: {
     title: 'Mua Sắm Công & Đấu Thầu Quốc Gia',
@@ -183,7 +183,9 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             proj_last_upd_date: p.last_updated_date || null,
             last_stage_reached_name: p.last_stage || p.sector || 'N/A',
             ai_summary: p.ai_summary || null,
-            rawUrl: p.url || `https://www.adb.org/projects/${p.external_id || p.id}/main`,
+            // id RSS ≠ project-number ADB → không dựng được URL /projects/{number}/main.
+            // Không có link gốc thì forward sang TÌM KIẾM ADB theo tên dự án (không 404).
+            rawUrl: p.url || `https://www.adb.org/projects?searchstax[query]=${encodeURIComponent(p.title || p.external_id || p.id)}`,
           };
         });
       } else if (normType === 'procurement') {
