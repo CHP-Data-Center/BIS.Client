@@ -113,7 +113,7 @@ function getLocalBookmarks() {
         original_id: item.id,
         project_code: item.id,
         article_title: item.project_name || `Dự án World Bank #${item.id}`,
-        article_url: item.rawUrl || `https://projects.worldbank.org/en/projects-operations/project-detail/${item.id}`,
+        article_url: item.rawUrl || `https://www.worldbank.org/en/search?q=${encodeURIComponent(item.id)}`,
         article_image_url: null,
         source_name: 'World Bank',
         source_type: 'worldbank',

@@ -38,7 +38,8 @@ const CONFIG_MAP = {
       { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
       { key: 'last_stage_reached_name', display: 'Giai Đoạn Cuối', sortable: true, width: '150px' },
     ],
-    getUrl: (id) => `https://projects.worldbank.org/en/projects-operations/project-detail/${id}`,
+    // Trang project-detail WB bị 403 (WB chặn hotlink direct) → forward sang WB search theo id.
+    getUrl: (id) => `https://www.worldbank.org/en/search?q=${encodeURIComponent(id)}`,
   },
   adb: {
     title: 'ADB Projects & Operations',

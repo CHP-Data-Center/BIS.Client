@@ -79,7 +79,7 @@ function getVietnamFallbackCoords(id, procuringEntity, title = '') {
 export function adaptOdaProject(p) {
   const origId = p.external_id || p.id;
   const projectUrl = p.url || (p.source_org === 'worldbank'
-    ? `https://projects.worldbank.org/en/projects-operations/project-detail/${origId}`
+    ? `https://www.worldbank.org/en/search?q=${encodeURIComponent(origId)}`
     : `https://www.adb.org/projects/${origId}/main`);
 
   let lat = p.lat;
@@ -141,7 +141,7 @@ export function adaptOdaToCard(p) {
   const bits = [p.country, p.status].filter(Boolean).join(' · ');
   const origId = p.external_id || p.id;
   const projectUrl = p.url || (p.source_org === 'worldbank'
-    ? `https://projects.worldbank.org/en/projects-operations/project-detail/${origId}`
+    ? `https://www.worldbank.org/en/search?q=${encodeURIComponent(origId)}`
     : `https://www.adb.org/projects/${origId}/main`);
 
   return {
