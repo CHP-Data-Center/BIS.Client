@@ -341,6 +341,15 @@ html[data-ui-theme="classic"],
   text-shadow: 1px 1px 2px #000000 !important;
 }
 
+/* Remove header banner translucent box and border lines in Classic theme */
+[data-ui-theme="classic"] .page-header-banner,
+[data-ui-theme="classic"] [class*="page-header-banner"] {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+}
+
 /* Classic 3D Outset Window Frame Panels */
 [data-ui-theme="classic"] .sidebar,
 [data-ui-theme="classic"] .card,

@@ -545,7 +545,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
       {/* Header Banner */}
       <div
-        className="animate-stagger-1"
+        className="animate-stagger-1 page-header-banner"
         style={{
           flex: '0 0 auto',
           background: config.bannerBg,
