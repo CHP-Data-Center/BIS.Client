@@ -316,9 +316,29 @@ html[data-ui-theme="classic"],
 [data-ui-theme="classic"] .app-layout,
 [data-ui-theme="classic"] .login-page {
   background-color: #008080 !important; /* Iconic Retro Windows 98 Teal Wallpaper */
-  background-image: radial-gradient(#004d4d 1px, transparent 0) !important;
-  background-size: 4px 4px !important;
-  color: #000000 !important;
+  background-image: none !important; /* Remove dark fuzzy dots behind text */
+  color: #ffffff !important;
+}
+
+/* High-contrast crisp text for page titles, subtitles, descriptions & breadcrumbs on classic teal wallpaper */
+[data-ui-theme="classic"] .main-content h1,
+[data-ui-theme="classic"] .main-content h2,
+[data-ui-theme="classic"] .main-content h3,
+[data-ui-theme="classic"] .main-content .page-title,
+[data-ui-theme="classic"] .main-content .news-header-title {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 1px 1px 2px #000000 !important;
+}
+
+[data-ui-theme="classic"] .main-content p,
+[data-ui-theme="classic"] .main-content .subtitle,
+[data-ui-theme="classic"] .main-content .news-header-subtitle,
+[data-ui-theme="classic"] .main-content .breadcrumb,
+[data-ui-theme="classic"] .main-content .breadcrumb * {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  text-shadow: 1px 1px 2px #000000 !important;
 }
 
 /* Classic 3D Outset Window Frame Panels */
@@ -341,6 +361,16 @@ html[data-ui-theme="classic"],
   backdrop-filter: none !important;
   animation: none !important;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Reset text-shadow inside metallic gray window cards */
+[data-ui-theme="classic"] .sidebar *,
+[data-ui-theme="classic"] .card *,
+[data-ui-theme="classic"] .stats-card *,
+[data-ui-theme="classic"] .news-card *,
+[data-ui-theme="classic"] .settings-card *,
+[data-ui-theme="classic"] .login-card * {
+  text-shadow: none !important;
 }
 
 [data-ui-theme="classic"] .sidebar {
