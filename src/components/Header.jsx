@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 import NotificationDropdown from './NotificationDropdown';
 import logoImg from '../assets/logo.png';
+import { SapphireDiamondSvg, SapphireStarSvg } from './common/ThemeFxOverlay';
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -27,6 +28,89 @@ function LiveClock() {
     }}>
       <Clock size={11} style={{ color: 'var(--brand-500)', flexShrink: 0 }} />
       {time.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+    </div>
+  );
+}
+
+
+
+function HeaderThemeRain() {
+  const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-ui-theme') || 'basic');
+  const items = useRef([
+    { id: 1,  left: '4%',  symbol: '🪙', isDiamond: true,  delay: '0s',    duration: '3.8s', size: 12 },
+    { id: 2,  left: '9%',  symbol: '✨', isDiamond: false, delay: '1.2s',  duration: '4.5s', size: 10 },
+    { id: 3,  left: '15%', symbol: '💰', isDiamond: true,  delay: '0.5s',  duration: '4.1s', size: 12 },
+    { id: 4,  left: '21%', symbol: '⭐', isDiamond: false, delay: '1.8s',  duration: '4.7s', size: 11 },
+    { id: 5,  left: '27%', symbol: '🪙', isDiamond: true,  delay: '0.9s',  duration: '3.6s', size: 13 },
+    { id: 6,  left: '33%', symbol: '✨', isDiamond: false, delay: '2.4s',  duration: '4.3s', size: 10 },
+    { id: 7,  left: '39%', symbol: '💰', isDiamond: true,  delay: '0.3s',  duration: '4.0s', size: 12 },
+    { id: 8,  left: '45%', symbol: '⭐', isDiamond: false, delay: '1.6s',  duration: '4.6s', size: 11 },
+    { id: 9,  left: '51%', symbol: '🪙', isDiamond: true,  delay: '2.7s',  duration: '4.2s', size: 13 },
+    { id: 10, left: '57%', symbol: '✨', isDiamond: false, delay: '0.8s',  duration: '4.4s', size: 10 },
+    { id: 11, left: '63%', symbol: '💰', isDiamond: true,  delay: '1.9s',  duration: '3.9s', size: 12 },
+    { id: 12, left: '69%', symbol: '⭐', isDiamond: false, delay: '0.4s',  duration: '4.5s', size: 11 },
+    { id: 13, left: '75%', symbol: '🪙', isDiamond: true,  delay: '2.1s',  duration: '4.1s', size: 13 },
+    { id: 14, left: '81%', symbol: '✨', isDiamond: false, delay: '1.1s',  duration: '4.7s', size: 10 },
+    { id: 15, left: '87%', symbol: '💰', isDiamond: true,  delay: '2.5s',  duration: '4.3s', size: 12 },
+    { id: 16, left: '92%', symbol: '⭐', isDiamond: false, delay: '0.7s',  duration: '4.6s', size: 11 },
+    { id: 17, left: '96%', symbol: '🪙', isDiamond: true,  delay: '1.5s',  duration: '4.0s', size: 12 },
+  ]).current;
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const current = document.documentElement.getAttribute('data-ui-theme') || 'basic';
+      setTheme(current);
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-ui-theme'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  if (theme !== 'luxury' && theme !== 'sapphire') return null;
+
+  const isLuxury = theme === 'luxury';
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 1, // Sitting behind header-left and header-right (zIndex 2)
+      }}
+    >
+      {items.map((it) => (
+        <div
+          key={it.id}
+          style={{
+            position: 'absolute',
+            top: '-20px',
+            left: it.left,
+            fontSize: it.size,
+            opacity: 0.85,
+            animation: `headerParticleFall ${it.duration} ease-in-out infinite`,
+            animationDelay: it.delay,
+            willChange: 'transform',
+            userSelect: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {isLuxury ? (
+            it.symbol
+          ) : it.isDiamond ? (
+            <SapphireDiamondSvg size={it.size + 5} />
+          ) : (
+            <SapphireStarSvg size={it.size + 3} />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -61,9 +145,12 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
   const shortName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : 'User';
 
   return (
-    <header className="header">
+    <header className="header" style={{ position: 'fixed' }}>
+      {/* Header Particle Rain for Luxury & Sapphire */}
+      <HeaderThemeRain />
+
       {/* Left */}
-      <div className="header-left">
+      <div className="header-left" style={{ position: 'relative', zIndex: 2 }}>
         <button
           className="mobile-menu-btn"
           onClick={onToggleSidebar}
@@ -95,7 +182,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
       </div>
 
       {/* Right */}
-      <div className="header-right">
+      <div className="header-right" style={{ position: 'relative', zIndex: 2 }}>
         {/* Search */}
         <div className="search-bar">
           <Search size={14} className="search-icon" />

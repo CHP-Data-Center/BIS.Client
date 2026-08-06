@@ -64,7 +64,10 @@ export default function LoginPage() {
     } else {
       setLoginError('');
     }
-  }, []);
+    // Sync active theme from localStorage on login page mount
+    const saved = localStorage.getItem('bis_ui_theme') || user?.ui_theme || 'basic';
+    document.documentElement.setAttribute('data-ui-theme', saved);
+  }, [user]);
 
   // Redirect if logged in
   useEffect(() => {

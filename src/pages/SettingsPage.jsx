@@ -383,8 +383,8 @@ export default function SettingsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
           {[
             { key: 'basic', title: 'BIS Modern Glassmorphism', desc: 'Giao diện mượt mà hiện đại mặc định.', colors: ['#3b82f6', '#10b981', '#ffffff'], tag: 'MẶC ĐỊNH' },
-            { key: 'classic', title: 'Classic Y2K Japanese Web', desc: 'Phong cách Nhật Bản Y2K vuông phẳng 2000s.', colors: ['#e4e0d4', '#807868', '#8b4513'], tag: 'Y2K 2000s' },
-            { key: 'cyberpunk', title: 'Cyberpunk Neo-Tokyo', desc: 'Sci-Fi Cyberpunk Đêm Neon — Góc cắt Futuristic, hiệu ứng Neon Pulse & Cyber Glow.', colors: ['#040814', '#00f0ff', '#ff007f'], tag: 'CYBERPUNK NEON' },
+            { key: 'classic', title: 'Classic Retro PC (Windows 98 OS)', desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.', colors: ['#008080', '#c0c0c0', '#000080'], tag: 'VINTAGE PC 98' },
+            { key: 'sapphire', title: 'Royal Sapphire Executive', desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.', colors: ['#050914', '#1d4ed8', '#38bdf8'], tag: 'ROYAL SAPPHIRE' },
             { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.', colors: ['#08080a', '#d4af37', '#fef1c9'], tag: 'LUXURY GOLD 24K' },
           ].map(theme => {
             const isUnlocked = user?.role === 'super_admin' || user?.role === 'admin' || theme.key === 'basic';

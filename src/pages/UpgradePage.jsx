@@ -600,7 +600,7 @@ export default function UpgradePage() {
               Cửa Hàng Giao Diện UI/UX & Theme Shop
             </h3>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
-              Thay đổi phong cách giao diện hệ thống theo sở thích (Mặc định, Báo Cổ Điển Vintage, Cyberpunk Neon, Bloomberg Executive).
+              Thay đổi phong cách giao diện hệ thống theo sở thích (Mặc định, Máy Cổ Windows 98 OS, Royal Sapphire VIP, Bloomberg Luxury Executive).
             </div>
           </div>
         </div>
@@ -617,19 +617,19 @@ export default function UpgradePage() {
             },
             {
               key: 'classic',
-              title: 'Classic Y2K Japanese Web (Code 2000s)',
+              title: 'Classic Retro PC (Windows 98 OS)',
               price: 99000,
-              desc: 'Giao diện Nhật Bản Y2K năm 2000 — KHÔNG bo tròn (border-radius: 0px), viền khung vuông phẳng 1px, phông chữ Tahoma / MS Gothic cổ điển.',
-              colors: ['#ece9d8', '#7f9db9', '#000080'],
-              tag: 'Y2K 2000s RETRO'
+              desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.',
+              colors: ['#008080', '#c0c0c0', '#000080'],
+              tag: 'VINTAGE PC 98'
             },
             {
-              key: 'cyberpunk',
-              title: 'Cyberpunk Neo-Tokyo',
+              key: 'sapphire',
+              title: 'Royal Sapphire Executive',
               price: 149000,
-              desc: 'Phong cách Sci-Fi Cyberpunk Đêm Neon — Góc cắt Futuristic, hiệu ứng Neon Pulse & Cyber Glow.',
-              colors: ['#040814', '#00f0ff', '#ff007f'],
-              tag: 'CYBERPUNK NEON'
+              desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.',
+              colors: ['#050914', '#1d4ed8', '#38bdf8'],
+              tag: 'ROYAL SAPPHIRE'
             },
             {
               key: 'luxury',

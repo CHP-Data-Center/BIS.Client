@@ -282,7 +282,7 @@ export default function NotificationDropdown() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
                         fontSize: 12.5, fontWeight: isRead ? 600 : 800,
-                        color: isRead ? 'var(--text-primary)' : '#1e293b',
+                        color: 'var(--text-primary)',
                         lineHeight: 1.4, marginBottom: 3,
                         overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
                         WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -291,7 +291,7 @@ export default function NotificationDropdown() {
                       </div>
 
                       <div style={{
-                        fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.35,
+                        fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.35,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {item.desc}

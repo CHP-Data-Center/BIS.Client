@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { syncUserTheme } from './utils/theme';
+import ThemeFxOverlay from './components/common/ThemeFxOverlay';
 
 // Dynamic imports for route-level Code Splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -125,6 +126,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <CrawlProvider>
+        <ThemeFxOverlay />
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Suspense fallback={<PageLoader />}>
             <Routes>

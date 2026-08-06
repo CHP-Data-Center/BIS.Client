@@ -4,7 +4,7 @@
  * Lấy theme UI đã lưu của một tài khoản user cụ thể.
  * Nếu user chưa từng chọn theme, mặc định trả về 'basic'.
  * @param {object|string|null} user - User object hoặc email/id
- * @returns {string} - Theme key ('basic', 'classic', 'cyberpunk', 'luxury')
+ * @returns {string} - Theme key ('basic', 'classic', 'sapphire', 'luxury')
  */
 export function getUserTheme(user) {
   const userKey = typeof user === 'string' ? user : (user?.email || user?.id);
