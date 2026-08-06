@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
+import { worldBankSearchUrl } from '../utils/wbUrl';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -39,7 +40,7 @@ const CONFIG_MAP = {
       { key: 'last_stage_reached_name', display: 'Giai Đoạn Cuối', sortable: true, width: '150px' },
     ],
     // Trang project-detail WB bị 403 (WB chặn hotlink direct) → forward sang WB search theo id.
-    getUrl: (id) => `https://www.worldbank.org/en/search?q=${encodeURIComponent(id)}`,
+    getUrl: (id) => worldBankSearchUrl(id),
   },
   adb: {
     title: 'ADB Projects & Operations',
