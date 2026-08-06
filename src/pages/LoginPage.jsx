@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import ThemeToggle from '../components/ThemeToggle';
+import { syncUserTheme } from '../utils/theme';
 import logoImg from '../assets/logo.png';
 
 // Google Icon Component
@@ -64,9 +64,8 @@ export default function LoginPage() {
     } else {
       setLoginError('');
     }
-    // Sync active theme from localStorage on login page mount
-    const saved = localStorage.getItem('bis_ui_theme') || user?.ui_theme || 'basic';
-    document.documentElement.setAttribute('data-ui-theme', saved);
+    // Sync active theme from user context or last active active user theme
+    syncUserTheme(user);
   }, [user]);
 
   // Redirect if logged in
@@ -233,10 +232,6 @@ export default function LoginPage() {
         animationDelay: '1.5s', animationDuration: '7s'
       }} />
 
-      {/* Theme toggle top-right */}
-      <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 20 }}>
-        <ThemeToggle />
-      </div>
 
       {/* Main Glassmorphism Card */}
       <div className="login-card">

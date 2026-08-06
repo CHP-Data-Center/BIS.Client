@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Menu, X, Search, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ThemeToggle from './ThemeToggle';
 import NotificationDropdown from './NotificationDropdown';
 import logoImg from '../assets/logo.png';
 import { SapphireDiamondSvg, SapphireStarSvg } from './common/ThemeFxOverlay';
@@ -196,8 +195,6 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
           />
         </div>
 
-        {/* Theme */}
-        <ThemeToggle />
 
         {/* Notification */}
         <NotificationDropdown />
