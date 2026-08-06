@@ -588,8 +588,11 @@ html[data-ui-theme="classic"],
 [data-ui-theme="classic"] .sidebar-nav-item {
   border-radius: 0px !important;
   border: 1px solid transparent !important;
+  border-left: 4px solid transparent !important;
   color: #000000 !important;
   font-weight: bold !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 
 [data-ui-theme="classic"] .sidebar-nav-item span {
@@ -599,12 +602,21 @@ html[data-ui-theme="classic"],
 [data-ui-theme="classic"] .sidebar-nav-item:hover {
   background: #d4d0c8 !important;
   border: 1px solid #808080 !important;
+  border-left: 4px solid #808080 !important;
   color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .sidebar-nav-item.group-active:not(.locked-item) {
+  background: #e4e0d8 !important;
+  color: #000080 !important;
+  border: 1px solid #808080 !important;
+  border-left: 4px solid #000080 !important;
 }
 
 [data-ui-theme="classic"] .sidebar-nav-item.active:not(.locked-item) {
   background: #000080 !important;
   color: #ffffff !important;
+  border: 1px solid #000080 !important;
   border-left: 4px solid #ff6600 !important;
 }
 
@@ -850,6 +862,8 @@ html[data-ui-theme="sapphire"],
 
 [data-ui-theme="sapphire"] .sidebar-nav-item {
   transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 
 [data-ui-theme="sapphire"] .sidebar-nav-item:hover {
@@ -1529,10 +1543,12 @@ ul, ol { list-style: none; }
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
   text-decoration: none;
   margin-bottom: 2px;
   position: relative;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .sidebar-nav-item:hover {
@@ -3951,8 +3967,8 @@ html, body {
 .cell-project-title .ai-badge { animation: floatYBalanced 3s ease-in-out infinite; }
 .banner-pill { transition: all var(--transition-fast); cursor: default; }
 .banner-pill:hover { transform: translateY(-3px) scale(1.08); background: rgba(255,255,255,0.28); }
-.sidebar-nav-item { transition: all var(--transition-fast), transform var(--transition-fast); }
-.sidebar-nav-item:hover { transform: translateX(3px); }
+.sidebar-nav-item { transition: background var(--transition-fast), color var(--transition-fast); }
+.sidebar-nav-item:hover { transform: none; }
 .user-avatar-btn:hover .avatar { animation: wiggle 0.4s ease; }
 .stats-card:hover .stats-value { background: linear-gradient(90deg, var(--text-primary), var(--brand-500), var(--accent-500), var(--text-primary)); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: shimmerSweep 1.5s linear infinite; }
 

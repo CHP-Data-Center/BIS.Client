@@ -148,7 +148,7 @@ export default function Sidebar({ isOpen, onClose }) {
               type="button"
               id="sidebar-proc-group"
               onClick={() => setProcOpen(o => !o)}
-              className={`sidebar-nav-item ${procActive ? 'active' : ''}`}
+              className={`sidebar-nav-item ${procActive ? 'group-active' : ''}`}
               style={{ width: '100%', background: 'none', border: 'none', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
             >
               <span style={{ color: procurementGroup.color }}>{procurementGroup.icon}</span>
@@ -169,7 +169,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 id={`sidebar-${child.to.replace(/\//g, '-').slice(1)}`}
                 onClick={() => onClose?.()}
                 className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-                style={{ paddingLeft: 32, fontSize: 12.5 }}
+                style={{ paddingLeft: 24, fontSize: 12.5, whiteSpace: 'nowrap' }}
               >
                 <span style={{ color: procurementGroup.color }}>{child.icon}</span>
                 {child.label}
