@@ -254,6 +254,92 @@ html[data-ui-theme="luxury"],
   color: #d4af37 !important;
 }
 
+/* Luxury Gold 24K Theme Overrides for Tables & Source Groupings */
+[data-ui-theme="luxury"] table {
+  background: transparent !important;
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] table th {
+  background: rgba(25, 25, 32, 0.9) !important;
+  color: #d4af37 !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] table td {
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .source-type-group-row.gov,
+[data-ui-theme="luxury"] .source-type-group-row.press,
+[data-ui-theme="luxury"] .source-type-group-row {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.2) 0%, rgba(20, 20, 26, 0.95) 100%) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.4) !important;
+}
+
+[data-ui-theme="luxury"] .source-type-group-row div,
+[data-ui-theme="luxury"] .source-type-group-row span {
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .source-type-group-row .group-count-badge {
+  background: rgba(212, 175, 55, 0.25) !important;
+  border: 1px solid rgba(212, 175, 55, 0.5) !important;
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .source-domain-group-row {
+  background: rgba(30, 30, 38, 0.8) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22) !important;
+}
+
+[data-ui-theme="luxury"] .source-domain-group-row div,
+[data-ui-theme="luxury"] .source-domain-group-row span {
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .source-domain-group-row svg {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .source-domain-group-row .domain-count-badge {
+  background: rgba(212, 175, 55, 0.18) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .source-item-row {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15) !important;
+}
+
+[data-ui-theme="luxury"] .source-item-row:hover {
+  background: rgba(212, 175, 55, 0.08) !important;
+}
+
+[data-ui-theme="luxury"] .source-type-badge.gov {
+  background: rgba(212, 175, 55, 0.2) !important;
+  color: #fef1c9 !important;
+  border: 1px solid rgba(212, 175, 55, 0.45) !important;
+}
+
+[data-ui-theme="luxury"] .source-type-badge.press {
+  background: rgba(212, 175, 55, 0.12) !important;
+  color: #d4af37 !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] .pending-source-banner {
+  background: linear-gradient(135deg, rgba(30, 26, 15, 0.95) 0%, rgba(18, 18, 21, 0.98) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .pending-source-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(212, 175, 55, 0.25) !important;
+  color: #f5f5f7 !important;
+}
+
 [data-ui-theme="sapphire"] .user-role-badge {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 28, 61, 0.95) 100%) !important;
   border: 1px solid rgba(56, 189, 248, 0.6) !important;
@@ -942,7 +1028,92 @@ html[data-ui-theme="sapphire"],
 [data-ui-theme="sapphire"] .user-menu-item:hover,
 [data-ui-theme="sapphire"] .notif-item:hover {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(16, 28, 61, 0.95) 100%) !important;
+}
+
+/* Royal Sapphire Theme Overrides for Tables & Source Groupings */
+[data-ui-theme="sapphire"] table {
+  background: transparent !important;
+  color: #f0f6fc !important;
+}
+
+[data-ui-theme="sapphire"] table th {
+  background: rgba(16, 28, 61, 0.9) !important;
   color: #38bdf8 !important;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-ui-theme="sapphire"] table td {
+  color: #f0f6fc !important;
+}
+
+[data-ui-theme="sapphire"] .source-type-group-row.gov,
+[data-ui-theme="sapphire"] .source-type-group-row.press,
+[data-ui-theme="sapphire"] .source-type-group-row {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.2) 0%, rgba(13, 23, 42, 0.95) 100%) !important;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.4) !important;
+}
+
+[data-ui-theme="sapphire"] .source-type-group-row div,
+[data-ui-theme="sapphire"] .source-type-group-row span {
+  color: #e0f2fe !important;
+}
+
+[data-ui-theme="sapphire"] .source-type-group-row .group-count-badge {
+  background: rgba(56, 189, 248, 0.25) !important;
+  border: 1px solid rgba(56, 189, 248, 0.5) !important;
+  color: #e0f2fe !important;
+}
+
+[data-ui-theme="sapphire"] .source-domain-group-row {
+  background: rgba(16, 28, 61, 0.8) !important;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.22) !important;
+}
+
+[data-ui-theme="sapphire"] .source-domain-group-row div,
+[data-ui-theme="sapphire"] .source-domain-group-row span {
+  color: #f0f6fc !important;
+}
+
+[data-ui-theme="sapphire"] .source-domain-group-row svg {
+  color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .source-domain-group-row .domain-count-badge {
+  background: rgba(56, 189, 248, 0.18) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .source-item-row {
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15) !important;
+}
+
+[data-ui-theme="sapphire"] .source-item-row:hover {
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+[data-ui-theme="sapphire"] .source-type-badge.gov {
+  background: rgba(168, 85, 247, 0.2) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(168, 85, 247, 0.4) !important;
+}
+
+[data-ui-theme="sapphire"] .source-type-badge.press {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #7dd3fc !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-ui-theme="sapphire"] .pending-source-banner {
+  background: linear-gradient(135deg, rgba(16, 28, 61, 0.95) 0%, rgba(10, 17, 36, 0.98) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  color: #e0f2fe !important;
+}
+
+[data-ui-theme="sapphire"] .pending-source-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  color: #f0f6fc !important;
 }
 
 [data-ui-theme="sapphire"] .user-menu-item:hover * {
