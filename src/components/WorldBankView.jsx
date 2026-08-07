@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
-import { worldBankSearchUrl } from '../utils/wbUrl';
+import { worldBankProjectUrl } from '../utils/wbUrl';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -39,8 +39,8 @@ const CONFIG_MAP = {
       { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
       { key: 'last_stage_reached_name', display: 'Giai Đoạn Cuối', sortable: true, width: '150px' },
     ],
-    // Trang project-detail WB bị 403 (WB chặn hotlink direct) → forward sang WB search theo id.
-    getUrl: (id) => worldBankSearchUrl(id),
+    // Mở thẳng trang chi tiết dự án WB (project-detail) theo mã.
+    getUrl: (id) => worldBankProjectUrl(id),
   },
   adb: {
     title: 'ADB Projects & Operations',

@@ -4,7 +4,7 @@ import { Bookmark, Trash2, ExternalLink, Calendar, Loader2, Eye, LayoutGrid, Lis
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { articlesService } from '../services/articles';
 import NewsCard from '../components/NewsCard';
-import { worldBankSearchUrl } from '../utils/wbUrl';
+import { worldBankProjectUrl } from '../utils/wbUrl';
 
 function stripAccents(str = '') {
   return str
@@ -114,7 +114,7 @@ function getLocalBookmarks() {
         original_id: item.id,
         project_code: item.id,
         article_title: item.project_name || `Dự án World Bank #${item.id}`,
-        article_url: worldBankSearchUrl(item.rawUrl || item.id),
+        article_url: worldBankProjectUrl(item.rawUrl || item.id),
         article_image_url: null,
         source_name: 'World Bank',
         source_type: 'worldbank',
