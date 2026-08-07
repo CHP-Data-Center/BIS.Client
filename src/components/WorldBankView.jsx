@@ -189,6 +189,19 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             proj_last_upd_date: p.last_updated_date || null,
             last_stage_reached_name: p.last_stage || p.sector || 'N/A',
             ai_summary: p.ai_summary || null,
+            // Trường chi tiết cho modal (đã enrich từ adb.org/.../main?print).
+            external_id: p.external_id || null,
+            development_objective: p.development_objective || null,
+            sector: p.sector || null,
+            region: p.region || null,
+            lending_instrument: p.lending_instrument || null,
+            amount_display: p.amount || null,
+            total_cost: p.total_cost || null,
+            fiscal_year: p.fiscal_year || null,
+            closing_date: p.closing_date || null,
+            borrower: p.borrower || null,
+            implementing_agency: p.implementing_agency || null,
+            team_leader: p.team_leader || null,
             // id RSS ≠ project-number ADB → không dựng được URL /projects/{number}/main.
             // Không có link gốc thì forward sang TÌM KIẾM ADB theo tên dự án (không 404).
             rawUrl: p.url || `https://www.adb.org/projects?searchstax[query]=${encodeURIComponent(p.title || p.external_id || p.id)}`,
