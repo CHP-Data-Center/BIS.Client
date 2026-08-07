@@ -471,7 +471,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
     const rawId = item.original_id || String(item.id || '').replace(/^(adb|wb|proc|worldbank)-/, '');
 
     if (item.source === 'worldbank') {
-      window.open(`https://www.worldbank.org/en/search?q=${encodeURIComponent(rawId)}`, '_blank');
+      window.open(`https://projects.worldbank.org/en/projects-operations/project-detail/${encodeURIComponent(rawId)}`, '_blank');
     } else if (item.source === 'adb') {
       window.open(`https://www.adb.org/projects/${rawId}/main`, '_blank');
     } else {

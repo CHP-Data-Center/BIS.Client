@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
-import { worldBankSearchUrl } from '../utils/wbUrl';
+import { worldBankProjectUrl } from '../utils/wbUrl';
+import OdaProjectDetailModal from './OdaProjectDetailModal';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -39,8 +40,8 @@ const CONFIG_MAP = {
       { key: 'proj_last_upd_date', display: 'Cập Nhật Cuối', sortable: true, width: '130px' },
       { key: 'last_stage_reached_name', display: 'Giai Đoạn Cuối', sortable: true, width: '150px' },
     ],
-    // Trang project-detail WB bị 403 (WB chặn hotlink direct) → forward sang WB search theo id.
-    getUrl: (id) => worldBankSearchUrl(id),
+    // Mở thẳng trang chi tiết dự án WB (project-detail) theo mã.
+    getUrl: (id) => worldBankProjectUrl(id),
   },
   adb: {
     title: 'ADB Projects & Operations',
@@ -106,6 +107,8 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
   const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
   const HeaderIcon = config.icon;
+  // WB & ADB: bấm tên/icon dự án → mở modal chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
+  const usesDetailModal = normType === 'worldbank' || normType === 'adb';
 
   // Tiêu đề riêng khi tách TBMT / KHLCNT thành 2 trang (dùng chung component procurement).
   const pageTitle = kind === 'notice' ? 'Thông Báo Mời Thầu (TBMT)'
@@ -122,6 +125,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const [savedIds, setSavedIds] = useState(new Set());
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
   const [toastMessage, setToastMessage] = useState(null);
+  const [detailItem, setDetailItem] = useState(null); // dự án WB đang mở modal chi tiết
 
   // Pagination & Sort
   const [currentPage, setCurrentPage] = useState(1);
@@ -528,6 +532,16 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
   return (
     <div className="wb-container" style={{ width: '100%', height: 'calc(100vh - 128px)', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+      {/* Modal chi tiết dự án ODA (WB/ADB) — xem trong app, không 403 */}
+      {detailItem && (
+        <OdaProjectDetailModal
+          item={detailItem}
+          source={normType}
+          stageLabel={config.stageLabel}
+          onClose={() => setDetailItem(null)}
+        />
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -1047,18 +1061,34 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
                           {/* Title */}
                           <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
-                            <a
-                              href={itemUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: config.brandColor, textDecoration: 'none',
-                                display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
-                              }}
-                            >
-                              <span>{p.project_name}</span>
-                              <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
-                            </a>
+                            {usesDetailModal ? (
+                              // WB: mở modal chi tiết TRONG APP (không phụ thuộc trang WB hay 403).
+                              <button
+                                onClick={() => setDetailItem(p)}
+                                style={{
+                                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                                  font: 'inherit', textAlign: 'left', color: config.brandColor,
+                                  display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                                }}
+                                title="Xem chi tiết dự án"
+                              >
+                                <span>{p.project_name}</span>
+                                <FileText size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                              </button>
+                            ) : (
+                              <a
+                                href={itemUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: config.brandColor, textDecoration: 'none',
+                                  display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                                }}
+                              >
+                                <span>{p.project_name}</span>
+                                <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                              </a>
+                            )}
                           </td>
 
                           {/* Org / Country */}
@@ -1149,14 +1179,24 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                         </div>
 
                         <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
-                          <a
-                            href={itemUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: 'inherit', textDecoration: 'none' }}
-                          >
-                            {p.project_name}
-                          </a>
+                          {usesDetailModal ? (
+                            <button
+                              onClick={() => setDetailItem(p)}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', textAlign: 'left', color: 'inherit' }}
+                              title="Xem chi tiết dự án"
+                            >
+                              {p.project_name}
+                            </button>
+                          ) : (
+                            <a
+                              href={itemUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: 'inherit', textDecoration: 'none' }}
+                            >
+                              {p.project_name}
+                            </a>
+                          )}
                         </h4>
 
                         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
@@ -1183,14 +1223,24 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           >
                             {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
                           </button>
-                          <a
-                            href={itemUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: config.brandColor, padding: 4 }}
-                          >
-                            <ExternalLink size={18} />
-                          </a>
+                          {usesDetailModal ? (
+                            <button
+                              onClick={() => setDetailItem(p)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.brandColor, padding: 4 }}
+                              title="Xem chi tiết dự án"
+                            >
+                              <FileText size={18} />
+                            </button>
+                          ) : (
+                            <a
+                              href={itemUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: config.brandColor, padding: 4 }}
+                            >
+                              <ExternalLink size={18} />
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>

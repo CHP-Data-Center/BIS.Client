@@ -2,7 +2,7 @@
 // Map dữ liệu backend (/oda-projects, /procurement) -> shape item của bản đồ Dashboard.
 // Map ưu tiên item.lat/item.lng (backend đã có toạ độ); id là CHUỖI (popup dùng .toLowerCase()).
 
-import { worldBankSearchUrl } from '../utils/wbUrl';
+import { worldBankProjectUrl } from '../utils/wbUrl';
 
 const PROC_TYPE = { notice: 'TB Mời thầu', plan: 'Kế hoạch thầu' };
 
@@ -80,9 +80,9 @@ function getVietnamFallbackCoords(id, procuringEntity, title = '') {
 /** Một dự án ODA (ADB/WB) -> item bản đồ. */
 export function adaptOdaProject(p) {
   const origId = p.external_id || p.id;
-  // WB: project-detail bị 403 → luôn qua trang tìm kiếm (kể cả khi DB còn url cũ). ADB giữ nguyên.
+  // WB: chuẩn hóa về trang chi tiết dự án (rút mã kể cả khi DB còn url search cũ). ADB giữ nguyên.
   const projectUrl = p.source_org === 'worldbank'
-    ? worldBankSearchUrl(p.url || origId)
+    ? worldBankProjectUrl(p.url || origId)
     : (p.url || `https://www.adb.org/projects/${origId}/main`);
 
   let lat = p.lat;
@@ -144,7 +144,7 @@ export function adaptOdaToCard(p) {
   const bits = [p.country, p.status].filter(Boolean).join(' · ');
   const origId = p.external_id || p.id;
   const projectUrl = p.source_org === 'worldbank'
-    ? worldBankSearchUrl(p.url || origId)
+    ? worldBankProjectUrl(p.url || origId)
     : (p.url || `https://www.adb.org/projects/${origId}/main`);
 
   return {
