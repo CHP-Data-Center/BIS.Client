@@ -54,6 +54,20 @@ export const worldBankService = {
           proj_last_upd_date: p.last_updated_date || null,
           last_stage_reached_name: p.last_stage || 'N/A',
           ai_summary: p.ai_summary || null,
+          // Trường chi tiết cho modal xem-trong-app (khỏi phụ thuộc trang WB hay 403).
+          external_id: p.external_id || null,
+          url: p.url || null,
+          sector: p.sector || null,
+          region: p.region || null,
+          development_objective: p.development_objective || null,
+          team_leader: p.team_leader || null,
+          borrower: p.borrower || null,
+          implementing_agency: p.implementing_agency || null,
+          lending_instrument: p.lending_instrument || null,
+          closing_date: p.closing_date || null,
+          fiscal_year: p.fiscal_year || null,
+          total_cost: p.total_cost || null,
+          amount_display: p.amount || null,
         };
       });
       apiCache.set(cacheKey, mapped, 60000); // cache 60s

@@ -9,6 +9,7 @@ import {
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import WbProjectDetailModal from './WbProjectDetailModal';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -122,6 +123,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const [savedIds, setSavedIds] = useState(new Set());
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
   const [toastMessage, setToastMessage] = useState(null);
+  const [detailItem, setDetailItem] = useState(null); // dự án WB đang mở modal chi tiết
 
   // Pagination & Sort
   const [currentPage, setCurrentPage] = useState(1);
@@ -528,6 +530,9 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
   return (
     <div className="wb-container" style={{ width: '100%', height: 'calc(100vh - 128px)', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+      {/* Modal chi tiết dự án WB (xem trong app, không 403) */}
+      {detailItem && <WbProjectDetailModal item={detailItem} onClose={() => setDetailItem(null)} />}
+
       {/* Toast Notification */}
       {toastMessage && (
         <div
@@ -1047,18 +1052,34 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
                           {/* Title */}
                           <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
-                            <a
-                              href={itemUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: config.brandColor, textDecoration: 'none',
-                                display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
-                              }}
-                            >
-                              <span>{p.project_name}</span>
-                              <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
-                            </a>
+                            {normType === 'worldbank' ? (
+                              // WB: mở modal chi tiết TRONG APP (không phụ thuộc trang WB hay 403).
+                              <button
+                                onClick={() => setDetailItem(p)}
+                                style={{
+                                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                                  font: 'inherit', textAlign: 'left', color: config.brandColor,
+                                  display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                                }}
+                                title="Xem chi tiết dự án"
+                              >
+                                <span>{p.project_name}</span>
+                                <FileText size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                              </button>
+                            ) : (
+                              <a
+                                href={itemUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: config.brandColor, textDecoration: 'none',
+                                  display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                                }}
+                              >
+                                <span>{p.project_name}</span>
+                                <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                              </a>
+                            )}
                           </td>
 
                           {/* Org / Country */}
@@ -1149,14 +1170,24 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                         </div>
 
                         <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
-                          <a
-                            href={itemUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: 'inherit', textDecoration: 'none' }}
-                          >
-                            {p.project_name}
-                          </a>
+                          {normType === 'worldbank' ? (
+                            <button
+                              onClick={() => setDetailItem(p)}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', textAlign: 'left', color: 'inherit' }}
+                              title="Xem chi tiết dự án"
+                            >
+                              {p.project_name}
+                            </button>
+                          ) : (
+                            <a
+                              href={itemUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: 'inherit', textDecoration: 'none' }}
+                            >
+                              {p.project_name}
+                            </a>
+                          )}
                         </h4>
 
                         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
@@ -1183,14 +1214,24 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           >
                             {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
                           </button>
-                          <a
-                            href={itemUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: config.brandColor, padding: 4 }}
-                          >
-                            <ExternalLink size={18} />
-                          </a>
+                          {normType === 'worldbank' ? (
+                            <button
+                              onClick={() => setDetailItem(p)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.brandColor, padding: 4 }}
+                              title="Xem chi tiết dự án"
+                            >
+                              <FileText size={18} />
+                            </button>
+                          ) : (
+                            <a
+                              href={itemUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: config.brandColor, padding: 4 }}
+                            >
+                              <ExternalLink size={18} />
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
