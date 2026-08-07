@@ -20,6 +20,7 @@ const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
 const AiPage = lazy(() => import('./pages/AiPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
+const EmailDigestPage = lazy(() => import('./pages/EmailDigestPage'));
 const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const WorldBankView = lazy(() => import('./components/WorldBankView'));
 
@@ -192,6 +193,12 @@ export default function App() {
               <Route path="/admin" element={
                 <AdminRoute>
                   <AppLayout><AdminPage /></AppLayout>
+                </AdminRoute>
+              } />
+
+              <Route path="/email-digest" element={
+                <AdminRoute>
+                  <AppLayout><EmailDigestPage /></AppLayout>
                 </AdminRoute>
               } />
 

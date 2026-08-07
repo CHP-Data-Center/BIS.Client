@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag, FileText, ChevronDown,
-  Settings, Tag, Bookmark, Bot, ShieldCheck, Loader2, Zap
+  Settings, Tag, Bookmark, Bot, ShieldCheck, Loader2, Zap, Mail
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCrawl } from '../context/CrawlContext';
@@ -267,6 +267,19 @@ export default function Sidebar({ isOpen, onClose }) {
               fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,
               background: '#dbeafe', color: '#1d4ed8',
             }}>PRO</span>
+          </NavLink>
+        )}
+
+        {isAdmin && (
+          <NavLink
+            to="/email-digest"
+            id="sidebar-email-digest"
+            onClick={() => onClose?.()}
+            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+            style={{ color: '#159B4C', fontWeight: 700 }}
+          >
+            <Mail size={16} style={{ color: '#159B4C' }} />
+            Cấu Hình Email
           </NavLink>
         )}
 
