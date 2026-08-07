@@ -12,6 +12,7 @@ import sapphireBg from '../assets/theme_sapphire_bg.png';
 import luxuryBg from '../assets/theme_luxury_bg.png';
 
 import { getUserTheme, setUserTheme, isThemeUnlocked } from '../utils/theme';
+import AdminDigestConfig from '../components/AdminDigestConfig';
 
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth();
@@ -359,6 +360,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Admin: Cấu hình Bản Tin Chung (gộp từ trang /email-digest cũ) ── */}
+      {isAdmin && <AdminDigestConfig />}
 
       {/* ── 3rd Section: Persistent UI/UX Theme Selection ── */}
       <div className="card settings-card" style={{
