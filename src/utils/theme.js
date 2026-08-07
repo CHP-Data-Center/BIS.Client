@@ -60,3 +60,51 @@ export function syncUserTheme(user) {
     applyTheme(lastTheme);
   }
 }
+
+/**
+ * Kiểm tra một user có quyền truy cập / đã sở hữu theme đó hay không.
+ * Super Admin (super_admin) luôn unlocked toàn bộ theme.
+ * Mọi role khác (kể cả Admin Phân Vùng 'admin') chỉ unlocked 'basic' hoặc các theme đã mua.
+ */
+export function isThemeUnlocked(user, themeKey) {
+  if (!themeKey || themeKey === 'basic') return true;
+  if (user?.role === 'super_admin') return true;
+
+  const userKey = typeof user === 'string' ? user : (user?.email || user?.id);
+  if (!userKey) return false;
+
+  const purchasedJson = localStorage.getItem(`bis_purchased_themes_${userKey}`);
+  if (purchasedJson) {
+    try {
+      const purchased = JSON.parse(purchasedJson);
+      if (Array.isArray(purchased) && purchased.includes(themeKey)) {
+        return true;
+      }
+    } catch (e) {
+      console.warn('Error parsing purchased themes', e);
+    }
+  }
+  return false;
+}
+
+/**
+ * Đánh dấu một theme đã được mua/mở khóa thành công cho user.
+ */
+export function unlockThemeForUser(user, themeKey) {
+  const userKey = typeof user === 'string' ? user : (user?.email || user?.id);
+  if (!userKey || !themeKey || themeKey === 'basic') return;
+
+  const purchasedJson = localStorage.getItem(`bis_purchased_themes_${userKey}`);
+  let purchased = [];
+  if (purchasedJson) {
+    try {
+      purchased = JSON.parse(purchasedJson);
+    } catch (e) {
+      purchased = [];
+    }
+  }
+  if (!purchased.includes(themeKey)) {
+    purchased.push(themeKey);
+    localStorage.setItem(`bis_purchased_themes_${userKey}`, JSON.stringify(purchased));
+  }
+}

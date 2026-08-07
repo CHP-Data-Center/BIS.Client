@@ -36,10 +36,13 @@ const toolItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, isAdmin, isPersonalUser } = useAuth();
+  const { user, isAdmin, isPersonalUser, isSuperAdmin } = useAuth();
   const { isCrawling } = useCrawl();
   const location = useLocation();
   const isUpgradePage = location.pathname === '/upgrade';
+
+  const userKey = user?.email || user?.id;
+  const hasAiAccess = isSuperAdmin || user?.has_ai === true || localStorage.getItem(`bis_ai_package_${userKey}`) === 'true';
 
   const filteredNavItems = navItems.filter(item => {
     if (isPersonalUser && item.to === '/dashboard') return false;
@@ -199,41 +202,8 @@ export default function Sidebar({ isOpen, onClose }) {
           </NavLink>
         ))}
 
-        {/* Locked Tool: Trợ Lý AI với hiệu ứng trượt mở/đóng mượt mà */}
-        {isPersonalUser ? (
-          <div style={{
-            maxHeight: isUpgradePage ? 60 : 0,
-            opacity: isUpgradePage ? 1 : 0,
-            overflow: 'hidden',
-            transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-            pointerEvents: isUpgradePage ? 'auto' : 'none',
-          }}>
-            <NavLink
-              to="/upgrade"
-              id="sidebar-ai-chat"
-              onClick={() => onClose?.()}
-              className={() => "sidebar-nav-item locked-item"}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
-              }}
-              title="Tính năng có phí — Bấm để xem gói nâng cấp"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
-                <span style={{ color: '#a855f7', flexShrink: 0 }}><Bot size={16} /></span>
-                <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>Trợ Lý AI</span>
-              </div>
-              <span className="upgrade-badge" style={{
-                marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
-                fontSize: 9, fontWeight: 800, padding: '2px 5px', height: 20,
-                display: 'inline-flex', alignItems: 'center', gap: 2,
-                borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
-              }}>
-                🔒 NÂNG CẤP
-              </span>
-            </NavLink>
-          </div>
-        ) : (
+        {/* Trợ Lý AI: Kiểm tra quyền AI thực tế (Super Admin hoặc đã đăng ký gói AI) */}
+        {hasAiAccess ? (
           <NavLink
             to="/ai-chat"
             id="sidebar-ai-chat"
@@ -249,6 +219,31 @@ export default function Sidebar({ isOpen, onClose }) {
               background: 'linear-gradient(135deg, #a855f7, #ec4899)',
               color: 'white', letterSpacing: '0.3px',
             }}>AI</span>
+          </NavLink>
+        ) : (
+          <NavLink
+            to="/upgrade"
+            id="sidebar-ai-chat"
+            onClick={() => onClose?.()}
+            className={() => "sidebar-nav-item locked-item"}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
+            }}
+            title="Tính năng AI có phí — Bấm để nâng cấp"
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
+              <span style={{ color: '#a855f7', flexShrink: 0 }}><Bot size={16} /></span>
+              <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>Trợ Lý AI</span>
+            </div>
+            <span className="upgrade-badge" style={{
+              marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
+              fontSize: 9, fontWeight: 800, padding: '2px 5px', height: 20,
+              display: 'inline-flex', alignItems: 'center', gap: 2,
+              borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
+            }}>
+              🔒 NÂNG CẤP
+            </span>
           </NavLink>
         )}
 
@@ -283,7 +278,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </NavLink>
         )}
 
-        {isPersonalUser && (
+        {(!isSuperAdmin || isPersonalUser) && (
           <NavLink
             to="/upgrade"
             id="sidebar-upgrade"
@@ -296,7 +291,7 @@ export default function Sidebar({ isOpen, onClose }) {
             }}
           >
             <Zap size={16} style={{ color: '#a855f7' }} />
-            Nâng Cấp Tính Năng
+            Nâng Cấp Dịch Vụ
             <span style={{
               marginLeft: 'auto',
               fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,

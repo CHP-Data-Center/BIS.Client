@@ -5,8 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
 import { settingsService } from '../services/settings';
+import animeBg from '../assets/anime_bg.png';
+import basicBg from '../assets/theme_basic_bg.png';
+import classicBg from '../assets/theme_classic_bg.png';
+import sapphireBg from '../assets/theme_sapphire_bg.png';
+import luxuryBg from '../assets/theme_luxury_bg.png';
 
-import { getUserTheme, setUserTheme } from '../utils/theme';
+import { getUserTheme, setUserTheme, isThemeUnlocked } from '../utils/theme';
 
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth();
@@ -373,37 +378,56 @@ export default function SettingsPage() {
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Thay đổi giao diện làm việc cố định cho tài khoản của bạn</div>
             </div>
           </div>
-          {(user?.role === 'super_admin' || user?.role === 'admin') && (
+          {user?.role === 'super_admin' ? (
             <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20, background: 'linear-gradient(135deg, #f59e0b, #ec4899)', color: 'white', boxShadow: '0 2px 8px rgba(245,158,11,0.3)' }}>
               👑 SUPER ADMIN — UNLOCKED TOÀN BỘ THEMES
             </span>
-          )}
+          ) : user?.role === 'admin' ? (
+            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: 'white', boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}>
+              🔰 ADMIN PHÂN VÙNG — QUẢN LÝ GÓI & CẦN MUA THEMES
+            </span>
+          ) : null}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, alignItems: 'stretch' }}>
           {[
-            { key: 'basic', title: 'BIS Modern Glassmorphism', desc: 'Giao diện mượt mà hiện đại mặc định.', colors: ['#3b82f6', '#10b981', '#ffffff'], tag: 'MẶC ĐỊNH' },
-            { key: 'classic', title: 'Classic Retro PC (Windows 98 OS)', desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.', colors: ['#008080', '#c0c0c0', '#000080'], tag: 'VINTAGE PC 98' },
-            { key: 'sapphire', title: 'Royal Sapphire Executive', desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.', colors: ['#050914', '#1d4ed8', '#38bdf8'], tag: 'ROYAL SAPPHIRE' },
-            { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.', colors: ['#08080a', '#d4af37', '#fef1c9'], tag: 'LUXURY GOLD 24K' },
+            { key: 'basic', title: 'BIS Modern Glassmorphism', desc: 'Giao diện mượt mà hiện đại mặc định.', colors: ['#3b82f6', '#10b981', '#ffffff'], tag: 'MẶC ĐỊNH', img: basicBg },
+            { key: 'classic', title: 'Classic Retro PC (Windows 98 OS)', desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.', colors: ['#008080', '#c0c0c0', '#000080'], tag: 'VINTAGE PC 98', img: classicBg },
+            { key: 'sapphire', title: 'Royal Sapphire Executive', desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.', colors: ['#050914', '#1d4ed8', '#38bdf8'], tag: 'ROYAL SAPPHIRE', img: sapphireBg },
+            { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.', colors: ['#08080a', '#d4af37', '#fef1c9'], tag: 'LUXURY GOLD 24K', img: luxuryBg },
+            { key: 'anime', title: 'Anime Twilight Sakura (新海誠)', desc: 'Hoàng Hôn Anime Dịu Mộng — Đêm Twilight Tím Mộng Mơ, Cánh Hoa Anh Đào (桜) Rơi Nhẹ & Ánh Sao Lấp Lánh.', colors: ['#0f0d19', '#f472b6', '#a855f7'], tag: 'ANIME SAKURA 🌸', img: animeBg },
           ].map(theme => {
-            const isUnlocked = user?.role === 'super_admin' || user?.role === 'admin' || theme.key === 'basic';
+            const isUnlocked = isThemeUnlocked(user, theme.key);
             const isCurrent = savedTheme === theme.key;
             return (
               <div key={theme.key} style={{
                 padding: 18, borderRadius: 'var(--radius-lg)', border: isCurrent ? '2px solid var(--brand-500)' : '1px solid var(--border)',
                 background: 'var(--bg-surface-2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                height: '100%', boxSizing: 'border-box', position: 'relative', overflow: 'hidden',
               }}>
-                <div>
+                {theme.img && (
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, height: 75,
+                    backgroundImage: `url(${theme.img})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                    opacity: 0.35, maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0))',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0))',
+                    pointerEvents: 'none',
+                  }} />
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative', zIndex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 6, background: isCurrent ? 'var(--brand-600)' : '#334155', color: '#ffffff' }}>
                       {theme.tag}
                     </span>
                     {isCurrent && <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--brand-500)' }}>✓ ĐANG DÙNG</span>}
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 4 }}>{theme.title}</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.4, marginBottom: 12 }}>{theme.desc}</div>
-                  <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6, minHeight: 38, display: 'flex', alignItems: 'center' }}>
+                    {theme.title}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.45, marginBottom: 14, minHeight: 52, display: 'flex', alignItems: 'flex-start' }}>
+                    {theme.desc}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 16, marginTop: 'auto' }}>
                     {theme.colors.map((c, i) => (
                       <span key={i} style={{ flex: 1, height: 8, borderRadius: 3, background: c }} />
                     ))}
@@ -414,7 +438,7 @@ export default function SettingsPage() {
                   disabled={!isUnlocked}
                   onClick={() => handleApplySavedTheme(theme.key)}
                   className={isCurrent ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
-                  style={{ width: '100%', fontSize: 12, fontWeight: 700 }}
+                  style={{ width: '100%', fontSize: 12, fontWeight: 700, position: 'relative', zIndex: 1, marginTop: 4 }}
                 >
                   {isCurrent ? '✓ Đang Áp Dụng' : isUnlocked ? 'Áp Dụng Giao Diện' : '🔒 Cần Nâng Cấp Gói'}
                 </button>

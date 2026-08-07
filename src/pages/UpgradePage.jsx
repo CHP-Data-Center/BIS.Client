@@ -8,29 +8,42 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-import { getUserTheme, setUserTheme, syncUserTheme, applyTheme } from '../utils/theme';
+import animeBg from '../assets/anime_bg.png';
+import basicBg from '../assets/theme_basic_bg.png';
+import classicBg from '../assets/theme_classic_bg.png';
+import sapphireBg from '../assets/theme_sapphire_bg.png';
+import luxuryBg from '../assets/theme_luxury_bg.png';
+
+import { getUserTheme, setUserTheme, syncUserTheme, applyTheme, isThemeUnlocked, unlockThemeForUser } from '../utils/theme';
 
 export default function UpgradePage() {
-  const { user, isPersonalUser } = useAuth();
+  const { user, isPersonalUser, isSuperAdmin, isRegionalAdmin } = useAuth();
   const nav = useNavigate();
 
-  const billingCycleState = useState('monthly');
-  const [billingCycle, setBillingCycle] = billingCycleState;
+  const [billingCycle, setBillingCycle] = useState('monthly');
   const [selectedComboSources, setSelectedComboSources] = useState(['adb', 'worldbank']);
   const [showModal, setShowModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [upgradeSubmitted, setUpgradeSubmitted] = useState(false);
   const [phone, setPhone] = useState('');
 
-  const isSuperAdmin = user?.role === 'super_admin' || user?.role === 'admin';
+  const userKey = user?.email || user?.id || 'default';
+  const [activeDataPackage, setActiveDataPackage] = useState(() => {
+    return localStorage.getItem(`bis_active_package_${userKey}`) || (user?.role === 'admin' ? 'full' : 'free');
+  });
+
+  const [hasAiPackage, setHasAiPackage] = useState(() => {
+    return localStorage.getItem(`bis_ai_package_${userKey}`) === 'true';
+  });
 
   const [activeUiTheme, setActiveUiTheme] = useState(() => getUserTheme(user));
 
   const handleApplyTheme = (themeKey) => {
     setActiveUiTheme(themeKey);
-    if (isSuperAdmin) {
+    if (isThemeUnlocked(user, themeKey)) {
       setUserTheme(user, themeKey);
     } else {
+      // Dùng thử live: áp dụng giao diện xem trước nhưng KHÔNG lưu cố định vào tài khoản
       applyTheme(themeKey);
     }
   };
@@ -38,10 +51,11 @@ export default function UpgradePage() {
   useEffect(() => {
     const saved = getUserTheme(user);
     setActiveUiTheme(saved);
-    applyTheme(saved);
 
     return () => {
-      syncUserTheme(user);
+      // Khi rời khỏi trang Upgrade / chuyển tab, tự động trả về Theme chính thức đã sở hữu của user
+      const officialTheme = getUserTheme(user);
+      applyTheme(officialTheme);
     };
   }, [user]);
 
@@ -85,8 +99,54 @@ export default function UpgradePage() {
     setShowModal(true);
   };
 
+const getCalculatedExpiration = (cycle = 'monthly') => {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const formatDate = (d) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+  
+  const startDateStr = formatDate(now);
+  const endDate = new Date(now);
+  if (cycle === 'yearly') {
+    endDate.setFullYear(endDate.getFullYear() + 1);
+  } else {
+    endDate.setMonth(endDate.getMonth() + 1);
+  }
+  const endDateStr = formatDate(endDate);
+  return `${startDateStr} - ${endDateStr}`;
+};
+
   const handleConfirmUpgrade = (e) => {
     e.preventDefault();
+    if (selectedPackage?.themeKey) {
+      unlockThemeForUser(user, selectedPackage.themeKey);
+      setUserTheme(user, selectedPackage.themeKey);
+      setActiveUiTheme(selectedPackage.themeKey);
+    } else {
+      const expDateStr = getCalculatedExpiration(selectedPackage?.cycle || billingCycle);
+      localStorage.setItem(`bis_pkg_exp_${userKey}`, expDateStr);
+
+      if (selectedPackage?.pkgType === 'combo2') {
+        localStorage.setItem(`bis_active_package_${userKey}`, 'combo2');
+        localStorage.setItem(`bis_selected_sources_${userKey}`, JSON.stringify(selectedComboSources));
+        setActiveDataPackage('combo2');
+      } else if (selectedPackage?.pkgType === 'single') {
+        localStorage.setItem(`bis_active_package_${userKey}`, 'single');
+        localStorage.setItem(`bis_selected_sources_${userKey}`, JSON.stringify([selectedPackage.sourceKey]));
+        setActiveDataPackage('single');
+      } else if (selectedPackage?.pkgType === 'full') {
+        localStorage.setItem(`bis_active_package_${userKey}`, 'full');
+        setActiveDataPackage('full');
+      } else if (selectedPackage?.pkgType === 'enterprise') {
+        localStorage.setItem(`bis_active_package_${userKey}`, 'enterprise');
+        setActiveDataPackage('enterprise');
+      } else if (selectedPackage?.pkgType === 'user_slots') {
+        const currentMax = parseInt(localStorage.getItem(`bis_max_users_${userKey}`) || '10', 10);
+        localStorage.setItem(`bis_max_users_${userKey}`, String(currentMax + 10));
+      } else if (selectedPackage?.pkgType === 'ai') {
+        localStorage.setItem(`bis_ai_package_${userKey}`, 'true');
+        setHasAiPackage(true);
+      }
+    }
     setUpgradeSubmitted(true);
     setTimeout(() => {
       setShowModal(false);
@@ -212,7 +272,9 @@ export default function UpgradePage() {
       }}>
 
         {/* 1. Gói Cá Nhân (Mặc định) */}
-        <div className="upgrade-pricing-card">
+        <div className="upgrade-pricing-card" style={{
+          border: activeDataPackage === 'free' ? '2px solid #3b82f6' : '1px solid var(--border)',
+        }}>
           <div>
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
@@ -242,13 +304,19 @@ export default function UpgradePage() {
               </div>
             </div>
 
-            <button
-              disabled={isPersonalUser}
-              className="btn btn-secondary"
-              style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24 }}
-            >
-              {isPersonalUser ? '✓ ĐANG SỬ DỤNG' : 'Miễn Phí Mặc Định'}
-            </button>
+            {isSuperAdmin ? (
+              <button disabled style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24, background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none' }}>
+                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+              </button>
+            ) : activeDataPackage === 'free' ? (
+              <button disabled style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24, background: 'var(--bg-surface-2)', color: '#2563eb', border: '1.5px solid #2563eb' }}>
+                ✓ ĐANG SỬ DỤNG (MẶC ĐỊNH)
+              </button>
+            ) : (
+              <button disabled className="btn btn-secondary" style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24 }}>
+                Miễn Phí Mặc Định
+              </button>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
@@ -282,16 +350,18 @@ export default function UpgradePage() {
 
         {/* 2. Gói Combo 2 Nguồn Dữ Liệu (HOT COMBO) */}
         <div className="upgrade-pricing-card" style={{
-          border: '2px solid #3b82f6', animation: 'glowPulse 4s infinite ease-in-out',
+          border: activeDataPackage === 'combo2' ? '2.5px solid #3b82f6' : activeDataPackage === 'full' ? '1px solid var(--border-subtle)' : '2px solid #3b82f6',
+          boxShadow: activeDataPackage === 'combo2' ? '0 8px 25px rgba(59,130,246,0.3)' : 'none',
+          opacity: activeDataPackage === 'full' && !isSuperAdmin ? 0.82 : 1,
         }}>
           <div style={{
             position: 'absolute', top: -14, right: 20,
-            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            background: isSuperAdmin ? 'linear-gradient(135deg, #10b981, #059669)' : activeDataPackage === 'combo2' ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : activeDataPackage === 'full' ? '#64748b' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
             color: 'white', fontSize: 10, fontWeight: 800, padding: '4px 12px',
             borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
-            boxShadow: '0 4px 10px rgba(59,130,246,0.4)',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
           }}>
-            🔥 COMBO 2 NGUỒN HOT
+            {activeDataPackage === 'combo2' ? '✓ COMBO 2 (ĐANG SỬ DỤNG)' : activeDataPackage === 'full' && !isSuperAdmin ? 'ℹ️ ĐÃ BAO GỒM TRONG FULL PACK' : '🔥 COMBO 2 NGUỒN HOT'}
           </div>
 
           <div>
@@ -370,9 +440,33 @@ export default function UpgradePage() {
               >
                 ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
               </button>
+            ) : activeDataPackage === 'combo2' ? (
+              <button
+                disabled
+                style={{
+                  width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24,
+                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: 'white', border: 'none',
+                  boxShadow: '0 4px 14px rgba(37,99,235,0.4)'
+                }}
+              >
+                ✓ ĐANG SỬ DỤNG
+              </button>
+            ) : activeDataPackage === 'full' ? (
+              <button
+                disabled
+                title="Tài khoản của bạn đã sở hữu trọn bộ 3 nguồn từ gói Full Data Pack"
+                style={{
+                  width: '100%', padding: '11px 0', fontSize: 12, fontWeight: 800, borderRadius: 12, marginBottom: 24,
+                  background: 'var(--bg-surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)',
+                  cursor: 'not-allowed'
+                }}
+              >
+                ℹ️ Đã Bao Gồm Trong Full Pack
+              </button>
             ) : (
               <button
                 onClick={() => handleOpenUpgradeModal({
+                  pkgType: 'combo2',
                   name: `Combo 2 Nguồn (${selectedComboSources.map(s => s === 'adb' ? 'ADB' : s === 'worldbank' ? 'World Bank' : 'Đấu Thầu').join(' + ')})`,
                   price: Math.round(349000 * discount),
                   cycle: billingCycle,
@@ -384,6 +478,12 @@ export default function UpgradePage() {
               </button>
             )}
           </div>
+
+          {activeDataPackage === 'full' && !isSuperAdmin && (
+            <div style={{ fontSize: 11, color: '#059669', background: '#ecfdf5', padding: '8px 10px', borderRadius: 8, marginTop: -14, marginBottom: 16, border: '1px solid #a7f3d0' }}>
+              💡 Bạn đang sử dụng gói Full Data Pack (Trọn bộ 3 nguồn), không cần mua thêm Combo 2.
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
@@ -407,7 +507,10 @@ export default function UpgradePage() {
         </div>
 
         {/* 3. Gói Full 3 Nguồn Dữ Liệu */}
-        <div className="upgrade-pricing-card">
+        <div className="upgrade-pricing-card" style={{
+          border: activeDataPackage === 'full' ? '2.5px solid #10b981' : '1px solid var(--border)',
+          boxShadow: activeDataPackage === 'full' ? '0 8px 25px rgba(16,185,129,0.35)' : 'none',
+        }}>
           <div>
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
@@ -454,9 +557,21 @@ export default function UpgradePage() {
               >
                 ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
               </button>
+            ) : activeDataPackage === 'full' ? (
+              <button
+                disabled
+                style={{
+                  width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24,
+                  background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none',
+                  boxShadow: '0 4px 14px rgba(16,185,129,0.4)'
+                }}
+              >
+                ✓ ĐANG SỬ DỤNG (FULL PACK)
+              </button>
             ) : (
               <button
                 onClick={() => handleOpenUpgradeModal({
+                  pkgType: 'full',
                   name: 'Gói Full Data Pack (ADB + WB + Đấu Thầu)',
                   price: Math.round(499000 * discount),
                   cycle: billingCycle,
@@ -490,18 +605,132 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        {/* 4. Gói Trợ Lý AI (AI Assistant Add-on) */}
+        {/* 4. Gói Enterprise (Doanh Nghiệp & Admin Phân Vùng) */}
         <div className="upgrade-pricing-card" style={{
-          background: 'linear-gradient(145deg, rgba(168,85,247,0.06), rgba(236,72,153,0.06))',
-          border: '1.5px solid rgba(168,85,247,0.4)',
+          background: 'linear-gradient(145deg, rgba(37,99,235,0.06), rgba(147,51,234,0.06))',
+          border: activeDataPackage === 'enterprise' || isRegionalAdmin ? '2.5px solid #9333ea' : '1.5px solid rgba(147,51,234,0.4)',
+          boxShadow: activeDataPackage === 'enterprise' || isRegionalAdmin ? '0 8px 25px rgba(147,51,234,0.35)' : 'none',
         }}>
           <div style={{
             position: 'absolute', top: -14, right: 20,
-            background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+            background: 'linear-gradient(135deg, #9333ea, #7e22ce)',
             color: 'white', fontSize: 10, fontWeight: 800, padding: '4px 12px',
             borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
           }}>
-            🤖 AI INTELLIGENCE
+            {activeDataPackage === 'enterprise' || isRegionalAdmin ? '✓ ĐANG SỬ DỤNG (ENTERPRISE)' : '🏢 QUẢN TRỊ TỔ CHỨC'}
+          </div>
+
+          <div>
+            <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#9333ea', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {billingCycle === 'yearly' ? '⚡️ GIẢM 20% THEO NĂM' : 'QUẢN TRỊ & PHÂN VÙNG'}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
+                  Gói Enterprise
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                  Full Data Pack + Quyền Admin Phân Vùng quản trị 10 thành viên.
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(147,51,234,0.08)', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(147,51,234,0.2)', fontSize: 11, color: '#9333ea', fontWeight: 600 }}>
+                <span>Bao gồm Full 3 Nguồn + Quản trị đến 10 User phân vùng.</span>
+              </div>
+            </div>
+
+            <div style={{ margin: '20px 0 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap' }}>
+                <span className="price-text-anim" style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                  {Math.round(999000 * discount).toLocaleString('vi-VN')}đ
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  / tháng
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
+                {billingCycle === 'yearly'
+                  ? `(Thanh toán ${(Math.round(999000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · Giảm 20%)`
+                  : 'Thanh toán linh hoạt từng tháng'}
+              </div>
+            </div>
+
+            {isSuperAdmin ? (
+              <button
+                disabled
+                style={{
+                  width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24,
+                  background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none',
+                  boxShadow: '0 4px 12px rgba(16,185,129,0.3)', cursor: 'default'
+                }}
+              >
+                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+              </button>
+            ) : activeDataPackage === 'enterprise' || isRegionalAdmin ? (
+              <button
+                disabled
+                style={{
+                  width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24,
+                  background: 'linear-gradient(135deg, #9333ea, #7e22ce)', color: 'white', border: 'none',
+                  boxShadow: '0 4px 14px rgba(147,51,234,0.4)'
+                }}
+              >
+                ✓ ĐANG SỬ DỤNG (ENTERPRISE)
+              </button>
+            ) : (
+              <button
+                onClick={() => handleOpenUpgradeModal({
+                  pkgType: 'enterprise',
+                  name: 'Gói Enterprise (Full Data + Quản Trị 10 User)',
+                  price: Math.round(999000 * discount),
+                  cycle: billingCycle,
+                })}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24, background: 'linear-gradient(135deg, #9333ea, #7e22ce)', border: 'none' }}
+              >
+                <Building2 size={15} /> Đăng Ký Enterprise
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span><b>Full Data Pack (ADB, WB, Đấu Thầu)</b></span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span>Quyền Admin Phân Vùng / Tổ Chức</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span>Tự quản lý <b>tối đa 10 tài khoản thành viên</b></span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+              <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span>Thành viên tự động kế thừa Full Data</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+              <X size={15} style={{ color: '#a855f7', flexShrink: 0 }} />
+              <span>Trợ lý AI Gemini 2.0 (Mua thêm 149k/tháng)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. Gói Trợ Lý AI (AI Assistant Add-on) */}
+        <div className="upgrade-pricing-card" style={{
+          background: 'linear-gradient(145deg, rgba(168,85,247,0.06), rgba(236,72,153,0.06))',
+          border: hasAiPackage ? '2.5px solid #a855f7' : '1.5px solid rgba(168,85,247,0.4)',
+          boxShadow: hasAiPackage ? '0 8px 25px rgba(168,85,247,0.35)' : 'none',
+        }}>
+          <div style={{
+            position: 'absolute', top: -14, right: 20,
+            background: hasAiPackage ? 'linear-gradient(135deg, #a855f7, #ec4899)' : 'linear-gradient(135deg, #a855f7, #ec4899)',
+            color: 'white', fontSize: 10, fontWeight: 800, padding: '4px 12px',
+            borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
+          }}>
+            {hasAiPackage ? '✓ AI (ĐANG SỬ DỤNG)' : '🤖 AI INTELLIGENCE'}
           </div>
 
           <div>
@@ -550,9 +779,21 @@ export default function UpgradePage() {
               >
                 ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
               </button>
+            ) : hasAiPackage ? (
+              <button
+                disabled
+                style={{
+                  width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24,
+                  background: 'linear-gradient(135deg, #a855f7, #9333ea)', color: 'white', border: 'none',
+                  boxShadow: '0 4px 14px rgba(168,85,247,0.4)'
+                }}
+              >
+                ✓ ĐANG SỬ DỤNG (AI GEMINI)
+              </button>
             ) : (
               <button
                 onClick={() => handleOpenUpgradeModal({
+                  pkgType: 'ai',
                   name: 'Trợ Lý AI Gemini Hỏi-Đáp',
                   price: Math.round(149000 * discount),
                   cycle: billingCycle,
@@ -605,7 +846,11 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+        <div style={{
+          display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 12,
+          scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch',
+          alignItems: 'stretch', scrollbarWidth: 'thin',
+        }}>
           {[
             {
               key: 'basic',
@@ -613,7 +858,8 @@ export default function UpgradePage() {
               price: 0,
               desc: 'Giao diện hiện tại — Thiết kế hiện đại, mượt mà, kính mờ nhã nhặn.',
               colors: ['#3b82f6', '#10b981', '#ffffff'],
-              tag: 'MẶC ĐỊNH'
+              tag: 'MẶC ĐỊNH',
+              img: basicBg
             },
             {
               key: 'classic',
@@ -621,7 +867,8 @@ export default function UpgradePage() {
               price: 99000,
               desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.',
               colors: ['#008080', '#c0c0c0', '#000080'],
-              tag: 'VINTAGE PC 98'
+              tag: 'VINTAGE PC 98',
+              img: classicBg
             },
             {
               key: 'sapphire',
@@ -629,64 +876,88 @@ export default function UpgradePage() {
               price: 149000,
               desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.',
               colors: ['#050914', '#1d4ed8', '#38bdf8'],
-              tag: 'ROYAL SAPPHIRE'
+              tag: 'ROYAL SAPPHIRE',
+              img: sapphireBg
             },
             {
               key: 'luxury',
               title: 'Bloomberg Luxury Executive',
-              price: 199000,
+              price: 149000,
               desc: 'Phong cách Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.',
               colors: ['#08080a', '#d4af37', '#fef1c9'],
-              tag: 'LUXURY GOLD 24K'
+              tag: 'LUXURY GOLD 24K',
+              img: luxuryBg
+            },
+            {
+              key: 'anime',
+              title: 'Anime Twilight Sakura (新海誠)',
+              price: 149000,
+              desc: 'Hoàng Hôn Anime Dịu Mộng — Đêm Twilight Tím Mộng Mơ, Cánh Hoa Anh Đào (桜) Rơi Nhẹ & Ánh Sao Lấp Lánh.',
+              colors: ['#0f0d19', '#f472b6', '#a855f7'],
+              tag: 'ANIME SAKURA 🌸',
+              img: animeBg
             },
           ].map(theme => {
+            const isUnlocked = isThemeUnlocked(user, theme.key);
             const isActive = activeUiTheme === theme.key;
             return (
               <div key={theme.key} style={{
-                padding: 20, borderRadius: 16, border: isActive ? '2px solid var(--brand-500)' : '1px solid var(--border)',
-                background: 'var(--bg-surface-2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                position: 'relative', transition: 'all 0.2s ease', boxShadow: isActive ? '0 8px 25px rgba(59,130,246,0.15)' : 'none',
+                flex: '0 0 280px', minWidth: 280, padding: 20, borderRadius: 16,
+                border: isActive ? '2px solid var(--brand-500)' : isUnlocked ? '1px solid #10b981' : '1px solid var(--border)',
+                background: 'var(--bg-surface-2)', display: 'flex', flexDirection: 'column',
+                justifyContent: 'space-between', position: 'relative', overflow: 'hidden',
+                transition: 'all 0.2s ease', boxShadow: isActive ? '0 8px 25px rgba(59,130,246,0.15)' : 'none',
+                scrollSnapAlign: 'start', boxSizing: 'border-box',
               }}>
-                <div>
+                {theme.img && (
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, height: 75,
+                    backgroundImage: `url(${theme.img})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                    opacity: 0.35, maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0))',
+                    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0))',
+                    pointerEvents: 'none',
+                  }} />
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative', zIndex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'nowrap' }}>
                     <span style={{
                       fontSize: 9.5, fontWeight: 800, padding: '3px 7px', borderRadius: 6,
-                      background: isActive ? '#2563eb' : '#334155', color: '#ffffff', letterSpacing: '0.4px',
+                      background: isActive ? '#2563eb' : isUnlocked ? '#10b981' : '#334155', color: '#ffffff', letterSpacing: '0.4px',
                       whiteSpace: 'nowrap', flexShrink: 0
                     }}>
-                      {theme.tag}
+                      {isActive ? '✓ ĐANG SỬ DỤNG' : isUnlocked ? '✓ ĐÃ SỞ HỮU' : theme.tag}
                     </span>
-                    <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {theme.price === 0 ? '0đ' : `${Math.round(theme.price * discount).toLocaleString('vi-VN')}đ/tháng`}
+                    <span style={{ fontWeight: 800, fontSize: 13, color: isUnlocked ? '#10b981' : 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {theme.price === 0 ? '0đ' : isUnlocked ? 'Đã sở hữu' : `${theme.price.toLocaleString('vi-VN')}đ`}
                     </span>
                   </div>
 
-                  <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)', marginBottom: 4 }}>
+                  <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)', marginBottom: 6, minHeight: 38, display: 'flex', alignItems: 'center' }}>
                     {theme.title}
                   </div>
 
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.45, marginBottom: 14, minHeight: 52, display: 'flex', alignItems: 'flex-start' }}>
                     {theme.desc}
                   </div>
 
                   {/* Color Palette Preview Bar */}
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 16, padding: 6, borderRadius: 8, background: 'var(--bg-surface)' }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 16, padding: 6, borderRadius: 8, background: 'var(--bg-surface)', marginTop: 'auto' }}>
                     {theme.colors.map((c, i) => (
                       <span key={i} style={{ flex: 1, height: 12, borderRadius: 4, background: c, border: '1px solid rgba(0,0,0,0.1)' }} />
                     ))}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {theme.key === 'basic' ? (
+                <div style={{ display: 'flex', gap: 8, position: 'relative', zIndex: 1 }}>
+                  {isUnlocked ? (
                     <button
                       type="button"
-                      disabled={activeUiTheme === 'basic'}
-                      onClick={() => handleApplyTheme('basic')}
-                      className={activeUiTheme === 'basic' ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'}
+                      disabled={isActive}
+                      onClick={() => handleApplyTheme(theme.key)}
+                      className={isActive ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'}
                       style={{ flex: 1, fontSize: 12, fontWeight: 700, borderRadius: 10 }}
                     >
-                      {activeUiTheme === 'basic' ? '✓ Đang Sử Dụng' : '🔄 Khôi Phục Mặc Định'}
+                      {isActive ? '✓ Đang Sử Dụng' : 'Áp Dụng Giao Diện'}
                     </button>
                   ) : (
                     <>
@@ -702,8 +973,8 @@ export default function UpgradePage() {
                         type="button"
                         onClick={() => handleOpenUpgradeModal({
                           name: `Gói UI/UX Theme ${theme.title}`,
-                          price: Math.round(theme.price * discount),
-                          cycle: billingCycle,
+                          price: theme.price,
+                          themeKey: theme.key,
                         })}
                         className="btn btn-ghost btn-sm"
                         style={{ color: '#a855f7', fontWeight: 700, fontSize: 12 }}
@@ -736,15 +1007,22 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+        <div style={{
+          display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 12,
+          scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch',
+          alignItems: 'stretch', scrollbarWidth: 'thin',
+        }}>
           {[
-            { key: 'adb', title: 'Nguồn ADB (Châu Á)', price: 199000, color: '#f59e0b', icon: <Building2 size={18} color="#f59e0b" />, desc: 'Dự án ODA Ngân hàng Phát triển Châu Á' },
+            { key: 'adb', title: 'Nguồn ADB (Châu Á)', price: 199000, color: '#f59e0b', icon: <Building2 size={18} color="#f59e0b" />, desc: 'Dự án ODA Ngân hàng Châu Á' },
             { key: 'wb', title: 'Nguồn World Bank', price: 199000, color: '#10b981', icon: <Globe size={18} color="#10b981" />, desc: 'Dự án ODA Ngân hàng Thế giới' },
-            { key: 'dau-thau', title: 'Đấu Thầu Công', price: 299000, color: '#8b5cf6', icon: <ShoppingBag size={18} color="#8b5cf6" />, desc: 'Thông báo mời thầu & KHLCNT quốc gia' },
+            { key: 'dau-thau', title: 'Đấu Thầu Công', price: 299000, color: '#8b5cf6', icon: <ShoppingBag size={18} color="#8b5cf6" />, desc: 'Thông báo mời thầu & KHLCNT' },
+            { key: 'user-slots', title: '+10 Slot User Enterprise', price: 50000, color: '#9333ea', icon: <Zap size={18} color="#9333ea" />, desc: 'Thêm 10 slot cho Admin Phân Vùng' },
           ].map(addon => (
             <div key={addon.key} style={{
-              padding: 18, borderRadius: 14, border: '1px solid var(--border)',
-              background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              flex: '0 0 280px', minWidth: 280, padding: 20, borderRadius: 16,
+              border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+              scrollSnapAlign: 'start', boxSizing: 'border-box', transition: 'all 0.2s ease',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ padding: 10, borderRadius: 10, background: 'var(--bg-surface)' }}>
@@ -760,17 +1038,65 @@ export default function UpgradePage() {
                   {Math.round(addon.price * discount).toLocaleString('vi-VN')}đ
                   <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>/tháng</span>
                 </div>
-                <button
-                  onClick={() => handleOpenUpgradeModal({
-                    name: `Gói Nguồn ${addon.title}`,
-                    price: Math.round(addon.price * discount),
-                    cycle: billingCycle,
-                  })}
-                  className="btn btn-ghost btn-xs"
-                  style={{ color: 'var(--brand-600)', fontWeight: 700, padding: '2px 8px', marginTop: 4 }}
-                >
-                  Thuê Nguồn →
-                </button>
+                {(() => {
+                  const normalizedKey = addon.key === 'wb' ? 'worldbank' : addon.key === 'dau-thau' ? 'gov' : addon.key;
+                  const isFull = isSuperAdmin || activeDataPackage === 'full';
+                  const isSingleActive = activeDataPackage === 'single' && JSON.parse(localStorage.getItem(`bis_selected_sources_${userKey}`) || '[]')[0] === normalizedKey;
+                  const isComboActive = activeDataPackage === 'combo2' && (selectedComboSources.includes(normalizedKey) || JSON.parse(localStorage.getItem(`bis_selected_sources_${userKey}`) || '[]').includes(normalizedKey));
+                  
+                  if (addon.key === 'user-slots') {
+                    return (
+                      <button
+                        onClick={() => handleOpenUpgradeModal({
+                          pkgType: 'user_slots',
+                          name: 'Gói Mua Thêm +10 Slot User Enterprise',
+                          price: Math.round(addon.price * discount),
+                          cycle: billingCycle,
+                        })}
+                        className="btn btn-ghost btn-xs"
+                        style={{ color: '#9333ea', fontWeight: 800, padding: '2px 8px', marginTop: 4, background: '#f3e8ff', border: '1px solid #e9d5ff' }}
+                      >
+                        ➕ Mua +10 User →
+                      </button>
+                    );
+                  }
+                  if (isFull) {
+                    return (
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: '#10b981', display: 'block', marginTop: 4 }}>
+                        ✓ Đã Bao Gồm (Full)
+                      </span>
+                    );
+                  }
+                  if (isSingleActive) {
+                    return (
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: '#2563eb', display: 'block', marginTop: 4 }}>
+                        ✓ ĐANG SỬ DỤNG
+                      </span>
+                    );
+                  }
+                  if (isComboActive) {
+                    return (
+                      <span style={{ fontSize: 10.5, fontWeight: 800, color: '#3b82f6', display: 'block', marginTop: 4 }}>
+                        ✓ Đã Có Trong Combo 2
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      onClick={() => handleOpenUpgradeModal({
+                        pkgType: 'single',
+                        sourceKey: normalizedKey,
+                        name: `Gói Độc Lập 1 Nguồn ${addon.title}`,
+                        price: Math.round(addon.price * discount),
+                        cycle: billingCycle,
+                      })}
+                      className="btn btn-ghost btn-xs"
+                      style={{ color: 'var(--brand-600)', fontWeight: 700, padding: '2px 8px', marginTop: 4 }}
+                    >
+                      Thuê Nguồn →
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           ))}
@@ -881,15 +1207,23 @@ export default function UpgradePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                     <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Chi phí gói:</span>
                     <span style={{ fontWeight: 900, fontSize: 16, color: 'var(--text-primary)' }}>
-                      {selectedPackage?.price?.toLocaleString('vi-VN')}đ / tháng
+                      {selectedPackage?.themeKey ? `${selectedPackage?.price?.toLocaleString('vi-VN')}đ (Dùng vĩnh viễn)` : `${selectedPackage?.price?.toLocaleString('vi-VN')}đ / tháng`}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                     <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Hình thức:</span>
                     <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--brand-600)' }}>
-                      {selectedPackage?.cycle === 'yearly' ? 'Thanh toán 12 tháng (Giảm 20%)' : 'Thanh toán từng tháng'}
+                      {selectedPackage?.themeKey ? 'Thanh toán 1 lần duy nhất' : (selectedPackage?.cycle || billingCycle) === 'yearly' ? 'Thanh toán 12 tháng (Giảm 20%)' : 'Thanh toán từng tháng'}
                     </span>
                   </div>
+                  {!selectedPackage?.themeKey && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Thời hạn gói:</span>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: '#10b981' }}>
+                        📅 {getCalculatedExpiration(selectedPackage?.cycle || billingCycle)} ({(selectedPackage?.cycle || billingCycle) === 'yearly' ? '1 năm' : '1 tháng'})
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <form onSubmit={handleConfirmUpgrade} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

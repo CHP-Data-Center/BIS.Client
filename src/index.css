@@ -1174,6 +1174,496 @@ html[data-ui-theme="sapphire"],
 }
 
 /* 3. Bloomberg Luxury Executive Theme (Obsidian & 24K Metallic Sheen) */
+
+/* ============================================
+   Anime Theme (Makoto Shinkai Twilight & Sakura Dreams)
+   ============================================ */
+:root[data-ui-theme="anime"],
+html[data-ui-theme="anime"],
+[data-theme][data-ui-theme="anime"],
+[data-ui-theme="anime"] {
+  --bg-page:        #0f0d19 !important;
+  --bg-surface:     #171426 !important;
+  --bg-surface-2:   #211d36 !important;
+  --bg-header:      rgba(23, 20, 38, 0.95) !important;
+  --border:         rgba(244, 114, 182, 0.3) !important;
+  --border-subtle:  rgba(168, 85, 247, 0.2) !important;
+  --text-primary:   #fff5f8 !important;
+  --text-secondary: #f472b6 !important;
+  --text-muted:     #a78bfa !important;
+  --brand-600:      #ec4899 !important;
+  --brand-500:      #f472b6 !important;
+  --radius-sm:      10px !important;
+  --radius-md:      16px !important;
+  --radius-lg:      22px !important;
+  --radius-xl:      28px !important;
+}
+
+@keyframes animeSakuraGlow {
+  0%, 100% {
+    box-shadow: 0 10px 30px rgba(15, 13, 25, 0.7), 0 0 20px rgba(244, 114, 182, 0.22);
+  }
+  50% {
+    box-shadow: 0 12px 35px rgba(15, 13, 25, 0.8), 0 0 30px rgba(168, 85, 247, 0.35);
+  }
+}
+
+[data-ui-theme="anime"] body,
+[data-ui-theme="anime"] .app-layout,
+[data-ui-theme="anime"] .main-content,
+[data-ui-theme="anime"] .login-page {
+  background-color: #0f0d19 !important;
+  background-image: 
+    linear-gradient(to bottom, rgba(15, 13, 25, 0.72), rgba(15, 13, 25, 0.88)),
+    url('/src/assets/anime_bg.png'),
+    radial-gradient(circle at 50% 0%, rgba(244, 114, 182, 0.25) 0%, transparent 65%) !important;
+  background-size: cover, cover, auto !important;
+  background-position: center, center, center !important;
+  background-attachment: fixed !important;
+  color: #fff5f8 !important;
+}
+
+/* Anime Glassmorphic Cards & Panels */
+[data-ui-theme="anime"] .sidebar,
+[data-ui-theme="anime"] .header,
+[data-ui-theme="anime"] .card,
+[data-ui-theme="anime"] .stats-card,
+[data-ui-theme="anime"] .news-card,
+[data-ui-theme="anime"] .settings-card,
+[data-ui-theme="anime"] .trending-strip,
+[data-ui-theme="anime"] .upgrade-pricing-card,
+[data-ui-theme="anime"] .dashboard-banner,
+[data-ui-theme="anime"] .login-card {
+  border: 1.5px solid rgba(244, 114, 182, 0.4) !important;
+  background: linear-gradient(135deg, rgba(28, 23, 46, 0.92) 0%, rgba(42, 32, 68, 0.88) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  color: #fff5f8 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 114, 182, 0.2) !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+[data-ui-theme="anime"] .stats-card:hover,
+[data-ui-theme="anime"] .news-card:hover,
+[data-ui-theme="anime"] .card:hover,
+[data-ui-theme="anime"] .trending-strip:hover {
+  border-color: #f472b6 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(244, 114, 182, 0.5) !important;
+  transform: translateY(-4px) scale(1.008) !important;
+}
+
+[data-ui-theme="anime"] .sidebar {
+  border-right: 1.5px solid rgba(244, 114, 182, 0.4) !important;
+  background: linear-gradient(180deg, #18142a 0%, #0d0a18 100%) !important;
+  box-shadow: 6px 0 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-ui-theme="anime"] .sidebar-label {
+  color: #f472b6 !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+}
+
+[data-ui-theme="anime"] .sidebar-label::after {
+  content: " 🌸";
+}
+
+/* Anime Header & Logo Sheen */
+[data-ui-theme="anime"] .header {
+  border-bottom: 2px solid rgba(244, 114, 182, 0.6) !important;
+  background: linear-gradient(90deg, #1b162e 0%, #341f48 50%, #151124 100%) !important;
+  box-shadow: 0 4px 25px rgba(244, 114, 182, 0.35) !important;
+}
+
+[data-ui-theme="anime"] .header .logo-title {
+  background: linear-gradient(135deg, #f472b6 0%, #f43f5e 50%, #c084fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 900 !important;
+  filter: drop-shadow(0 2px 8px rgba(244, 114, 182, 0.5)) !important;
+}
+
+[data-ui-theme="anime"] .header .logo-title::after {
+  content: " ✦ アニメ ✦ (≧◡≦)";
+  font-size: 11px;
+  font-weight: 800;
+  color: #c084fc;
+  -webkit-text-fill-color: #c084fc;
+  letter-spacing: 1px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+[data-ui-theme="anime"] .header .logo-sub {
+  color: #f472b6 !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="anime"] .header .logo-sub::after {
+  content: " 「ニュース & データ」";
+  font-size: 10px;
+  color: #a78bfa;
+  margin-left: 4px;
+}
+
+[data-ui-theme="anime"] .header .avatar-name {
+  color: #fff5f8 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(244, 114, 182, 0.5) !important;
+}
+
+[data-ui-theme="anime"] .header .avatar-name::after {
+  content: " ちゃん";
+  font-size: 11px;
+  color: #f472b6;
+}
+
+/* Anime Header Live Clock & Search Bar */
+[data-ui-theme="anime"] .live-clock {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.2) 0%, rgba(35, 28, 58, 0.95) 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.5) !important;
+  color: #fff5f8 !important;
+  box-shadow: 0 0 12px rgba(244, 114, 182, 0.3) !important;
+}
+
+[data-ui-theme="anime"] .live-clock::after {
+  content: " 「時間」";
+  font-size: 10px;
+  color: #f472b6;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+[data-ui-theme="anime"] .header .search-bar {
+  background: rgba(18, 14, 32, 0.9) !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.4) !important;
+  border-radius: 20px !important;
+}
+
+[data-ui-theme="anime"] .header .search-input {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .header .search-input::placeholder {
+  color: #a78bfa !important;
+}
+
+[data-ui-theme="anime"] .header .search-icon {
+  color: #f472b6 !important;
+}
+
+/* Anime Header Action Buttons */
+[data-ui-theme="anime"] .header .theme-toggle,
+[data-ui-theme="anime"] .header .notif-btn,
+[data-ui-theme="anime"] .header .user-avatar-btn {
+  background: linear-gradient(145deg, #241f3b 0%, #161326 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.5) !important;
+  color: #f472b6 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(244, 114, 182, 0.2) !important;
+  transition: all 0.25s ease !important;
+}
+
+[data-ui-theme="anime"] .header .user-avatar-btn .avatar {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #a855f7 100%) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 10px rgba(244, 114, 182, 0.5) !important;
+}
+
+[data-ui-theme="anime"] .header .theme-toggle *,
+[data-ui-theme="anime"] .header .notif-btn *,
+[data-ui-theme="anime"] .header .user-avatar-btn * {
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .header .theme-toggle:hover,
+[data-ui-theme="anime"] .header .notif-btn:hover,
+[data-ui-theme="anime"] .header .user-avatar-btn:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.3) 0%, rgba(35, 30, 58, 0.98) 100%) !important;
+  border-color: #f472b6 !important;
+  box-shadow: 0 0 22px rgba(244, 114, 182, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-ui-theme="anime"] .header .theme-toggle:hover *,
+[data-ui-theme="anime"] .header .notif-btn:hover *,
+[data-ui-theme="anime"] .header .user-avatar-btn:hover * {
+  color: #ffffff !important;
+}
+
+/* User Role Badges in Anime Theme */
+[data-ui-theme="anime"] .user-role-badge {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.25) 0%, rgba(35, 30, 58, 0.95) 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.6) !important;
+  color: #fff5f8 !important;
+  box-shadow: 0 0 12px rgba(244, 114, 182, 0.35) !important;
+}
+
+[data-ui-theme="anime"] .user-role-badge * {
+  color: #f472b6 !important;
+}
+
+/* Buttons in Anime Theme */
+[data-ui-theme="anime"] .btn-primary {
+  background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.45) !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="anime"] .btn-primary:hover {
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.65) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-ui-theme="anime"] .btn-secondary {
+  background: rgba(35, 30, 58, 0.9) !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] input,
+[data-ui-theme="anime"] select,
+[data-ui-theme="anime"] textarea,
+[data-ui-theme="anime"] .form-input {
+  background-color: #120f20 !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] input:focus,
+[data-ui-theme="anime"] select:focus,
+[data-ui-theme="anime"] textarea:focus,
+[data-ui-theme="anime"] .form-input:focus {
+  border-color: #f472b6 !important;
+  box-shadow: 0 0 18px rgba(244, 114, 182, 0.4) !important;
+  outline: none !important;
+}
+
+/* Sidebar Active Items in Anime Theme */
+[data-ui-theme="anime"] .sidebar-nav-item:hover {
+  background: rgba(244, 114, 182, 0.15) !important;
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .sidebar-nav-item.active:not(.locked-item) {
+  background: linear-gradient(90deg, rgba(244, 114, 182, 0.22) 0%, rgba(168, 85, 247, 0.08) 100%) !important;
+  border-left: 4px solid #f472b6 !important;
+  box-shadow: 0 0 15px rgba(244, 114, 182, 0.3) !important;
+}
+
+[data-ui-theme="anime"] .sidebar-nav-item.active:not(.locked-item) span {
+  color: #f472b6 !important;
+  font-weight: 800 !important;
+}
+
+/* Tables & Groups in Anime Theme */
+[data-ui-theme="anime"] table {
+  background: transparent !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] table th {
+  background: rgba(23, 20, 38, 0.95) !important;
+  color: #f472b6 !important;
+  border-bottom: 1px solid rgba(244, 114, 182, 0.3) !important;
+}
+
+[data-ui-theme="anime"] table td {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .source-type-group-row.gov,
+[data-ui-theme="anime"] .source-type-group-row.press,
+[data-ui-theme="anime"] .source-type-group-row {
+  background: linear-gradient(90deg, rgba(244, 114, 182, 0.2) 0%, rgba(23, 20, 38, 0.95) 100%) !important;
+  border-bottom: 1px solid rgba(244, 114, 182, 0.4) !important;
+}
+
+[data-ui-theme="anime"] .source-type-group-row div,
+[data-ui-theme="anime"] .source-type-group-row span {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .source-type-group-row .group-count-badge {
+  background: rgba(244, 114, 182, 0.25) !important;
+  border: 1px solid rgba(244, 114, 182, 0.5) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .source-domain-group-row {
+  background: rgba(33, 29, 54, 0.8) !important;
+  border-bottom: 1px solid rgba(244, 114, 182, 0.22) !important;
+}
+
+[data-ui-theme="anime"] .source-domain-group-row div,
+[data-ui-theme="anime"] .source-domain-group-row span {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .source-domain-group-row svg {
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .source-domain-group-row .domain-count-badge {
+  background: rgba(244, 114, 182, 0.18) !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .source-item-row {
+  border-bottom: 1px solid rgba(244, 114, 182, 0.15) !important;
+}
+
+[data-ui-theme="anime"] .source-item-row:hover {
+  background: rgba(244, 114, 182, 0.08) !important;
+}
+
+[data-ui-theme="anime"] .source-type-badge.gov {
+  background: rgba(168, 85, 247, 0.2) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(168, 85, 247, 0.4) !important;
+}
+
+[data-ui-theme="anime"] .source-type-badge.press {
+  background: rgba(244, 114, 182, 0.18) !important;
+  color: #f472b6 !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+}
+
+[data-ui-theme="anime"] .pending-source-banner {
+  background: linear-gradient(135deg, rgba(33, 29, 54, 0.95) 0%, rgba(23, 20, 38, 0.98) 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.4) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .pending-source-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(244, 114, 182, 0.25) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .user-menu,
+[data-ui-theme="anime"] .notif-dropdown,
+[data-ui-theme="anime"] .dropdown-menu,
+[data-ui-theme="anime"] .modal,
+[data-ui-theme="anime"] .modal-content,
+[data-ui-theme="anime"] div[style*="zIndex: 9999"],
+[data-ui-theme="anime"] div[style*="zIndex: 99999"] {
+  background: linear-gradient(145deg, #1c1830 0%, #120e21 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.45) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 25px rgba(244, 114, 182, 0.25) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .user-menu-item:hover,
+[data-ui-theme="anime"] .notif-item:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.22) 0%, rgba(33, 29, 54, 0.95) 100%) !important;
+  color: #f472b6 !important;
+}
+
+/* Anime Login Page Overrides */
+[data-ui-theme="anime"] .login-page {
+  background-color: #0f0d19 !important;
+}
+
+[data-ui-theme="anime"] .login-card {
+  background: linear-gradient(145deg, rgba(28, 20, 52, 0.94) 0%, rgba(18, 14, 34, 0.96) 100%) !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.5) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(244, 114, 182, 0.35) !important;
+  backdrop-filter: blur(24px) !important;
+  border-radius: 24px !important;
+}
+
+[data-ui-theme="anime"] .login-title {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 50%, #c084fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  font-weight: 900 !important;
+  filter: drop-shadow(0 2px 10px rgba(244, 114, 182, 0.6)) !important;
+}
+
+[data-ui-theme="anime"] .login-title::after {
+  content: "✦ ログイン (SYSTEM) ✦";
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #c084fc;
+  -webkit-text-fill-color: #c084fc;
+  letter-spacing: 2px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+[data-ui-theme="anime"] .login-subtitle {
+  color: #f472b6 !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="anime"] .login-ai-badge {
+  background: rgba(244, 114, 182, 0.15) !important;
+  border: 1px solid rgba(244, 114, 182, 0.4) !important;
+  border-radius: 12px !important;
+}
+
+[data-ui-theme="anime"] .ai-badge-text {
+  color: #fff5f8 !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="anime"] .login-btn-google {
+  background: linear-gradient(145deg, #241f3b 0%, #161326 100%) !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.45) !important;
+  color: #fff5f8 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 14px !important;
+}
+
+[data-ui-theme="anime"] .login-btn-google:hover {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.3) 0%, rgba(35, 30, 58, 0.98) 100%) !important;
+  border-color: #f472b6 !important;
+  box-shadow: 0 0 20px rgba(244, 114, 182, 0.5) !important;
+}
+
+[data-ui-theme="anime"] .login-btn {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #a855f7 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.6) !important;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 6px 25px rgba(236, 72, 153, 0.55), 0 0 15px rgba(244, 114, 182, 0.4) !important;
+  border-radius: 14px !important;
+}
+
+[data-ui-theme="anime"] .login-btn:hover {
+  box-shadow: 0 8px 30px rgba(236, 72, 153, 0.75), 0 0 25px rgba(244, 114, 182, 0.6) !important;
+  transform: translateY(-2px) !important;
+}
+
+[data-ui-theme="anime"] .login-demo-hint {
+  background: linear-gradient(145deg, rgba(35, 25, 60, 0.95) 0%, rgba(20, 15, 38, 0.95) 100%) !important;
+  border: 1px solid rgba(244, 114, 182, 0.4) !important;
+  color: #fff5f8 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 16px !important;
+}
+
+[data-ui-theme="anime"] .demo-hint-title,
+[data-ui-theme="anime"] .demo-hint-title span {
+  color: #f472b6 !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="anime"] .demo-account-pill {
+  background: rgba(244, 114, 182, 0.15) !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .demo-account-pill:hover {
+  background: rgba(244, 114, 182, 0.3) !important;
+  border-color: #f472b6 !important;
+}
 /* Sapphire Login Page Overrides */
 [data-ui-theme="sapphire"] .login-page {
   background-color: #050814 !important;

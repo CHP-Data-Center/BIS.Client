@@ -95,6 +95,17 @@ function EnterpriseRoute({ children }) {
   return children;
 }
 
+// Route dành riêng cho Trợ Lý AI (Super Admin hoặc người dùng đã mua gói AI)
+function AiRoute({ children }) {
+  const { isLoggedIn, user, isSuperAdmin, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  const userKey = user?.email || user?.id;
+  const hasAiAccess = isSuperAdmin || user?.has_ai === true || localStorage.getItem(`bis_ai_package_${userKey}`) === 'true';
+  if (!hasAiAccess) return <Navigate to="/upgrade" replace />;
+  return children;
+}
+
 // Redirect mặc định theo vai trò người dùng
 function DefaultRedirect() {
   const { isPersonalUser, isLoggedIn, loading } = useAuth();
@@ -148,9 +159,9 @@ export default function App() {
               } />
 
               <Route path="/ai-chat" element={
-                <EnterpriseRoute>
+                <AiRoute>
                   <AppLayout><AiPage /></AppLayout>
-                </EnterpriseRoute>
+                </AiRoute>
               } />
 
               {/* Protected — tất cả người dùng hợp lệ */}

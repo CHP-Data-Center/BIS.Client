@@ -60,11 +60,12 @@ export function SapphireStarSvg({ size = 15 }) {
 }
 
 // Ultra-optimized, GPU-accelerated Theme Rain (Sits BEHIND cards & content at zIndex: 0)
-function BackgroundRain({ isLuxury }) {
+function BackgroundRain({ theme }) {
   const items = useRef(
     Array.from({ length: 35 }).map((_, i) => ({
       id: i,
       goldSymbol: i % 4 === 0 ? '🪙' : i % 5 === 0 ? '💰' : i % 3 === 0 ? '⭐' : '✨',
+      animeSymbol: i % 8 === 0 ? '「かわいい」' : i % 7 === 0 ? '「キラキラ」' : i % 6 === 0 ? '「すごい！」' : i % 5 === 0 ? '(≧◡≦)' : i % 4 === 0 ? '🌸' : i % 3 === 0 ? '💖' : '✨',
       isDiamond: i % 2 === 0, // 50% diamonds, 50% stars!
       left: `${(i * 2.8 + (i % 7) * 2.5) % 97}%`,
       size: 14 + (i % 5) * 3,
@@ -102,8 +103,10 @@ function BackgroundRain({ isLuxury }) {
             justifyContent: 'center',
           }}
         >
-          {isLuxury ? (
+          {theme === 'luxury' ? (
             c.goldSymbol
+          ) : theme === 'anime' ? (
+            c.animeSymbol
           ) : c.isDiamond ? (
             <SapphireDiamondSvg size={c.size + 4} />
           ) : (
@@ -134,9 +137,9 @@ export default function ThemeFxOverlay() {
     return () => observer.disconnect();
   }, []);
 
-  // Mouse trail emitting both Diamonds & Stars for Sapphire theme!
+  // Mouse trail emitting particle effects
   useEffect(() => {
-    if (theme !== 'luxury' && theme !== 'sapphire') return;
+    if (theme !== 'luxury' && theme !== 'sapphire' && theme !== 'anime') return;
 
     let lastTime = 0;
     const handleMouseMove = (e) => {
@@ -155,7 +158,7 @@ export default function ThemeFxOverlay() {
           x,
           y,
           size: 14 + Math.random() * 5,
-          isDiamond: Math.random() > 0.45, // Both Diamonds & Stars emit on mouse move!
+          isDiamond: Math.random() > 0.45,
         },
       ]);
     };
@@ -173,15 +176,19 @@ export default function ThemeFxOverlay() {
     return () => clearTimeout(timer);
   }, [trail]);
 
-  if (theme !== 'luxury' && theme !== 'sapphire') return null;
+  if (theme !== 'luxury' && theme !== 'sapphire' && theme !== 'anime') return null;
 
-  const isLuxury = theme === 'luxury';
-  const ambientGlowColor = isLuxury ? 'rgba(212, 175, 55, 0.08)' : 'rgba(56, 189, 248, 0.08)';
+  const ambientGlowColor =
+    theme === 'luxury'
+      ? 'rgba(212, 175, 55, 0.08)'
+      : theme === 'anime'
+      ? 'rgba(244, 114, 182, 0.12)'
+      : 'rgba(56, 189, 248, 0.08)';
 
   return (
     <>
-      {/* Falling Coins & Sapphire Rain (BEHIND content at zIndex: 0) */}
-      <BackgroundRain isLuxury={isLuxury} />
+      {/* Falling Coins, Sapphire & Sakura Rain (BEHIND content at zIndex: 0) */}
+      <BackgroundRain theme={theme} />
 
       {/* Background Ambient Mouse Glow (BEHIND content at zIndex: 0) */}
       <div
@@ -218,8 +225,12 @@ export default function ThemeFxOverlay() {
               userSelect: 'none',
             }}
           >
-            {isLuxury ? (
+            {theme === 'luxury' ? (
               <span style={{ fontSize: p.size }}>✨</span>
+            ) : theme === 'anime' ? (
+              <span style={{ fontSize: p.size, fontWeight: 800, color: '#f472b6', textShadow: '0 0 8px rgba(244, 114, 182, 0.7)' }}>
+                {p.isDiamond ? (p.size > 16 ? '(≧◡≦)' : '🌸') : (p.size > 16 ? '「キラキラ」' : '✨')}
+              </span>
             ) : p.isDiamond ? (
               <SapphireDiamondSvg size={p.size + 2} />
             ) : (

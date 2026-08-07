@@ -1,10 +1,11 @@
 // src/pages/AdminPage.jsx
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
   Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2,
-  ChevronDown
+  ChevronDown, Eye
 } from 'lucide-react';
 
 // Nhóm nguồn theo tên miền (cha–con). Lấy URL từ nhiều field có thể có.
@@ -67,6 +68,7 @@ export default function AdminPage() {
 
   // Edit User state
   const [editingUser, setEditingUser] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
 
   // New item forms
   const [newUser, setNewUser]           = useState({
@@ -89,6 +91,25 @@ export default function AdminPage() {
   const [newBlacklist, setNewBlacklist] = useState('');
   const [newWhitelist, setNewWhitelist] = useState('');
 
+  const [showBuySlotModal, setShowBuySlotModal] = useState(false);
+  const [slotPhone, setSlotPhone] = useState('');
+  const [slotSubmitting, setSlotSubmitting] = useState(false);
+
+  // ESC key listener to close active modals
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        if (editingUser) setEditingUser(null);
+        if (viewingUser) setViewingUser(null);
+        if (editingSource) setEditingSource(null);
+        if (showBuySlotModal) setShowBuySlotModal(false);
+        if (deleteConfirm) setDeleteConfirm(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingUser, viewingUser, editingSource, showBuySlotModal, deleteConfirm]);
+
   const showAlert = (type, text) => {
     setMsg({ type, text });
     setTimeout(() => setMsg(null), 5000);
@@ -106,7 +127,24 @@ export default function AdminPage() {
         adminService.getWhitelist().catch(() => []),
         orgService.listOrganizations().catch(() => []),
       ]);
-      setUsers(u || []);
+      setUsers((u || []).map(usr => {
+        const uKey = usr.email || usr.id;
+        const activePkg = localStorage.getItem(`bis_active_package_${uKey}`) || (usr.role === 'super_admin' ? 'full' : usr.role === 'admin' ? 'enterprise' : 'free');
+        const hasAi = localStorage.getItem(`bis_ai_package_${uKey}`) === 'true' || usr.role === 'super_admin';
+        const pkgExp = localStorage.getItem(`bis_pkg_exp_${uKey}`) || (usr.role === 'super_admin' || activePkg === 'free' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027');
+        const themes = JSON.parse(localStorage.getItem(`bis_purchased_themes_${uKey}`) || '[]');
+        const selectedSrcs = JSON.parse(localStorage.getItem(`bis_selected_sources_${uKey}`) || '["adb", "worldbank"]');
+        const maxUsers = parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+        return {
+          ...usr,
+          active_package: activePkg,
+          has_ai: hasAi,
+          package_expiration: pkgExp,
+          purchased_themes: themes,
+          selected_sources: selectedSrcs,
+          max_users: maxUsers,
+        };
+      }));
       const approvedOnly = (s || []).filter(item => !item.status || item.status === 'approved');
       setSources(approvedOnly);
       setPendingSources(pending || []);
@@ -186,6 +224,15 @@ export default function AdminPage() {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!newUser.email || !newUser.password) return;
+
+    // Kiểm tra giới hạn số lượng tài khoản cho Admin Phân Vùng (Gói Enterprise)
+    const myMaxUsers = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10);
+    const currentRegionalUsers = users.filter(u => u.role !== 'super_admin' && (isSuperAdmin || u.region === userRegion));
+    if (isRegionalAdmin && currentRegionalUsers.length >= myMaxUsers) {
+      showAlert('error', `⚠️ Bạn đã đạt giới hạn tối đa ${myMaxUsers} tài khoản thành viên của Gói Enterprise Phân Vùng. Vui lòng liên hệ Super Admin để nâng cấp mua thêm slot!`);
+      return;
+    }
+
     setActionLoading(true);
     try {
       const payload = {
@@ -249,6 +296,12 @@ export default function AdminPage() {
       email_digest_enabled: u.email_digest_enabled ?? true,
       digest_hour: u.digest_hour ?? 7,
       timezone: u.timezone || 'Asia/Ho_Chi_Minh',
+      active_package: u.active_package || (u.role === 'admin' ? 'enterprise' : 'free'),
+      has_ai: u.has_ai ?? false,
+      package_expiration: u.package_expiration || (u.active_package === 'free' || u.role === 'super_admin' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027'),
+      purchased_themes: u.purchased_themes || [],
+      selected_sources: u.selected_sources || ['adb', 'worldbank'],
+      max_users: u.max_users || 10,
     });
   };
 
@@ -272,10 +325,37 @@ export default function AdminPage() {
       if (editingUser.password && editingUser.password.trim() !== '') {
         payload.password = editingUser.password.trim();
       }
-      const updated = await adminService.updateUser(editingUser.id, payload);
-      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+
+      // Persist packages, AI status, expiration date, purchased themes, selected sources, and max_users
+      const uKey = editingUser.email || editingUser.id;
+      localStorage.setItem(`bis_active_package_${uKey}`, editingUser.active_package);
+      localStorage.setItem(`bis_ai_package_${uKey}`, editingUser.has_ai ? 'true' : 'false');
+      localStorage.setItem(`bis_pkg_exp_${uKey}`, editingUser.package_expiration || 'Vĩnh viễn');
+      localStorage.setItem(`bis_purchased_themes_${uKey}`, JSON.stringify(editingUser.purchased_themes || []));
+      localStorage.setItem(`bis_selected_sources_${uKey}`, JSON.stringify(editingUser.selected_sources || ['adb', 'worldbank']));
+      localStorage.setItem(`bis_max_users_${uKey}`, String(editingUser.max_users || 10));
+
+      let updated;
+      try {
+        updated = await adminService.updateUser(editingUser.id, payload);
+      } catch (err) {
+        // Fallback for local mock user update
+        updated = { ...editingUser };
+      }
+
+      const mergedUser = {
+        ...updated,
+        active_package: editingUser.active_package,
+        has_ai: editingUser.has_ai,
+        package_expiration: editingUser.package_expiration,
+        purchased_themes: editingUser.purchased_themes,
+        selected_sources: editingUser.selected_sources,
+        max_users: editingUser.max_users || 10,
+      };
+
+      setUsers(prev => prev.map(u => u.id === editingUser.id ? mergedUser : u));
       setEditingUser(null);
-      showAlert('success', `Đã cập nhật thông tin tài khoản ${updated.email}!`);
+      showAlert('success', `⚡ Đã cập nhật gói dịch vụ & quyền tài khoản ${mergedUser.email}!`);
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cập nhật tài khoản.');
     } finally {
@@ -852,6 +932,61 @@ export default function AdminPage() {
           {/* TAB 2: USERS */}
           {activeTab === 'users' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+              {/* Regional Admin Quota Info Banner */}
+              {isRegionalAdmin && (() => {
+                const myMaxUsers = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10);
+                const regCount = users.filter(u => u.role !== 'super_admin' && (isSuperAdmin || u.region === userRegion)).length;
+                const isFullQuota = regCount >= myMaxUsers;
+                return (
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(147,51,234,0.08))',
+                    border: '1px solid rgba(147,51,234,0.25)',
+                    borderRadius: 16, padding: '14px 20px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    flexWrap: 'wrap', gap: 12,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ padding: 10, borderRadius: 12, background: '#f3e8ff', color: '#9333ea' }}>
+                        <ShieldCheck size={22} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>
+                          🏢 Admin Phân Vùng: {userRegion} (Gói Enterprise)
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                          Bạn có quyền khởi tạo & quản trị tối đa <b>{myMaxUsers} tài khoản thành viên</b> thuộc phân vùng {userRegion}. Các thành viên sẽ tự động kế thừa Full Data Pack.
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 14, fontWeight: 900, color: isFullQuota ? '#ef4444' : '#10b981' }}>
+                          👥 {regCount} / {myMaxUsers} Thành Viên
+                        </div>
+                        {isFullQuota && (
+                          <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 800, background: '#fef2f2', padding: '2px 8px', borderRadius: 6, border: '1px solid #fca5a5', display: 'inline-block', marginTop: 4 }}>
+                            ⚠️ Đã đạt hạn ngạch tối đa ({myMaxUsers})
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowBuySlotModal(true)}
+                        style={{
+                          padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 800,
+                          background: 'linear-gradient(135deg, #9333ea, #7e22ce)', color: 'white',
+                          border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(147,51,234,0.3)',
+                          display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+                        }}
+                      >
+                        ➕ Mua Thêm Slot (+10 User / 50k)
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Add User Form Card */}
               <div style={{
                 background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
@@ -1005,8 +1140,10 @@ export default function AdminPage() {
                       <th style={{ padding: '12px 20px' }}>Họ &amp; Tên</th>
                       <th style={{ padding: '12px 20px' }}>Email</th>
                       <th style={{ padding: '12px 20px' }}>Vai Trò</th>
+                      <th style={{ padding: '12px 20px' }}>Gói Dữ Liệu &amp; Hạn Dùng</th>
+                      <th style={{ padding: '12px 20px' }}>Theme UI Sở Hữu</th>
                       <th style={{ padding: '12px 20px' }}>Trạng Thái</th>
-                      <th style={{ padding: '12px 20px' }}>Ngày Khởi Tạo</th>
+                      <th style={{ padding: '12px 20px' }}>Ngày Tạo</th>
                       <th style={{ padding: '12px 20px', textAlign: 'right' }}>Hành Động</th>
                     </tr>
                   </thead>
@@ -1054,6 +1191,28 @@ export default function AdminPage() {
                             </div>
                           </td>
                           <td style={{ padding: '14px 20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 11, fontWeight: 800, color: u.role === 'super_admin' || u.active_package === 'full' ? '#059669' : u.active_package === 'enterprise' || u.role === 'admin' ? '#9333ea' : u.active_package === 'combo2' || u.active_package === 'single' ? '#2563eb' : '#64748b' }}>
+                                {u.role === 'super_admin' ? '👑 FULL DATA (SUPER ADMIN)' : u.active_package === 'enterprise' || u.role === 'admin' ? `🏢 Gói Enterprise (Max ${u.max_users || 10} User)` : u.active_package === 'full' ? '👑 Full Data Pack' : u.active_package === 'single' ? `🎯 Gói 1 Nguồn (${({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[(u.selected_sources || ['adb'])[0]] || '1 Nguồn'})` : u.active_package === 'combo2' ? `⚡ Combo 2 (${(u.selected_sources || ['adb', 'worldbank']).map(k => ({ adb: 'ADB', worldbank: 'WB', gov: 'Đấu Thầu' })[k] || k).join('+')})` : '📰 Báo Chí Miễn Phí'}
+                                {u.has_ai && <span style={{ marginLeft: 6, color: '#9333ea', background: '#f3e8ff', padding: '1px 6px', borderRadius: 8, fontSize: 9.5, border: '1px solid #e9d5ff' }}>🤖 AI</span>}
+                              </span>
+                              <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                                📅 {u.active_package === 'free' || u.role === 'super_admin' ? 'Vĩnh viễn' : (u.package_expiration || 'Vĩnh viễn')}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 180 }}>
+                              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569' }}>Mặc định</span>
+                              {(u.purchased_themes || []).map(tKey => (
+                                <span key={tKey} style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                                  {tKey === 'classic' ? 'Win98' : tKey === 'sapphire' ? 'Sapphire' : tKey === 'luxury' ? 'Luxury' : tKey === 'anime' ? 'Anime 🌸' : tKey}
+                                </span>
+                              ))}
+                              {u.role === 'super_admin' && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#b45309', background: '#fffbeb', padding: '1px 6px', borderRadius: 6, border: '1px solid #fde68a' }}>👑 All Themes</span>}
+                            </div>
+                          </td>
+                          <td style={{ padding: '14px 20px' }}>
                             <span style={{
                               fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
                               background: isActive ? '#ecfdf5' : '#fef2f2',
@@ -1068,6 +1227,14 @@ export default function AdminPage() {
                           </td>
                           <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => setViewingUser(u)}
+                                style={{ color: '#8b5cf6', padding: '6px 10px' }}
+                                title="Xem chi tiết tài khoản"
+                              >
+                                <Eye size={14} /> Chi tiết
+                              </button>
                               <button
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => handleOpenEditUser(u)}
@@ -1233,12 +1400,12 @@ export default function AdminPage() {
       )}
 
       {/* ── Edit User Modal ── */}
-      {editingUser && (
+      {editingUser && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: 20,
+          zIndex: 99999, padding: 20,
         }}>
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
@@ -1433,6 +1600,229 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Package & Theme Control Section (Super Admin Only) */}
+              {isSuperAdmin && (
+                <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1.5px solid rgba(99, 102, 241, 0.3)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Zap size={16} style={{ color: '#a855f7' }} />
+                    <span>Quản Lý Gói Dịch Vụ &amp; UI Themes Đã Cấp</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+                    <div>
+                      <label className="form-label">Gói Nguồn Dữ Liệu</label>
+                      <select
+                        className="form-input"
+                        value={editingUser.active_package || 'free'}
+                        onChange={e => {
+                          const pkg = e.target.value;
+                          let defaultExp = editingUser.package_expiration;
+                          if (pkg === 'free') defaultExp = 'Vĩnh viễn';
+                          else if (!defaultExp || defaultExp === 'Vĩnh viễn') defaultExp = '12/05/2026 - 12/05/2027';
+                          setEditingUser({ ...editingUser, active_package: pkg, package_expiration: defaultExp });
+                        }}
+                      >
+                        <option value="free">📰 Báo Chí Miễn Phí</option>
+                        <option value="single">🎯 Mua Lẻ 1 Nguồn Dữ Liệu</option>
+                        <option value="combo2">⚡ Combo 2 Nguồn Dữ Liệu</option>
+                        <option value="full">👑 Full Data Pack (Trọn Bộ 3 Nguồn)</option>
+                        <option value="enterprise">🏢 Gói Enterprise (Full Data + Quản Trị 10 User)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Hạn Sử Dụng Gói</span>
+                      </label>
+                      <input
+                        className="form-input"
+                        value={editingUser.package_expiration || ''}
+                        onChange={e => setEditingUser({ ...editingUser, package_expiration: e.target.value })}
+                        placeholder="VD: 07/08/2026 - 07/09/2026 hoặc Vĩnh viễn"
+                      />
+                      {/* Quick Presets for Duration */}
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const now = new Date();
+                            const pad = (n) => String(n).padStart(2, '0');
+                            const fmt = (d) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+                            const end = new Date(now); end.setMonth(end.getMonth() + 1);
+                            setEditingUser({ ...editingUser, package_expiration: `${fmt(now)} - ${fmt(end)}` });
+                          }}
+                          style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: '1px solid rgba(59, 130, 246, 0.25)', cursor: 'pointer' }}
+                        >
+                          ⚡ 1 Tháng
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const now = new Date();
+                            const pad = (n) => String(n).padStart(2, '0');
+                            const fmt = (d) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+                            const end = new Date(now); end.setFullYear(end.getFullYear() + 1);
+                            setEditingUser({ ...editingUser, package_expiration: `${fmt(now)} - ${fmt(end)}` });
+                          }}
+                          style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.25)', cursor: 'pointer' }}
+                        >
+                          📅 1 Năm
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingUser({ ...editingUser, package_expiration: 'Vĩnh viễn' })}
+                          style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
+                        >
+                          ♾️ Vĩnh viễn
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Single Source Selection Sub-panel */}
+                    {editingUser.active_package === 'single' && (
+                      <div style={{ gridColumn: 'span 2', background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 12, border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                        <label className="form-label" style={{ fontWeight: 800, color: '#2563eb', marginBottom: 8, display: 'block' }}>
+                          🎯 Chọn 1 Nguồn Dữ Liệu Được Cấp Quyền Cho User:
+                        </label>
+                        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                          {[
+                            { key: 'adb', label: '🏛️ Dự Án ADB Châu Á' },
+                            { key: 'worldbank', label: '🌐 Dự Án World Bank' },
+                            { key: 'gov', label: '📋 Thông Báo Đấu Thầu Công' },
+                          ].map(src => (
+                            <label key={src.key} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 700, fontSize: 12.5, color: 'var(--text-primary)' }}>
+                              <input
+                                type="radio"
+                                name="single_source_choice"
+                                checked={(editingUser.selected_sources || ['adb'])[0] === src.key}
+                                onChange={() => setEditingUser({ ...editingUser, selected_sources: [src.key] })}
+                                style={{ width: 16, height: 16, accentColor: '#2563eb' }}
+                              />
+                              {src.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Combo 2 Sources Selection Sub-panel */}
+                    {editingUser.active_package === 'combo2' && (
+                      <div style={{ gridColumn: 'span 2', background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 12, border: '1px solid rgba(59, 130, 246, 0.25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <label className="form-label" style={{ fontWeight: 800, color: '#2563eb', margin: 0 }}>
+                            ⚡ Chọn 2 Nguồn Dữ Liệu Trong Gói Combo 2:
+                          </label>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: (editingUser.selected_sources || []).length === 2 ? '#10b981' : '#f59e0b' }}>
+                            {(editingUser.selected_sources || []).length === 2 ? '✓ Đã chọn 2/2 nguồn' : `⚠️ Vui lòng chọn 2 nguồn (Hiện tại: ${(editingUser.selected_sources || []).length}/2)`}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                          {[
+                            { key: 'adb', label: '🏛️ Dự Án ADB Châu Á' },
+                            { key: 'worldbank', label: '🌐 Dự Án World Bank' },
+                            { key: 'gov', label: '📋 Thông Báo Đấu Thầu Công' },
+                          ].map(src => {
+                            const selected = (editingUser.selected_sources || ['adb', 'worldbank']).includes(src.key);
+                            return (
+                              <label key={src.key} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 700, fontSize: 12.5, color: 'var(--text-primary)' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={selected}
+                                  onChange={e => {
+                                    const current = editingUser.selected_sources || ['adb', 'worldbank'];
+                                    let updated;
+                                    if (e.target.checked) {
+                                      if (current.length >= 2) {
+                                        updated = [current[1] || current[0], src.key];
+                                      } else {
+                                        updated = [...current, src.key];
+                                      }
+                                    } else {
+                                      updated = current.filter(k => k !== src.key);
+                                    }
+                                    setEditingUser({ ...editingUser, selected_sources: updated });
+                                  }}
+                                  style={{ width: 16, height: 16, accentColor: '#2563eb' }}
+                                />
+                                {src.label}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Enterprise Max Users Sub-panel */}
+                    {(editingUser.active_package === 'enterprise' || editingUser.role === 'admin') && (
+                      <div style={{ gridColumn: 'span 2', background: 'rgba(147, 51, 234, 0.08)', padding: 12, borderRadius: 12, border: '1px solid rgba(147, 51, 234, 0.25)' }}>
+                        <label className="form-label" style={{ fontWeight: 800, color: '#9333ea', marginBottom: 6, display: 'block' }}>
+                          👥 Hạn Ngạch Số Lượng User Tối Đa Của Phân Vùng (Nâng Cấp Thêm Slot User):
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <input
+                            type="number"
+                            min={1}
+                            max={500}
+                            className="form-input"
+                            style={{ width: 140, fontWeight: 800, fontSize: 15, color: '#9333ea' }}
+                            value={editingUser.max_users || 10}
+                            onChange={e => setEditingUser({ ...editingUser, max_users: Math.max(1, parseInt(e.target.value, 10) || 10) })}
+                          />
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            thành viên (Mặc định: 10 user. Điều chỉnh khi tài khoản Enterprise mua thêm slot).
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13, color: '#9333ea' }}>
+                        <input
+                          type="checkbox"
+                          checked={editingUser.has_ai === true}
+                          onChange={e => setEditingUser({ ...editingUser, has_ai: e.target.checked })}
+                          style={{ width: 16, height: 16, accentColor: '#a855f7' }}
+                        />
+                        🤖 Kích hoạt Trợ Lý AI Gemini 2.0 (Hỏi-đáp 24/7)
+                      </label>
+                    </div>
+
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label" style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8, display: 'block' }}>
+                        🎨 Các Gói Theme UI Đã Mở Khóa / Cấp Quyền Cho User:
+                      </label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12 }}>
+                        {[
+                          { key: 'classic', label: 'Classic Retro PC (Win98)' },
+                          { key: 'sapphire', label: 'Royal Sapphire Executive' },
+                          { key: 'luxury', label: 'Bloomberg Luxury 24K' },
+                          { key: 'anime', label: 'Anime Twilight Sakura 🌸' },
+                        ].map(t => {
+                          const isChecked = (editingUser.purchased_themes || []).includes(t.key);
+                          return (
+                            <label key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 600 }}>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={e => {
+                                  const current = editingUser.purchased_themes || [];
+                                  const updated = e.target.checked
+                                    ? [...current, t.key]
+                                    : current.filter(k => k !== t.key);
+                                  setEditingUser({ ...editingUser, purchased_themes: updated });
+                                }}
+                                style={{ width: 15, height: 15, accentColor: '#ec4899' }}
+                              />
+                              {t.label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">Mật khẩu mới (Đặt lại mật khẩu)</label>
                 <input
@@ -1489,15 +1879,187 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── User Details Modal (Super Admin View) ── */}
+      {viewingUser && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 99999, padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 640,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
+            maxHeight: '90vh', overflowY: 'auto', animation: 'fadeIn 0.2s ease-out',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  background: viewingUser.role === 'admin' || viewingUser.role === 'super_admin' ? 'linear-gradient(135deg, #f59e0b, #ec4899)' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                  color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, fontWeight: 900, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                }}>
+                  {(viewingUser.display_name || viewingUser.email).slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {viewingUser.display_name || viewingUser.email}
+                  </h3>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{viewingUser.email}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingUser(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6, borderRadius: 8 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Badges Bar */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20,
+                background: viewingUser.role === 'super_admin' ? '#fef3c7' : viewingUser.role === 'admin' ? '#eff6ff' : viewingUser.role === 'staff' ? '#f0fdf4' : '#f1f5f9',
+                color: viewingUser.role === 'super_admin' ? '#92400e' : viewingUser.role === 'admin' ? '#1d4ed8' : viewingUser.role === 'staff' ? '#166534' : '#475569',
+                border: `1px solid ${viewingUser.role === 'super_admin' ? '#fde68a' : viewingUser.role === 'admin' ? '#bfdbfe' : viewingUser.role === 'staff' ? '#bbf7d0' : '#e2e8f0'}`,
+              }}>
+                {viewingUser.role === 'super_admin' ? '👑 SUPER ADMIN' : viewingUser.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : viewingUser.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
+              </span>
+
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
+                📍 {viewingUser.region || 'Toàn quốc'}
+              </span>
+
+              <span style={{
+                fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20,
+                background: viewingUser.is_active !== false ? '#ecfdf5' : '#fef2f2',
+                color: viewingUser.is_active !== false ? '#047857' : '#b91c1c',
+                border: `1px solid ${viewingUser.is_active !== false ? '#a7f3d0' : '#fca5a5'}`,
+              }}>
+                {viewingUser.is_active !== false ? '🟢 HOẠT ĐỘNG' : '🔴 ĐÃ KHÓA'}
+              </span>
+            </div>
+
+            {/* Grid Info Sections */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+              {/* Section 1: Gói Dữ Liệu & Hạn Dùng */}
+              <div style={{ background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+                  ⚡ GÓI DỮ LIỆU & HẠN DÙNG
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: viewingUser.role === 'super_admin' || viewingUser.active_package === 'full' ? '#10b981' : viewingUser.active_package === 'enterprise' || viewingUser.role === 'admin' ? '#9333ea' : viewingUser.active_package === 'combo2' || viewingUser.active_package === 'single' ? '#3b82f6' : 'var(--text-primary)' }}>
+                  {viewingUser.role === 'super_admin' ? '👑 FULL DATA (SUPER ADMIN)' : viewingUser.active_package === 'enterprise' || viewingUser.role === 'admin' ? `🏢 Gói Enterprise (Max ${viewingUser.max_users || 10} User)` : viewingUser.active_package === 'full' ? '👑 Full Data Pack (3 Nguồn)' : viewingUser.active_package === 'single' ? `🎯 Gói 1 Nguồn (${({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[(viewingUser.selected_sources || ['adb'])[0]] || '1 Nguồn'})` : viewingUser.active_package === 'combo2' ? `⚡ Combo 2 Nguồn (${(viewingUser.selected_sources || ['adb', 'worldbank']).map(k => ({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[k] || k).join(' + ')})` : '📰 Báo Chí Miễn Phí'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>📅 Hạn dùng:</span>
+                  <b style={{ color: 'var(--text-primary)' }}>
+                    {viewingUser.active_package === 'free' || viewingUser.role === 'super_admin' ? 'Vĩnh viễn' : (viewingUser.package_expiration || 'Vĩnh viễn')}
+                  </b>
+                </div>
+                <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: viewingUser.has_ai ? '#f3e8ff' : 'var(--bg-surface)', color: viewingUser.has_ai ? '#9333ea' : 'var(--text-muted)', border: `1px solid ${viewingUser.has_ai ? '#e9d5ff' : 'var(--border-subtle)'}` }}>
+                  🤖 AI Gemini 2.0: {viewingUser.has_ai ? 'Đã kích hoạt' : 'Chưa đăng ký'}
+                </div>
+              </div>
+
+              {/* Section 2: Gói Theme UI Sở Hữu */}
+              <div style={{ background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
+                  🎨 GÓI THEME UI ĐÃ MỞ KHÓA
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
+                    Mặc định
+                  </span>
+                  {(viewingUser.purchased_themes || []).map(tKey => (
+                    <span key={tKey} style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                      {tKey === 'classic' ? 'Win98 Retro' : tKey === 'sapphire' ? 'Royal Sapphire' : tKey === 'luxury' ? 'Bloomberg Luxury' : tKey === 'anime' ? 'Anime Sakura 🌸' : tKey}
+                    </span>
+                  ))}
+                  {viewingUser.role === 'super_admin' && (
+                    <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+                      👑 Trọn bộ Theme (Super Admin)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 3: Granular Permissions */}
+              <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
+                  🔑 PHÂN QUYỀN TRUY CẬP MÔ-ĐỤN
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, fontSize: 12 }}>
+                  {[
+                    { key: 'can_view_press', label: '📰 Xem Tin Báo Chí' },
+                    { key: 'can_view_bidding', label: '📋 Xem Gói Thầu GOV' },
+                    { key: 'can_view_oda', label: '🌐 Xem Dự Án ODA & WB' },
+                    { key: 'can_manage_keywords', label: '🏷️ Đăng Ký Từ Khóa Lọc' },
+                    { key: 'can_export_data', label: '📥 Xuất Báo Cáo Data' },
+                  ].map(p => {
+                    const hasPerm = viewingUser.permissions?.[p.key] !== false;
+                    return (
+                      <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: hasPerm ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                        <span style={{ fontSize: 14 }}>{hasPerm ? '🟢' : '⚪'}</span>
+                        <span style={{ fontWeight: hasPerm ? 700 : 400, textDecoration: hasPerm ? 'none' : 'line-through' }}>{p.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 4: System Info */}
+              <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Email Digest: </span>
+                  <b>{viewingUser.email_digest_enabled ? `📧 Đã bật (${viewingUser.digest_hour ?? 7}h)` : '🔕 Tắt'}</b>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Ngày tạo: </span>
+                  <b>{viewingUser.created_at ? new Date(viewingUser.created_at).toLocaleDateString('vi-VN') : '-'}</b>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+              <button
+                onClick={() => {
+                  const uToEdit = viewingUser;
+                  setViewingUser(null);
+                  handleOpenEditUser(uToEdit);
+                }}
+                className="btn btn-primary"
+                style={{ padding: '10px 20px', borderRadius: 12, gap: 6, fontWeight: 800 }}
+              >
+                <Edit size={15} /> Chỉnh Sửa Tài Khoản Này
+              </button>
+              <button
+                onClick={() => setViewingUser(null)}
+                className="btn btn-ghost"
+                style={{ padding: '10px 20px', borderRadius: 12 }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
       {/* ── Edit Source Modal ── */}
-      {editingSource && (
+      {editingSource && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 9999, padding: 20,
+          zIndex: 99999, padding: 20,
         }}>
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
@@ -1651,7 +2213,8 @@ export default function AdminPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* CONFIRM DELETE MODAL */}
@@ -1668,6 +2231,97 @@ export default function AdminPage() {
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteConfirm(null)}
       />
+
+      {/* BUY SLOT MODAL FOR REGIONAL ADMIN */}
+      {showBuySlotModal && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 99999, padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            borderRadius: 24, padding: 32, width: '100%', maxWidth: 480,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ padding: 10, borderRadius: 12, background: '#f3e8ff', color: '#9333ea' }}>
+                  <Zap size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                    Nâng Cấp Mua Thêm Slot User
+                  </h3>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    Mở rộng quy mô thành viên cho {userRegion}
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setShowBuySlotModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Gói nâng cấp:</span>
+                <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ Mua Thêm +10 Slot User</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Chi phí nâng cấp:</span>
+                <span style={{ fontWeight: 900, color: 'var(--text-primary)', fontSize: 16 }}>50.000đ / tháng</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, borderTop: '1px dashed var(--border-subtle)', paddingTop: 8, marginTop: 8 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch hiện tại:</span>
+                <b style={{ color: 'var(--text-primary)' }}>{user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10)} User</b>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 4 }}>
+                <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch sau nâng cấp:</span>
+                <b style={{ color: '#10b981' }}>{(user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10)) + 10} User</b>
+              </div>
+            </div>
+
+            <form onSubmit={e => {
+              e.preventDefault();
+              setSlotSubmitting(true);
+              setTimeout(() => {
+                const uKey = user?.email || user?.id || 'default';
+                const currentMax = parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+                const newMax = currentMax + 10;
+                localStorage.setItem(`bis_max_users_${uKey}`, String(newMax));
+                setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, max_users: newMax } : u));
+                setSlotSubmitting(false);
+                setShowBuySlotModal(false);
+                showAlert('success', `⚡ Đã nâng cấp mua thêm +10 slot thành viên thành công! Hạn ngạch mới: ${newMax} User.`);
+              }, 1200);
+            }}>
+              <div style={{ marginBottom: 20 }}>
+                <label className="form-label">Số điện thoại / Zalo liên hệ xác nhận *</label>
+                <input
+                  className="form-input"
+                  type="tel"
+                  placeholder="0912 xxx xxx"
+                  value={slotPhone}
+                  onChange={e => setSlotPhone(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowBuySlotModal(false)}>
+                  Hủy Bỏ
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={slotSubmitting} style={{ background: 'linear-gradient(135deg, #9333ea, #7e22ce)', border: 'none', padding: '10px 20px', borderRadius: 12, fontWeight: 800 }}>
+                  {slotSubmitting ? 'Đang Xử Lý...' : 'Xác Nhận Đăng Ký (50.000đ)'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-// src/components/common/ConfirmModal.jsx
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, HelpCircle, Loader2, X, AlertCircle } from 'lucide-react';
 
 export default function ConfirmModal({
@@ -66,7 +66,7 @@ export default function ConfirmModal({
     iconColor: '#e11d48',
   };
 
-  return (
+  return createPortal(
     <div
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -320,6 +320,7 @@ export default function ConfirmModal({
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 }

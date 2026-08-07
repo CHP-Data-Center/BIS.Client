@@ -36,23 +36,28 @@ function LiveClock() {
 function HeaderThemeRain() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-ui-theme') || 'basic');
   const items = useRef([
-    { id: 1,  left: '4%',  symbol: '🪙', isDiamond: true,  delay: '0s',    duration: '3.8s', size: 12 },
-    { id: 2,  left: '9%',  symbol: '✨', isDiamond: false, delay: '1.2s',  duration: '4.5s', size: 10 },
-    { id: 3,  left: '15%', symbol: '💰', isDiamond: true,  delay: '0.5s',  duration: '4.1s', size: 12 },
-    { id: 4,  left: '21%', symbol: '⭐', isDiamond: false, delay: '1.8s',  duration: '4.7s', size: 11 },
-    { id: 5,  left: '27%', symbol: '🪙', isDiamond: true,  delay: '0.9s',  duration: '3.6s', size: 13 },
-    { id: 6,  left: '33%', symbol: '✨', isDiamond: false, delay: '2.4s',  duration: '4.3s', size: 10 },
-    { id: 7,  left: '39%', symbol: '💰', isDiamond: true,  delay: '0.3s',  duration: '4.0s', size: 12 },
-    { id: 8,  left: '45%', symbol: '⭐', isDiamond: false, delay: '1.6s',  duration: '4.6s', size: 11 },
-    { id: 9,  left: '51%', symbol: '🪙', isDiamond: true,  delay: '2.7s',  duration: '4.2s', size: 13 },
-    { id: 10, left: '57%', symbol: '✨', isDiamond: false, delay: '0.8s',  duration: '4.4s', size: 10 },
-    { id: 11, left: '63%', symbol: '💰', isDiamond: true,  delay: '1.9s',  duration: '3.9s', size: 12 },
-    { id: 12, left: '69%', symbol: '⭐', isDiamond: false, delay: '0.4s',  duration: '4.5s', size: 11 },
-    { id: 13, left: '75%', symbol: '🪙', isDiamond: true,  delay: '2.1s',  duration: '4.1s', size: 13 },
-    { id: 14, left: '81%', symbol: '✨', isDiamond: false, delay: '1.1s',  duration: '4.7s', size: 10 },
-    { id: 15, left: '87%', symbol: '💰', isDiamond: true,  delay: '2.5s',  duration: '4.3s', size: 12 },
-    { id: 16, left: '92%', symbol: '⭐', isDiamond: false, delay: '0.7s',  duration: '4.6s', size: 11 },
-    { id: 17, left: '96%', symbol: '🪙', isDiamond: true,  delay: '1.5s',  duration: '4.0s', size: 12 },
+    { id: 1,  left: '2%',  symbol: '🪙', animeSymbol: '🌸', isDiamond: true,  delay: '0s',    duration: '3.8s', size: 12 },
+    { id: 2,  left: '6%',  symbol: '✨', animeSymbol: '「かわいい」', isDiamond: false, delay: '1.2s',  duration: '4.5s', size: 11 },
+    { id: 3,  left: '10%', symbol: '💰', animeSymbol: '💖', isDiamond: true,  delay: '0.5s',  duration: '4.1s', size: 12 },
+    { id: 4,  left: '14%', symbol: '⭐', animeSymbol: '(≧◡≦)', isDiamond: false, delay: '1.8s',  duration: '4.7s', size: 12 },
+    { id: 5,  left: '18%', symbol: '🪙', animeSymbol: '🌸', isDiamond: true,  delay: '0.9s',  duration: '3.6s', size: 13 },
+    { id: 6,  left: '23%', symbol: '✨', animeSymbol: '「キラキラ」', isDiamond: false, delay: '2.4s',  duration: '4.3s', size: 11 },
+    { id: 7,  left: '28%', symbol: '💰', animeSymbol: '💖', isDiamond: true,  delay: '0.3s',  duration: '4.0s', size: 12 },
+    { id: 8,  left: '32%', symbol: '⭐', animeSymbol: '(✿◠‿◠)', isDiamond: false, delay: '1.6s',  duration: '4.6s', size: 12 },
+    { id: 9,  left: '37%', symbol: '🪙', animeSymbol: '「すごい！」', isDiamond: true,  delay: '2.7s',  duration: '4.2s', size: 11 },
+    { id: 10, left: '42%', symbol: '✨', animeSymbol: '🌸', isDiamond: false, delay: '0.8s',  duration: '4.4s', size: 12 },
+    { id: 11, left: '46%', symbol: '💰', animeSymbol: '💖', isDiamond: true,  delay: '1.9s',  duration: '3.9s', size: 12 },
+    { id: 12, left: '50%', symbol: '⭐', animeSymbol: '「ヤッター」', isDiamond: false, delay: '0.4s',  duration: '4.5s', size: 11 },
+    { id: 13, left: '55%', symbol: '🪙', animeSymbol: '✨', isDiamond: true,  delay: '2.1s',  duration: '4.1s', size: 13 },
+    { id: 14, left: '60%', symbol: '✨', animeSymbol: '(｡♥‿♥｡)', isDiamond: false, delay: '1.1s',  duration: '4.7s', size: 12 },
+    { id: 15, left: '65%', symbol: '💰', animeSymbol: '🌸', isDiamond: true,  delay: '2.5s',  duration: '4.3s', size: 12 },
+    { id: 16, left: '70%', symbol: '⭐', animeSymbol: '「最高！」', isDiamond: false, delay: '0.7s',  duration: '4.6s', size: 11 },
+    { id: 17, left: '74%', symbol: '🪙', animeSymbol: '💖', isDiamond: true,  delay: '1.5s',  duration: '4.0s', size: 12 },
+    { id: 18, left: '79%', symbol: '✨', animeSymbol: '「だいすき」', isDiamond: false, delay: '2.2s',  duration: '4.4s', size: 11 },
+    { id: 19, left: '84%', symbol: '💰', animeSymbol: '🌸', isDiamond: true,  delay: '0.6s',  duration: '3.9s', size: 13 },
+    { id: 20, left: '88%', symbol: '⭐', animeSymbol: '(๑>◡<๑)', isDiamond: false, delay: '1.7s',  duration: '4.5s', size: 12 },
+    { id: 21, left: '93%', symbol: '🪙', animeSymbol: '「ルンルン」', isDiamond: true,  delay: '2.8s',  duration: '4.1s', size: 11 },
+    { id: 22, left: '97%', symbol: '✨', animeSymbol: '🌸', isDiamond: false, delay: '1.0s',  duration: '4.3s', size: 12 },
   ]).current;
 
   useEffect(() => {
@@ -69,9 +74,10 @@ function HeaderThemeRain() {
     return () => observer.disconnect();
   }, []);
 
-  if (theme !== 'luxury' && theme !== 'sapphire') return null;
+  if (theme !== 'luxury' && theme !== 'sapphire' && theme !== 'anime') return null;
 
   const isLuxury = theme === 'luxury';
+  const isAnime = theme === 'anime';
 
   return (
     <div
@@ -91,7 +97,7 @@ function HeaderThemeRain() {
             top: '-20px',
             left: it.left,
             fontSize: it.size,
-            opacity: 0.85,
+            opacity: 0.88,
             animation: `headerParticleFall ${it.duration} ease-in-out infinite`,
             animationDelay: it.delay,
             willChange: 'transform',
@@ -103,6 +109,16 @@ function HeaderThemeRain() {
         >
           {isLuxury ? (
             it.symbol
+          ) : isAnime ? (
+            <span style={{
+              color: '#f472b6',
+              fontWeight: 800,
+              textShadow: '0 0 10px rgba(244, 114, 182, 0.8), 0 0 20px rgba(168, 85, 247, 0.5)',
+              fontSize: typeof it.animeSymbol === 'string' && it.animeSymbol.length > 2 ? 10.5 : it.size,
+              whiteSpace: 'nowrap',
+            }}>
+              {it.animeSymbol}
+            </span>
           ) : it.isDiamond ? (
             <SapphireDiamondSvg size={it.size + 5} />
           ) : (
