@@ -45,7 +45,7 @@ export default function ConfirmModal({
       color: '#f59e0b',
       bgGrad: 'linear-gradient(135deg, #f59e0b, #d97706)',
       glow: 'rgba(245, 158, 11, 0.35)',
-      badgeBg: '#fffbe completed',
+      badgeBg: '#fffbeb',
       badgeBorder: '#fde68a',
       iconColor: '#d97706',
     },

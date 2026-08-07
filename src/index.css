@@ -340,6 +340,24 @@ html[data-ui-theme="luxury"],
   color: #f5f5f7 !important;
 }
 
+/* Luxury Theme Modal, Popover & Dropdown Overrides */
+[data-ui-theme="luxury"] .modal,
+[data-ui-theme="luxury"] .modal-content,
+[data-ui-theme="luxury"] div[style*="zIndex: 9999"],
+[data-ui-theme="luxury"] div[style*="zIndex: 99999"] {
+  background: linear-gradient(145deg, rgba(25, 25, 32, 0.98) 0%, rgba(14, 14, 17, 0.99) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(212, 175, 55, 0.2) !important;
+  color: #f5f5f7 !important;
+}
+
+[data-ui-theme="luxury"] .notif-dropdown {
+  background: linear-gradient(145deg, rgba(25, 25, 32, 0.98) 0%, rgba(14, 14, 17, 0.99) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.9), 0 0 25px rgba(212, 175, 55, 0.2) !important;
+  color: #f5f5f7 !important;
+}
+
 [data-ui-theme="sapphire"] .user-role-badge {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(16, 28, 61, 0.95) 100%) !important;
   border: 1px solid rgba(56, 189, 248, 0.6) !important;
@@ -1113,6 +1131,17 @@ html[data-ui-theme="sapphire"],
 [data-ui-theme="sapphire"] .pending-source-item {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  color: #f0f6fc !important;
+}
+
+/* Royal Sapphire Theme Modal & Popover Overrides */
+[data-ui-theme="sapphire"] .modal,
+[data-ui-theme="sapphire"] .modal-content,
+[data-ui-theme="sapphire"] div[style*="zIndex: 9999"],
+[data-ui-theme="sapphire"] div[style*="zIndex: 99999"] {
+  background: linear-gradient(145deg, rgba(16, 28, 61, 0.98) 0%, rgba(8, 14, 34, 0.99) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.2) !important;
   color: #f0f6fc !important;
 }
 
