@@ -9,7 +9,7 @@ import {
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
 import { worldBankProjectUrl } from '../utils/wbUrl';
-import WbProjectDetailModal from './WbProjectDetailModal';
+import OdaProjectDetailModal from './OdaProjectDetailModal';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -107,6 +107,8 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
   const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
   const HeaderIcon = config.icon;
+  // WB & ADB: bấm tên/icon dự án → mở modal chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
+  const usesDetailModal = normType === 'worldbank' || normType === 'adb';
 
   // Tiêu đề riêng khi tách TBMT / KHLCNT thành 2 trang (dùng chung component procurement).
   const pageTitle = kind === 'notice' ? 'Thông Báo Mời Thầu (TBMT)'
@@ -530,8 +532,15 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
   return (
     <div className="wb-container" style={{ width: '100%', height: 'calc(100vh - 128px)', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
-      {/* Modal chi tiết dự án WB (xem trong app, không 403) */}
-      {detailItem && <WbProjectDetailModal item={detailItem} onClose={() => setDetailItem(null)} />}
+      {/* Modal chi tiết dự án ODA (WB/ADB) — xem trong app, không 403 */}
+      {detailItem && (
+        <OdaProjectDetailModal
+          item={detailItem}
+          source={normType}
+          stageLabel={config.stageLabel}
+          onClose={() => setDetailItem(null)}
+        />
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (
@@ -1052,7 +1061,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
                           {/* Title */}
                           <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
-                            {normType === 'worldbank' ? (
+                            {usesDetailModal ? (
                               // WB: mở modal chi tiết TRONG APP (không phụ thuộc trang WB hay 403).
                               <button
                                 onClick={() => setDetailItem(p)}
@@ -1170,7 +1179,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                         </div>
 
                         <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
-                          {normType === 'worldbank' ? (
+                          {usesDetailModal ? (
                             <button
                               onClick={() => setDetailItem(p)}
                               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', textAlign: 'left', color: 'inherit' }}
@@ -1214,7 +1223,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           >
                             {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
                           </button>
-                          {normType === 'worldbank' ? (
+                          {usesDetailModal ? (
                             <button
                               onClick={() => setDetailItem(p)}
                               style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.brandColor, padding: 4 }}

@@ -1,6 +1,6 @@
-// Modal chi tiết dự án World Bank — hiển thị NGAY TRONG APP từ dữ liệu đã crawl, nên KHÔNG
-// bao giờ 403 (trang project-detail của WB hay bị Akamai chặn tạm thời khi bấm nhiều).
-// Vẫn có nút "Xem trên World Bank" cho ai muốn mở trang gốc.
+// Modal chi tiết dự án ODA (World Bank / ADB) — hiển thị NGAY TRONG APP từ dữ liệu đã crawl,
+// nên KHÔNG bao giờ 403 (trang gốc của WB/ADB hay bị chặn tạm thời khi bấm nhiều/automation).
+// Có nút "Xem trên World Bank" / "Xem trên ADB" để mở trang gốc.
 import { X, ExternalLink, Building2, Globe2, Landmark, CalendarDays, Wallet, FileText } from 'lucide-react';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 
@@ -14,10 +14,21 @@ function Row({ label, value }) {
   );
 }
 
-export default function WbProjectDetailModal({ item, onClose }) {
+const SOURCE_META = {
+  worldbank: { brand: '#10b981', Icon: Globe2, label: 'World Bank', dataNote: 'Dữ liệu từ World Bank API' },
+  adb: { brand: '#f59e0b', Icon: Building2, label: 'ADB', dataNote: 'Dữ liệu từ ADB' },
+};
+
+export default function OdaProjectDetailModal({ item, source = 'worldbank', stageLabel = 'Giai đoạn', onClose }) {
   if (!item) return null;
 
-  const wbUrl = worldBankProjectUrl(item.url || item.external_id || item.id);
+  const meta = SOURCE_META[source] || SOURCE_META.worldbank;
+  const Icon = meta.Icon;
+  const extId = item.external_id || item.id;
+  const externalUrl = source === 'adb'
+    ? (item.rawUrl || item.url || `https://www.adb.org/projects/${extId}/main`)
+    : worldBankProjectUrl(item.url || extId);
+
   const objective = item.development_objective || item.ai_summary;
   const fmtDate = (d) => {
     if (!d) return null;
@@ -43,13 +54,13 @@ export default function WbProjectDetailModal({ item, onClose }) {
       >
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Globe2 size={20} color="white" />
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: meta.brand, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon size={20} color="white" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: '#10b981', background: '#ecfdf5', padding: '2px 8px', borderRadius: 8 }}>
-                {item.external_id || item.id}
+              <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, color: meta.brand, background: `${meta.brand}1a`, padding: '2px 8px', borderRadius: 8 }}>
+                {extId}
               </span>
               {item.projectstatusdisplay && (
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>{item.projectstatusdisplay}</span>
@@ -83,7 +94,7 @@ export default function WbProjectDetailModal({ item, onClose }) {
             <Row label="Tổng vốn dự án" value={item.total_cost} />
             <Row label="Công cụ vay" value={item.lending_instrument} />
             <Row label="Năm tài khóa" value={item.fiscal_year} />
-            <Row label="Giai đoạn" value={item.last_stage_reached_name} />
+            <Row label={stageLabel} value={item.last_stage_reached_name} />
             <Row label={<><CalendarDays size={12} style={{ verticalAlign: -1 }} /> Ngày phê duyệt</>} value={fmtDate(item.boardapprovaldate)} />
             <Row label="Cập nhật cuối" value={fmtDate(item.proj_last_upd_date)} />
             <Row label="Ngày đóng" value={fmtDate(item.closing_date)} />
@@ -96,19 +107,19 @@ export default function WbProjectDetailModal({ item, onClose }) {
         {/* Footer */}
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            Dữ liệu từ World Bank API · bấm để mở trang gốc
+            {meta.dataNote} · bấm để mở trang gốc
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <a
-              href={wbUrl}
+              href={externalUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary btn-sm"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, textDecoration: 'none' }}
             >
-              Xem trên World Bank <ExternalLink size={13} />
+              Xem trên {meta.label} <ExternalLink size={13} />
             </a>
-            <button onClick={onClose} className="btn btn-primary btn-sm" style={{ fontSize: 12, background: '#10b981', border: 'none' }}>
+            <button onClick={onClose} className="btn btn-primary btn-sm" style={{ fontSize: 12, background: meta.brand, border: 'none' }}>
               Đóng
             </button>
           </div>
