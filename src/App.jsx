@@ -22,6 +22,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const WorldBankView = lazy(() => import('./components/WorldBankView'));
+const WbProjectDetailPage = lazy(() => import('./pages/WbProjectDetailPage'));
 
 function PageLoader() {
   return (
@@ -154,6 +155,18 @@ export default function App() {
               <Route path="/worldbank" element={
                 <EnterpriseRoute>
                   <AppLayout><WorldBankView /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+              <Route path="/worldbank/project/:id" element={
+                <EnterpriseRoute>
+                  <AppLayout><WbProjectDetailPage /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+              <Route path="/worldbank/:id" element={
+                <EnterpriseRoute>
+                  <AppLayout><WbProjectDetailPage /></AppLayout>
                 </EnterpriseRoute>
               } />
 

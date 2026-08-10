@@ -2306,6 +2306,14 @@ ul, ol { list-style: none; }
   border-radius: var(--radius-full);
 }
 
+/* Xóa cục lồi ra ở ngoài (::before) cho Royal (Sapphire), Luxury, Anime Sakura & Classic -> Chỉ giữ viền trái thẳng */
+[data-ui-theme="sapphire"] .sidebar-nav-item.active::before,
+[data-ui-theme="luxury"] .sidebar-nav-item.active::before,
+[data-ui-theme="anime"] .sidebar-nav-item.active::before,
+[data-ui-theme="classic"] .sidebar-nav-item.active::before {
+  display: none !important;
+}
+
 .sidebar-nav-item .nav-badge {
   margin-left: auto;
   font-size: 10px;

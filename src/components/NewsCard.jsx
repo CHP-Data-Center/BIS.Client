@@ -119,8 +119,10 @@ export default function NewsCard({ article, index = 0 }) {
   };
 
   const handleClick = () => {
-    if (article.is_local_project && article.url) {
-      window.open(article.url, '_blank');
+    const isWbOrAdb = article.source === 'worldbank' || article.source === 'adb' || article.source_type === 'worldbank' || article.source_type === 'adb' || article.local_key === 'saved_worldbank_projects' || article.local_key === 'saved_adb_projects';
+    if (isWbOrAdb) {
+      const targetId = article.original_id || article.project_code || article.id;
+      nav(`/worldbank/project/${targetId}`, { state: { project: article } });
     } else {
       nav(`/article/${article.id}`, { state: { article } });
     }

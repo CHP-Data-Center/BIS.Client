@@ -262,8 +262,8 @@ export default function ArticlePage() {
               <div style={{
                 display: 'flex',
                 gap: 12,
-                padding: '16px 20px',
-                background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.85), rgba(243, 232, 255, 0.85))',
+                padding: '18px 22px',
+                background: 'var(--bg-surface-2)',
                 border: '1px solid rgba(167, 139, 250, 0.4)',
                 borderRadius: 'var(--radius-lg)',
                 marginBottom: 'var(--space-6)',

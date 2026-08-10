@@ -1,6 +1,6 @@
 // src/components/WorldBankView.jsx
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Globe, Building2, ShoppingBag, Search, Filter, RotateCcw, ArrowUpDown, ChevronUp, ChevronDown,
   Bookmark, BookmarkCheck, ExternalLink, Download, LayoutGrid, List,
@@ -102,6 +102,7 @@ const CONFIG_MAP = {
 };
 
 export default function WorldBankView({ type = 'worldbank', kind = null }) {
+  const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const initialQ = searchParams.get('q') || '';
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
@@ -1075,18 +1076,18 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           {/* Title */}
                           <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
                             {usesDetailModal ? (
-                              // WB: mở modal chi tiết TRONG APP (không phụ thuộc trang WB hay 403).
                               <button
-                                onClick={() => setDetailItem(p)}
+                                onClick={() => nav(`/worldbank/project/${p.id}`, { state: { project: p } })}
                                 style={{
                                   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                                   font: 'inherit', textAlign: 'left', color: config.brandColor,
-                                  display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                  width: '100%', gap: 8, lineHeight: 1.4,
                                 }}
                                 title="Xem chi tiết dự án"
                               >
-                                <span>{p.project_name}</span>
-                                <FileText size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                                <span style={{ flex: 1 }}>{p.project_name}</span>
+                                <ExternalLink size={13} style={{ flexShrink: 0, opacity: 0.65 }} />
                               </button>
                             ) : (
                               <a
@@ -1095,11 +1096,12 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                                 rel="noopener noreferrer"
                                 style={{
                                   color: config.brandColor, textDecoration: 'none',
-                                  display: 'inline-flex', alignItems: 'flex-start', gap: 6, lineHeight: 1.4,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                  width: '100%', gap: 8, lineHeight: 1.4,
                                 }}
                               >
-                                <span>{p.project_name}</span>
-                                <ExternalLink size={12} style={{ flexShrink: 0, marginTop: 3 }} />
+                                <span style={{ flex: 1 }}>{p.project_name}</span>
+                                <ExternalLink size={13} style={{ flexShrink: 0, opacity: 0.65 }} />
                               </a>
                             )}
                           </td>
@@ -1194,7 +1196,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                         <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
                           {usesDetailModal ? (
                             <button
-                              onClick={() => setDetailItem(p)}
+                              onClick={() => nav(`/worldbank/project/${p.id}`, { state: { project: p } })}
                               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', textAlign: 'left', color: 'inherit' }}
                               title="Xem chi tiết dự án"
                             >
@@ -1238,11 +1240,11 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           </button>
                           {usesDetailModal ? (
                             <button
-                              onClick={() => setDetailItem(p)}
+                              onClick={() => nav(`/worldbank/project/${p.id}`, { state: { project: p } })}
                               style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.brandColor, padding: 4 }}
                               title="Xem chi tiết dự án"
                             >
-                              <FileText size={18} />
+                              <ExternalLink size={18} />
                             </button>
                           ) : (
                             <a

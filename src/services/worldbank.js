@@ -87,6 +87,63 @@ export const worldBankService = {
     }
   },
 
+  /**
+   * Get a single World Bank project by ID
+   */
+  async getProjectById(id) {
+    if (!id) return null;
+    const targetId = String(id).trim().toLowerCase();
+    try {
+      const all = await this.fetchProjects();
+      const found = all.find(p => 
+        String(p.id).toLowerCase() === targetId || 
+        String(p.external_id || '').toLowerCase() === targetId
+      );
+      if (found) return found;
+
+      const res = await api.get('/oda-projects', {
+        params: { source: 'worldbank', q: id, size: 20 },
+      });
+      const items = res.data?.items || [];
+      const item = items.find(p => 
+        String(p.external_id || p.id).toLowerCase() === targetId
+      ) || items[0];
+
+      if (item) {
+        const totalAmt = item.amount_usd || (typeof item.amount === 'string' ? parseFloat(item.amount.replace(/[^0-9.]/g, '')) : item.amount) || 0;
+        return {
+          id: item.external_id || String(item.id),
+          project_name: item.title || 'N/A',
+          countryshortname: item.country || 'N/A',
+          totalamt: totalAmt,
+          totalCommitmentAmount: totalAmt,
+          projectstatusdisplay: item.status || 'Active',
+          boardapprovaldate: item.approval_date || null,
+          proj_last_upd_date: item.last_updated_date || null,
+          last_stage_reached_name: item.last_stage || 'N/A',
+          ai_summary: item.ai_summary || null,
+          external_id: item.external_id || null,
+          url: item.url || null,
+          sector: item.sector || null,
+          region: item.region || null,
+          development_objective: item.development_objective || null,
+          team_leader: item.team_leader || null,
+          borrower: item.borrower || null,
+          implementing_agency: item.implementing_agency || null,
+          lending_instrument: item.lending_instrument || null,
+          closing_date: item.closing_date || null,
+          fiscal_year: item.fiscal_year || null,
+          total_cost: item.total_cost || null,
+          amount_display: item.amount || null,
+          details: safeParse(item.details_json),
+        };
+      }
+    } catch (e) {
+      console.warn('Failed getProjectById:', e);
+    }
+    return null;
+  },
+
 
   /**
    * Get saved projects from localStorage / server

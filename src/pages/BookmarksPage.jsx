@@ -241,27 +241,31 @@ export default function BookmarksPage() {
 
   const handleViewDetail = (bm, e) => {
     if (e) e.stopPropagation();
-    if (bm.is_local_project && bm.article_url) {
-      window.open(bm.article_url, '_blank');
+    const isWbOrAdb = bm.source_type === 'worldbank' || bm.source_type === 'adb' || bm.local_key === 'saved_worldbank_projects' || bm.local_key === 'saved_adb_projects';
+    if (isWbOrAdb) {
+      const targetId = bm.original_id || bm.project_code || bm.article_id || bm.id;
+      nav(`/worldbank/project/${targetId}`, { state: { project: bm } });
     } else {
-      nav(`/article/${bm.article_id}`);
+      nav(`/article/${bm.article_id || bm.id}`);
     }
   };
 
   const mapBookmarkToArticle = (bm) => ({
     id: bm.article_id || bm.id,
+    original_id: bm.original_id || bm.project_code,
+    project_code: bm.project_code,
     title: bm.article_title || `Bài viết #${bm.article_id}`,
     url: bm.article_url,
     image_url: bm.article_image_url || bm.image_url,
     sources: bm.source_name ? [{ source_name: bm.source_name }] : [],
     source: bm.source_type || (bm.source_name?.toLowerCase().includes('thầu') ? 'gov' : 'press'),
+    source_type: bm.source_type,
     excerpt: bm.excerpt,
     published_at: bm.published_at || bm.created_at,
     matched_keywords: bm.matched_keywords || [],
     is_bookmarked: true,
     is_local_project: bm.is_local_project,
     local_key: bm.local_key,
-    original_id: bm.original_id,
     amount: bm.amount ? formatProjectAmount(bm.amount, bm.source_type) : null,
   });
 
