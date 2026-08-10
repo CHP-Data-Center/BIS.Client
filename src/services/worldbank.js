@@ -5,6 +5,13 @@ import { apiCache } from '../utils/apiCache';
 const WB_SAVED_KEY = 'saved_worldbank_projects';
 const WB_PUBLIC_API = 'https://search.worldbank.org/api/v2/projects';
 
+/** Parse details_json (chi tiết rich) an toàn -> object hoặc null. */
+function safeParse(s) {
+  if (!s) return null;
+  if (typeof s === 'object') return s;
+  try { return JSON.parse(s); } catch { return null; }
+}
+
 export const worldBankService = {
   /**
    * Trigger server-side crawling of World Bank projects into the database
@@ -68,6 +75,8 @@ export const worldBankService = {
           fiscal_year: p.fiscal_year || null,
           total_cost: p.total_cost || null,
           amount_display: p.amount || null,
+          // Chi tiết rich (từ WB API v3): financers, milestones, sectors… cho modal "như trang WB".
+          details: safeParse(p.details_json),
         };
       });
       apiCache.set(cacheKey, mapped, 60000); // cache 60s
