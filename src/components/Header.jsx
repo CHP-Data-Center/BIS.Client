@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
 import logoImg from '../assets/logo.png';
-import { SapphireDiamondSvg, SapphireStarSvg } from './common/ThemeFxOverlay';
+import { SapphireDiamondSvg, SapphireStarSvg, LuxuryCrownSvg, LuxuryMoneyBagSvg } from './common/ThemeFxOverlay';
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -31,34 +31,86 @@ function LiveClock() {
   );
 }
 
+function getHeaderParticleSpec(i) {
+  // Probabilities for Header Rain:
+  // ~25% CỰC TO / HUGE (40px - 54px)
+  // ~35% TO VỪA / LARGE (22px - 34px)
+  // ~40% NHỎ / SMALL (11px - 16px)
+  const seed = (Math.sin(i * 17.1234 + 43.567) * 43758.5453) % 1;
+  const rand = Math.abs(seed);
 
+  if (rand < 0.25) {
+    const norm = rand / 0.25;
+    const size = 40 + Math.floor(norm * 15); // 40px - 55px
+    const opacity = 0.95;
+    return { size, opacity, tier: 'huge' };
+  } else if (rand < 0.60) {
+    const norm = (rand - 0.25) / 0.35;
+    const size = 22 + Math.floor(norm * 13); // 22px - 35px
+    const opacity = 0.82;
+    return { size, opacity, tier: 'large' };
+  } else {
+    const norm = (rand - 0.60) / 0.40;
+    const size = 11 + Math.floor(norm * 6); // 11px - 17px
+    const opacity = 0.55;
+    return { size, opacity, tier: 'small' };
+  }
+}
+
+const TRAJECTORIES = [
+  { rotStart: '0deg', rotEnd: '0deg', driftX: '0px' },        // Rơi thẳng xuôi (0°)
+  { rotStart: '35deg', rotEnd: '50deg', driftX: '18px' },     // Rơi nghiêng xuôi (35°)
+  { rotStart: '170deg', rotEnd: '190deg', driftX: '-15px' },  // Rơi ngược (180°)
+  { rotStart: '-45deg', rotEnd: '-55deg', driftX: '-22px' },  // Rơi nghiêng trái (-45°)
+  { rotStart: '0deg', rotEnd: '360deg', driftX: '20px' },     // Rơi xoay tròn 360°
+  { rotStart: '-140deg', rotEnd: '-120deg', driftX: '12px' }, // Rơi chéo ngược (-135°)
+  { rotStart: '85deg', rotEnd: '95deg', driftX: '-28px' },    // Rơi ngang (90°)
+  { rotStart: '-18deg', rotEnd: '-10deg', driftX: '0px' },    // Rơi hơi nghiêng (-15°)
+];
 
 function HeaderThemeRain() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-ui-theme') || 'basic');
-  const items = useRef([
-    { id: 1,  left: '2%',  symbol: '🪙', animeSymbol: '🌸', isDiamond: true,  delay: '0s',    duration: '3.8s', size: 12 },
-    { id: 2,  left: '6%',  symbol: '✨', animeSymbol: '「かわいい」', isDiamond: false, delay: '1.2s',  duration: '4.5s', size: 11 },
-    { id: 3,  left: '10%', symbol: '💰', animeSymbol: '💖', isDiamond: true,  delay: '0.5s',  duration: '4.1s', size: 12 },
-    { id: 4,  left: '14%', symbol: '⭐', animeSymbol: '(≧◡≦)', isDiamond: false, delay: '1.8s',  duration: '4.7s', size: 12 },
-    { id: 5,  left: '18%', symbol: '🪙', animeSymbol: '🌸', isDiamond: true,  delay: '0.9s',  duration: '3.6s', size: 13 },
-    { id: 6,  left: '23%', symbol: '✨', animeSymbol: '「キラキラ」', isDiamond: false, delay: '2.4s',  duration: '4.3s', size: 11 },
-    { id: 7,  left: '28%', symbol: '💰', animeSymbol: '💖', isDiamond: true,  delay: '0.3s',  duration: '4.0s', size: 12 },
-    { id: 8,  left: '32%', symbol: '⭐', animeSymbol: '(✿◠‿◠)', isDiamond: false, delay: '1.6s',  duration: '4.6s', size: 12 },
-    { id: 9,  left: '37%', symbol: '🪙', animeSymbol: '「すごい！」', isDiamond: true,  delay: '2.7s',  duration: '4.2s', size: 11 },
-    { id: 10, left: '42%', symbol: '✨', animeSymbol: '🌸', isDiamond: false, delay: '0.8s',  duration: '4.4s', size: 12 },
-    { id: 11, left: '46%', symbol: '💰', animeSymbol: '💖', isDiamond: true,  delay: '1.9s',  duration: '3.9s', size: 12 },
-    { id: 12, left: '50%', symbol: '⭐', animeSymbol: '「ヤッター」', isDiamond: false, delay: '0.4s',  duration: '4.5s', size: 11 },
-    { id: 13, left: '55%', symbol: '🪙', animeSymbol: '✨', isDiamond: true,  delay: '2.1s',  duration: '4.1s', size: 13 },
-    { id: 14, left: '60%', symbol: '✨', animeSymbol: '(｡♥‿♥｡)', isDiamond: false, delay: '1.1s',  duration: '4.7s', size: 12 },
-    { id: 15, left: '65%', symbol: '💰', animeSymbol: '🌸', isDiamond: true,  delay: '2.5s',  duration: '4.3s', size: 12 },
-    { id: 16, left: '70%', symbol: '⭐', animeSymbol: '「最高！」', isDiamond: false, delay: '0.7s',  duration: '4.6s', size: 11 },
-    { id: 17, left: '74%', symbol: '🪙', animeSymbol: '💖', isDiamond: true,  delay: '1.5s',  duration: '4.0s', size: 12 },
-    { id: 18, left: '79%', symbol: '✨', animeSymbol: '「だいすき」', isDiamond: false, delay: '2.2s',  duration: '4.4s', size: 11 },
-    { id: 19, left: '84%', symbol: '💰', animeSymbol: '🌸', isDiamond: true,  delay: '0.6s',  duration: '3.9s', size: 13 },
-    { id: 20, left: '88%', symbol: '⭐', animeSymbol: '(๑>◡<๑)', isDiamond: false, delay: '1.7s',  duration: '4.5s', size: 12 },
-    { id: 21, left: '93%', symbol: '🪙', animeSymbol: '「ルンルン」', isDiamond: true,  delay: '2.8s',  duration: '4.1s', size: 11 },
-    { id: 22, left: '97%', symbol: '✨', animeSymbol: '🌸', isDiamond: false, delay: '1.0s',  duration: '4.3s', size: 12 },
-  ]).current;
+  const items = useRef(
+    Array.from({ length: 26 }).map((_, i) => {
+      const spec = getHeaderParticleSpec(i);
+      const left = `${(i * 3.8 + (i % 5) * 1.5) % 97}%`;
+      const durVal = 3.2 + (i % 6) * 0.65;
+      const duration = `${durVal.toFixed(2)}s`;
+      // Negative delay ensures particles are ALREADY scattered mid-fall on F5 page refresh (0ms freeze)
+      const delay = `-${((i * 0.55) % durVal).toFixed(2)}s`;
+
+      const traj = TRAJECTORIES[i % TRAJECTORIES.length];
+
+      return {
+        id: i,
+        ...spec,
+        left,
+        delay,
+        duration,
+        ...traj,
+        goldSymbol: i % 4 === 0 ? 'crown_svg' : i % 4 === 1 ? 'bag_svg' : i % 4 === 2 ? 'crown_svg' : '🪙',
+        sapphireSymbol: i % 2 === 0 ? 'diamond_svg' : 'star_svg',
+        animeSymbol:
+          i % 9 === 0
+            ? '🌸'
+            : i % 9 === 1
+            ? '(˶>⩊<˶)'
+            : i % 9 === 2
+            ? '💖'
+            : i % 9 === 3
+            ? 'ദ്ദി ˉ͈̀꒳ˉ͈́ )✧'
+            : i % 9 === 4
+            ? '🎀'
+            : i % 9 === 5
+            ? '( • ̀ω•́ )✧'
+            : i % 9 === 6
+            ? '(≡> ᴗ <≡)'
+            : i % 9 === 7
+            ? '「キラキラ」'
+            : '(≧◡≦)',
+      };
+    })
+  ).current;
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -76,9 +128,6 @@ function HeaderThemeRain() {
 
   if (theme !== 'luxury' && theme !== 'sapphire' && theme !== 'anime') return null;
 
-  const isLuxury = theme === 'luxury';
-  const isAnime = theme === 'anime';
-
   return (
     <div
       style={{
@@ -89,43 +138,70 @@ function HeaderThemeRain() {
         zIndex: 1, // Sitting behind header-left and header-right (zIndex 2)
       }}
     >
-      {items.map((it) => (
-        <div
-          key={it.id}
-          style={{
-            position: 'absolute',
-            top: '-20px',
-            left: it.left,
-            fontSize: it.size,
-            opacity: 0.88,
-            animation: `headerParticleFall ${it.duration} ease-in-out infinite`,
-            animationDelay: it.delay,
-            willChange: 'transform',
-            userSelect: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {isLuxury ? (
-            it.symbol
-          ) : isAnime ? (
-            <span style={{
-              color: '#f472b6',
-              fontWeight: 800,
-              textShadow: '0 0 10px rgba(244, 114, 182, 0.8), 0 0 20px rgba(168, 85, 247, 0.5)',
-              fontSize: typeof it.animeSymbol === 'string' && it.animeSymbol.length > 2 ? 10.5 : it.size,
-              whiteSpace: 'nowrap',
-            }}>
-              {it.animeSymbol}
-            </span>
-          ) : it.isDiamond ? (
-            <SapphireDiamondSvg size={it.size + 5} />
-          ) : (
-            <SapphireStarSvg size={it.size + 3} />
-          )}
-        </div>
-      ))}
+      {items.map((it) => {
+        const glowFilter =
+          it.tier === 'huge'
+            ? theme === 'luxury'
+              ? 'drop-shadow(0 6px 18px rgba(234, 179, 8, 0.95)) drop-shadow(0 2px 8px rgba(255, 215, 0, 0.8))'
+              : theme === 'anime'
+              ? 'drop-shadow(0 6px 18px rgba(244, 114, 182, 0.95))'
+              : 'drop-shadow(0 6px 18px rgba(56, 189, 248, 0.95))'
+            : it.tier === 'large'
+            ? theme === 'luxury'
+              ? 'drop-shadow(0 3px 10px rgba(234, 179, 8, 0.8))'
+              : theme === 'anime'
+              ? 'drop-shadow(0 3px 10px rgba(244, 114, 182, 0.8))'
+              : 'drop-shadow(0 3px 10px rgba(56, 189, 248, 0.8))'
+            : undefined;
+
+        const renderHeaderSymbol = () => {
+          if (theme === 'luxury') {
+            if (it.goldSymbol === 'crown_svg') return <LuxuryCrownSvg size={it.size} />;
+            if (it.goldSymbol === 'bag_svg') return <LuxuryMoneyBagSvg size={it.size} />;
+            return <span style={{ fontSize: it.size, lineHeight: 1 }}>{it.goldSymbol}</span>;
+          }
+
+          if (theme === 'anime') {
+            if (typeof it.animeSymbol === 'string' && (it.animeSymbol.includes('(') || it.animeSymbol.includes('「') || it.animeSymbol.includes('✧') || it.animeSymbol.length > 2)) {
+              return (
+                <span style={{ fontSize: Math.min(it.size, 17), fontWeight: 800, color: '#f472b6', whiteSpace: 'nowrap', textShadow: '0 0 8px rgba(244, 114, 182, 0.8)' }}>
+                  {it.animeSymbol}
+                </span>
+              );
+            }
+            return <span style={{ fontSize: it.size, lineHeight: 1, color: '#f472b6' }}>{it.animeSymbol}</span>;
+          }
+
+          // Sapphire / Royal: ONLY pure blue Sapphire SVGs!
+          if (it.sapphireSymbol === 'diamond_svg') return <SapphireDiamondSvg size={it.size + 4} />;
+          return <SapphireStarSvg size={it.size + 2} />;
+        };
+
+        return (
+          <div
+            key={it.id}
+            style={{
+              position: 'absolute',
+              top: '-90px',
+              left: it.left,
+              '--particle-opacity': it.opacity,
+              '--rot-start': it.rotStart,
+              '--rot-end': it.rotEnd,
+              '--drift-x': it.driftX,
+              animation: `headerParticleFall ${it.duration} linear infinite both`,
+              animationDelay: it.delay,
+              willChange: 'transform',
+              userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              filter: glowFilter,
+            }}
+          >
+            {renderHeaderSymbol()}
+          </div>
+        );
+      })}
     </div>
   );
 }

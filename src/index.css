@@ -2717,17 +2717,17 @@ ul, ol { list-style: none; }
 /* GPU-Accelerated Falling Gold Coins Rain (Behind content) */
 @keyframes goldCoinFallGpu {
   0% {
-    transform: translate3d(0, 0vh, 0) rotate(0deg);
+    transform: translate3d(0, 0px, 0) rotate(var(--rot-start, 0deg)) scale(0.95);
     opacity: 0;
   }
   15% {
-    opacity: 0.65;
+    opacity: var(--particle-opacity, 0.85);
   }
   85% {
-    opacity: 0.65;
+    opacity: var(--particle-opacity, 0.85);
   }
   100% {
-    transform: translate3d(0, 105vh, 0) rotate(360deg);
+    transform: translate3d(var(--drift-x, 0px), 115vh, 0) rotate(var(--rot-end, 0deg)) scale(0.95);
     opacity: 0;
   }
 }
@@ -2747,17 +2747,17 @@ ul, ol { list-style: none; }
 /* Header Particle Fall Animation */
 @keyframes headerParticleFall {
   0% {
-    transform: translate3d(0, -25px, 0) rotate(0deg);
+    transform: translate3d(0, 0px, 0) rotate(var(--rot-start, 0deg));
     opacity: 0;
   }
-  20% {
-    opacity: 0.65;
+  15% {
+    opacity: var(--particle-opacity, 0.85);
   }
-  80% {
-    opacity: 0.65;
+  85% {
+    opacity: var(--particle-opacity, 0.85);
   }
   100% {
-    transform: translate3d(0, 75px, 0) rotate(180deg);
+    transform: translate3d(var(--drift-x, 0px), 145px, 0) rotate(var(--rot-end, 0deg));
     opacity: 0;
   }
 }

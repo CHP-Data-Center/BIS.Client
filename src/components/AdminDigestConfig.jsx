@@ -127,11 +127,47 @@ export default function AdminDigestConfig() {
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {DAY_LABELS.map((lbl, d) => {
                   const on = cfg.days.includes(d);
+                  const theme = document.documentElement.getAttribute('data-ui-theme') || 'basic';
+                  
+                  let btnBg = 'var(--bg-surface-2)';
+                  let btnColor = 'var(--text-muted)';
+                  let btnBorder = '1px solid var(--border)';
+                  let btnShadow = 'none';
+                  let btnWeight = 700;
+
+                  if (on) {
+                    btnWeight = 900;
+                    if (theme === 'luxury') {
+                      btnBg = 'linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%)';
+                      btnColor = '#000000';
+                      btnBorder = '1px solid #fef08a';
+                      btnShadow = '0 2px 10px rgba(234, 179, 8, 0.45)';
+                    } else if (theme === 'sapphire') {
+                      btnBg = 'linear-gradient(135deg, #38bdf8 0%, #1d4ed8 100%)';
+                      btnColor = '#ffffff';
+                      btnBorder = '1px solid #7dd3fc';
+                      btnShadow = '0 2px 10px rgba(56, 189, 248, 0.5)';
+                    } else if (theme === 'anime') {
+                      btnBg = 'linear-gradient(135deg, #f472b6 0%, #db2777 100%)';
+                      btnColor = '#ffffff';
+                      btnBorder = '1px solid #fbcfe8';
+                      btnShadow = '0 2px 10px rgba(244, 114, 182, 0.5)';
+                    } else {
+                      btnBg = 'var(--brand-500)';
+                      btnColor = '#ffffff';
+                      btnBorder = 'none';
+                      btnShadow = '0 2px 8px rgba(37, 99, 235, 0.3)';
+                    }
+                  }
+
                   return (
                     <button key={d} type="button" onClick={() => toggleDay(d)} style={{
-                      width: 44, height: 38, borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                      border: on ? 'none' : '1px solid var(--border)', background: on ? 'var(--brand-500)' : 'var(--bg-surface)',
-                      color: on ? 'white' : 'var(--text-secondary)',
+                      width: 44, height: 38, borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: btnWeight,
+                      border: btnBorder,
+                      background: btnBg,
+                      color: btnColor,
+                      boxShadow: btnShadow,
+                      transition: 'all 0.2s ease',
                     }}>{lbl}</button>
                   );
                 })}
