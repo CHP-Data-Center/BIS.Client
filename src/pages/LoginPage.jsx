@@ -248,17 +248,6 @@ export default function LoginPage() {
           <div className="login-subtitle">Hệ Thống Thông Tin Đấu Thầu Thông Minh</div>
         </div>
 
-        {/* AI Status Badge */}
-        <div className="login-ai-badge">
-          <div className="ai-badge-icon">
-            <Cpu size={14} style={{ color: '#818cf8' }} />
-          </div>
-          <span className="ai-badge-text">
-            Crawler AI đang hoạt động · Cập nhật tự động 4h/lần
-          </span>
-          <span className="ai-badge-pulse" />
-        </div>
-
         {/* Google Sign-In Button */}
         <button
           type="button"

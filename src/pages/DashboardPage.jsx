@@ -1181,27 +1181,8 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* ── Hero Banner ── */}
-      <div className="dashboard-banner">
-        <div className="banner-aurora-1" />
-        <div className="banner-aurora-2" />
-        <img src={logoImg} alt="" className="banner-logo-watermark" />
-
-        <div className="banner-content">
-          <div className="banner-title" style={{ animation: 'slideInLeft 0.5s ease both' }}>
-            Hệ Thống Đấu Thầu &amp; ODA Thông Minh
-          </div>
-          <div className="banner-sub" style={{ animation: 'slideInLeft 0.5s 0.05s ease both' }}>
-            Theo dõi dữ liệu dự án, cơ hội đấu thầu từ ADB, World Bank &amp; Mua sắm công quốc gia. Phân tích tự động bởi AI — cập nhật liên tục mỗi 4h.
-          </div>
-          <div className="banner-pills" style={{ animation: 'slideInLeft 0.5s 0.1s ease both' }}>
-            <span className="banner-pill"><Building2 size={13} style={{ color: '#f59e0b' }} /> ADB (Châu Á)</span>
-            <span className="banner-pill"><Globe size={13} style={{ color: '#10b981' }} /> World Bank</span>
-            <span className="banner-pill"><ShoppingBag size={13} style={{ color: '#a855f7' }} /> Đấu Thầu Công</span>
-            <span className="banner-pill"><Cpu size={13} style={{ color: '#60a5fa' }} /> AI Insights</span>
-          </div>
-        </div>
-      </div>
+      {/* ── Map (Top Section) ── */}
+      <ProjectDistributionMap />
 
       {/* ── Stats Grid ── */}
       <div className="stats-grid">
@@ -1261,9 +1242,6 @@ export default function DashboardPage() {
         keywords={trending}
         onSelectKeyword={(term) => nav(`/news/all?q=${encodeURIComponent(term)}`)}
       />
-
-      {/* ── Map ── */}
-      <ProjectDistributionMap />
 
       {/* ── News Section ── */}
       <div ref={gridRef}>
