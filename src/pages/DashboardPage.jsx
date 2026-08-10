@@ -789,7 +789,7 @@ function ProjectDistributionMap() {
   );
 
   return (
-    <div style={{ marginBottom: 'var(--space-8)' }}>
+    <div style={{ marginBottom: 'var(--space-4)' }}>
       {/* ── Section Header ── */}
       <div className="dashboard-map-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -856,7 +856,7 @@ function ProjectDistributionMap() {
             zoom={4}
             minZoom={3}
             worldCopyJump={true}
-            style={{ height: 500, width: '100%', background: '#dbeafe' }}
+            style={{ height: 360, width: '100%', background: '#dbeafe' }}
             scrollWheelZoom={true}
             zoomControl={false}
           >

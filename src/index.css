@@ -1252,6 +1252,13 @@ html[data-ui-theme="anime"],
   transform: translateY(-4px) scale(1.008) !important;
 }
 
+[data-ui-theme="anime"] .trending-keyword-chip:hover {
+  background: rgba(244, 114, 182, 0.25) !important;
+  border-color: #f472b6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(244, 114, 182, 0.4) !important;
+}
+
 [data-ui-theme="anime"] .sidebar {
   border-right: 1.5px solid rgba(244, 114, 182, 0.4) !important;
   background: linear-gradient(180deg, #18142a 0%, #0d0a18 100%) !important;
@@ -2459,7 +2466,7 @@ ul, ol { list-style: none; }
   /* Up to 6 columns, responsive wrap */
   grid-template-columns: repeat(6, 1fr);
   gap: var(--space-4);
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4);
 }
 
 @media (max-width: 1400px) {
@@ -4534,28 +4541,14 @@ html, body {
   position: relative;
   padding: 6px 0;
   margin: -6px 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 48px, #000 calc(100% - 48px), transparent 100%);
 }
 
-/* Left & Right gradient fade masks for smooth entry/exit */
+/* Left & Right gradient fade masks disabled in favor of CSS mask-image for zero artifact overlay */
 .trending-marquee-wrapper::before,
 .trending-marquee-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 60px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.trending-marquee-wrapper::before {
-  left: 0;
-  background: linear-gradient(to right, var(--bg-surface), transparent);
-}
-
-.trending-marquee-wrapper::after {
-  right: 0;
-  background: linear-gradient(to left, var(--bg-surface), transparent);
+  display: none !important;
 }
 
 .trending-marquee-track {
