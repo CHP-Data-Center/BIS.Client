@@ -480,7 +480,15 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
   };
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans','Inter',sans-serif", padding: '2px', maxWidth: 300, minWidth: 270 }}>
+    <div style={{
+      fontFamily: "'Plus Jakarta Sans','Inter',sans-serif",
+      padding: '2px',
+      maxWidth: 320,
+      minWidth: 270,
+      maxHeight: 'min(420px, 65vh)',
+      overflowY: 'auto',
+      boxSizing: 'border-box',
+    }}>
       {items.length > 1 && (
         <div style={{
           background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)',
@@ -600,11 +608,34 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             {activeItem.status && <span style={{ background: activeItem.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: activeItem.status === 'Active' ? '#16a34a' : '#475569', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>{STATUS_ICONS[activeItem.status] || '⚙️'} {activeItem.status}</span>}
           </div>
 
-          <div style={{ background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))', border: '1px dashed rgba(168,85,247,.3)', borderRadius: 10, padding: '8px 10px', fontSize: 11, color: '#334155', lineHeight: 1.45 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700, color: '#a855f7', fontSize: 10, marginBottom: 3 }}>
+          <div style={{
+            background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))',
+            border: '1px dashed rgba(168,85,247,.3)',
+            borderRadius: 10,
+            padding: '8px 10px',
+            fontSize: 11,
+            color: '#334155',
+            lineHeight: 1.45,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontWeight: 700,
+              color: '#a855f7',
+              fontSize: 10,
+              marginBottom: 4,
+            }}>
               <Cpu size={10} /> PHÂN TÍCH AI
             </div>
-            {activeItem.aiSummary || 'Dự án thúc đẩy nâng cấp hạ tầng, kết nối vùng và cải thiện an sinh xã hội khu vực.'}
+            <div style={{
+              maxHeight: 100,
+              overflowY: 'auto',
+              wordBreak: 'break-word',
+              paddingRight: 2,
+            }}>
+              {activeItem.aiSummary || 'Dự án thúc đẩy nâng cấp hạ tầng, kết nối vùng và cải thiện an sinh xã hội khu vực.'}
+            </div>
           </div>
         </div>
       ) : (
