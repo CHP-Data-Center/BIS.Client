@@ -5438,6 +5438,10 @@ html, body {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
 }
 
+.leaflet-control-attribution {
+  display: none !important;
+}
+
 .leaflet-top,
 .leaflet-bottom,
 .leaflet-pane,

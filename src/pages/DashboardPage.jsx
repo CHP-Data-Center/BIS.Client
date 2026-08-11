@@ -854,11 +854,12 @@ function ProjectDistributionMap() {
           <MapContainer
             center={[15, 107]}
             zoom={4}
-            minZoom={3}
+            minZoom={2.5}
             worldCopyJump={true}
-            style={{ height: 360, width: '100%', background: '#dbeafe' }}
+            style={{ height: 450, width: '100%', background: '#dbeafe' }}
             scrollWheelZoom={true}
             zoomControl={false}
+            attributionControl={false}
           >
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
