@@ -94,6 +94,8 @@ export default function AdminPage() {
   const [showBuySlotModal, setShowBuySlotModal] = useState(false);
   const [slotPhone, setSlotPhone] = useState('');
   const [slotSubmitting, setSlotSubmitting] = useState(false);
+  const [selectedSlotPackage, setSelectedSlotPackage] = useState(10);
+  const [selectedSlotMonths, setSelectedSlotMonths] = useState(1);
 
   // ESC key listener to close active modals
   useEffect(() => {
@@ -134,7 +136,24 @@ export default function AdminPage() {
         const pkgExp = localStorage.getItem(`bis_pkg_exp_${uKey}`) || (usr.role === 'super_admin' || activePkg === 'free' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027');
         const themes = JSON.parse(localStorage.getItem(`bis_purchased_themes_${uKey}`) || '[]');
         const selectedSrcs = JSON.parse(localStorage.getItem(`bis_selected_sources_${uKey}`) || '["adb", "worldbank"]');
-        const maxUsers = parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+        const expStr = localStorage.getItem(`bis_slot_exp_${uKey}`);
+        const isCancelled = localStorage.getItem(`bis_slot_cancelled_${uKey}`) === 'true';
+        let maxUsers = parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+
+        if (expStr && isCancelled) {
+          const parts = expStr.split('/');
+          if (parts.length === 3) {
+            const expDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10), 23, 59, 59);
+            if (Date.now() > expDate.getTime()) {
+              maxUsers = 10;
+              localStorage.setItem(`bis_max_users_${uKey}`, '10');
+              localStorage.removeItem(`bis_slot_exp_${uKey}`);
+              localStorage.removeItem(`bis_slot_cancelled_${uKey}`);
+              localStorage.removeItem(`bis_extra_slots_${uKey}`);
+            }
+          }
+        }
+
         return {
           ...usr,
           active_package: activePkg,
@@ -143,6 +162,7 @@ export default function AdminPage() {
           purchased_themes: themes,
           selected_sources: selectedSrcs,
           max_users: maxUsers,
+          slot_cancelled: isCancelled,
         };
       }));
       const approvedOnly = (s || []).filter(item => !item.status || item.status === 'approved');
@@ -451,6 +471,13 @@ export default function AdminPage() {
         await adminService.deleteWhitelist(item.id);
         setWhitelist(prev => prev.filter(x => x.id !== item.id));
         showAlert('success', 'Đã xóa từ khóa khỏi Whitelist.');
+      } else if (type === 'cancel_extra_slots') {
+        const uKey = user?.email || user?.id || 'default';
+        const expDate = localStorage.getItem(`bis_slot_exp_${uKey}`);
+        const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+        localStorage.setItem(`bis_slot_cancelled_${uKey}`, 'true');
+        setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, slot_cancelled: true } : u));
+        showAlert('success', `⚡ Đã hủy tự động gia hạn thành công! Bạn vẫn được tiếp tục sử dụng đầy đủ ${currentMax} User cho đến hết ngày ${expDate || 'hạn tháng hiện tại'}.`);
       }
       setDeleteConfirm(null);
     } catch (e) {
@@ -935,38 +962,56 @@ export default function AdminPage() {
 
               {/* Regional Admin Quota Info Banner */}
               {isRegionalAdmin && (() => {
-                const myMaxUsers = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10);
+                const uKey = user?.email || user?.id || 'default';
+                const myMaxUsers = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+                const slotExpDate = localStorage.getItem(`bis_slot_exp_${uKey}`);
+                const isCancelled = localStorage.getItem(`bis_slot_cancelled_${uKey}`) === 'true';
                 const regCount = users.filter(u => u.role !== 'super_admin' && (isSuperAdmin || u.region === userRegion)).length;
                 const isFullQuota = regCount >= myMaxUsers;
+                const extraSlotCount = myMaxUsers > 10 ? myMaxUsers - 10 : 0;
                 return (
                   <div style={{
                     background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(147,51,234,0.08))',
                     border: '1px solid rgba(147,51,234,0.25)',
-                    borderRadius: 16, padding: '14px 20px',
+                    borderRadius: 16, padding: '16px 20px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     flexWrap: 'wrap', gap: 12,
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ padding: 10, borderRadius: 12, background: '#f3e8ff', color: '#9333ea' }}>
-                        <ShieldCheck size={22} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 280 }}>
+                      <div style={{ padding: 10, borderRadius: 12, background: '#f3e8ff', color: '#9333ea', flexShrink: 0 }}>
+                        <ShieldCheck size={24} />
                       </div>
                       <div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>
-                          🏢 Admin Phân Vùng: {userRegion} (Gói Enterprise)
+                        <div style={{ fontWeight: 800, fontSize: 14.5, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span>🏢 Admin Phân Vùng: {userRegion} (Gói Enterprise)</span>
+                          {extraSlotCount > 0 && !isCancelled && (
+                            <span style={{ fontSize: 11, fontWeight: 700, background: '#f3e8ff', color: '#9333ea', padding: '2px 8px', borderRadius: 12, border: '1px solid rgba(147,51,234,0.3)' }}>
+                              ⚡ Mua thêm +{extraSlotCount} Slot User
+                            </span>
+                          )}
+                          {isCancelled && (
+                            <span style={{ fontSize: 11, fontWeight: 700, background: '#fff7ed', color: '#ea580c', padding: '2px 8px', borderRadius: 12, border: '1px solid #ffedd5' }}>
+                              ⚠️ Đã hủy gia hạn tự động (Hạn dùng đến {slotExpDate || 'cuối tháng'})
+                            </span>
+                          )}
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                          Bạn có quyền khởi tạo & quản trị tối đa <b>{myMaxUsers} tài khoản thành viên</b> thuộc phân vùng {userRegion}. Các thành viên sẽ tự động kế thừa Full Data Pack.
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.45 }}>
+                          Quyền quản trị tối đa <b>{myMaxUsers} tài khoản thành viên</b> (Mặc định: 10 user base
+                          {extraSlotCount > 0 ? ` + ${extraSlotCount} slot nâng cấp ${slotExpDate ? `· Hạn dùng đến ${slotExpDate}` : ''}` : ''}).
+                          {isCancelled
+                            ? ` Bạn vẫn được sử dụng đầy đủ ${myMaxUsers} User cho đến hết ngày ${slotExpDate || 'hạn thanh toán'}. Sau ngày này, hạn ngạch mới trả về 10 User mặc định.`
+                            : ' Các thành viên tự động kế thừa Full Data Pack.'}
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ textAlign: 'right', paddingRight: 4 }}>
                         <div style={{ fontSize: 14, fontWeight: 900, color: isFullQuota ? '#ef4444' : '#10b981' }}>
                           👥 {regCount} / {myMaxUsers} Thành Viên
                         </div>
                         {isFullQuota && (
-                          <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 800, background: '#fef2f2', padding: '2px 8px', borderRadius: 6, border: '1px solid #fca5a5', display: 'inline-block', marginTop: 4 }}>
-                            ⚠️ Đã đạt hạn ngạch tối đa ({myMaxUsers})
+                          <span style={{ fontSize: 10.5, color: '#ef4444', fontWeight: 800, background: '#fef2f2', padding: '2px 8px', borderRadius: 6, border: '1px solid #fca5a5', display: 'inline-block', marginTop: 3 }}>
+                            ⚠️ Đã đạt giới hạn ({myMaxUsers})
                           </span>
                         )}
                       </div>
@@ -983,6 +1028,51 @@ export default function AdminPage() {
                       >
                         ➕ Mua Thêm Slot (+10 User / 50k)
                       </button>
+
+                      {extraSlotCount > 0 && !isCancelled && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirm({
+                            type: 'cancel_extra_slots',
+                            title: 'Hủy Gia Hạn Mua Thêm Slot User',
+                            message: `Bạn có chắc chắn muốn hủy tự động gia hạn gói mua thêm slot (+50.000đ/tháng/10 user)? Bạn vẫn tiếp tục được sử dụng đầy đủ ${myMaxUsers} User cho tới hết ngày ${slotExpDate || 'hạn thanh toán hiện tại'}.`,
+                            itemName: `Phân vùng: ${userRegion}`,
+                            itemSub: `Hạn ngạch hiện tại: ${myMaxUsers} User (Vẫn giữ nguyên sử dụng tới hết ${slotExpDate || 'hạn dùng'})`,
+                            confirmText: 'Xác Nhận Hủy Gia Hạn',
+                          })}
+                          style={{
+                            padding: '8px 12px', borderRadius: 10, fontSize: 11.5, fontWeight: 700,
+                            background: 'rgba(239,68,68,0.1)', color: '#ef4444',
+                            border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
+                            transition: 'all 0.15s ease',
+                          }}
+                          title="Hủy tự động tính tiền gia hạn cho các tháng tiếp theo"
+                        >
+                          ❌ Hủy Đăng Ký Mua Thêm
+                        </button>
+                      )}
+
+                      {isCancelled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            localStorage.removeItem(`bis_slot_cancelled_${uKey}`);
+                            setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, slot_cancelled: false } : u));
+                            showAlert('success', '⚡ Đã khôi phục gia hạn tự động mua thêm slot thành công!');
+                          }}
+                          style={{
+                            padding: '8px 12px', borderRadius: 10, fontSize: 11.5, fontWeight: 700,
+                            background: 'rgba(16,185,129,0.1)', color: '#10b981',
+                            border: '1px solid rgba(16,185,129,0.3)', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
+                            transition: 'all 0.15s ease',
+                          }}
+                          title="Bật lại tính năng tự động gia hạn hằng tháng"
+                        >
+                          🔄 Khôi Phục Gia Hạn Tự Động
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1401,12 +1491,15 @@ export default function AdminPage() {
 
       {/* ── Edit User Modal ── */}
       {editingUser && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 99999, padding: 20,
-        }}>
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingUser(null); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 99999, padding: 20,
+          }}
+        >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
             borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 620,
@@ -1761,15 +1854,16 @@ export default function AdminPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <input
                             type="number"
-                            min={1}
+                            step={10}
+                            min={10}
                             max={500}
                             className="form-input"
                             style={{ width: 140, fontWeight: 800, fontSize: 15, color: '#9333ea' }}
                             value={editingUser.max_users || 10}
-                            onChange={e => setEditingUser({ ...editingUser, max_users: Math.max(1, parseInt(e.target.value, 10) || 10) })}
+                            onChange={e => setEditingUser({ ...editingUser, max_users: Math.max(10, parseInt(e.target.value, 10) || 10) })}
                           />
                           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                            thành viên (Mặc định: 10 user. Điều chỉnh khi tài khoản Enterprise mua thêm slot).
+                            thành viên (Mặc định: 10 user. Mỗi +10 user nâng cấp là 50.000đ/tháng, quản lý theo tháng).
                           </span>
                         </div>
                       </div>
@@ -1885,12 +1979,15 @@ export default function AdminPage() {
 
       {/* ── User Details Modal (Super Admin View) ── */}
       {viewingUser && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 99999, padding: 20,
-        }}>
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setViewingUser(null); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 99999, padding: 20,
+          }}
+        >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
             borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 640,
@@ -2055,12 +2152,15 @@ export default function AdminPage() {
       )}
       {/* ── Edit Source Modal ── */}
       {editingSource && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 99999, padding: 20,
-        }}>
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingSource(null); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 99999, padding: 20,
+          }}
+        >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
             borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 540,
@@ -2224,9 +2324,9 @@ export default function AdminPage() {
         message={deleteConfirm?.message || ''}
         itemName={deleteConfirm?.itemName || ''}
         itemSub={deleteConfirm?.itemSub || ''}
-        confirmText="Xác Nhận Xóa"
-        cancelText="Hủy Bỏ"
-        type="danger"
+        confirmText={deleteConfirm?.confirmText || 'Xác Nhận Xóa'}
+        cancelText={deleteConfirm?.cancelText || 'Hủy Bỏ'}
+        type={deleteConfirm?.type === 'cancel_extra_slots' ? 'warning' : (deleteConfirm?.modalType || 'danger')}
         loading={actionLoading}
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteConfirm(null)}
@@ -2234,15 +2334,18 @@ export default function AdminPage() {
 
       {/* BUY SLOT MODAL FOR REGIONAL ADMIN */}
       {showBuySlotModal && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 99999, padding: 20,
-        }}>
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setShowBuySlotModal(false); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 99999, padding: 20,
+          }}
+        >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: 32, width: '100%', maxWidth: 480,
+            borderRadius: 24, padding: 32, width: '100%', maxWidth: 520,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
@@ -2255,7 +2358,7 @@ export default function AdminPage() {
                     Nâng Cấp Mua Thêm Slot User
                   </h3>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Mở rộng quy mô thành viên cho {userRegion}
+                    Mở rộng quy mô thành viên cho {userRegion} (Quản lý đăng ký theo tháng)
                   </div>
                 </div>
               </div>
@@ -2264,37 +2367,122 @@ export default function AdminPage() {
               </button>
             </div>
 
-            <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Gói nâng cấp:</span>
-                <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ Mua Thêm +10 Slot User</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Chi phí nâng cấp:</span>
-                <span style={{ fontWeight: 900, color: 'var(--text-primary)', fontSize: 16 }}>50.000đ / tháng</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, borderTop: '1px dashed var(--border-subtle)', paddingTop: 8, marginTop: 8 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch hiện tại:</span>
-                <b style={{ color: 'var(--text-primary)' }}>{user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10)} User</b>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 4 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch sau nâng cấp:</span>
-                <b style={{ color: '#10b981' }}>{(user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10)) + 10} User</b>
+            {/* 1. Chọn Số Lượng Slot Mua Thêm */}
+            <div style={{ marginBottom: 16 }}>
+              <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
+                📦 CHỌN SỐ LƯỢNG SLOT USER MUA THÊM:
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                {[
+                  { count: 10, label: '+10 User Slot', priceStr: '50.000đ/tháng' },
+                  { count: 20, label: '+20 User Slot', priceStr: '100.000đ/tháng' },
+                  { count: 30, label: '+30 User Slot', priceStr: '150.000đ/tháng' },
+                  { count: 50, label: '+50 User Slot', priceStr: '250.000đ/tháng' },
+                ].map(opt => {
+                  const isSelected = selectedSlotPackage === opt.count;
+                  return (
+                    <button
+                      key={opt.count}
+                      type="button"
+                      onClick={() => setSelectedSlotPackage(opt.count)}
+                      style={{
+                        padding: '10px 12px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+                        border: isSelected ? '2px solid #9333ea' : '1px solid var(--border-subtle)',
+                        background: isSelected ? 'rgba(147, 51, 234, 0.1)' : 'var(--bg-surface-2)',
+                        color: isSelected ? '#9333ea' : 'var(--text-primary)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, fontSize: 13 }}>{opt.label}</div>
+                      <div style={{ fontSize: 11, color: isSelected ? '#7e22ce' : 'var(--text-muted)', marginTop: 2 }}>{opt.priceStr}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            {/* 2. Chọn Thời Gian Mua Theo Tháng */}
+            <div style={{ marginBottom: 20 }}>
+              <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
+                ⏳ CHỌN THỜI GIAN THUÊ SỬ DỤNG (THEO THÁNG):
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                {[
+                  { months: 1, label: '1 Tháng', tag: 'Tiêu chuẩn' },
+                  { months: 3, label: '3 Tháng', tag: 'Giảm 5%' },
+                  { months: 6, label: '6 Tháng', tag: 'Giảm 10%' },
+                  { months: 12, label: '12 Tháng', tag: 'Giảm 20%' },
+                ].map(mOpt => {
+                  const isSelected = selectedSlotMonths === mOpt.months;
+                  return (
+                    <button
+                      key={mOpt.months}
+                      type="button"
+                      onClick={() => setSelectedSlotMonths(mOpt.months)}
+                      style={{
+                        padding: '8px 6px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
+                        border: isSelected ? '2px solid #9333ea' : '1px solid var(--border-subtle)',
+                        background: isSelected ? 'rgba(147, 51, 234, 0.12)' : 'var(--bg-surface-2)',
+                        color: isSelected ? '#9333ea' : 'var(--text-primary)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, fontSize: 12 }}>{mOpt.label}</div>
+                      <div style={{ fontSize: 9.5, color: isSelected ? '#7e22ce' : '#10b981', marginTop: 2, fontWeight: 700 }}>{mOpt.tag}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Calculation summary */}
+            {(() => {
+              const uKey = user?.email || user?.id || 'default';
+              const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+              const newMax = currentMax + selectedSlotPackage;
+              const slotMultiplier = selectedSlotPackage / 10;
+              const discountFactor = selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0;
+              const monthlyPrice = Math.round(50000 * slotMultiplier * discountFactor);
+              const totalPrice = monthlyPrice * selectedSlotMonths;
+
+              return (
+                <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Gói bổ sung chọn:</span>
+                    <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ {selectedSlotPackage} Slot User ({selectedSlotMonths} tháng)</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch sau nâng cấp:</span>
+                    <b style={{ color: '#10b981' }}>{currentMax} ➔ {newMax} User</b>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 8 }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>Tổng tiền thanh toán ({selectedSlotMonths} tháng):</span>
+                    <span style={{ fontWeight: 900, color: '#9333ea', fontSize: 18 }}>{totalPrice.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <form onSubmit={e => {
               e.preventDefault();
               setSlotSubmitting(true);
               setTimeout(() => {
                 const uKey = user?.email || user?.id || 'default';
-                const currentMax = parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
-                const newMax = currentMax + 10;
+                const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+                const newMax = currentMax + selectedSlotPackage;
+                const expDate = new Date();
+                expDate.setMonth(expDate.getMonth() + selectedSlotMonths);
+                const expDateStr = expDate.toLocaleDateString('vi-VN');
+
                 localStorage.setItem(`bis_max_users_${uKey}`, String(newMax));
+                localStorage.setItem(`bis_slot_exp_${uKey}`, expDateStr);
+                localStorage.setItem(`bis_slot_months_${uKey}`, String(selectedSlotMonths));
+                localStorage.setItem(`bis_extra_slots_${uKey}`, String((parseInt(localStorage.getItem(`bis_extra_slots_${uKey}`) || '0', 10)) + selectedSlotPackage));
+
                 setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, max_users: newMax } : u));
                 setSlotSubmitting(false);
                 setShowBuySlotModal(false);
-                showAlert('success', `⚡ Đã nâng cấp mua thêm +10 slot thành viên thành công! Hạn ngạch mới: ${newMax} User.`);
+                showAlert('success', `⚡ Đã nâng cấp mua thêm +${selectedSlotPackage} slot thành viên (${selectedSlotMonths} tháng) thành công! Hạn ngạch mới: ${newMax} User.`);
               }, 1200);
             }}>
               <div style={{ marginBottom: 20 }}>
@@ -2314,7 +2502,7 @@ export default function AdminPage() {
                   Hủy Bỏ
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={slotSubmitting} style={{ background: 'linear-gradient(135deg, #9333ea, #7e22ce)', border: 'none', padding: '10px 20px', borderRadius: 12, fontWeight: 800 }}>
-                  {slotSubmitting ? 'Đang Xử Lý...' : 'Xác Nhận Đăng Ký (50.000đ)'}
+                  {slotSubmitting ? 'Đang Xử Lý...' : `Xác Nhận Đăng Ký (${(Math.round(50000 * (selectedSlotPackage/10) * (selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0)) * selectedSlotMonths).toLocaleString('vi-VN')}đ)`}
                 </button>
               </div>
             </form>

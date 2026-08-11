@@ -89,7 +89,7 @@ export default function ConfirmModal({
           borderRadius: 24,
           padding: '30px 28px 26px',
           width: '100%',
-          maxWidth: 430,
+          maxWidth: 460,
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
           animation: 'modalScaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           position: 'relative',
@@ -196,15 +196,11 @@ export default function ConfirmModal({
             </div>
             {itemSub && (
               <div style={{
-                fontSize: 11.5,
+                fontSize: 12,
                 color: 'var(--text-muted, #94a3b8)',
-                marginTop: 3,
-                wordBreak: 'break-all',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical'
+                marginTop: 4,
+                wordBreak: 'break-word',
+                lineHeight: 1.45,
               }}>
                 {itemSub}
               </div>
