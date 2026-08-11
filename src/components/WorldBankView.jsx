@@ -97,7 +97,7 @@ const CONFIG_MAP = {
       { key: 'proj_last_upd_date', display: 'Đóng Thầu', sortable: true, width: '140px' },
       { key: 'last_stage_reached_name', display: 'Phân Loại / Lĩnh Vực', sortable: true, width: '160px' },
     ],
-    getUrl: (id) => `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(id)}`,
+    getUrl: (id) => `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(id)}`,
   },
 };
 

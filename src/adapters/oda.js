@@ -115,7 +115,7 @@ export function adaptOdaProject(p) {
 /** Một gói mua sắm công -> item bản đồ (nguồn 'dauthau'). */
 export function adaptProcurement(p) {
   const origId = p.id;
-  const procUrl = p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`;
+  const procUrl = p.url || `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(p.id)}`;
   const coords = (p.lat != null && p.lng != null)
     ? [p.lat, p.lng]
     : getVietnamFallbackCoords(p.id, p.procuring_entity, p.title);
@@ -170,7 +170,7 @@ export function adaptProcToCard(p) {
     p.package_count ? `${p.package_count} gói` : null,
     p.status,
   ].filter(Boolean).join(' · ');
-  const procUrl = p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`;
+  const procUrl = p.url || `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(p.id)}`;
 
   return {
     id: `proc-${p.id}`,

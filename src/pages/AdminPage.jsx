@@ -131,9 +131,10 @@ export default function AdminPage() {
       ]);
       setUsers((u || []).map(usr => {
         const uKey = usr.email || usr.id;
-        const activePkg = localStorage.getItem(`bis_active_package_${uKey}`) || (usr.role === 'super_admin' ? 'full' : usr.role === 'admin' ? 'enterprise' : 'free');
-        const hasAi = localStorage.getItem(`bis_ai_package_${uKey}`) === 'true' || usr.role === 'super_admin';
-        const pkgExp = localStorage.getItem(`bis_pkg_exp_${uKey}`) || (usr.role === 'super_admin' || activePkg === 'free' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027');
+        const normalizedRole = (usr.role || 'user').toLowerCase();
+        const activePkg = localStorage.getItem(`bis_active_package_${uKey}`) || (normalizedRole === 'super_admin' ? 'full' : normalizedRole === 'admin' ? 'enterprise' : 'free');
+        const hasAi = localStorage.getItem(`bis_ai_package_${uKey}`) === 'true' || normalizedRole === 'super_admin';
+        const pkgExp = localStorage.getItem(`bis_pkg_exp_${uKey}`) || (normalizedRole === 'super_admin' || activePkg === 'free' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027');
         const themes = JSON.parse(localStorage.getItem(`bis_purchased_themes_${uKey}`) || '[]');
         const selectedSrcs = JSON.parse(localStorage.getItem(`bis_selected_sources_${uKey}`) || '["adb", "worldbank"]');
         const expStr = localStorage.getItem(`bis_slot_exp_${uKey}`);
@@ -156,6 +157,7 @@ export default function AdminPage() {
 
         return {
           ...usr,
+          role: normalizedRole,
           active_package: activePkg,
           has_ai: hasAi,
           package_expiration: pkgExp,
@@ -297,11 +299,15 @@ export default function AdminPage() {
   };
 
   const handleOpenEditUser = (u) => {
+    const rawRole = (u.role || 'user').toLowerCase();
+    const validRoles = ['super_admin', 'admin', 'staff', 'user'];
+    const role = validRoles.includes(rawRole) ? rawRole : 'user';
+
     setEditingUser({
       id: u.id,
       email: u.email || '',
       display_name: u.display_name || '',
-      role: u.role || 'user',
+      role: role,
       organization_id: u.organization_id || null,
       region: u.region || userRegion || 'Toàn quốc',
       permissions: u.permissions || {
@@ -316,9 +322,9 @@ export default function AdminPage() {
       email_digest_enabled: u.email_digest_enabled ?? true,
       digest_hour: u.digest_hour ?? 7,
       timezone: u.timezone || 'Asia/Ho_Chi_Minh',
-      active_package: u.active_package || (u.role === 'admin' ? 'enterprise' : 'free'),
+      active_package: u.active_package || (role === 'admin' ? 'enterprise' : 'free'),
       has_ai: u.has_ai ?? false,
-      package_expiration: u.package_expiration || (u.active_package === 'free' || u.role === 'super_admin' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027'),
+      package_expiration: u.package_expiration || (u.active_package === 'free' || role === 'super_admin' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027'),
       purchased_themes: u.purchased_themes || [],
       selected_sources: u.selected_sources || ['adb', 'worldbank'],
       max_users: u.max_users || 10,
@@ -1556,7 +1562,7 @@ export default function AdminPage() {
                 <label className="form-label">Phân quyền vai trò</label>
                 <select
                   className="form-input"
-                  value={editingUser.role}
+                  value={editingUser.role || 'user'}
                   disabled={isRegionalAdmin}
                   onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
                 >
