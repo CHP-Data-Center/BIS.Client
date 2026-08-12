@@ -1168,7 +1168,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             animation: 'backdropFadeIn 0.2s ease-out',
           }}
         >
-          <div style={{
+          <div className="custom-modal-scroll" style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border)',
             borderRadius: 24, maxWidth: 480, width: '100%', padding: 32,
             boxShadow: '0 25px 65px -15px rgba(0, 0, 0, 0.45)', position: 'relative',

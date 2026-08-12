@@ -1508,13 +1508,14 @@ export default function AdminPage() {
         >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 620,
+            borderRadius: 24, width: '100%', maxWidth: 640,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
             animation: 'fadeIn 0.2s ease-out',
-            maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+            maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden',
           }}>
             {/* Modal Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
                   <Edit size={18} />
@@ -1535,9 +1536,10 @@ export default function AdminPage() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleUpdateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-              <div>
-                <label className="form-label">Email tài khoản *</label>
+            <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
+              <div className="custom-modal-scroll" style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, alignContent: 'start' }}>
+                <div>
+                  <label className="form-label">Email tài khoản *</label>
                 <input
                   className="form-input"
                   type="email"
@@ -1958,7 +1960,10 @@ export default function AdminPage() {
                 />
               </div>
 
-              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
                 <button
                   type="button"
                   className="btn btn-ghost"
@@ -1996,12 +2001,13 @@ export default function AdminPage() {
         >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 640,
+            borderRadius: 24, width: '100%', maxWidth: 640,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
-            maxHeight: '90vh', overflowY: 'auto', animation: 'fadeIn 0.2s ease-out',
+            maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out',
           }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{
                   width: 48, height: 48, borderRadius: '50%',
@@ -2026,7 +2032,9 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Badges Bar */}
+            {/* Modal Body */}
+            <div className="custom-modal-scroll" style={{ padding: '24px 28px', overflowY: 'auto', flex: 1 }}>
+              {/* Badges Bar */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
               <span style={{
                 fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20,
@@ -2131,8 +2139,10 @@ export default function AdminPage() {
               </div>
             </div>
 
+            </div>
+
             {/* Footer Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
               <button
                 onClick={() => {
                   const uToEdit = viewingUser;
@@ -2169,12 +2179,13 @@ export default function AdminPage() {
         >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: '28px 32px', width: '100%', maxWidth: 540,
+            borderRadius: 24, width: '100%', maxWidth: 560,
             boxShadow: '0 24px 60px rgba(0,0,0,0.3)', position: 'relative',
-            animation: 'fadeIn 0.2s ease-out',
+            maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out',
           }}>
             {/* Modal Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
                   <Edit size={18} />
@@ -2197,8 +2208,9 @@ export default function AdminPage() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleUpdateSource} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-              <div style={{ gridColumn: 'span 2' }}>
+            <form onSubmit={handleUpdateSource} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
+              <div className="custom-modal-scroll" style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, alignContent: 'start' }}>
+                <div style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">Tên nguồn tin *</label>
                 <input
                   className="form-input"
@@ -2298,7 +2310,10 @@ export default function AdminPage() {
                 )}
               </div>
 
-              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+              </div>
+
+              {/* Modal Footer */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
                 <button
                   type="button"
                   className="btn btn-ghost"
@@ -2351,10 +2366,13 @@ export default function AdminPage() {
         >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
-            borderRadius: 24, padding: 32, width: '100%', maxWidth: 520,
+            borderRadius: 24, width: '100%', maxWidth: 540,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
+            maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ padding: 10, borderRadius: 12, background: '#f3e8ff', color: '#9333ea' }}>
                   <Zap size={22} />
@@ -2373,137 +2391,145 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* 1. Chọn Số Lượng Slot Mua Thêm */}
-            <div style={{ marginBottom: 16 }}>
-              <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
-                📦 CHỌN SỐ LƯỢNG SLOT USER MUA THÊM:
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                {[
-                  { count: 10, label: '+10 User Slot', priceStr: '50.000đ/tháng' },
-                  { count: 20, label: '+20 User Slot', priceStr: '100.000đ/tháng' },
-                  { count: 30, label: '+30 User Slot', priceStr: '150.000đ/tháng' },
-                  { count: 50, label: '+50 User Slot', priceStr: '250.000đ/tháng' },
-                ].map(opt => {
-                  const isSelected = selectedSlotPackage === opt.count;
-                  return (
-                    <button
-                      key={opt.count}
-                      type="button"
-                      onClick={() => setSelectedSlotPackage(opt.count)}
-                      style={{
-                        padding: '10px 12px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
-                        border: isSelected ? '2px solid #9333ea' : '1px solid var(--border-subtle)',
-                        background: isSelected ? 'rgba(147, 51, 234, 0.1)' : 'var(--bg-surface-2)',
-                        color: isSelected ? '#9333ea' : 'var(--text-primary)',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <div style={{ fontWeight: 800, fontSize: 13 }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: isSelected ? '#7e22ce' : 'var(--text-muted)', marginTop: 2 }}>{opt.priceStr}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Modal Form */}
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                setSlotSubmitting(true);
+                setTimeout(() => {
+                  const uKey = user?.email || user?.id || 'default';
+                  const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+                  const newMax = currentMax + selectedSlotPackage;
+                  const expDate = new Date();
+                  expDate.setMonth(expDate.getMonth() + selectedSlotMonths);
+                  const expDateStr = expDate.toLocaleDateString('vi-VN');
 
-            {/* 2. Chọn Thời Gian Mua Theo Tháng */}
-            <div style={{ marginBottom: 20 }}>
-              <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
-                ⏳ CHỌN THỜI GIAN THUÊ SỬ DỤNG (THEO THÁNG):
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                {[
-                  { months: 1, label: '1 Tháng', tag: 'Tiêu chuẩn' },
-                  { months: 3, label: '3 Tháng', tag: 'Giảm 5%' },
-                  { months: 6, label: '6 Tháng', tag: 'Giảm 10%' },
-                  { months: 12, label: '12 Tháng', tag: 'Giảm 20%' },
-                ].map(mOpt => {
-                  const isSelected = selectedSlotMonths === mOpt.months;
-                  return (
-                    <button
-                      key={mOpt.months}
-                      type="button"
-                      onClick={() => setSelectedSlotMonths(mOpt.months)}
-                      style={{
-                        padding: '8px 6px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
-                        border: isSelected ? '2px solid #9333ea' : '1px solid var(--border-subtle)',
-                        background: isSelected ? 'rgba(147, 51, 234, 0.12)' : 'var(--bg-surface-2)',
-                        color: isSelected ? '#9333ea' : 'var(--text-primary)',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <div style={{ fontWeight: 800, fontSize: 12 }}>{mOpt.label}</div>
-                      <div style={{ fontSize: 9.5, color: isSelected ? '#7e22ce' : '#10b981', marginTop: 2, fontWeight: 700 }}>{mOpt.tag}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                  localStorage.setItem(`bis_max_users_${uKey}`, String(newMax));
+                  localStorage.setItem(`bis_slot_exp_${uKey}`, expDateStr);
+                  localStorage.setItem(`bis_slot_months_${uKey}`, String(selectedSlotMonths));
+                  localStorage.setItem(`bis_extra_slots_${uKey}`, String((parseInt(localStorage.getItem(`bis_extra_slots_${uKey}`) || '0', 10)) + selectedSlotPackage));
 
-            {/* Calculation summary */}
-            {(() => {
-              const uKey = user?.email || user?.id || 'default';
-              const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
-              const newMax = currentMax + selectedSlotPackage;
-              const slotMultiplier = selectedSlotPackage / 10;
-              const discountFactor = selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0;
-              const monthlyPrice = Math.round(50000 * slotMultiplier * discountFactor);
-              const totalPrice = monthlyPrice * selectedSlotMonths;
-
-              return (
-                <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Gói bổ sung chọn:</span>
-                    <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ {selectedSlotPackage} Slot User ({selectedSlotMonths} tháng)</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch sau nâng cấp:</span>
-                    <b style={{ color: '#10b981' }}>{currentMax} ➔ {newMax} User</b>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 8 }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>Tổng tiền thanh toán ({selectedSlotMonths} tháng):</span>
-                    <span style={{ fontWeight: 900, color: '#9333ea', fontSize: 18 }}>{totalPrice.toLocaleString('vi-VN')}đ</span>
+                  setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, max_users: newMax } : u));
+                  setSlotSubmitting(false);
+                  setShowBuySlotModal(false);
+                  showAlert('success', `⚡ Đã nâng cấp mua thêm +${selectedSlotPackage} slot thành viên (${selectedSlotMonths} tháng) thành công! Hạn ngạch mới: ${newMax} User.`);
+                }, 1200);
+              }}
+              style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}
+            >
+              {/* Modal Content Scroll */}
+              <div className="custom-modal-scroll" style={{ padding: '24px 28px', overflowY: 'auto', flex: 1 }}>
+                {/* 1. Chọn Số Lượng Slot Mua Thêm */}
+                <div style={{ marginBottom: 16 }}>
+                  <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
+                    📦 CHỌN SỐ LƯỢNG SLOT USER MUA THÊM:
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                    {[
+                      { count: 10, label: '+10 User Slot', priceStr: '50.000đ/tháng' },
+                      { count: 20, label: '+20 User Slot', priceStr: '100.000đ/tháng' },
+                      { count: 30, label: '+30 User Slot', priceStr: '150.000đ/tháng' },
+                      { count: 50, label: '+50 User Slot', priceStr: '250.000đ/tháng' },
+                    ].map(opt => {
+                      const isSelected = selectedSlotPackage === opt.count;
+                      return (
+                        <button
+                          key={opt.count}
+                          type="button"
+                          onClick={() => setSelectedSlotPackage(opt.count)}
+                          style={{
+                            padding: '10px 12px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+                            border: isSelected ? '2px solid #9333ea' : '1px solid var(--border-subtle)',
+                            background: isSelected ? 'rgba(147, 51, 234, 0.1)' : 'var(--bg-surface-2)',
+                            color: isSelected ? '#9333ea' : 'var(--text-primary)',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <div style={{ fontWeight: 800, fontSize: 13 }}>{opt.label}</div>
+                          <div style={{ fontSize: 11, color: isSelected ? '#7e22ce' : 'var(--text-muted)', marginTop: 2 }}>{opt.priceStr}</div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })()}
 
-            <form onSubmit={e => {
-              e.preventDefault();
-              setSlotSubmitting(true);
-              setTimeout(() => {
-                const uKey = user?.email || user?.id || 'default';
-                const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
-                const newMax = currentMax + selectedSlotPackage;
-                const expDate = new Date();
-                expDate.setMonth(expDate.getMonth() + selectedSlotMonths);
-                const expDateStr = expDate.toLocaleDateString('vi-VN');
+                {/* 2. Chọn Thời Gian Mua Theo Tháng */}
+                <div style={{ marginBottom: 20 }}>
+                  <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
+                    ⏳ CHỌN THỜI GIAN THUÊ SỬ DỤNG (THEO THÁNG):
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    {[
+                      { months: 1, label: '1 Tháng', tag: 'Tiêu chuẩn' },
+                      { months: 3, label: '3 Tháng', tag: 'Giảm 5%' },
+                      { months: 6, label: '6 Tháng', tag: 'Giảm 10%' },
+                      { months: 12, label: '12 Tháng', tag: 'Giảm 20%' },
+                    ].map(mOpt => {
+                      const isSelected = selectedSlotMonths === mOpt.months;
+                      return (
+                        <button
+                          key={mOpt.months}
+                          type="button"
+                          onClick={() => setSelectedSlotMonths(mOpt.months)}
+                          style={{
+                            padding: '8px 6px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
+                            border: isSelected ? '2px solid #9333ea' : '1px solid var(--border-subtle)',
+                            background: isSelected ? 'rgba(147, 51, 234, 0.12)' : 'var(--bg-surface-2)',
+                            color: isSelected ? '#9333ea' : 'var(--text-primary)',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <div style={{ fontWeight: 800, fontSize: 12 }}>{mOpt.label}</div>
+                          <div style={{ fontSize: 9.5, color: isSelected ? '#7e22ce' : '#10b981', marginTop: 2, fontWeight: 700 }}>{mOpt.tag}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                localStorage.setItem(`bis_max_users_${uKey}`, String(newMax));
-                localStorage.setItem(`bis_slot_exp_${uKey}`, expDateStr);
-                localStorage.setItem(`bis_slot_months_${uKey}`, String(selectedSlotMonths));
-                localStorage.setItem(`bis_extra_slots_${uKey}`, String((parseInt(localStorage.getItem(`bis_extra_slots_${uKey}`) || '0', 10)) + selectedSlotPackage));
+                {/* Calculation summary */}
+                {(() => {
+                  const uKey = user?.email || user?.id || 'default';
+                  const currentMax = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+                  const newMax = currentMax + selectedSlotPackage;
+                  const slotMultiplier = selectedSlotPackage / 10;
+                  const discountFactor = selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0;
+                  const monthlyPrice = Math.round(50000 * slotMultiplier * discountFactor);
+                  const totalPrice = monthlyPrice * selectedSlotMonths;
 
-                setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, max_users: newMax } : u));
-                setSlotSubmitting(false);
-                setShowBuySlotModal(false);
-                showAlert('success', `⚡ Đã nâng cấp mua thêm +${selectedSlotPackage} slot thành viên (${selectedSlotMonths} tháng) thành công! Hạn ngạch mới: ${newMax} User.`);
-              }, 1200);
-            }}>
-              <div style={{ marginBottom: 20 }}>
-                <label className="form-label">Số điện thoại / Zalo liên hệ xác nhận *</label>
-                <input
-                  className="form-input"
-                  type="tel"
-                  placeholder="0912 xxx xxx"
-                  value={slotPhone}
-                  onChange={e => setSlotPhone(e.target.value)}
-                  required
-                />
+                  return (
+                    <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Gói bổ sung chọn:</span>
+                        <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ {selectedSlotPackage} Slot User ({selectedSlotMonths} tháng)</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch sau nâng cấp:</span>
+                        <b style={{ color: '#10b981' }}>{currentMax} ➔ {newMax} User</b>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 8 }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>Tổng tiền thanh toán ({selectedSlotMonths} tháng):</span>
+                        <span style={{ fontWeight: 900, color: '#9333ea', fontSize: 18 }}>{totalPrice.toLocaleString('vi-VN')}đ</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div style={{ marginBottom: 20 }}>
+                  <label className="form-label">Số điện thoại / Zalo liên hệ xác nhận *</label>
+                  <input
+                    className="form-input"
+                    type="tel"
+                    placeholder="0912 xxx xxx"
+                    value={slotPhone}
+                    onChange={e => setSlotPhone(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              {/* Modal Footer */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setShowBuySlotModal(false)}>
                   Hủy Bỏ
                 </button>
