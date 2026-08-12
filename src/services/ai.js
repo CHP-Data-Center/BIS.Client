@@ -9,8 +9,9 @@ export const aiService = {
    * @throws 503 nếu server chưa cấu hình Gemini
    */
   async ask(question) {
-    // AI (RAG + gemini-2.5-flash) chậm ~13-16s → timeout riêng 25s (global api = 15s).
-    const { data } = await api.post('/ai/ask', { question }, { timeout: 25000 });
+    // AI (RAG) chậm: flash ~13-16s, pro ~15-24s → timeout riêng 60s (global api = 15s).
+    // Server để gemini_timeout_seconds=50 (< 60s này) nên server luôn kịp báo lỗi rõ ràng.
+    const { data } = await api.post('/ai/ask', { question }, { timeout: 60000 });
     return data; // AiAnswer
   },
 
