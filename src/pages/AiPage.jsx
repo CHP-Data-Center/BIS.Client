@@ -119,12 +119,20 @@ export default function AiPage() {
   ]);
   const [input, setInput]     = useState('');
   const [loading, setLoading] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
   useEffect(() => {
+    aiService.status()
+      .then(res => setIsConfigured(res?.configured ?? true))
+      .catch(() => setIsConfigured(true));
+  }, []);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
 
   const sendMessage = async (question) => {
     const q = (question || input).trim();
@@ -186,8 +194,19 @@ export default function AiPage() {
         </p>
       </div>
 
+      {!isConfigured && (
+        <div style={{
+          padding: '12px 16px', borderRadius: 12, marginBottom: 16,
+          background: '#fffbebf0', border: '1.5px solid #fde68a', color: '#b45309',
+          fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          ⚠️ Trợ lý AI chưa được cấu hình API Key trên máy chủ Server. Vui lòng liên hệ Admin hệ thống.
+        </div>
+      )}
+
       {/* Chat area */}
       <div style={{
+
         flex: 1, overflowY: 'auto',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',

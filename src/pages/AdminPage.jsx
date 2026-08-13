@@ -243,6 +243,84 @@ export default function AdminPage() {
     }
   };
 
+  // ODA Crawler Handlers
+  const handleCrawlWorldBank = async (rows = 100) => {
+    setActionLoading(true);
+    try {
+      const res = await adminService.crawlWorldBank(rows);
+      showAlert('success', `Đã kích hoạt cào World Bank thành công! (${res?.items || 0} bài)`);
+      loadData();
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi cào World Bank.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCrawlAdb = async () => {
+    setActionLoading(true);
+    try {
+      await adminService.crawlAdb();
+      showAlert('success', 'Đã kích hoạt cào dữ liệu ADB thành công!');
+      loadData();
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi cào ADB.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCrawlDauthau = async (kind = 'all', q = '', pages = 1) => {
+    setActionLoading(true);
+    try {
+      await adminService.crawlDauthau(kind, q, pages);
+      showAlert('success', `Đã kích hoạt cào dauthau.asia (${kind}) thành công!`);
+      loadData();
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi cào dauthau.asia.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCrawlMuasamcong = async () => {
+    setActionLoading(true);
+    try {
+      await adminService.crawlMuasamcong();
+      showAlert('success', 'Đã kích hoạt cào Mua sắm công Playwright thành công!');
+      loadData();
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi cào Muasamcong.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResolveMuasamcongUrls = async (kind = 'notice', limit = 50) => {
+    setActionLoading(true);
+    try {
+      const res = await adminService.resolveMuasamcongUrls(kind, limit);
+      showAlert('success', `Backfill URL thành công: đã check ${res?.checked || 0}, resolved ${res?.resolved || 0}, còn lại ${res?.remaining || 0}.`);
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi backfill URL.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEnrichProcurementDetails = async (limit = 20) => {
+    setActionLoading(true);
+    try {
+      const res = await adminService.enrichProcurementDetails(limit);
+      showAlert('success', `Enrich details thành công: checked ${res?.checked || 0}, enriched ${res?.enriched || 0}, còn lại ${res?.remaining || 0}.`);
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Lỗi khi enrich chi tiết.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!newUser.email || !newUser.password) return;
@@ -731,11 +809,87 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {/* ODA & Procurement Crawlers Control Panel */}
+              <div style={{
+                background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                borderRadius: 20, padding: '22px 24px', boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
+              }}>
+                <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(168, 85, 247, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
+                    <Zap size={18} />
+                  </div>
+                  Bộ Công Cụ &amp; Điều Khiển Crawler ODA / Mua Sắm Công
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => handleCrawlWorldBank(200)}
+                    disabled={actionLoading}
+                    className="btn"
+                    style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
+                  >
+                    🌐 Crawl World Bank
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCrawlAdb}
+                    disabled={actionLoading}
+                    className="btn"
+                    style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
+                  >
+                    🏢 Crawl ADB (RSS)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCrawlDauthau('all', '', 2)}
+                    disabled={actionLoading}
+                    className="btn"
+                    style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
+                  >
+                    📋 Crawl dauthau.asia
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCrawlMuasamcong}
+                    disabled={actionLoading}
+                    className="btn"
+                    style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
+                  >
+                    ⚡ Crawl Muasamcong (Playwright)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleResolveMuasamcongUrls('notice', 50)}
+                    disabled={actionLoading}
+                    className="btn"
+                    style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 14, fontWeight: 700, fontSize: 12.5, gap: 8, justifyContent: 'center' }}
+                  >
+                    🔗 Backfill URL Muasamcong
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleEnrichProcurementDetails(20)}
+                    disabled={actionLoading}
+                    className="btn"
+                    style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 14, fontWeight: 700, fontSize: 12.5, gap: 8, justifyContent: 'center' }}
+                  >
+                    ✨ Enrich Procurement Details
+                  </button>
+                </div>
+              </div>
+
               {/* Add Source Form Card */}
               <div style={{
                 background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
                 borderRadius: 20, padding: '22px 24px', boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
               }}>
+
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-600, #2563eb)' }}>
                     <Plus size={16} />

@@ -117,4 +117,41 @@ export const adminService = {
     const { data } = await api.post('/admin/digest/run-now');
     return data;
   },
+
+  // ── ODA & Procurement Crawlers ──────────────────────────────────
+  async crawlWorldBank(rows = 100) {
+    const { data } = await api.post('/admin/oda/crawl-worldbank', null, { params: { rows } });
+    return data;
+  },
+
+  async crawlAdb() {
+    const { data } = await api.post('/admin/oda/crawl-adb');
+    return data;
+  },
+
+  async crawlDauthau(kind = 'all', q = '', pages = 1) {
+    const { data } = await api.post('/admin/oda/crawl-dauthau', null, { params: { kind, q, pages } });
+    return data;
+  },
+
+  async crawlMuasamcong() {
+    const { data } = await api.post('/admin/oda/crawl-muasamcong');
+    return data;
+  },
+
+  async resolveMuasamcongUrls(kind = 'notice', limit = 50) {
+    const { data } = await api.post('/admin/oda/resolve-muasamcong-urls', null, { params: { kind, limit } });
+    return data;
+  },
+
+  async enrichProcurementDetails(limit = 20) {
+    const { data } = await api.post('/admin/oda/enrich-procurement-details', null, { params: { limit } });
+    return data;
+  },
+
+  async enrichAdbDetails(limit = 20) {
+    const { data } = await api.post('/admin/oda/enrich-adb-details', null, { params: { limit } });
+    return data;
+  },
 };
+

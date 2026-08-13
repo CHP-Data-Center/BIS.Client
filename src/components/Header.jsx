@@ -7,6 +7,8 @@ import { useLang } from '../context/LanguageContext';
 import NotificationDropdown from './NotificationDropdown';
 import logoImg from '../assets/logo.png';
 import { SapphireDiamondSvg, SapphireStarSvg, LuxuryCrownSvg, LuxuryMoneyBagSvg } from './common/ThemeFxOverlay';
+import { FlagIcon, FlagVN, FlagUK, FlagJA } from './common/FlagIcons';
+
 
 function LiveClock() {
   const [time, setTime] = useState(new Date());
@@ -207,18 +209,18 @@ function HeaderThemeRain() {
   );
 }
 
-// Công tắc ngôn ngữ toàn giao diện: menu/nhãn + nội dung tin đổi theo (vi→en→ja).
-const LANG_META = { vi: '🇻🇳 VI', en: '🇬🇧 EN', ja: '🇯🇵 JA' };
-
+// Công tắc ngôn ngữ toàn giao diện: hiển thị CỜ QUỐC GIA SVG (🇻🇳 🇬🇧 🇯🇵) — đổi là menu + nhãn + nội dung đổi theo.
 function LanguageSwitcher() {
   const { lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   const ref = useRef();
+
   useEffect(() => {
     const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, []);
+
   return (
     <div className="relative" ref={ref} style={{ position: 'relative' }}>
       <button
@@ -226,35 +228,45 @@ function LanguageSwitcher() {
         onClick={() => setOpen(o => !o)}
         title="Đổi ngôn ngữ / Change language / 言語を変更"
         style={{
-          display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px',
+          display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px',
           background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
           borderRadius: 'var(--radius-full)', cursor: 'pointer',
-          fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+          transition: 'all 0.15s ease',
         }}
       >
-        {LANG_META[lang] || LANG_META.vi}
-        <ChevronDown size={11} />
+        <FlagIcon lang={lang} size={15} />
+        <ChevronDown size={12} style={{ color: 'var(--text-muted)' }} />
       </button>
+
       {open && (
         <div style={{
           position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 1000,
           background: 'var(--bg-surface)', border: '1px solid var(--border)',
-          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', overflow: 'hidden', minWidth: 150,
+          borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.18)', overflow: 'hidden', minWidth: 160,
+          padding: '4px 0',
         }}>
-          {[['vi', '🇻🇳 Tiếng Việt'], ['en', '🇬🇧 English'], ['ja', '🇯🇵 日本語']].map(([code, label]) => (
+          {[
+            ['vi', <FlagVN key="vi" size={16} />, 'Tiếng Việt'],
+            ['en', <FlagUK key="en" size={16} />, 'English'],
+            ['ja', <FlagJA key="ja" size={16} />, '日本語'],
+          ].map(([code, flagIcon, label]) => (
             <div
               key={code}
               onClick={() => { setLang(code); setOpen(false); }}
               style={{
-                padding: '9px 14px', fontSize: 13, cursor: 'pointer',
+                padding: '9px 16px', fontSize: 13, cursor: 'pointer',
                 fontWeight: lang === code ? 800 : 500,
                 color: lang === code ? 'var(--brand-600)' : 'var(--text-primary)',
                 background: lang === code ? 'var(--bg-surface-2)' : 'transparent',
+                display: 'flex', alignItems: 'center', gap: 10,
+                transition: 'background-color 0.12s ease',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
               onMouseLeave={(e) => { if (lang !== code) e.currentTarget.style.background = 'transparent'; }}
             >
-              {label}
+              {flagIcon}
+              <span>{label}</span>
             </div>
           ))}
         </div>
@@ -262,6 +274,8 @@ function LanguageSwitcher() {
     </div>
   );
 }
+
+
 
 export default function Header({ onToggleSidebar, isSidebarOpen }) {
   const { user, logout, isGuest, isAdmin, isPersonalUser } = useAuth();

@@ -24,7 +24,10 @@ const AdminPage = lazy(() => import('./pages/AdminPage'));
 const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const WorldBankView = lazy(() => import('./components/WorldBankView'));
 const WbProjectDetailPage = lazy(() => import('./pages/WbProjectDetailPage'));
+const AdbProjectDetailPage = lazy(() => import('./pages/AdbProjectDetailPage'));
 const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
+
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
 
 function PageLoader() {
   return (
@@ -173,6 +176,26 @@ export default function App() {
                 </EnterpriseRoute>
               } />
 
+              <Route path="/adb" element={
+                <EnterpriseRoute>
+                  <AppLayout><WorldBankView type="adb" /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+
+              <Route path="/adb/project/:id" element={
+                <EnterpriseRoute>
+                  <AppLayout><AdbProjectDetailPage /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+              <Route path="/adb/:id" element={
+                <EnterpriseRoute>
+                  <AppLayout><AdbProjectDetailPage /></AppLayout>
+                </EnterpriseRoute>
+              } />
+
+
               <Route path="/ai-chat" element={
                 <AiRoute>
                   <AppLayout><AiPage /></AppLayout>
@@ -202,6 +225,12 @@ export default function App() {
               <Route path="/keywords" element={
                 <ProtectedRoute>
                   <AppLayout><KeywordsPage /></AppLayout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <AppLayout><ProjectsPage /></AppLayout>
                 </ProtectedRoute>
               } />
 

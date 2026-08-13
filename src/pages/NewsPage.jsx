@@ -15,17 +15,17 @@ const PAGE_SIZE = 12;
 // Ánh xạ URL param -> nguồn. api: 'articles' (tin bài) | 'oda' (ADB/WB) | 'proc' (đấu thầu).
 // ADB/WB nằm ở bảng oda_projects, đấu thầu ở procurement_items — KHÔNG phải /articles.
 const SOURCE_MAP = {
-  all:       { label: 'Tất Cả Tin Tức & Dự Án', api: 'articles', type: null, icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  press:     { label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  tintuc:    { label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  adb:       { label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
-  worldbank: { label: 'Dự Án World Bank', api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
-  gov:       { label: 'Mua Sắm Công / Đấu Thầu', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
-  dauthau:   { label: 'Mua Sắm Công Quốc Gia', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
-  // Tách 2 trang riêng, cùng khu vực "Đấu Thầu Công" (kind lọc notice/plan).
-  tbmt:      { label: 'Thông Báo Mời Thầu (TBMT)', api: 'proc', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
-  khlcnt:    { label: 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)', api: 'proc', kind: 'plan', icon: <FileText size={18} style={{ color: '#8b5cf6' }} /> },
+  all:       { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  press:     { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  tintuc:    { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  adb:       { labelKey: 'nav.adb', label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
+  worldbank: { labelKey: 'nav.worldbank', label: 'Dự Án World Bank', api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
+  gov:       { labelKey: 'nav.procGroup', label: 'Mua Sắm Công / Đấu Thầu', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  dauthau:   { labelKey: 'nav.procGroup', label: 'Mua Sắm Công Quốc Gia', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  tbmt:      { labelKey: 'nav.tbmt', label: 'Thông Báo Mời Thầu (TBMT)', api: 'proc', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  khlcnt:    { labelKey: 'nav.khlcnt', label: 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)', api: 'proc', kind: 'plan', icon: <FileText size={18} style={{ color: '#8b5cf6' }} /> },
 };
+
 
 function SkeletonCard() {
   return (
@@ -304,13 +304,16 @@ export default function NewsPage() {
         </div>
       </button>
 
+
+
       {/* ── Filter sidebar (Đồng bộ UI gọn gàng theo dung lượng nội dung) ── */}
       <div className={`news-filter-sidebar ${mobileFilterOpen ? 'mobile-open' : ''}`}>
         {/* Header với nút Đặt lại góc trên phải */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Filter size={14} color="var(--brand-500)" />
-            {srcConfig.api === 'oda' ? 'Bộ Lọc Dự Án' : srcConfig.api === 'proc' ? 'Bộ Lọc Đấu Thầu' : 'Bộ Lọc Tin Tức'}
+            {t('filter.title')}
           </div>
           <button
             className="btn btn-ghost btn-xs"
@@ -318,7 +321,7 @@ export default function NewsPage() {
             style={{ gap: 4, fontSize: 11, color: 'var(--text-muted)', padding: '2px 6px' }}
             id="btn-reset-filters"
           >
-            <RotateCcw size={11} /> Đặt lại
+            <RotateCcw size={11} /> {t('news.reset')}
           </button>
         </div>
 
@@ -351,8 +354,8 @@ export default function NewsPage() {
         >
           {onlyBookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
           {onlyBookmarked
-            ? (srcConfig.api === 'oda' ? 'Đang hiện: Dự án đã lưu' : 'Đang hiện: Bài đã lưu')
-            : (srcConfig.api === 'oda' ? 'Chỉ bài đã lưu' : 'Chỉ bài đã lưu')}
+            ? `${t('news.saved')}`
+            : `${t('filter.savedOnly')}`}
           <span style={{
             fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 10,
             background: onlyBookmarked ? 'rgba(255,255,255,0.25)' : '#dbeafe',
@@ -372,7 +375,7 @@ export default function NewsPage() {
               type="text"
               className="form-input"
               style={{ paddingLeft: 30, paddingRight: searchInput ? 26 : 10, fontSize: 12, height: 36, width: '100%' }}
-              placeholder="Tìm Tên, ID, Từ khóa..."
+              placeholder={t('news.searchPlaceholder')}
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               onKeyDown={e => {
@@ -408,10 +411,10 @@ export default function NewsPage() {
               whiteSpace: 'nowrap',
               borderRadius: 8,
             }}
-            title="Bấm để tìm kiếm"
+            title={t('common.search')}
           >
             <Search size={13} />
-            Tìm kiếm
+            {t('common.search')}
           </button>
         </form>
 
@@ -438,7 +441,7 @@ export default function NewsPage() {
             value={lang}
             onChange={e => { setLang(e.target.value); setPage(1); }}
           >
-            <option value="vi">🇻🇳 Tiếng Việt (gốc)</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
             <option value="en">🇬🇧 English</option>
             <option value="ja">🇯🇵 日本語</option>
           </select>
@@ -447,7 +450,7 @@ export default function NewsPage() {
         {/* Khoảng thời gian */}
         <div style={{ paddingTop: 8, borderTop: '1px dashed var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>Khoảng Thời Gian:</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{t('news.dateRange')}:</span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input
                 type="date"
@@ -492,8 +495,9 @@ export default function NewsPage() {
             <div className="section-title">
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {srcConfig.icon}
-                {srcConfig.label}
+                {t(srcConfig.labelKey || 'nav.press')}
               </span>
+
               <span style={{
                 fontSize: 12, fontWeight: 600, color: 'var(--text-muted)',
                 padding: '2px 8px', background: 'var(--bg-surface-2)',

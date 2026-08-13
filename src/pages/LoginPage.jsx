@@ -1,11 +1,13 @@
 // src/pages/LoginPage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles, X, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { authService } from '../services/auth';
 import { syncUserTheme } from '../utils/theme';
 import logoImg from '../assets/logo.png';
+
 
 // Google Icon Component
 function GoogleIcon() {
@@ -57,8 +59,26 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
 
+  // Forgot password modal state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+
+  // Reset password modal state
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetToken, setResetToken] = useState('');
+  const [resetNewPw, setResetNewPw] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState(null);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setResetToken(token);
+      setShowResetModal(true);
+    }
     if (params.get('session_expired') === '1') {
       setLoginError('Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.');
     } else {
@@ -67,6 +87,40 @@ export default function LoginPage() {
     // Sync active theme from user context or last active active user theme
     syncUserTheme(user);
   }, [user]);
+
+  const handleSendForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    try {
+      await authService.forgotPassword(forgotEmail.trim());
+      setForgotSuccess(true);
+    } catch (err) {
+      setForgotSuccess(true);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetToken.trim() || !resetNewPw) return;
+    setResetLoading(true);
+    setResetMsg(null);
+    try {
+      await authService.resetPassword(resetToken.trim(), resetNewPw);
+      setResetMsg({ type: 'success', text: 'Đặt lại mật khẩu thành công! Hãy đăng nhập với mật khẩu mới.' });
+      setTimeout(() => {
+        setShowResetModal(false);
+        setResetNewPw('');
+      }, 2500);
+    } catch (err) {
+      setResetMsg({ type: 'error', text: err.response?.data?.detail || 'Token đặt lại không hợp lệ hoặc đã hết hạn.' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
 
   // Redirect if logged in
   useEffect(() => {
@@ -338,7 +392,7 @@ export default function LoginPage() {
               />
               <span>Ghi nhớ đăng nhập</span>
             </label>
-            <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Vui lòng liên hệ Quản trị viên hệ thống để khôi phục mật khẩu.'); }} className="forgot-link">
+            <a href="#forgot" onClick={(e) => { e.preventDefault(); setShowForgotModal(true); setForgotSuccess(false); setForgotEmail(''); }} className="forgot-link">
               Quên mật khẩu?
             </a>
           </div>
@@ -378,10 +432,9 @@ export default function LoginPage() {
                   setPassword('SuperAdmin@12345');
                 }}
                 id="btn-demo-superadmin"
-                className="demo-account-pill superadmin-pill"
+                className="btn-demo-acc"
               >
-                <Sparkles size={12} />
-                <span>👑 Super Admin: superadmin@ckjvn.vn / SuperAdmin@12345</span>
+                👑 Super Admin: superadmin@ckjvn.vn
               </button>
               <button
                 type="button"
@@ -390,16 +443,200 @@ export default function LoginPage() {
                   setPassword('Admin@12345');
                 }}
                 id="btn-demo-admin"
-                className="demo-account-pill admin-pill"
+                className="btn-demo-acc"
               >
-                <Sparkles size={12} />
-                <span>🔰 Admin Phân Vùng: admin@ckjvn.vn / Admin@12345</span>
+                ⚡ Admin Doanh Nghiệp: admin@ckjvn.vn
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('personal@ckjvn.vn');
+                  setPassword('User@12345');
+                }}
+                id="btn-demo-user"
+                className="btn-demo-acc"
+              >
+                👤 User Cá Nhân: personal@ckjvn.vn
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* ── Centered Modal Popup: Quên mật khẩu ── */}
+
+
+      {showForgotModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}
+        onClick={() => setShowForgotModal(false)}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: 460, background: 'var(--bg-surface)',
+              borderRadius: 24, padding: 32, border: '1px solid var(--border)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.35)', position: 'relative',
+              color: 'var(--text-primary)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowForgotModal(false)}
+              style={{
+                position: 'absolute', top: 18, right: 18, background: 'transparent',
+                border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6,
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 14, background: 'var(--brand-50)',
+                color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <KeyRound size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>Quên Mật Khẩu</h3>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Gửi link đặt lại mật khẩu qua email</div>
+              </div>
+            </div>
+
+            {forgotSuccess ? (
+              <div style={{
+                padding: '16px 20px', borderRadius: 16, background: '#f0fdf4',
+                border: '1.5px solid #86efac', color: '#15803d', fontSize: 13.5, fontWeight: 700,
+                textAlign: 'center', marginTop: 12,
+              }}>
+                <CheckCircle2 size={32} style={{ margin: '0 auto 8px', color: '#16a34a' }} />
+                Yêu cầu đã được ghi nhận. Nếu email tồn tại trong hệ thống, link hướng dẫn sẽ được gửi đến hòm thư của bạn.
+              </div>
+            ) : (
+              <form onSubmit={handleSendForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 12 }}>
+                <div>
+                  <label className="form-label">Nhập email tài khoản của bạn *</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="vi-du@company.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="login-btn"
+                  disabled={forgotLoading}
+                  style={{ marginTop: 8 }}
+                >
+                  {forgotLoading ? <><Loader2 size={16} className="spin" /> Đang gửi...</> : 'Gửi link khôi phục'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Centered Modal Popup: Đặt lại mật khẩu ── */}
+      {showResetModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}
+        onClick={() => setShowResetModal(false)}
+        >
+          <div
+            style={{
+              width: '100%', maxWidth: 460, background: 'var(--bg-surface)',
+              borderRadius: 24, padding: 32, border: '1px solid var(--border)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.35)', position: 'relative',
+              color: 'var(--text-primary)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowResetModal(false)}
+              style={{
+                position: 'absolute', top: 18, right: 18, background: 'transparent',
+                border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6,
+                borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 14, background: 'var(--brand-50)',
+                color: 'var(--brand-600)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <KeyRound size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>Đặt Lai Mật Khẩu</h3>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Tạo mật khẩu mới cho tài khoản</div>
+              </div>
+            </div>
+
+            {resetMsg && (
+              <div style={{
+                padding: '12px 16px', borderRadius: 12, fontSize: 13, fontWeight: 700, marginBottom: 16,
+                background: resetMsg.type === 'success' ? '#f0fdf4' : '#fff1f2',
+                border: `1.5px solid ${resetMsg.type === 'success' ? '#86efac' : '#fca5a5'}`,
+                color: resetMsg.type === 'success' ? '#15803d' : '#b91c1c',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                {resetMsg.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                {resetMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label className="form-label">Token khôi phục *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Mã token nhận qua email"
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label">Mật khẩu mới *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="≥ 8 ký tự"
+                  value={resetNewPw}
+                  onChange={(e) => setResetNewPw(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="login-btn"
+                disabled={resetLoading}
+                style={{ marginTop: 8 }}
+              >
+                {resetLoading ? <><Loader2 size={16} className="spin" /> Đang xử lý...</> : 'Cập nhật mật khẩu mới'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 

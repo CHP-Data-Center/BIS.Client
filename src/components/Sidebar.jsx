@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag, FileText, ChevronDown,
-  Settings, Tag, Bookmark, Bot, ShieldCheck, Zap
+  Settings, Tag, Bookmark, Bot, ShieldCheck, Zap, FolderKanban
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
@@ -10,8 +10,8 @@ import { useLang } from '../context/LanguageContext';
 // Nhãn qua khóa i18n (t('nav.…')) — đổi ngôn ngữ giao diện là menu đổi theo.
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, labelKey: 'nav.dashboard', badge: null },
-  { to: '/news/all',  icon: <Newspaper size={16} />,       labelKey: 'nav.allNews',   badge: null },
 ];
+
 
 const sourceNavItems = [
   { to: '/news/press',     icon: <Newspaper size={16} />,  labelKey: 'nav.press',     badge: null, color: '#3b82f6' },
@@ -31,10 +31,12 @@ const procurementGroup = {
 };
 
 const toolItems = [
-  { to: '/keywords',  icon: <Tag size={16} />,      labelKey: 'nav.keywords',  badge: null },
-  { to: '/bookmarks', icon: <Bookmark size={16} />, labelKey: 'nav.bookmarks', badge: null },
-  { to: '/ai-chat',   icon: <Bot size={16} />,      labelKey: 'nav.ai',        badge: null, highlight: true },
+  { to: '/keywords',  icon: <Tag size={16} />,          labelKey: 'nav.keywords',  badge: null },
+  { to: '/projects',  icon: <FolderKanban size={16} />, labelKey: 'nav.projects',  badge: null },
+  { to: '/bookmarks', icon: <Bookmark size={16} />,     labelKey: 'nav.bookmarks', badge: null },
+  { to: '/ai-chat',   icon: <Bot size={16} />,          labelKey: 'nav.ai',        badge: null, highlight: true },
 ];
+
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, isAdmin, isPersonalUser, isSuperAdmin } = useAuth();

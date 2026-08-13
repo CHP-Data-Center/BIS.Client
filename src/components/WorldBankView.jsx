@@ -9,9 +9,11 @@ import {
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
 import { worldBankProjectUrl } from '../utils/wbUrl';
-import OdaProjectDetailModal from './OdaProjectDetailModal';
+import { useLang } from '../context/LanguageContext';
+
 
 const DEFAULT_PAGE_SIZE = 20;
+
 
 /** Parse details_json (chi tiết rich đã crawl) an toàn -> object hoặc null. */
 function safeParseDetails(s) {
@@ -110,7 +112,9 @@ const CONFIG_MAP = {
 
 export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const nav = useNavigate();
+  const { t } = useLang();
   const [searchParams] = useSearchParams();
+
   const initialQ = searchParams.get('q') || '';
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
   const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
@@ -157,12 +161,12 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
-  // Bấm xem chi tiết: WB → trang chi tiết đầy đủ; ADB → modal rich (details_json crawl
-  // từ adb.org) — trang /worldbank/project mang nhãn World Bank, sai ngữ cảnh cho ADB.
+  // Bấm xem chi tiết: WB → trang chi tiết đầy đủ; ADB → trang chi tiết đầy đủ ADB (/adb/project/:id).
   const openDetail = (p) => {
-    if (normType === 'adb') setDetailItem(p);
+    if (normType === 'adb') nav(`/adb/project/${p.id}`, { state: { project: p } });
     else nav(`/worldbank/project/${p.id}`, { state: { project: p } });
   };
+
 
   // Show Toast
   const showToast = (msg, toastType = 'info') => {
@@ -702,14 +706,14 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Filter size={14} color={config.brandColor} />
-                Bộ Lọc Dữ Liệu
+                <span>{t('filter.title')}</span>
               </div>
               <button
                 className="btn btn-ghost btn-xs"
                 onClick={handleClearFilters}
                 style={{ gap: 4, fontSize: 11, color: 'var(--text-muted)', padding: '2px 6px' }}
               >
-                <RotateCcw size={11} /> Đặt lại
+                <RotateCcw size={11} /> {t('news.reset')}
               </button>
             </div>
 
@@ -737,7 +741,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
               }}
             >
               {onlySaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-              {onlySaved ? `Đang hiện: ${config.entityLabel} đã lưu` : `Chỉ ${config.entityLabel} đã lưu`}
+              {onlySaved ? `${t('news.saved')}: ${config.entityLabel}` : `Chỉ ${config.entityLabel} ${t('news.saved')}`}
               {savedIds.size > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 800, background: onlySaved ? 'rgba(255,255,255,0.25)' : 'var(--brand-100)', color: onlySaved ? 'white' : 'var(--brand-700)', padding: '1px 6px', borderRadius: 10 }}>
                   {savedIds.size}
@@ -753,7 +757,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: 30, paddingRight: 26, fontSize: 12, height: 36, width: '100%' }}
-                  placeholder={`Tìm Tên, ID, ${config.orgLabel}...`}
+                  placeholder={t('news.searchPlaceholder')}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -785,10 +789,10 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                   display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap', borderRadius: 8,
                   background: config.brandColor, border: 'none',
                 }}
-                title="Bấm để tìm kiếm"
+                title={t('common.search')}
               >
                 <Search size={13} />
-                Tìm kiếm
+                {t('common.search')}
               </button>
             </div>
 
