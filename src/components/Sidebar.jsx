@@ -30,6 +30,59 @@ const procurementGroup = {
   ],
 };
 
+// Nhóm "ADB" — 2 loại bản ghi khác hẳn nhau (dự án vs thông báo mời thầu),
+// tách 2 trang con như Đấu Thầu Công.
+const adbGroup = {
+  labelKey: 'nav.adb',
+  color: '#f59e0b',
+  icon: <Building2 size={16} />,
+  children: [
+    { to: '/news/adb',         icon: <Building2 size={14} />,  labelKey: 'nav.adbProjects' },
+    { to: '/news/adb-tenders', icon: <ShoppingBag size={14} />, labelKey: 'nav.adbTenders' },
+  ],
+};
+
+/** Mục nav dạng nhóm xổ xuống (dùng chung cho ADB & Đấu Thầu Công). */
+function NavGroup({ group, id, t, onClose }) {
+  const location = useLocation();
+  const active = group.children.some((c) => location.pathname === c.to);
+  const [open, setOpen] = useState(true);
+  const showChildren = open || active;
+  return (
+    <>
+      <button
+        type="button"
+        id={id}
+        onClick={() => setOpen((o) => !o)}
+        className={`sidebar-nav-item ${active ? 'group-active' : ''}`}
+        style={{ width: '100%', background: 'none', border: 'none', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
+      >
+        <span style={{ color: group.color }}>{group.icon}</span>
+        {t(group.labelKey)}
+        <ChevronDown
+          size={14}
+          style={{ marginLeft: 'auto', transition: 'transform 0.2s ease', transform: showChildren ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        />
+      </button>
+      {showChildren && group.children.map((child) => (
+        <NavLink
+          key={child.to}
+          to={child.to}
+          id={`sidebar-${child.to.replace(/\//g, '-').slice(1)}`}
+          onClick={() => onClose?.()}
+          // `end` để /news/adb KHÔNG sáng khi đang ở /news/adb-tenders.
+          end
+          className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+          style={{ paddingLeft: 24, fontSize: 12.5, whiteSpace: 'nowrap' }}
+        >
+          <span style={{ color: group.color }}>{child.icon}</span>
+          {t(child.labelKey)}
+        </NavLink>
+      ))}
+    </>
+  );
+}
+
 const toolItems = [
   { to: '/keywords',  icon: <Tag size={16} />,          labelKey: 'nav.keywords',  badge: null },
   { to: '/projects',  icon: <FolderKanban size={16} />, labelKey: 'nav.projects',  badge: null },
@@ -51,10 +104,6 @@ export default function Sidebar({ isOpen, onClose }) {
     if (isPersonalUser && item.to === '/dashboard') return false;
     return true;
   });
-
-  const procActive = procurementGroup.children.some((c) => location.pathname.startsWith(c.to));
-  const [procOpen, setProcOpen] = useState(true);
-  const showProcChildren = procOpen || procActive;
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -136,51 +185,26 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         ) : (
           <>
-            {sourceNavItems.filter(s => s.to !== '/news/press').map(item => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
-                onClick={() => onClose?.()}
-                className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-              >
-                <span style={{ color: item.color }}>{item.icon}</span>
-                {t(item.labelKey)}
-              </NavLink>
-            ))}
+            {/* Nhóm "ADB" — xổ ra 2 trang con (Dự án / Thông báo mời thầu) */}
+            <NavGroup group={adbGroup} id="sidebar-adb-group" t={t} onClose={onClose} />
+
+            {sourceNavItems
+              .filter(s => s.to !== '/news/press' && s.to !== '/news/adb')
+              .map(item => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+                  onClick={() => onClose?.()}
+                  className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <span style={{ color: item.color }}>{item.icon}</span>
+                  {t(item.labelKey)}
+                </NavLink>
+              ))}
 
             {/* Nhóm "Đấu Thầu Công" — bấm để xổ ra 2 trang con (TBMT/KHLCNT) */}
-            <button
-              type="button"
-              id="sidebar-proc-group"
-              onClick={() => setProcOpen(o => !o)}
-              className={`sidebar-nav-item ${procActive ? 'group-active' : ''}`}
-              style={{ width: '100%', background: 'none', border: 'none', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
-            >
-              <span style={{ color: procurementGroup.color }}>{procurementGroup.icon}</span>
-              {t(procurementGroup.labelKey)}
-              <ChevronDown
-                size={14}
-                style={{
-                  marginLeft: 'auto',
-                  transition: 'transform 0.2s ease',
-                  transform: showProcChildren ? 'rotate(180deg)' : 'rotate(0deg)',
-                }}
-              />
-            </button>
-            {showProcChildren && procurementGroup.children.map(child => (
-              <NavLink
-                key={child.to}
-                to={child.to}
-                id={`sidebar-${child.to.replace(/\//g, '-').slice(1)}`}
-                onClick={() => onClose?.()}
-                className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-                style={{ paddingLeft: 24, fontSize: 12.5, whiteSpace: 'nowrap' }}
-              >
-                <span style={{ color: procurementGroup.color }}>{child.icon}</span>
-                {t(child.labelKey)}
-              </NavLink>
-            ))}
+            <NavGroup group={procurementGroup} id="sidebar-proc-group" t={t} onClose={onClose} />
           </>
         )}
       </div>
