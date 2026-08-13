@@ -118,13 +118,21 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   // WB & ADB: bấm tên/icon dự án → xem chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
   const usesDetailModal = normType === 'worldbank' || normType === 'adb';
 
-  // Tiêu đề riêng khi tách TBMT / KHLCNT thành 2 trang (dùng chung component procurement).
-  const pageTitle = kind === 'notice' ? 'Thông Báo Mời Thầu (TBMT)'
+  // Tiêu đề riêng khi tách 2 trang con: ADB (dự án / mời thầu) và mua sắm công (TBMT / KHLCNT).
+  // `kind` dùng chung 2 ngữ cảnh nên PHẢI xét normType trước, tránh trang ADB mang nhãn TBMT.
+  const isAdb = normType === 'adb';
+  const pageTitle = isAdb
+    ? (kind === 'notice' ? 'Thông Báo Mời Thầu ADB' : config.title)
+    : kind === 'notice' ? 'Thông Báo Mời Thầu (TBMT)'
     : kind === 'plan' ? 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)'
     : config.title;
-  const pageSubtitle = kind
-    ? `Tra cứu ${kind === 'notice' ? 'thông báo mời thầu (TBMT)' : 'kế hoạch lựa chọn nhà thầu (KHLCNT)'} — bấm mã để mở trang chi tiết trên Hệ thống mạng đấu thầu quốc gia`
-    : config.subtitle;
+  const pageSubtitle = isAdb
+    ? (kind === 'notice'
+        ? 'Thông báo mời thầu (Invitation for Bids) theo các khoản vay/viện trợ của ADB'
+        : config.subtitle)
+    : kind
+      ? `Tra cứu ${kind === 'notice' ? 'thông báo mời thầu (TBMT)' : 'kế hoạch lựa chọn nhà thầu (KHLCNT)'} — bấm mã để mở trang chi tiết trên Hệ thống mạng đấu thầu quốc gia`
+      : config.subtitle;
 
   // === STATE ===
   const [allProjects, setAllProjects] = useState([]);
@@ -189,7 +197,9 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
       if (normType === 'worldbank') {
         data = await worldBankService.fetchProjects();
       } else if (normType === 'adb') {
-        const res = await odaService.getProjects({ source: 'adb', size: 5000 });
+        const res = await odaService.getProjects({
+          source: 'adb', size: 5000, ...(kind ? { kind } : {}),
+        });
         const items = res?.items || [];
         data = items.map((p) => {
           const totalAmt = p.amount_usd || (typeof p.amount === 'string' ? parseFloat(p.amount.replace(/[^0-9.]/g, '')) : p.amount) || 0;

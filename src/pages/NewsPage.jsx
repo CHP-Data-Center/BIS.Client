@@ -18,7 +18,8 @@ const SOURCE_MAP = {
   all:       { label: 'Tất Cả Tin Tức & Dự Án', api: 'articles', type: null, icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
   press:     { label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
   tintuc:    { label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  adb:       { label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
+  adb:       { label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', kind: 'project', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
+  'adb-tenders': { label: 'Thông Báo Mời Thầu ADB', api: 'oda', odaSource: 'adb', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#f59e0b' }} /> },
   worldbank: { label: 'Dự Án World Bank', api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
   gov:       { label: 'Mua Sắm Công / Đấu Thầu', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
   dauthau:   { label: 'Mua Sắm Công Quốc Gia', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
@@ -102,7 +103,7 @@ export default function NewsPage() {
   const { isPersonalUser } = useAuth();
   const scrollContainerRef = useRef(null);
 
-  if (isPersonalUser && (source === 'adb' || source === 'worldbank' || source === 'gov' || source === 'dauthau')) {
+  if (isPersonalUser && (source === 'adb' || source === 'adb-tenders' || source === 'worldbank' || source === 'gov' || source === 'dauthau')) {
     return <Navigate to="/news/press" replace />;
   }
 
@@ -137,7 +138,8 @@ export default function NewsPage() {
       if (srcConfig.api === 'oda') {
         // Dự án ADB / World Bank (bảng oda_projects).
         const res = await odaService.getProjects({
-          source: srcConfig.odaSource, page: p, size: PAGE_SIZE, ...(q ? { q } : {}),
+          source: srcConfig.odaSource, page: p, size: PAGE_SIZE,
+          ...(srcConfig.kind ? { kind: srcConfig.kind } : {}), ...(q ? { q } : {}),
         });
         items = (res.items || []).map(adaptOdaToCard);
         tot = res.total || 0;
@@ -263,8 +265,12 @@ export default function NewsPage() {
   if (source === 'worldbank') {
     return <WorldBankView type="worldbank" />;
   }
+  // ADB tách 2 trang như Đấu Thầu Công: dự án vs thông báo mời thầu.
   if (source === 'adb') {
-    return <WorldBankView type="adb" />;
+    return <WorldBankView type="adb" kind="project" />;
+  }
+  if (source === 'adb-tenders') {
+    return <WorldBankView type="adb" kind="notice" />;
   }
   if (source === 'tbmt') {
     return <WorldBankView type="procurement" kind="notice" />;
