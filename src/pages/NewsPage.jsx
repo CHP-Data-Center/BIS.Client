@@ -120,6 +120,8 @@ export default function NewsPage() {
   const [dateFrom, setDateFrom]       = useState('');
   const [dateTo, setDateTo]           = useState('');
   const [onlyMyKw, setOnlyMyKw]       = useState(false);
+  // Ngôn ngữ hiển thị tin (vi gốc | en | ja) — bài có bản dịch trả title/excerpt đã dịch.
+  const [lang, setLang]               = useState(localStorage.getItem('news_lang') || 'vi');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const srcConfig = SOURCE_MAP[source] || SOURCE_MAP.all;
@@ -151,6 +153,7 @@ export default function NewsPage() {
         if (q)              params.q           = q;
         if (srcConfig.type) params.source_type = srcConfig.type;
         if (dateFrom)       params.date_from   = dateFrom;
+        if (lang !== 'vi')  params.lang        = lang; // bài có bản dịch hiện EN/JA
         const res = await articlesService.getArticles(params);
         items = res.items || [];
         tot = res.total || 0;
@@ -165,7 +168,7 @@ export default function NewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw]);
+  }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw, lang]);
 
   const fetchBookmarks = useCallback(async () => {
     setLoadingBookmarks(true);
@@ -204,7 +207,7 @@ export default function NewsPage() {
   // Main data fetch effect: triggers when source, search, page, sort, or date filters change
   useEffect(() => {
     fetchArticles(page);
-  }, [source, search, page, sortBy, dateFrom, dateTo, onlyMyKw]);
+  }, [source, search, page, sortBy, dateFrom, dateTo, onlyMyKw, lang]);
 
   // Bookmarks & background update event listener
   useEffect(() => {
@@ -422,6 +425,21 @@ export default function NewsPage() {
           >
             <option value="newest">Mới nhất</option>
             <option value="match_count">Khớp nhiều nhất</option>
+          </select>
+        </div>
+
+        {/* Ngôn ngữ hiển thị (bài có bản dịch AI hiện EN/JA; chưa dịch giữ bản gốc) */}
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Ngôn ngữ tin:</label>
+          <select
+            className="form-input"
+            style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
+            value={lang}
+            onChange={e => { setLang(e.target.value); localStorage.setItem('news_lang', e.target.value); setPage(1); }}
+          >
+            <option value="vi">🇻🇳 Tiếng Việt (gốc)</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="ja">🇯🇵 日本語</option>
           </select>
         </div>
 
