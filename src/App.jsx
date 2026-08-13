@@ -3,6 +3,7 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { CrawlProvider } from './context/CrawlContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ScrollToTop from './components/ScrollToTop';
@@ -137,6 +138,7 @@ function ComingSoon({ title }) {
 export default function App() {
   return (
     <ErrorBoundary>
+      <LanguageProvider>
       <CrawlProvider>
         <ThemeFxOverlay />
         <BrowserRouter basename={import.meta.env.BASE_URL}>
@@ -244,6 +246,7 @@ export default function App() {
           </Suspense>
         </BrowserRouter>
       </CrawlProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }

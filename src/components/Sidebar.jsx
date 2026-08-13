@@ -5,37 +5,40 @@ import {
   Settings, Tag, Bookmark, Bot, ShieldCheck, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 
+// Nhãn qua khóa i18n (t('nav.…')) — đổi ngôn ngữ giao diện là menu đổi theo.
 const navItems = [
-  { to: '/dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard', badge: null },
-  { to: '/news/all',  icon: <Newspaper size={16} />,       label: 'Tất Cả Tin',  badge: null },
+  { to: '/dashboard', icon: <LayoutDashboard size={16} />, labelKey: 'nav.dashboard', badge: null },
+  { to: '/news/all',  icon: <Newspaper size={16} />,       labelKey: 'nav.allNews',   badge: null },
 ];
 
 const sourceNavItems = [
-  { to: '/news/press',     icon: <Newspaper size={16} />,   label: 'Báo Chí',           badge: null, color: '#3b82f6' },
-  { to: '/news/adb',       icon: <Building2 size={16} />,   label: 'ADB (Châu Á)',      badge: null, color: '#f59e0b' },
-  { to: '/news/worldbank', icon: <Globe size={16} />,        label: 'World Bank',        badge: null, color: '#10b981' },
+  { to: '/news/press',     icon: <Newspaper size={16} />,  labelKey: 'nav.press',     badge: null, color: '#3b82f6' },
+  { to: '/news/adb',       icon: <Building2 size={16} />,  labelKey: 'nav.adb',       badge: null, color: '#f59e0b' },
+  { to: '/news/worldbank', icon: <Globe size={16} />,       labelKey: 'nav.worldbank', badge: null, color: '#10b981' },
 ];
 
 // Nhóm "Đấu Thầu Công" — bấm để XỔ RA 2 trang con (TBMT / KHLCNT).
 const procurementGroup = {
-  label: 'Đấu Thầu Công',
+  labelKey: 'nav.procGroup',
   color: '#8b5cf6',
   icon: <ShoppingBag size={16} />,
   children: [
-    { to: '/news/tbmt',   icon: <ShoppingBag size={14} />, label: 'Thông Báo Mời Thầu (TBMT)' },
-    { to: '/news/khlcnt', icon: <FileText size={14} />,    label: 'Kế Hoạch LCNT (KHLCNT)' },
+    { to: '/news/tbmt',   icon: <ShoppingBag size={14} />, labelKey: 'nav.tbmt' },
+    { to: '/news/khlcnt', icon: <FileText size={14} />,    labelKey: 'nav.khlcnt' },
   ],
 };
 
 const toolItems = [
-  { to: '/keywords',  icon: <Tag size={16} />,      label: 'Từ Khóa',    badge: null },
-  { to: '/bookmarks', icon: <Bookmark size={16} />, label: 'Đã Lưu',     badge: null },
-  { to: '/ai-chat',   icon: <Bot size={16} />,      label: 'Trợ Lý AI',  badge: null, highlight: true },
+  { to: '/keywords',  icon: <Tag size={16} />,      labelKey: 'nav.keywords',  badge: null },
+  { to: '/bookmarks', icon: <Bookmark size={16} />, labelKey: 'nav.bookmarks', badge: null },
+  { to: '/ai-chat',   icon: <Bot size={16} />,      labelKey: 'nav.ai',        badge: null, highlight: true },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, isAdmin, isPersonalUser, isSuperAdmin } = useAuth();
+  const { t } = useLang();
   const location = useLocation();
   const isUpgradePage = location.pathname === '/upgrade';
 
@@ -55,7 +58,7 @@ export default function Sidebar({ isOpen, onClose }) {
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Main Nav */}
       <div className="sidebar-section">
-        <div className="sidebar-label">Chính</div>
+        <div className="sidebar-label">{t('nav.main')}</div>
         {filteredNavItems.map(item => (
           <NavLink
             key={item.to}
@@ -65,7 +68,7 @@ export default function Sidebar({ isOpen, onClose }) {
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             {item.icon}
-            {item.label}
+            {t(item.labelKey)}
             {item.badge != null && <span className="nav-badge">{item.badge}</span>}
           </NavLink>
         ))}
@@ -75,7 +78,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sources */}
       <div className="sidebar-section">
-        <div className="sidebar-label">Nguồn Dữ Liệu</div>
+        <div className="sidebar-label">{t('nav.sources')}</div>
 
         {/* 1. Unlocked Source: Báo Chí */}
         <NavLink
@@ -85,7 +88,7 @@ export default function Sidebar({ isOpen, onClose }) {
           className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
         >
           <span style={{ color: '#3b82f6' }}><Newspaper size={16} /></span>
-          Báo Chí
+          {t('nav.press')}
         </NavLink>
 
         {/* 2. Nguồn trả phí (ADB, World Bank, Đấu Thầu). Personal user: khóa (mở khi vào /upgrade). */}
@@ -100,7 +103,7 @@ export default function Sidebar({ isOpen, onClose }) {
           }}>
             {[
               ...sourceNavItems.filter(s => s.to !== '/news/press'),
-              { to: '/news/tbmt', icon: <ShoppingBag size={16} />, label: 'Đấu Thầu Công', color: '#8b5cf6' },
+              { to: '/news/tbmt', icon: <ShoppingBag size={16} />, labelKey: 'nav.procGroup', color: '#8b5cf6' },
             ].map(item => (
               <NavLink
                 key={item.to}
@@ -116,7 +119,7 @@ export default function Sidebar({ isOpen, onClose }) {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
                   <span style={{ color: item.color, flexShrink: 0 }}>{item.icon}</span>
-                  <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>{item.label}</span>
+                  <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>{t(item.labelKey)}</span>
                 </div>
                 <span className="upgrade-badge" style={{
                   marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
@@ -124,7 +127,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   display: 'inline-flex', alignItems: 'center', gap: 2,
                   borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
                 }}>
-                  🔒 NÂNG CẤP
+                  {t('badge.upgrade')}
                 </span>
               </NavLink>
             ))}
@@ -140,7 +143,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
               >
                 <span style={{ color: item.color }}>{item.icon}</span>
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
 
@@ -153,7 +156,7 @@ export default function Sidebar({ isOpen, onClose }) {
               style={{ width: '100%', background: 'none', border: 'none', font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
             >
               <span style={{ color: procurementGroup.color }}>{procurementGroup.icon}</span>
-              {procurementGroup.label}
+              {t(procurementGroup.labelKey)}
               <ChevronDown
                 size={14}
                 style={{
@@ -173,7 +176,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 style={{ paddingLeft: 24, fontSize: 12.5, whiteSpace: 'nowrap' }}
               >
                 <span style={{ color: procurementGroup.color }}>{child.icon}</span>
-                {child.label}
+                {t(child.labelKey)}
               </NavLink>
             ))}
           </>
@@ -184,7 +187,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Tools */}
       <div className="sidebar-section">
-        <div className="sidebar-label">Công Cụ</div>
+        <div className="sidebar-label">{t('nav.tools')}</div>
         
         {/* Unlocked Tools: Từ Khóa, Đã Lưu */}
         {toolItems.filter(t => t.to !== '/ai-chat').map(item => (
@@ -196,7 +199,7 @@ export default function Sidebar({ isOpen, onClose }) {
             className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
           >
             {item.icon}
-            {item.label}
+            {t(item.labelKey)}
           </NavLink>
         ))}
 
@@ -210,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }) {
             style={{ position: 'relative' }}
           >
             <span style={{ color: '#a855f7' }}><Bot size={16} /></span>
-            Trợ Lý AI
+            {t('nav.ai')}
             <span style={{
               marginLeft: 'auto',
               fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8,
@@ -232,7 +235,7 @@ export default function Sidebar({ isOpen, onClose }) {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
               <span style={{ color: '#a855f7', flexShrink: 0 }}><Bot size={16} /></span>
-              <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>Trợ Lý AI</span>
+              <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>{t('nav.ai')}</span>
             </div>
             <span className="upgrade-badge" style={{
               marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
@@ -240,7 +243,7 @@ export default function Sidebar({ isOpen, onClose }) {
               display: 'inline-flex', alignItems: 'center', gap: 2,
               borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
             }}>
-              🔒 NÂNG CẤP
+              {t('badge.upgrade')}
             </span>
           </NavLink>
         )}
@@ -254,7 +257,7 @@ export default function Sidebar({ isOpen, onClose }) {
             style={{ color: '#2563eb', fontWeight: 700, marginTop: 4 }}
           >
             <ShieldCheck size={16} style={{ color: '#2563eb' }} />
-            Quản Trị Admin
+            {t('nav.admin')}
             <span style={{
               marginLeft: 'auto',
               fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,
@@ -276,7 +279,7 @@ export default function Sidebar({ isOpen, onClose }) {
             }}
           >
             <Zap size={16} style={{ color: '#a855f7' }} />
-            Nâng Cấp Dịch Vụ
+            {t('nav.upgrade')}
             <span style={{
               marginLeft: 'auto',
               fontSize: 9, fontWeight: 800, padding: '1px 6px', borderRadius: 8,
@@ -294,7 +297,7 @@ export default function Sidebar({ isOpen, onClose }) {
           className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
         >
           <Settings size={16} />
-          Cài đặt
+          {t('nav.settings')}
         </NavLink>
       </div>
     </aside>

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Menu, X, Search, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import NotificationDropdown from './NotificationDropdown';
 import logoImg from '../assets/logo.png';
 import { SapphireDiamondSvg, SapphireStarSvg, LuxuryCrownSvg, LuxuryMoneyBagSvg } from './common/ThemeFxOverlay';
@@ -206,8 +207,65 @@ function HeaderThemeRain() {
   );
 }
 
+// Công tắc ngôn ngữ toàn giao diện: menu/nhãn + nội dung tin đổi theo (vi→en→ja).
+const LANG_META = { vi: '🇻🇳 VI', en: '🇬🇧 EN', ja: '🇯🇵 JA' };
+
+function LanguageSwitcher() {
+  const { lang, setLang } = useLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  return (
+    <div className="relative" ref={ref} style={{ position: 'relative' }}>
+      <button
+        id="btn-lang-switch"
+        onClick={() => setOpen(o => !o)}
+        title="Đổi ngôn ngữ / Change language / 言語を変更"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px',
+          background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-full)', cursor: 'pointer',
+          fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)',
+        }}
+      >
+        {LANG_META[lang] || LANG_META.vi}
+        <ChevronDown size={11} />
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 1000,
+          background: 'var(--bg-surface)', border: '1px solid var(--border)',
+          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', overflow: 'hidden', minWidth: 150,
+        }}>
+          {[['vi', '🇻🇳 Tiếng Việt'], ['en', '🇬🇧 English'], ['ja', '🇯🇵 日本語']].map(([code, label]) => (
+            <div
+              key={code}
+              onClick={() => { setLang(code); setOpen(false); }}
+              style={{
+                padding: '9px 14px', fontSize: 13, cursor: 'pointer',
+                fontWeight: lang === code ? 800 : 500,
+                color: lang === code ? 'var(--brand-600)' : 'var(--text-primary)',
+                background: lang === code ? 'var(--bg-surface-2)' : 'transparent',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+              onMouseLeave={(e) => { if (lang !== code) e.currentTarget.style.background = 'transparent'; }}
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Header({ onToggleSidebar, isSidebarOpen }) {
   const { user, logout, isGuest, isAdmin, isPersonalUser } = useAuth();
+  const { t } = useLang();
   const nav = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
@@ -280,13 +338,15 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
           <input
             id="input-search"
             className="search-input"
-            placeholder="Tìm kiếm tin tức... (Enter)"
+            placeholder={t('header.searchPlaceholder')}
             value={searchVal}
             onChange={e => setSearchVal(e.target.value)}
             onKeyDown={handleSearch}
           />
         </div>
 
+        {/* Ngôn ngữ giao diện + tin */}
+        <LanguageSwitcher />
 
         {/* Notification */}
         <NotificationDropdown />
@@ -302,7 +362,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
               padding: '7px 16px', fontSize: 12.5,
             }}
           >
-            <LogIn size={13} /> Đăng nhập
+            <LogIn size={13} /> {t('header.login')}
           </button>
         ) : (
           <div className="relative" ref={userRef}>
@@ -337,22 +397,22 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
                 </div>
                 {isAdmin && (
                   <div className="user-menu-item" onClick={() => { nav('/admin'); setUserMenuOpen(false); }} id="menu-admin" style={{ color: '#2563eb', fontWeight: 700 }}>
-                    <ShieldCheck size={14} style={{ color: '#2563eb' }} /> Bảng Quản Trị Admin
+                    <ShieldCheck size={14} style={{ color: '#2563eb' }} /> {t('header.adminPanel')}
                   </div>
                 )}
                 {isPersonalUser && (
                   <div className="user-menu-item" onClick={() => { nav('/upgrade'); setUserMenuOpen(false); }} id="menu-upgrade" style={{ color: '#9333ea', fontWeight: 700 }}>
-                    <Zap size={14} style={{ color: '#a855f7' }} /> Nâng Cấp Gói Dịch Vụ
+                    <Zap size={14} style={{ color: '#a855f7' }} /> {t('header.upgradeMenu')}
                   </div>
                 )}
                 <div className="user-menu-item" onClick={() => { nav('/settings'); setUserMenuOpen(false); }} id="menu-settings">
-                  <Settings size={14} /> Cài đặt
+                  <Settings size={14} /> {t('header.settings')}
                 </div>
                 <div className="user-menu-item" onClick={() => { nav('/keywords'); setUserMenuOpen(false); }} id="menu-keywords">
-                  <User size={14} /> Từ khóa của tôi
+                  <User size={14} /> {t('header.myKeywords')}
                 </div>
                 <div className="user-menu-item danger" onClick={handleLogout} id="menu-logout">
-                  <LogOut size={14} /> Đăng xuất
+                  <LogOut size={14} /> {t('header.logout')}
                 </div>
               </div>
             )}

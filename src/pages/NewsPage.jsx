@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, FileText, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
@@ -120,8 +121,8 @@ export default function NewsPage() {
   const [dateFrom, setDateFrom]       = useState('');
   const [dateTo, setDateTo]           = useState('');
   const [onlyMyKw, setOnlyMyKw]       = useState(false);
-  // Ngôn ngữ hiển thị tin (vi gốc | en | ja) — bài có bản dịch trả title/excerpt đã dịch.
-  const [lang, setLang]               = useState(localStorage.getItem('news_lang') || 'vi');
+  // Ngôn ngữ TOÀN CỤC (header 🌐): đổi là menu + nhãn + nội dung tin đổi theo.
+  const { lang, setLang, t } = useLang();
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const srcConfig = SOURCE_MAP[source] || SOURCE_MAP.all;
@@ -416,26 +417,26 @@ export default function NewsPage() {
 
         {/* Dropdown Sắp xếp */}
         <div>
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Sắp xếp:</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{t('news.sort')}</label>
           <select
             className="form-input"
             style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
             value={sortBy}
             onChange={e => { setSortBy(e.target.value); setPage(1); }}
           >
-            <option value="newest">Mới nhất</option>
-            <option value="match_count">Khớp nhiều nhất</option>
+            <option value="newest">{t('news.sortNewest')}</option>
+            <option value="match_count">{t('news.sortMatch')}</option>
           </select>
         </div>
 
-        {/* Ngôn ngữ hiển thị (bài có bản dịch AI hiện EN/JA; chưa dịch giữ bản gốc) */}
+        {/* Ngôn ngữ (đồng bộ công tắc 🌐 toàn cục ở header) */}
         <div>
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Ngôn ngữ tin:</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{t('news.lang')}</label>
           <select
             className="form-input"
             style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
             value={lang}
-            onChange={e => { setLang(e.target.value); localStorage.setItem('news_lang', e.target.value); setPage(1); }}
+            onChange={e => { setLang(e.target.value); setPage(1); }}
           >
             <option value="vi">🇻🇳 Tiếng Việt (gốc)</option>
             <option value="en">🇬🇧 English</option>
@@ -477,7 +478,7 @@ export default function NewsPage() {
                 onChange={e => { setOnlyMyKw(e.target.checked); setPage(1); }}
                 style={{ width: 14, height: 14, accentColor: 'var(--brand-500)' }}
               />
-              Chỉ từ khóa của tôi
+              {t('news.onlyMyKw')}
             </label>
           </div>
         )}
