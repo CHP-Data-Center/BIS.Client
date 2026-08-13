@@ -15,7 +15,7 @@ const PAGE_SIZE = 12;
 // Ánh xạ URL param -> nguồn. api: 'articles' (tin bài) | 'oda' (ADB/WB) | 'proc' (đấu thầu).
 // ADB/WB nằm ở bảng oda_projects, đấu thầu ở procurement_items — KHÔNG phải /articles.
 const SOURCE_MAP = {
-  all:       { labelKey: 'nav.allNews', label: 'Tất Cả Tin Tức & Dự Án', api: 'articles', type: null, icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  all:       { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
   press:     { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
   tintuc:    { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
   adb:       { labelKey: 'nav.adbProjects', label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', kind: 'project', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
