@@ -322,6 +322,14 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
     : worldBankProjectUrl(item.url || extId);
   const isWbRich = source === 'worldbank' && item.details;
   const isAdbRich = source === 'adb' && item.details;
+  // Thông báo mời thầu ADB: bản gốc chỉ là file PDF (bị chặn) và ADB KHÔNG có trang
+  // chi tiết riêng cho nó → link đưa về trang tra cứu dự án theo số khoản vay.
+  // Nói rõ ở nhãn nút để người dùng không bất ngờ khi ra trang tìm kiếm.
+  const isNotice = Boolean(item.details?.notice);
+  const goesToSearch = isNotice && externalUrl.includes('/projects?terms=');
+  const externalLabel = goesToSearch
+    ? `Tra cứu khoản vay trên ${meta.label}`
+    : `Xem trên ${meta.label}`;
 
   return (
     <div
@@ -356,10 +364,14 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
 
         {/* Footer */}
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{meta.dataNote} · bấm để mở trang gốc</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            {goesToSearch
+              ? 'ADB không có trang riêng cho thông báo mời thầu — mở trang tra cứu theo số khoản vay'
+              : `${meta.dataNote} · bấm để mở trang gốc`}
+          </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, textDecoration: 'none' }}>
-              Xem trên {meta.label} <ExternalLink size={13} />
+              {externalLabel} <ExternalLink size={13} />
             </a>
             <button onClick={onClose} className="btn btn-primary btn-sm" style={{ fontSize: 12, background: meta.brand, border: 'none' }}>Đóng</button>
           </div>

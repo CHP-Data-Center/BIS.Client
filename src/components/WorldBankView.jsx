@@ -117,7 +117,22 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
   const initialQ = searchParams.get('q') || '';
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
-  const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
+  // Thông báo mời thầu ADB KHÔNG có ngày phê duyệt (ADB ghi "-") — dùng nhãn ngày cho
+  // đúng bản chất thay vì để cột "Ngày Phê Duyệt" trống trơn.
+  const isAdbNotice = normType === 'adb' && kind === 'notice';
+  const config = useMemo(() => {
+    const base = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
+    if (!isAdbNotice) return base;
+    return {
+      ...base,
+      date1Label: 'Ngày Đăng',
+      date2Label: 'Ngày Thu Thập',
+      headers: base.headers.map((h) =>
+        h.key === 'boardapprovaldate' ? { ...h, display: 'Ngày Đăng' }
+          : h.key === 'proj_last_upd_date' ? { ...h, display: 'Ngày Thu Thập' }
+          : h),
+    };
+  }, [normType, isAdbNotice]);
   const HeaderIcon = config.icon;
   // WB & ADB: bấm tên/icon dự án → xem chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
   const usesDetailModal = normType === 'worldbank' || normType === 'adb';
@@ -214,8 +229,12 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             totalamt: totalAmt,
             totalCommitmentAmount: totalAmt,
             projectstatusdisplay: p.status || 'Active',
-            boardapprovaldate: p.approval_date || null,
-            proj_last_upd_date: p.last_updated_date || null,
+            // Thông báo mời thầu không có ngày phê duyệt → cột ngày dùng ngày đăng
+            // (last_updated) và ngày hệ thống thu thập (created_at), khớp nhãn ở trên.
+            boardapprovaldate: isAdbNotice ? (p.last_updated_date || null) : (p.approval_date || null),
+            proj_last_upd_date: isAdbNotice
+              ? (p.created_at ? String(p.created_at).slice(0, 10) : null)
+              : (p.last_updated_date || null),
             last_stage_reached_name: p.last_stage || p.sector || 'N/A',
             ai_summary: p.ai_summary || null,
             // Trường chi tiết cho modal (đã enrich từ adb.org/.../main?print).
@@ -269,7 +288,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
     } finally {
       setLoading(false);
     }
-  }, [normType, config, getSavedProjects, kind]);
+  }, [normType, config, getSavedProjects, kind, isAdbNotice]);
 
   useEffect(() => {
     loadData();
