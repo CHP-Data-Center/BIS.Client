@@ -128,6 +128,148 @@ function WbRichBody({ d, extId }) {
   );
 }
 
+// ── Body giàu cho ADB (mọi trường crawl từ trang dự án adb.org) ───────────────
+// details = {fields: {nhãn EN: giá trị}, funding[], milestones{}, documents[]}.
+// Nhãn EN phổ biến dịch sẵn sang VN; nhãn lạ giữ nguyên (trang ADB đổi không vỡ).
+const ADB_LABEL_VI = {
+  'Project Number': 'Mã dự án',
+  'Country / Economy': 'Quốc gia',
+  'Project Status': 'Trạng thái',
+  'Project Type / Modality of Assistance': 'Loại dự án / Hình thức hỗ trợ',
+  'Source of Funding / Amount': 'Nguồn vốn / Số tiền',
+  'Strategic Agendas': 'Chương trình chiến lược',
+  'Drivers of Change': 'Động lực thay đổi',
+  'Sector / Subsector': 'Lĩnh vực / Phân ngành',
+  'Gender': 'Yếu tố giới',
+  'Geographical Location': 'Địa bàn',
+  'Responsible ADB Officer': 'Cán bộ phụ trách',
+  'Responsible ADB Department': 'Vụ/Ban phụ trách',
+  'Responsible ADB Division': 'Phòng phụ trách',
+  'Executing Agencies': 'Cơ quan thực hiện',
+  'Concept Clearance': 'Thông qua ý tưởng',
+  'Fact Finding': 'Khảo sát thực địa',
+  'Last Review Mission': 'Đợt rà soát gần nhất',
+  'Last PDS Update': 'Cập nhật PDS gần nhất',
+  'Approval': 'Phê duyệt',
+  'Description': 'Mô tả dự án',
+  'Project Rationale and Linkage to Country/Regional Strategy': 'Cơ sở & liên kết chiến lược',
+  'Impact': 'Tác động',
+  'Description of Outcome': 'Kết quả (Outcome)',
+  'Progress Toward Outcome': 'Tiến độ đạt kết quả',
+  'Description of Project Outputs': 'Đầu ra dự án',
+  'Status of Implementation Progress (Outputs, Activities, and Issues)': 'Tiến độ thực hiện',
+  'During Project Design': 'Tham vấn khi thiết kế',
+  'During Project Implementation': 'Tham vấn khi thực hiện',
+  'Consulting Services': 'Dịch vụ tư vấn',
+  'Procurement': 'Mua sắm / Đấu thầu',
+  'Environmental Aspects': 'Môi trường',
+  'Involuntary Resettlement': 'Tái định cư không tự nguyện',
+  'Indigenous Peoples': 'Dân tộc bản địa',
+  'Summary of Environmental and Social Aspects': 'Tóm tắt môi trường & xã hội',
+};
+const adbLabel = (en) => ADB_LABEL_VI[en] || en;
+
+/** Đoạn văn dài có nút Xem thêm/Thu gọn. */
+function LongText({ text }) {
+  const [more, setMore] = useState(false);
+  const showToggle = (text || '').length > 420;
+  const shown = more || !showToggle ? text : text.slice(0, 420) + '…';
+  return (
+    <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-line' }}>
+      {shown}{' '}
+      {showToggle && (
+        <button onClick={() => setMore((v) => !v)} style={{ background: 'none', border: 'none', color: '#f59e0b', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 13 }}>
+          {more ? 'Thu gọn' : 'Xem thêm +'}
+        </button>
+      )}
+    </p>
+  );
+}
+
+function AdbRichBody({ d }) {
+  const fields = d.fields || {};
+  // Trường ngắn → bảng Thông tin chính; trường dài (mô tả/tiến độ…) → mục riêng.
+  // Bỏ Project Name (đã ở header) và Source of Funding (đã có bảng Nguồn vốn).
+  const skip = new Set(['Project Name', 'Source of Funding / Amount', 'Description']);
+  const shortRows = [];
+  const longSections = [];
+  Object.entries(fields).forEach(([k, v]) => {
+    if (skip.has(k) || !v) return;
+    if (String(v).length > 200) longSections.push([k, v]);
+    else shortRows.push([k, v]);
+  });
+  const ms = d.milestones;
+  const closing = ms?.closing || {};
+
+  return (
+    <>
+      {fields.Description && (
+        <>
+          <SectionTitle icon={FileText}>Mô tả dự án (Description)</SectionTitle>
+          <LongText text={fields.Description} />
+        </>
+      )}
+
+      <SectionTitle icon={Landmark}>Thông tin chính</SectionTitle>
+      <div>
+        {shortRows.map(([k, v]) => <Row key={k} label={adbLabel(k)} value={v} />)}
+      </div>
+
+      {(d.funding || []).length > 0 && (
+        <>
+          <SectionTitle icon={Wallet}>Nguồn vốn (Funding)</SectionTitle>
+          <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', background: 'var(--bg-surface-2)', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '8px 12px' }}>
+              <div style={{ flex: 1 }}>Nguồn tài trợ</div><div style={{ width: 150, textAlign: 'right' }}>Số tiền</div>
+            </div>
+            {d.funding.map((f, i) => (
+              <div key={i} style={{ display: 'flex', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ flex: 1, color: 'var(--text-primary)' }}>{f.source}</div>
+                <div style={{ width: 150, textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{f.amount}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {ms && (
+        <>
+          <SectionTitle icon={CalendarDays}>Mốc chính (Milestones)</SectionTitle>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+            <Row label="Phê duyệt" value={ms.approval} />
+            <Row label="Ký kết" value={ms.signing} />
+            <Row label="Hiệu lực" value={ms.effectivity} />
+            <Row label="Đóng (kế hoạch)" value={closing.original} />
+            <Row label="Đóng (điều chỉnh)" value={closing.revised} />
+            <Row label="Đóng (thực tế)" value={closing.actual} />
+          </div>
+        </>
+      )}
+
+      {longSections.map(([k, v]) => (
+        <div key={k}>
+          <SectionTitle>{adbLabel(k)}</SectionTitle>
+          <LongText text={v} />
+        </div>
+      ))}
+
+      {(d.documents || []).length > 0 && (
+        <>
+          <SectionTitle icon={FileText}>Tài liệu dự án</SectionTitle>
+          <div>
+            {d.documents.map((doc, i) => (
+              <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px dashed var(--border-subtle)', fontSize: 13 }}>
+                <div style={{ flex: 1, color: 'var(--text-primary)' }}>{doc.title}</div>
+                <div style={{ flex: '0 0 90px', textAlign: 'right', color: 'var(--text-muted)' }}>{doc.date}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 // ── Body gọn (ADB / khi chưa có details) ──────────────────────────────────────
 function SimpleBody({ item }) {
   const objective = item.development_objective || item.ai_summary;
@@ -171,6 +313,7 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
     ? (item.rawUrl || item.url || `https://www.adb.org/projects/${extId}/main`)
     : worldBankProjectUrl(item.url || extId);
   const isWbRich = source === 'worldbank' && item.details;
+  const isAdbRich = source === 'adb' && item.details;
 
   return (
     <div
@@ -198,7 +341,9 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
 
         {/* Body */}
         <div style={{ padding: '4px 20px 16px', overflowY: 'auto' }}>
-          {isWbRich ? <WbRichBody d={item.details} extId={extId} /> : <SimpleBody item={item} />}
+          {isWbRich ? <WbRichBody d={item.details} extId={extId} />
+            : isAdbRich ? <AdbRichBody d={item.details} />
+            : <SimpleBody item={item} />}
         </div>
 
         {/* Footer */}

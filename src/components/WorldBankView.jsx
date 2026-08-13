@@ -13,6 +13,13 @@ import OdaProjectDetailModal from './OdaProjectDetailModal';
 
 const DEFAULT_PAGE_SIZE = 20;
 
+/** Parse details_json (chi tiết rich đã crawl) an toàn -> object hoặc null. */
+function safeParseDetails(s) {
+  if (!s) return null;
+  if (typeof s === 'object') return s;
+  try { return JSON.parse(s); } catch { return null; }
+}
+
 const CONFIG_MAP = {
   worldbank: {
     title: 'World Bank Projects & Operations',
@@ -108,7 +115,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const normType = (type === 'gov' || type === 'dauthau') ? 'procurement' : type;
   const config = CONFIG_MAP[normType] || CONFIG_MAP.worldbank;
   const HeaderIcon = config.icon;
-  // WB & ADB: bấm tên/icon dự án → mở modal chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
+  // WB & ADB: bấm tên/icon dự án → xem chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
   const usesDetailModal = normType === 'worldbank' || normType === 'adb';
 
   // Tiêu đề riêng khi tách TBMT / KHLCNT thành 2 trang (dùng chung component procurement).
@@ -149,6 +156,13 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   // Dropdown open states
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
+
+  // Bấm xem chi tiết: WB → trang chi tiết đầy đủ; ADB → modal rich (details_json crawl
+  // từ adb.org) — trang /worldbank/project mang nhãn World Bank, sai ngữ cảnh cho ADB.
+  const openDetail = (p) => {
+    if (normType === 'adb') setDetailItem(p);
+    else nav(`/worldbank/project/${p.id}`, { state: { project: p } });
+  };
 
   // Show Toast
   const showToast = (msg, toastType = 'info') => {
@@ -206,6 +220,8 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             // id RSS ≠ project-number ADB → không dựng được URL /projects/{number}/main.
             // Không có link gốc thì forward sang TÌM KIẾM ADB theo tên dự án (không 404).
             rawUrl: p.url || `https://www.adb.org/projects?searchstax[query]=${encodeURIComponent(p.title || p.external_id || p.id)}`,
+            // Chi tiết rich (crawl từ trang dự án adb.org) cho modal "như trang ADB".
+            details: safeParseDetails(p.details_json),
           };
         });
       } else if (normType === 'procurement') {
@@ -1077,7 +1093,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           <td style={{ padding: '10px 14px', fontWeight: 600, minWidth: 260 }}>
                             {usesDetailModal ? (
                               <button
-                                onClick={() => nav(`/worldbank/project/${p.id}`, { state: { project: p } })}
+                                onClick={() => openDetail(p)}
                                 style={{
                                   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
                                   font: 'inherit', textAlign: 'left', color: config.brandColor,
@@ -1196,7 +1212,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                         <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.4 }}>
                           {usesDetailModal ? (
                             <button
-                              onClick={() => nav(`/worldbank/project/${p.id}`, { state: { project: p } })}
+                              onClick={() => openDetail(p)}
                               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', textAlign: 'left', color: 'inherit' }}
                               title="Xem chi tiết dự án"
                             >
@@ -1240,7 +1256,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                           </button>
                           {usesDetailModal ? (
                             <button
-                              onClick={() => nav(`/worldbank/project/${p.id}`, { state: { project: p } })}
+                              onClick={() => openDetail(p)}
                               style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.brandColor, padding: 4 }}
                               title="Xem chi tiết dự án"
                             >
