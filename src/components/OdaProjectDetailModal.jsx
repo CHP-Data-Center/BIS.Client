@@ -166,6 +166,14 @@ const ADB_LABEL_VI = {
   'Involuntary Resettlement': 'Tái định cư không tự nguyện',
   'Indigenous Peoples': 'Dân tộc bản địa',
   'Summary of Environmental and Social Aspects': 'Tóm tắt môi trường & xã hội',
+  // Thông báo mời thầu ADB (dữ liệu bóc từ tiêu đề feed — xem adb_crawler.py)
+  'Notice Type': 'Loại thông báo',
+  'Financing Type': 'Hình thức tài trợ',
+  'Financing Number': 'Số khoản vay / viện trợ',
+  'Project': 'Dự án',
+  'Contract / Package': 'Gói thầu / Hợp đồng',
+  'Special Funds': 'Nguồn vốn đặc biệt',
+  'Source': 'Nguồn dữ liệu',
 };
 const adbLabel = (en) => ADB_LABEL_VI[en] || en;
 
