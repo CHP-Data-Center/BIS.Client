@@ -284,8 +284,9 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchVal.trim()) {
-      const targetSource = isPersonalUser ? 'press' : 'all';
-      nav(`/news/${targetSource}?q=${encodeURIComponent(searchVal.trim())}`);
+      // Tìm TOÀN CỤC (4 kho, chia mục). Personal user chỉ có Báo Chí → về trang press.
+      if (isPersonalUser) nav(`/news/press?q=${encodeURIComponent(searchVal.trim())}`);
+      else nav(`/search?q=${encodeURIComponent(searchVal.trim())}`);
     }
   };
 

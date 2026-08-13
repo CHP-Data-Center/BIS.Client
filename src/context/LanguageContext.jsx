@@ -45,6 +45,11 @@ const DICT = {
     'news.save': 'Lưu lại',
     'common.close': 'Đóng',
     'common.loading': 'Đang tải...',
+    'search.title': 'Kết quả tìm kiếm',
+    'search.viewAll': 'Xem tất cả',
+    'search.empty': 'Không có kết quả khớp.',
+    'search.press': 'Báo Chí',
+    'search.proc': 'Mua Sắm Công (TBMT / KHLCNT)',
   },
   en: {
     'nav.main': 'Main',
@@ -85,6 +90,11 @@ const DICT = {
     'news.save': 'Save',
     'common.close': 'Close',
     'common.loading': 'Loading...',
+    'search.title': 'Search results',
+    'search.viewAll': 'View all',
+    'search.empty': 'No matching results.',
+    'search.press': 'Press',
+    'search.proc': 'Public Procurement (TBMT / KHLCNT)',
   },
   ja: {
     'nav.main': 'メイン',
@@ -125,6 +135,11 @@ const DICT = {
     'news.save': '保存',
     'common.close': '閉じる',
     'common.loading': '読み込み中...',
+    'search.title': '検索結果',
+    'search.viewAll': 'すべて表示',
+    'search.empty': '一致する結果はありません。',
+    'search.press': '新聞・報道',
+    'search.proc': '公共調達（TBMT / KHLCNT）',
   },
 };
 

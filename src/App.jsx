@@ -24,6 +24,7 @@ const AdminPage = lazy(() => import('./pages/AdminPage'));
 const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const WorldBankView = lazy(() => import('./components/WorldBankView'));
 const WbProjectDetailPage = lazy(() => import('./pages/WbProjectDetailPage'));
+const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 function PageLoader() {
   return (
@@ -182,6 +183,13 @@ export default function App() {
               <Route path="/news/:source" element={
                 <ProtectedRoute>
                   <AppLayout><NewsPage /></AppLayout>
+                </ProtectedRoute>
+              } />
+
+              {/* Tìm kiếm toàn cục (ô search header): quét 4 kho, chia mục */}
+              <Route path="/search" element={
+                <ProtectedRoute>
+                  <AppLayout><GlobalSearchPage /></AppLayout>
                 </ProtectedRoute>
               } />
 
