@@ -510,7 +510,7 @@ export default function NewsPage() {
                 padding: '2px 8px', background: 'var(--bg-surface-2)',
                 borderRadius: 'var(--radius-full)', border: '1px solid var(--border)',
               }}>
-                {displayedArticles.length} bài
+                {displayedArticles.length} {t('news.articlesCount')}
               </span>
             </div>
 
@@ -548,7 +548,7 @@ export default function NewsPage() {
                 style={{ gap: 5 }}
               >
                 {isPageLoading ? <Loader2 size={13} style={{ animation: 'spin 0.7s linear infinite' }} /> : <RotateCcw size={13} />}
-                Làm mới
+                {t('common.refresh')}
               </button>
             </div>
           </div>
@@ -556,10 +556,10 @@ export default function NewsPage() {
           {/* Breadcrumb */}
           <div className="breadcrumb">
             <a onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
-              {isPersonalUser ? 'Trang Chủ' : 'Dashboard'}
+              {isPersonalUser ? t('nav.home') : 'Dashboard'}
             </a>
             <ChevronRight size={12} className="breadcrumb-sep" />
-            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{srcConfig.label}</span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{t(srcConfig.labelKey) || srcConfig.label}</span>
           </div>
         </div>
 

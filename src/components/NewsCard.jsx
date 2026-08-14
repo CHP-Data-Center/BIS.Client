@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { articlesService } from '../services/articles';
 import { getSourceStyle } from '../utils/sourceStyle';
+import { useLang } from '../context/LanguageContext';
 
 function stripAccents(str = '') {
   return str
@@ -53,6 +54,7 @@ function highlightText(text, query) {
 
 export default function NewsCard({ article, index = 0 }) {
   const nav = useNavigate();
+  const { lang, t } = useLang();
   const [searchParams] = useSearchParams();
   const currentQ = searchParams.get('q') || '';
 
@@ -61,10 +63,11 @@ export default function NewsCard({ article, index = 0 }) {
   const [showOverflow, setShowOverflow] = useState(false);
 
   const src = getSourceStyle(article);
+  const dateLocale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'vi-VN';
   const publishedDate = article.published_at
-    ? new Date(article.published_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    ? new Date(article.published_at).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })
     : article.date
-      ? new Date(article.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      ? new Date(article.date).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })
       : null;
 
   const titleText = article.titleVi || article.title;
@@ -191,12 +194,12 @@ export default function NewsCard({ article, index = 0 }) {
               background: 'var(--bg-surface-2)', color: 'var(--text-muted)',
               border: '1px solid var(--border-subtle)',
             }}>
-              +{article.sources.length - 1} nguồn
+              +{article.sources.length - 1} {t('common.sourcesCount')}
             </span>
           )}
 
           {article.is_read && (
-            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic', marginLeft: 'auto' }}>✓ Đã đọc</span>
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic', marginLeft: 'auto' }}>✓ {t('common.readStatus')}</span>
           )}
         </div>
 

@@ -7,6 +7,7 @@ import {
   ShieldCheck, CheckCircle2, ArrowRight, ChevronRight, Star, Layers, Lock, Gift, PhoneCall, Palette
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 
 import animeBg from '../assets/anime_bg.png';
 import basicBg from '../assets/theme_basic_bg.png';
@@ -18,6 +19,7 @@ import { getUserTheme, setUserTheme, syncUserTheme, applyTheme, isThemeUnlocked,
 
 export default function UpgradePage() {
   const { user, isPersonalUser, isSuperAdmin, isRegionalAdmin } = useAuth();
+  const { t } = useLang();
   const nav = useNavigate();
 
   const [billingCycle, setBillingCycle] = useState('monthly');
@@ -206,21 +208,21 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
           boxShadow: '0 4px 12px rgba(168,85,247,0.1)',
         }}>
           <Sparkles size={14} style={{ color: '#a855f7' }} />
-          BẢNG GIÁ NÂNG CẤP DỊCH VỤ DỮ LIỆU & UI/UX THEMES
+          {t('upgrade.heroBadge')}
         </div>
 
         <h1 style={{
           fontSize: 34, fontWeight: 900, color: 'var(--text-primary)',
           letterSpacing: '-0.6px', marginBottom: 12, lineHeight: 1.2,
         }}>
-          Tối Ưu Sức Mạnh Dữ Liệu Theo Nhu Cầu
+          {t('upgrade.heroTitle')}
         </h1>
 
         <p style={{
           fontSize: 15, color: 'var(--text-secondary)', maxWidth: 680,
           margin: '0 auto 30px', lineHeight: 1.6,
         }}>
-          Dễ dàng mở khóa từng nguồn dữ liệu chuyên sâu <b>ADB, World Bank, Đấu Thầu Công</b>, <b>Trợ Lý AI Gemini</b> hoặc các bộ <b>Giao Diện UI/UX Độc Quyền</b> theo tháng với chi phí tiết kiệm nhất.
+          {t('upgrade.heroSubtitle')}
         </p>
 
         {/* Billing Cycle Switcher */}
@@ -240,7 +242,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               boxShadow: billingCycle === 'monthly' ? '0 4px 12px rgba(37,99,235,0.3)' : 'none',
             }}
           >
-            Thanh Toán Theo Tháng
+            {t('upgrade.billingMonthly')}
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
@@ -253,19 +255,19 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               boxShadow: billingCycle === 'yearly' ? '0 4px 12px rgba(37,99,235,0.3)' : 'none',
             }}
           >
-            Thanh Toán Theo Năm
+            {t('upgrade.billingYearly')}
             <span style={{
               fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 10,
               background: billingCycle === 'yearly' ? '#fef08a' : 'linear-gradient(135deg, #f59e0b, #ec4899)',
               color: billingCycle === 'yearly' ? '#854d0e' : 'white',
             }}>
-              GIẢM 20%
+              {t('upgrade.discount20')}
             </span>
           </button>
         </div>
       </div>
 
-      {/* ── Main Pricing Cards Grid (Fixed Equal Header Block & Alignments) ── */}
+      {/* ── Main Pricing Cards Grid ── */}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
         gap: 20, marginBottom: 50, position: 'relative', zIndex: 1, alignItems: 'stretch',
@@ -279,51 +281,51 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  GÓI CÁ NHÂN
+                  {t('upgrade.personalPlan')}
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                  Báo Chí Miễn Phí
+                  {t('upgrade.freeTitle')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Đọc tin tức báo chí toàn quốc không giới hạn.
+                  {t('upgrade.freeSub')}
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-surface-2)', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 11, color: 'var(--text-muted)' }}>
-                <span>Miễn phí đọc tin báo chí cá nhân thường nhật.</span>
+                <span>{t('upgrade.freeBadge')}</span>
               </div>
             </div>
 
             <div style={{ margin: '20px 0 20px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)' }}>0đ</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>/ tháng</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>{t('upgrade.perMonth')}</span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
-                Miễn phí vĩnh viễn
+                {t('upgrade.freeForever')}
               </div>
             </div>
 
             {isSuperAdmin ? (
               <button disabled style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24, background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none' }}>
-                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+                {t('upgrade.unlockedSuperAdmin')}
               </button>
             ) : activeDataPackage === 'free' ? (
               <button disabled style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 800, borderRadius: 12, marginBottom: 24, background: 'var(--bg-surface-2)', color: '#2563eb', border: '1.5px solid #2563eb' }}>
-                ✓ ĐANG SỬ DỤNG (MẶC ĐỊNH)
+                {t('upgrade.activeDefault')}
               </button>
             ) : (
               <button disabled className="btn btn-secondary" style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24 }}>
-                Miễn Phí Mặc Định
+                {t('upgrade.freeTitle')}
               </button>
             )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Toàn bộ <b>Tin Tức Báo Chí</b> toàn quốc</span>
+              <span>Toàn bộ <b>Tin Tức Báo Chí</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
@@ -361,26 +363,26 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
             boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
           }}>
-            {activeDataPackage === 'combo2' ? '✓ COMBO 2 (ĐANG SỬ DỤNG)' : activeDataPackage === 'full' && !isSuperAdmin ? 'ℹ️ ĐÃ BAO GỒM TRONG FULL PACK' : '🔥 COMBO 2 NGUỒN HOT'}
+            {activeDataPackage === 'combo2' ? '✓ COMBO 2 (ĐANG SỬ DỤNG)' : activeDataPackage === 'full' && !isSuperAdmin ? t('upgrade.includedInFull') : '🔥 COMBO 2'}
           </div>
 
           <div>
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {billingCycle === 'yearly' ? '⚡️ TIẾT KIỆM 32% (GIẢM THEO NĂM)' : '⚡️ TIẾT KIỆM 15% COMBO'}
+                  {billingCycle === 'yearly' ? t('upgrade.save32Yearly') : t('upgrade.save15Combo')}
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                  Combo 2 Nguồn Dữ Liệu
+                  {t('upgrade.combo2Title')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Chọn 2 nguồn dữ liệu chuyên sâu tùy thích theo nhu cầu.
+                  {t('upgrade.combo2Sub')}
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-surface-2)', padding: 8, borderRadius: 10, border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 4, letterSpacing: 0.4 }}>
-                  CHỌN 2 NGUỒN TÙY Ý:
+                  {t('upgrade.combo2Choose')}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {[
@@ -419,13 +421,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   {Math.round(349000 * discount).toLocaleString('vi-VN')}đ
                 </span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  / tháng
+                  {t('upgrade.perMonth')}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(349000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · Giảm 20%)`
-                  : 'Thanh toán linh hoạt từng tháng'}
+                  ? `(Thanh toán ${(Math.round(349000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
+                  : 'Thanh toán linh hoạt'}
               </div>
             </div>
 
@@ -438,7 +440,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 12px rgba(16,185,129,0.3)', cursor: 'default'
                 }}
               >
-                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+                {t('upgrade.unlockedSuperAdmin')}
               </button>
             ) : activeDataPackage === 'combo2' ? (
               <button
@@ -449,7 +451,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 14px rgba(37,99,235,0.4)'
                 }}
               >
-                ✓ ĐANG SỬ DỤNG
+                {t('upgrade.activeUsing')}
               </button>
             ) : activeDataPackage === 'full' ? (
               <button
@@ -461,7 +463,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   cursor: 'not-allowed'
                 }}
               >
-                ℹ️ Đã Bao Gồm Trong Full Pack
+                {t('upgrade.includedInFull')}
               </button>
             ) : (
               <button
@@ -474,7 +476,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24, gap: 6 }}
               >
-                <Zap size={15} /> Đăng Ký Combo Ngay
+                <Zap size={15} /> {t('upgrade.subscribeCombo')}
               </button>
             )}
           </div>
@@ -515,18 +517,18 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {billingCycle === 'yearly' ? '⚡️ GIẢM 20% THEO NĂM' : 'TOÀN BỘ NGUỒN'}
+                  {billingCycle === 'yearly' ? t('upgrade.save20Yearly') : t('upgrade.allSourcesTag')}
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                  Full Data Pack
+                  {t('upgrade.fullPackTitle')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Bao gồm đầy đủ ADB, World Bank & Đấu Thầu Công.
+                  {t('upgrade.fullPackSub')}
                 </div>
               </div>
 
               <div style={{ background: 'rgba(16,185,129,0.08)', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(16,185,129,0.2)', fontSize: 11, color: '#10b981', fontWeight: 600 }}>
-                <span>Trọn bộ 3 nguồn ODA & Mua sắm công quốc gia.</span>
+                <span>{t('upgrade.fullPackBadge')}</span>
               </div>
             </div>
 
@@ -536,13 +538,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   {Math.round(499000 * discount).toLocaleString('vi-VN')}đ
                 </span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  / tháng
+                  {t('upgrade.perMonth')}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(499000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · Giảm 20%)`
-                  : 'Thanh toán linh hoạt từng tháng'}
+                  ? `(Thanh toán ${(Math.round(499000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
+                  : 'Thanh toán linh hoạt'}
               </div>
             </div>
 
@@ -555,7 +557,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 12px rgba(16,185,129,0.3)', cursor: 'default'
                 }}
               >
-                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+                {t('upgrade.unlockedSuperAdmin')}
               </button>
             ) : activeDataPackage === 'full' ? (
               <button
@@ -566,7 +568,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 14px rgba(16,185,129,0.4)'
                 }}
               >
-                ✓ ĐANG SỬ DỤNG (FULL PACK)
+                {t('upgrade.activeUsing')}
               </button>
             ) : (
               <button
@@ -579,13 +581,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                 className="btn btn-secondary"
                 style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24 }}
               >
-                Đăng Ký Full Nguồn
+                {t('upgrade.subscribeFull')}
               </button>
             )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
               <span><b>Dự án ADB Châu Á</b></span>
@@ -624,18 +626,18 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#9333ea', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {billingCycle === 'yearly' ? '⚡️ GIẢM 20% THEO NĂM' : 'QUẢN TRỊ & PHÂN VÙNG'}
+                  {billingCycle === 'yearly' ? t('upgrade.save20Yearly') : t('upgrade.orgAdminTag')}
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                  Gói Enterprise
+                  {t('upgrade.enterpriseTitle')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Full Data Pack + Quyền Admin Phân Vùng quản trị 10 thành viên.
+                  {t('upgrade.enterpriseSub')}
                 </div>
               </div>
 
               <div style={{ background: 'rgba(147,51,234,0.08)', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(147,51,234,0.2)', fontSize: 11, color: '#9333ea', fontWeight: 600 }}>
-                <span>Bao gồm Full 3 Nguồn + Quản trị đến 10 User phân vùng.</span>
+                <span>{t('upgrade.enterpriseBadge')}</span>
               </div>
             </div>
 
@@ -645,13 +647,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   {Math.round(999000 * discount).toLocaleString('vi-VN')}đ
                 </span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  / tháng
+                  {t('upgrade.perMonth')}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(999000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · Giảm 20%)`
-                  : 'Thanh toán linh hoạt từng tháng'}
+                  ? `(Thanh toán ${(Math.round(999000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
+                  : 'Thanh toán linh hoạt'}
               </div>
             </div>
 
@@ -664,7 +666,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 12px rgba(16,185,129,0.3)', cursor: 'default'
                 }}
               >
-                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+                {t('upgrade.unlockedSuperAdmin')}
               </button>
             ) : activeDataPackage === 'enterprise' || isRegionalAdmin ? (
               <button
@@ -675,7 +677,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 14px rgba(147,51,234,0.4)'
                 }}
               >
-                ✓ ĐANG SỬ DỤNG (ENTERPRISE)
+                {t('upgrade.activeUsing')}
               </button>
             ) : (
               <button
@@ -688,13 +690,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '11px 0', fontSize: 13, fontWeight: 700, borderRadius: 12, marginBottom: 24, background: 'linear-gradient(135deg, #9333ea, #7e22ce)', border: 'none' }}
               >
-                <Building2 size={15} /> Đăng Ký Enterprise
+                <Building2 size={15} /> {t('upgrade.subscribeEnterprise')}
               </button>
             )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
               <span><b>Full Data Pack (ADB, WB, Đấu Thầu)</b></span>
@@ -737,13 +739,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ minHeight: 180, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {billingCycle === 'yearly' ? '⚡️ GIẢM 20% THEO NĂM' : 'HỎI-ĐÁP THÔNG MINH'}
+                  {billingCycle === 'yearly' ? t('upgrade.save20Yearly') : t('upgrade.aiIntelligenceTag')}
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', marginTop: 4 }}>
-                  Trợ Lý AI Gemini
+                  {t('upgrade.aiTitle')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Thuê theo tháng hỗ trợ tra cứu dữ liệu 24/7.
+                  {t('upgrade.aiSub')}
                 </div>
               </div>
 
@@ -758,13 +760,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   {Math.round(149000 * discount).toLocaleString('vi-VN')}đ
                 </span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  / tháng
+                  {t('upgrade.perMonth')}
                 </span>
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(149000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · Giảm 20%)`
-                  : 'Thanh toán linh hoạt từng tháng'}
+                  ? `(Thanh toán ${(Math.round(149000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
+                  : 'Thanh toán linh hoạt'}
               </div>
             </div>
 
@@ -777,7 +779,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 12px rgba(16,185,129,0.3)', cursor: 'default'
                 }}
               >
-                ✓ ĐÃ MỞ KHÓA (SUPER ADMIN)
+                {t('upgrade.unlockedSuperAdmin')}
               </button>
             ) : hasAiPackage ? (
               <button
@@ -788,7 +790,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   boxShadow: '0 4px 14px rgba(168,85,247,0.4)'
                 }}
               >
-                ✓ ĐANG SỬ DỤNG (AI GEMINI)
+                {t('upgrade.activeUsing')}
               </button>
             ) : (
               <button
@@ -805,13 +807,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   marginBottom: 24, boxShadow: '0 4px 14px rgba(168,85,247,0.3)', gap: 6,
                 }}
               >
-                <Bot size={16} /> Thuê Trợ Lý AI
+                <Bot size={16} /> {t('upgrade.subscribeAi')}
               </button>
             )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#a855f7', flexShrink: 0 }} />
               <span>Hỏi-đáp tự nhiên trên kho dữ liệu tin tức</span>
@@ -838,10 +840,10 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
           <Palette size={22} style={{ color: '#a855f7', flexShrink: 0 }} />
           <div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              Cửa Hàng Giao Diện UI/UX & Theme Shop
+              {t('upgrade.themeShopTitle')}
             </h3>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
-              Thay đổi phong cách giao diện hệ thống theo sở thích (Mặc định, Máy Cổ Windows 98 OS, Royal Sapphire VIP, Bloomberg Luxury Executive).
+              {t('upgrade.themeShopSub')}
             </div>
           </div>
         </div>
@@ -854,45 +856,35 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
           {[
             {
               key: 'basic',
-              title: 'BIS Modern Glassmorphism',
               price: 0,
-              desc: 'Giao diện hiện tại — Thiết kế hiện đại, mượt mà, kính mờ nhã nhặn.',
               colors: ['#3b82f6', '#10b981', '#ffffff'],
               tag: 'MẶC ĐỊNH',
               img: basicBg
             },
             {
               key: 'classic',
-              title: 'Classic Retro PC (Windows 98 OS)',
               price: 99000,
-              desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.',
               colors: ['#008080', '#c0c0c0', '#000080'],
               tag: 'VINTAGE PC 98',
               img: classicBg
             },
             {
               key: 'sapphire',
-              title: 'Royal Sapphire Executive',
               price: 149000,
-              desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.',
               colors: ['#050914', '#1d4ed8', '#38bdf8'],
               tag: 'ROYAL SAPPHIRE',
               img: sapphireBg
             },
             {
               key: 'luxury',
-              title: 'Bloomberg Luxury Executive',
               price: 149000,
-              desc: 'Phong cách Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.',
               colors: ['#08080a', '#d4af37', '#fef1c9'],
               tag: 'LUXURY GOLD 24K',
               img: luxuryBg
             },
             {
               key: 'anime',
-              title: 'Anime Twilight Sakura (新海誠)',
               price: 149000,
-              desc: 'Hoàng Hôn Anime Dịu Mộng — Đêm Twilight Tím Mộng Mơ, Cánh Hoa Anh Đào (桜) Rơi Nhẹ & Ánh Sao Lấp Lánh.',
               colors: ['#0f0d19', '#f472b6', '#a855f7'],
               tag: 'ANIME SAKURA 🌸',
               img: animeBg
@@ -925,7 +917,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                       background: isActive ? '#2563eb' : isUnlocked ? '#10b981' : '#334155', color: '#ffffff', letterSpacing: '0.4px',
                       whiteSpace: 'nowrap', flexShrink: 0
                     }}>
-                      {isActive ? '✓ ĐANG SỬ DỤNG' : isUnlocked ? '✓ ĐÃ SỞ HỮU' : theme.tag}
+                      {isActive ? t('upgrade.themeApplied') : isUnlocked ? '✓ ĐÃ SỞ HỮU' : theme.tag}
                     </span>
                     <span style={{ fontWeight: 800, fontSize: 13, color: isUnlocked ? '#10b981' : 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                       {theme.price === 0 ? '0đ' : isUnlocked ? 'Đã sở hữu' : `${theme.price.toLocaleString('vi-VN')}đ`}
@@ -933,11 +925,11 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   </div>
 
                   <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)', marginBottom: 6, minHeight: 38, display: 'flex', alignItems: 'center' }}>
-                    {theme.title}
+                    {t(`theme.${theme.key}.title`)}
                   </div>
 
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.45, marginBottom: 14, minHeight: 52, display: 'flex', alignItems: 'flex-start' }}>
-                    {theme.desc}
+                    {t(`theme.${theme.key}.desc`)}
                   </div>
 
                   {/* Color Palette Preview Bar */}

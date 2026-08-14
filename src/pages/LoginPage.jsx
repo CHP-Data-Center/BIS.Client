@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles, X, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLang } from '../context/LanguageContext';
 import { authService } from '../services/auth';
 import { syncUserTheme } from '../utils/theme';
 import logoImg from '../assets/logo.png';
@@ -48,8 +49,37 @@ function Particles() {
   );
 }
 
+// Custom SVG Flag Components
+const FlagVN = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 26 26" style={{ flexShrink: 0, display: 'block' }}>
+    <circle cx="13" cy="13" r="12" fill="#da251d" />
+    <polygon points="13,5.5 15.2,10.2 20.4,10.2 16.2,13.3 17.8,18.4 13,15.2 8.2,18.4 9.8,13.3 5.6,10.2 10.8,10.2" fill="#fffe00" />
+  </svg>
+);
+
+const FlagUK = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 26 26" style={{ flexShrink: 0, display: 'block' }}>
+    <clipPath id="uk-circle-clip-login"><circle cx="13" cy="13" r="12" /></clipPath>
+    <g clipPath="url(#uk-circle-clip-login)">
+      <rect width="26" height="26" fill="#00247d" />
+      <path d="M0,0 L26,26 M26,0 L0,26" stroke="#ffffff" strokeWidth="4.5" />
+      <path d="M0,0 L26,26 M26,0 L0,26" stroke="#cf142b" strokeWidth="2.5" />
+      <path d="M13,0 V26 M0,13 H26" stroke="#ffffff" strokeWidth="6.5" />
+      <path d="M13,0 V26 M0,13 H26" stroke="#cf142b" strokeWidth="3.5" />
+    </g>
+  </svg>
+);
+
+const FlagJP = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 26 26" style={{ flexShrink: 0, display: 'block' }}>
+    <circle cx="13" cy="13" r="12" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+    <circle cx="13" cy="13" r="5" fill="#bc002d" />
+  </svg>
+);
+
 export default function LoginPage() {
   const { user, login, loginWithGoogle, loginError, setLoginError, isLoggedIn } = useAuth();
+  const { lang, setLang, t } = useLang();
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -138,105 +168,63 @@ export default function LoginPage() {
 
     const trimmedEmail = email.trim();
     let hasError = false;
-    const newFieldErrors = { email: '', password: '' };
 
     if (!trimmedEmail) {
-      newFieldErrors.email = 'Vui lòng nhập email công việc.';
+      setFieldErrors(prev => ({ ...prev, email: 'Vui lòng nhập email công việc' }));
       hasError = true;
-    } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedEmail)) {
-        newFieldErrors.email = 'Định dạng email không hợp lệ.';
-        hasError = true;
-      }
+    } else if (!/\S+@\S+\.\S+/.test(trimmedEmail)) {
+      setFieldErrors(prev => ({ ...prev, email: 'Email không đúng định dạng' }));
+      hasError = true;
     }
 
     if (!password) {
-      newFieldErrors.password = 'Vui lòng nhập mật khẩu.';
+      setFieldErrors(prev => ({ ...prev, password: 'Vui lòng nhập mật khẩu' }));
       hasError = true;
     }
 
-    if (hasError) {
-      setFieldErrors(newFieldErrors);
-      if (newFieldErrors.email && newFieldErrors.password) {
-        setLoginError('Vui lòng điền đầy đủ email và mật khẩu.');
-      } else {
-        setLoginError(newFieldErrors.email || newFieldErrors.password);
-      }
-      return;
-    }
+    if (hasError) return;
 
     setLoading(true);
-    const userObj = await login(trimmedEmail, password);
-    setLoading(false);
-    if (userObj) {
-      const target = userObj.role === 'personal' ? '/news/press' : '/dashboard';
-      nav(target, { replace: true });
+    try {
+      const res = await login(trimmedEmail, password, rememberMe);
+      const target = res?.user?.role === 'personal' ? '/news/press' : '/dashboard';
+      nav(target);
+    } catch (err) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      if (status === 401) {
+        setLoginError('Email hoặc mật khẩu không chính xác.');
+      } else if (status === 403) {
+        setLoginError(detail || 'Tài khoản chưa được kích hoạt hoặc đã bị khóa.');
+      } else if (status === 429) {
+        setLoginError('Quá nhiều lần đăng nhập không thành công. Vui lòng thử lại sau ít phút.');
+      } else if (!navigator.onLine) {
+        setLoginError('Không có kết nối mạng. Vui lòng kiểm tra lại đường truyền internet.');
+      } else {
+        setLoginError('Không thể kết nối đến máy chủ xác thực. Vui lòng thử lại sau.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '227924702568-q0kmobftaj5crfve5vu9tmr6kkl2vvec.apps.googleusercontent.com';
-    setLoginError('');
-    setFieldErrors({ email: '', password: '' });
-
-    if (!googleClientId) {
-      setLoginError('Chưa cấu hình VITE_GOOGLE_CLIENT_ID trong môi trường.');
-      return;
-    }
-
-    if (!window.google?.accounts) {
-      setLoginError('Thư viện Google OAuth đang tải, vui lòng thử lại sau giây lát.');
-      return;
-    }
-
-    setGoogleLoading(true);
-
     try {
-      if (window.google.accounts.oauth2) {
-        const tokenClient = window.google.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          scope: 'email profile openid',
-          callback: async (response) => {
-            if (response && response.access_token) {
-              let userInfo = null;
-              try {
-                const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${response.access_token}` }
-                });
-                if (uRes.ok) userInfo = await uRes.json();
-              } catch (e) {
-                console.warn('Browser fetch userinfo error:', e);
-              }
-              const userObj = await loginWithGoogle(null, response.access_token, userInfo);
-              setGoogleLoading(false);
-              if (userObj) {
-                const target = userObj.role === 'personal' ? '/news/press' : '/dashboard';
-                nav(target, { replace: true });
-              }
-            } else {
-              setGoogleLoading(false);
-              if (response?.error !== 'popup_closed_by_user') {
-                setLoginError('Đăng nhập Google không thành công.');
-              }
-            }
-          },
-          error_callback: (err) => {
-            setGoogleLoading(false);
-            setLoginError('Đã xảy ra lỗi khi mở đăng nhập Google.');
-          },
-        });
-        tokenClient.requestAccessToken();
-      } else if (window.google.accounts.id) {
+      setGoogleLoading(true);
+      setLoginError('');
+
+      if (window.google && window.google.accounts) {
         window.google.accounts.id.initialize({
-          client_id: googleClientId,
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id.apps.googleusercontent.com',
           callback: async (response) => {
-            if (response && response.credential) {
-              const userObj = await loginWithGoogle(response.credential, null);
-              setGoogleLoading(false);
-              if (userObj) {
-                const target = userObj.role === 'personal' ? '/news/press' : '/dashboard';
-                nav(target, { replace: true });
+            if (response.credential) {
+              try {
+                const res = await loginWithGoogle(response.credential);
+                const target = res?.user?.role === 'personal' ? '/news/press' : '/dashboard';
+                nav(target);
+              } catch (err) {
+                setGoogleLoading(false);
+                setLoginError(err.response?.data?.detail || 'Đăng nhập Google thất bại. Hãy thử lại.');
               }
             } else {
               setGoogleLoading(false);
@@ -246,11 +234,7 @@ export default function LoginPage() {
             }
           },
         });
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            setGoogleLoading(false);
-          }
-        });
+        window.google.accounts.id.prompt();
       }
     } catch (err) {
       setGoogleLoading(false);
@@ -258,16 +242,64 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemo = () => {
-    setLoginError('');
-    setFieldErrors({ email: '', password: '' });
-    setEmail('admin@ckjvn.vn');
-    setPassword('Admin@12345');
-  };
-
   return (
     <div className="login-page">
       <Particles />
+
+      {/* Top Right Floating Language Switcher */}
+      <div style={{
+        position: 'fixed',
+        top: 20,
+        right: 24,
+        zIndex: 999,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        background: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255, 255, 255, 0.14)',
+        borderRadius: 24,
+        padding: '5px 8px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
+      }}>
+        {[
+          { code: 'vi', label: 'Tiếng Việt', flag: <FlagVN size={16} /> },
+          { code: 'en', label: 'English', flag: <FlagUK size={16} /> },
+          { code: 'ja', label: '日本語', flag: <FlagJP size={16} /> },
+        ].map((item) => {
+          const active = lang === item.code;
+          return (
+            <button
+              key={item.code}
+              type="button"
+              onClick={() => setLang(item.code)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                borderRadius: 20,
+                border: active ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid transparent',
+                background: active ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15))' : 'transparent',
+                color: active ? '#fef08a' : '#94a3b8',
+                fontSize: 12.5,
+                fontWeight: active ? 800 : 600,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.color = '#94a3b8';
+              }}
+            >
+              {item.flag}
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Dynamic Ambient Background Orbs */}
       <div className="login-bg-orb" style={{
@@ -286,7 +318,6 @@ export default function LoginPage() {
         animationDelay: '1.5s', animationDuration: '7s'
       }} />
 
-
       {/* Main Glassmorphism Card */}
       <div className="login-card">
         {/* Logo Header */}
@@ -299,7 +330,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="login-title">Bidding Intelligence System</div>
-          <div className="login-subtitle">Hệ Thống Thông Tin Đấu Thầu Thông Minh</div>
+          <div className="login-subtitle">{t('auth.subtitle')}</div>
         </div>
 
         {/* Google Sign-In Button */}
@@ -311,21 +342,21 @@ export default function LoginPage() {
           id="btn-google-login"
         >
           {googleLoading ? (
-            <><span className="spinner spinner-dark" /> Đang kết nối Google...</>
+            <><span className="spinner spinner-dark" /> {t('common.loading')}...</>
           ) : (
-            <><GoogleIcon /> <span>Đăng nhập bằng Google</span></>
+            <><GoogleIcon /> <span>{t('auth.googleLogin')}</span></>
           )}
         </button>
 
         {/* Divider */}
         <div className="auth-divider">
-          <span>hoặc tiếp tục với email</span>
+          <span>{t('auth.orEmail')}</span>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label className="form-label" htmlFor="input-email">Email công việc</label>
+            <label className="form-label" htmlFor="input-email">{t('auth.email')}</label>
             <div className="form-input-wrapper">
               <Mail className="form-input-icon" size={17} />
               <input
@@ -349,7 +380,7 @@ export default function LoginPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="input-password">Mật khẩu</label>
+            <label className="form-label" htmlFor="input-password">{t('auth.password')}</label>
             <div className="form-input-wrapper">
               <Lock className="form-input-icon" size={17} />
               <input
@@ -390,10 +421,10 @@ export default function LoginPage() {
                 checked={rememberMe}
                 onChange={e => setRememberMe(e.target.checked)}
               />
-              <span>Ghi nhớ đăng nhập</span>
+              <span>{t('auth.rememberMe')}</span>
             </label>
             <a href="#forgot" onClick={(e) => { e.preventDefault(); setShowForgotModal(true); setForgotSuccess(false); setForgotEmail(''); }} className="forgot-link">
-              Quên mật khẩu?
+              {t('auth.forgotPassword')}
             </a>
           </div>
 
@@ -410,9 +441,9 @@ export default function LoginPage() {
             disabled={loading || googleLoading}
           >
             {loading ? (
-              <><span className="spinner" /> Đang xác thực...</>
+              <><span className="spinner" /> {t('auth.loggingIn')}</>
             ) : (
-              <><LogIn size={17} /> <span>Đăng nhập hệ thống</span></>
+              <><LogIn size={17} /> <span>{t('auth.loginBtn')}</span></>
             )}
           </button>
         </form>

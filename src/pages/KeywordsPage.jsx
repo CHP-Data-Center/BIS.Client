@@ -1,11 +1,11 @@
-// src/pages/KeywordsPage.jsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Plus, Trash2, Edit3, X, Tag, Loader2, Search, 
-  LayoutGrid, Sparkles, Star, Folder
+  LayoutGrid, Sparkles, Star, Folder, Globe, ChevronDown
 } from 'lucide-react';
 import { keywordsService } from '../services/keywords';
 import { categoriesService } from '../services/categories';
+import { useLang } from '../context/LanguageContext';
 import ConfirmModal from '../components/common/ConfirmModal';
 
 const MAX_KEYWORDS = 50;
@@ -31,12 +31,132 @@ const FlagUK = ({ size = 18 }) => (
   </svg>
 );
 
+const FlagJP = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 26 26" style={{ flexShrink: 0, display: 'block', overflow: 'visible' }}>
+    <circle cx="13" cy="13" r="12" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+    <circle cx="13" cy="13" r="5" fill="#bc002d" />
+  </svg>
+);
+
 const LangFlag = ({ lang, size = 18 }) => {
-  return lang === 'en' ? <FlagUK size={size} /> : <FlagVN size={size} />;
+  if (lang === 'ja') return <FlagJP size={size} />;
+  if (lang === 'en') return <FlagUK size={size} />;
+  return <FlagVN size={size} />;
+};
+
+const LANG_OPTIONS = [
+  { value: 'vi', label: 'Tiếng Việt', flag: <FlagVN size={18} /> },
+  { value: 'en', label: 'English',    flag: <FlagUK size={18} /> },
+  { value: 'ja', label: '日本語',      flag: <FlagJP size={18} /> },
+];
+
+const CustomLangSelect = ({ value, onChange, includeAll = false, allLabel = 'Tất cả', style = {}, height = 40 }) => {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const options = includeAll
+    ? [{ value: 'all', label: allLabel, flag: <Globe size={16} style={{ color: 'var(--text-muted)' }} /> }, ...LANG_OPTIONS]
+    : LANG_OPTIONS;
+
+  const currentOption = options.find((o) => o.value === value) || options[0];
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', minWidth: 135, ...style }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="form-input"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          height,
+          padding: '0 12px',
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: 'pointer',
+          background: 'var(--bg-surface-2)',
+          border: '1px solid var(--border)',
+          borderRadius: 10,
+          width: '100%',
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {currentOption.flag}
+          <span>{currentOption.label}</span>
+        </span>
+        <ChevronDown size={14} style={{ color: 'var(--text-muted)', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 4px)',
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+            padding: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 10px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: opt.value === value ? 700 : 500,
+                color: opt.value === value ? 'var(--brand-500)' : 'var(--text-primary)',
+                background: opt.value === value ? 'var(--bg-surface-2)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                if (opt.value !== value) e.currentTarget.style.background = 'var(--bg-surface-2)';
+              }}
+              onMouseLeave={(e) => {
+                if (opt.value !== value) e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              {opt.flag}
+              <span>{opt.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // Reusable Keyword Chip Component for 100% consistency across views
-const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick }) => (
+const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick, tCategory, t }) => (
   <div
     style={{
       display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -73,7 +193,7 @@ const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick }) => (
 
     {/* Primary Star Badge */}
     {kw.is_primary && (
-      <Star size={13} style={{ color: '#f59e0b', fill: '#f59e0b' }} title="Từ khóa chính" />
+      <Star size={13} style={{ color: '#f59e0b', fill: '#f59e0b' }} title={t ? t('keywords.isPrimary') : 'Từ khóa chính'} />
     )}
 
     {/* Category Label (optional) */}
@@ -82,7 +202,7 @@ const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick }) => (
         fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
         background: 'var(--brand-50)', color: 'var(--brand-700)', border: '1px solid var(--brand-200)'
       }}>
-        {catMap[kw.category_id]}
+        {tCategory ? tCategory(catMap[kw.category_id]) : catMap[kw.category_id]}
       </span>
     )}
 
@@ -279,6 +399,7 @@ export default function KeywordsPage() {
     return groups;
   }, [filteredKeywords, catMap]);
 
+  const { t, tCategory } = useLang();
   const primaryCount = useMemo(() => keywords.filter(k => k.is_primary).length, [keywords]);
 
   return (
@@ -302,10 +423,10 @@ export default function KeywordsPage() {
             }}>
               <Tag size={22} color="white" />
             </div>
-            Quản Lý Từ Khóa Theo Dõi
+            {t('keywords.title')}
           </div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-            Tự động theo dõi tin tức & bài viết đấu thầu theo từ khóa được cấu hình.
+            {t('keywords.subtitle')}
           </p>
         </div>
 
@@ -320,7 +441,7 @@ export default function KeywordsPage() {
           }}>
             <Tag size={16} style={{ color: 'var(--brand-500)' }} />
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tổng Số</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('common.total')}</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>
                 {keywords.length} <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)' }}>/ {MAX_KEYWORDS}</span>
               </div>
@@ -336,7 +457,7 @@ export default function KeywordsPage() {
           }}>
             <Star size={16} style={{ color: '#f59e0b', fill: '#f59e0b' }} />
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Từ Khóa Chính</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('keywords.isPrimary')}</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#d97706' }}>{primaryCount}</div>
             </div>
           </div>
@@ -363,7 +484,7 @@ export default function KeywordsPage() {
         boxShadow: 'var(--shadow-sm)'
       }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Sparkles size={16} style={{ color: 'var(--brand-500)' }} /> Thêm Từ Khóa Mới
+          <Sparkles size={16} style={{ color: 'var(--brand-500)' }} /> {t('keywords.addBtn')}
         </div>
 
         <form onSubmit={handleAdd} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -371,7 +492,7 @@ export default function KeywordsPage() {
             <input
               id="input-keyword-term"
               className="form-input"
-              placeholder="Nhập từ khóa (vd: cao tốc, metro, đấu thầu...)"
+              placeholder={t('keywords.termPlaceholder')}
               value={newTerm}
               onChange={(e) => setNewTerm(e.target.value)}
               required
@@ -380,20 +501,11 @@ export default function KeywordsPage() {
           </div>
 
           <div style={{ width: 140 }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <select 
-                className="form-input" 
-                style={{ fontSize: 13, height: 40, paddingLeft: 36 }} 
-                value={newLang} 
-                onChange={(e) => setNewLang(e.target.value)}
-              >
-                <option value="vi">Tiếng Việt</option>
-                <option value="en">English</option>
-              </select>
-              <div style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center' }}>
-                <LangFlag lang={newLang} size={18} />
-              </div>
-            </div>
+            <CustomLangSelect 
+              value={newLang} 
+              onChange={setNewLang} 
+              height={40} 
+            />
           </div>
 
           {categories.length > 0 && (
@@ -404,8 +516,8 @@ export default function KeywordsPage() {
                 value={newCat} 
                 onChange={(e) => setNewCat(e.target.value)}
               >
-                <option value="">-- Danh mục --</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="">-- {t('keywords.allCategories')} --</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{tCategory(c.name)}</option>)}
               </select>
             </div>
           )}
@@ -422,7 +534,7 @@ export default function KeywordsPage() {
               onChange={(e) => setNewPrimary(e.target.checked)} 
               style={{ width: 16, height: 16, accentColor: 'var(--brand-500)', cursor: 'pointer' }} 
             />
-            Gắn sao (Chính)
+            {t('keywords.isPrimary')}
           </label>
 
           <button
@@ -433,7 +545,7 @@ export default function KeywordsPage() {
             id="btn-add-keyword"
           >
             {saving ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={16} />}
-            Thêm Ngay
+            {t('keywords.addBtn')}
           </button>
         </form>
       </div>
@@ -452,7 +564,7 @@ export default function KeywordsPage() {
             <input
               type="text"
               className="form-input"
-              placeholder="Tìm kiếm từ khóa..."
+              placeholder={t('keywords.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ paddingLeft: 34, height: 36, fontSize: 13, width: '100%' }}
@@ -470,16 +582,14 @@ export default function KeywordsPage() {
         {/* Right Controls: Filters & View Modes */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {/* Lang Filter */}
-          <select 
-            className="form-input" 
-            style={{ height: 36, fontSize: 12.5, padding: '0 10px', width: 'auto' }}
-            value={filterLang}
-            onChange={(e) => setFilterLang(e.target.value)}
-          >
-            <option value="all">Tất cả ngôn ngữ</option>
-            <option value="vi">🇻🇳 Tiếng Việt</option>
-            <option value="en">🇬🇧 English</option>
-          </select>
+          <CustomLangSelect 
+            value={filterLang} 
+            onChange={setFilterLang} 
+            includeAll={true} 
+            allLabel={t('keywords.allLangs')} 
+            height={36} 
+            style={{ width: 155 }} 
+          />
 
           {/* Category Filter */}
           {categories.length > 0 && (
@@ -489,9 +599,9 @@ export default function KeywordsPage() {
               value={filterCat}
               onChange={(e) => setFilterCat(e.target.value)}
             >
-              <option value="all">Tất cả danh mục</option>
-              <option value="uncategorized">Chưa phân loại</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option value="all">{t('keywords.allCategories')}</option>
+              <option value="uncategorized">{t('keywords.uncategorized')}</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{tCategory(c.name)}</option>)}
             </select>
           )}
 
@@ -508,7 +618,7 @@ export default function KeywordsPage() {
             }}
           >
             <Star size={13} style={{ fill: onlyPrimary ? '#f59e0b' : 'none', color: onlyPrimary ? '#f59e0b' : 'currentColor' }} />
-            Từ chính
+            {t('keywords.isPrimary')}
           </button>
 
           <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 2px' }} />
@@ -517,7 +627,7 @@ export default function KeywordsPage() {
           <div style={{ display: 'flex', background: 'var(--bg-surface-2)', padding: 3, borderRadius: 9, border: '1px solid var(--border)' }}>
             <button
               onClick={() => setViewMode('chips')}
-              title="Dạng thẻ Tag gọn (Chips)"
+              title={t('keywords.chipsView')}
               style={{
                 height: 30, padding: '0 10px', borderRadius: 7, border: 'none',
                 background: viewMode === 'chips' ? 'var(--bg-surface)' : 'transparent',
@@ -528,12 +638,12 @@ export default function KeywordsPage() {
                 cursor: 'pointer'
               }}
             >
-              <Tag size={13} /> Thẻ gọn (Chips)
+              <Tag size={13} /> {t('keywords.chipsView')}
             </button>
 
             <button
               onClick={() => setViewMode('grid')}
-              title="Dạng Lưới (Grid Cards)"
+              title={t('keywords.gridView')}
               style={{
                 height: 30, padding: '0 10px', borderRadius: 7, border: 'none',
                 background: viewMode === 'grid' ? 'var(--bg-surface)' : 'transparent',
@@ -544,12 +654,12 @@ export default function KeywordsPage() {
                 cursor: 'pointer'
               }}
             >
-              <LayoutGrid size={13} /> Lưới Card
+              <LayoutGrid size={13} /> {t('keywords.gridView')}
             </button>
 
             <button
               onClick={() => setViewMode('grouped')}
-              title="Dạng Nhóm theo Danh mục"
+              title={t('keywords.groupedView')}
               style={{
                 height: 30, padding: '0 10px', borderRadius: 7, border: 'none',
                 background: viewMode === 'grouped' ? 'var(--bg-surface)' : 'transparent',
@@ -560,7 +670,7 @@ export default function KeywordsPage() {
                 cursor: 'pointer'
               }}
             >
-              <Folder size={13} /> Theo danh mục
+              <Folder size={13} /> {t('keywords.groupedView')}
             </button>
           </div>
         </div>
@@ -570,7 +680,7 @@ export default function KeywordsPage() {
       {loading ? (
         <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
           <Loader2 size={28} style={{ animation: 'spin 0.8s linear infinite', margin: '0 auto 12px', display: 'block' }} />
-          Đang tải danh sách từ khóa...
+          {t('common.loading')}
         </div>
       ) : filteredKeywords.length === 0 ? (
         <div style={{
@@ -578,12 +688,7 @@ export default function KeywordsPage() {
           borderRadius: 16, padding: 48, textAlign: 'center'
         }}>
           <div style={{ fontSize: 36, marginBottom: 8 }}>🔍</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Không tìm thấy từ khóa nào</div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-            {searchTerm || filterLang !== 'all' || filterCat !== 'all' || onlyPrimary 
-              ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.' 
-              : 'Hãy thêm từ khóa đầu tiên ở bảng phía trên.'}
-          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{t('keywords.noKeywords')}</div>
         </div>
       ) : (
         <>
@@ -604,13 +709,13 @@ export default function KeywordsPage() {
                 boxShadow: 'var(--shadow-xl)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>✏️ Chỉnh Sửa Từ Khóa</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>✏️ {t('keywords.editModalTitle')}</div>
                   <button onClick={() => setEditId(null)} style={{ color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Từ khóa</label>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>{t('keywords.termLabel')}</label>
                     <input
                       className="form-input"
                       value={editTerm}
@@ -622,24 +727,20 @@ export default function KeywordsPage() {
 
                   <div style={{ display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Ngôn ngữ</label>
-                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                        <select className="form-input" value={editLang} onChange={(e) => setEditLang(e.target.value)} style={{ fontSize: 13, paddingLeft: 36, width: '100%' }}>
-                          <option value="vi">Tiếng Việt</option>
-                          <option value="en">English</option>
-                        </select>
-                        <div style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center' }}>
-                          <LangFlag lang={editLang} size={18} />
-                        </div>
-                      </div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>{t('keywords.languageLabel')}</label>
+                      <CustomLangSelect 
+                        value={editLang} 
+                        onChange={setEditLang} 
+                        height={40} 
+                      />
                     </div>
 
                     {categories.length > 0 && (
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>Danh mục</label>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'block' }}>{t('keywords.categoryLabel')}</label>
                         <select className="form-input" value={editCat} onChange={(e) => setEditCat(e.target.value)} style={{ fontSize: 13 }}>
-                          <option value="">-- Không --</option>
-                          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          <option value="">-- {t('keywords.uncategorized')} --</option>
+                          {categories.map((c) => <option key={c.id} value={c.id}>{tCategory(c.name)}</option>)}
                         </select>
                       </div>
                     )}
@@ -647,12 +748,12 @@ export default function KeywordsPage() {
 
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 4 }}>
                     <input type="checkbox" checked={editPrimary} onChange={(e) => setEditPrimary(e.target.checked)} style={{ accentColor: 'var(--brand-500)', width: 16, height: 16 }} />
-                    Từ khóa chính (Gắn sao)
+                    {t('keywords.isPrimary')}
                   </label>
 
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 12 }}>
-                    <button className="btn btn-ghost" onClick={() => setEditId(null)}>Hủy</button>
-                    <button className="btn btn-primary" onClick={() => handleEditSave(editId)}>Lưu Thay Đổi</button>
+                    <button className="btn btn-ghost" onClick={() => setEditId(null)}>{t('common.cancel')}</button>
+                    <button className="btn btn-primary" onClick={() => handleEditSave(editId)}>{t('common.save')}</button>
                   </div>
                 </div>
               </div>
@@ -666,7 +767,7 @@ export default function KeywordsPage() {
               borderRadius: 16, padding: 22, boxShadow: 'var(--shadow-sm)'
             }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 14 }}>
-                Danh sách thẻ từ khóa ({filteredKeywords.length})
+                {t('keywords.chipsView')} ({filteredKeywords.length})
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -677,6 +778,8 @@ export default function KeywordsPage() {
                     catMap={catMap} 
                     startEdit={startEdit} 
                     onDeleteClick={setDeleteTarget} 
+                    tCategory={tCategory}
+                    t={t}
                   />
                 ))}
               </div>
@@ -719,14 +822,14 @@ export default function KeywordsPage() {
                         <LangFlag lang={kw.lang} size={18} />
                         {kw.category_id && catMap[kw.category_id] && (
                           <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--brand-50)', color: 'var(--brand-700)', border: '1px solid var(--brand-200)' }}>
-                            {catMap[kw.category_id]}
+                            {tCategory(catMap[kw.category_id])}
                           </span>
                         )}
                       </div>
 
                       {kw.is_primary && (
                         <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'rgba(254, 243, 199, 0.8)', color: '#92400e', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Star size={10} style={{ fill: '#f59e0b', color: '#f59e0b' }} /> Chính
+                          <Star size={10} style={{ fill: '#f59e0b', color: '#f59e0b' }} /> {t('keywords.isPrimary')}
                         </span>
                       )}
                     </div>
@@ -741,13 +844,13 @@ export default function KeywordsPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     fontSize: 11, color: 'var(--text-muted)'
                   }}>
-                    <span>{kw.created_at ? new Date(kw.created_at).toLocaleDateString('vi-VN') : 'Mới'}</span>
+                    <span>{kw.created_at ? new Date(kw.created_at).toLocaleDateString('vi-VN') : ''}</span>
 
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button
                         className="btn btn-ghost btn-sm"
                         onClick={() => startEdit(kw)}
-                        title="Chỉnh sửa"
+                        title={t('common.edit')}
                         style={{ padding: 4 }}
                       >
                         <Edit3 size={13} />
@@ -755,7 +858,7 @@ export default function KeywordsPage() {
                       <button
                         className="btn btn-ghost btn-sm"
                         onClick={() => setDeleteTarget(kw)}
-                        title="Xóa từ khóa"
+                        title={t('common.delete')}
                         style={{ padding: 4, color: '#ef4444' }}
                       >
                         <Trash2 size={13} />
@@ -785,10 +888,10 @@ export default function KeywordsPage() {
                   }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Folder size={16} style={{ color: 'var(--brand-500)' }} />
-                      {catName}
+                      {catName === 'Chưa phân loại' ? t('keywords.uncategorized') : tCategory(catName)}
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--brand-100)', color: 'var(--brand-700)' }}>
-                      {kws.length} từ khóa
+                      {kws.length}
                     </span>
                   </div>
 
@@ -800,6 +903,8 @@ export default function KeywordsPage() {
                         catMap={null} 
                         startEdit={startEdit} 
                         onDeleteClick={setDeleteTarget} 
+                        tCategory={tCategory}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -813,11 +918,11 @@ export default function KeywordsPage() {
       {/* CONFIRM DELETE MODAL */}
       <ConfirmModal
         isOpen={!!deleteTarget}
-        title="Xóa Từ Khóa"
-        message="Bạn có chắc chắn muốn xóa từ khóa này khỏi danh sách theo dõi?"
+        title={t('keywords.deleteConfirmTitle')}
+        message={t('keywords.deleteConfirmMsg')}
         itemName={deleteTarget?.term}
-        confirmText="Xóa Từ Khóa"
-        cancelText="Hủy Bỏ"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         type="danger"
         loading={deleting}
         onConfirm={confirmDeleteKeyword}

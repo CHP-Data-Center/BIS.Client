@@ -335,8 +335,8 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
         <div className="header-logo" onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
           <img src={logoImg} alt="BIS Logo" className="logo-img" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div className="logo-text">
-            <span className="logo-title">Hệ Thống BIS</span>
-            <span className="logo-sub">Bidding Intelligence System</span>
+            <span className="logo-title">{t('header.brandName')}</span>
+            <span className="logo-sub">{t('header.brandSub')}</span>
           </div>
         </div>
 

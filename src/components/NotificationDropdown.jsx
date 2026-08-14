@@ -8,9 +8,11 @@ import {
 import { articlesService } from '../services/articles';
 import { adminService } from '../services/admin';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 
 export default function NotificationDropdown() {
   const { user, isSuperAdmin, isRegionalAdmin } = useAuth();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -46,9 +48,9 @@ export default function NotificationDropdown() {
           items.push({
             id: `pending_sources_${pending.length}_${pending[0]?.id}`,
             type: 'pending_source',
-            title: `📥 Có ${pending.length} nguồn tin chờ duyệt`,
-            desc: `Đề xuất mới nhất: "${pending[0]?.name || 'Nguồn mới'}" (${pending[0]?.region || 'Phân vùng'}). Click để duyệt ngay.`,
-            time: 'Cần xử lý',
+            title: `📥 ${pending.length} pending sources`,
+            desc: `"${pending[0]?.name || 'Source'}" (${pending[0]?.region || 'Region'}).`,
+            time: 'Urgent',
             link: '/admin',
             isUrgent: true,
           });
@@ -63,9 +65,9 @@ export default function NotificationDropdown() {
           items.push({
             id: `art_${art.id}`,
             type: isGov ? 'bidding' : 'news',
-            title: isGov ? `📋 [Gói Thầu] ${art.title}` : `📰 [Tin Tức] ${art.title}`,
-            desc: art.summary ? (art.summary.length > 80 ? art.summary.slice(0, 80) + '...' : art.summary) : (art.source_name || 'Nguồn tin mới cập nhật'),
-            time: art.published_at ? formatTimeAgo(art.published_at) : `${(idx + 1) * 15} phút trước`,
+            title: isGov ? `📋 ${art.title}` : `📰 ${art.title}`,
+            desc: art.summary ? (art.summary.length > 80 ? art.summary.slice(0, 80) + '...' : art.summary) : (art.source_name || ''),
+            time: art.published_at ? formatTimeAgo(art.published_at) : `${(idx + 1) * 15}m`,
             link: `/article/${art.id}`,
             articleData: art,
           });
@@ -76,9 +78,9 @@ export default function NotificationDropdown() {
       items.push({
         id: 'sys_crawl_status_ok',
         type: 'system',
-        title: '⚡ Tự Động Quét Dữ Liệu Active',
-        desc: 'Hệ thống BIS đang chạy crawler tự động định kỳ mỗi 4 giờ cho toàn bộ các nguồn báo chí & đấu thầu.',
-        time: 'Hôm nay',
+        title: '⚡ Auto Crawler Active',
+        desc: 'BIS background crawler runs every 4 hours.',
+        time: 'Today',
         link: '/dashboard',
       });
 
@@ -126,12 +128,19 @@ export default function NotificationDropdown() {
   function formatTimeAgo(dateStr) {
     try {
       const diffSec = Math.floor((new Date() - new Date(dateStr)) / 1000);
-      if (diffSec < 60) return 'Vừa xong';
-      if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
-      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
-      return `${Math.floor(diffSec / 86400)} ngày trước`;
+      if (diffSec < 60) return lang === 'vi' ? 'Vừa xong' : lang === 'ja' ? 'たった今' : 'Just now';
+      if (diffSec < 3600) {
+        const m = Math.floor(diffSec / 60);
+        return lang === 'vi' ? `${m} phút trước` : lang === 'ja' ? `${m}分前` : `${m}m ago`;
+      }
+      if (diffSec < 86400) {
+        const h = Math.floor(diffSec / 3600);
+        return lang === 'vi' ? `${h} giờ trước` : lang === 'ja' ? `${h}時間前` : `${h}h ago`;
+      }
+      const d = Math.floor(diffSec / 86400);
+      return lang === 'vi' ? `${d} ngày trước` : lang === 'ja' ? `${d}日前` : `${d}d ago`;
     } catch {
-      return 'Vừa xong';
+      return lang === 'vi' ? 'Vừa xong' : lang === 'ja' ? 'たった今' : 'Just now';
     }
   }
 
@@ -155,7 +164,7 @@ export default function NotificationDropdown() {
       <button
         className="notif-btn"
         id="btn-notifications"
-        title="Thông báo hệ thống"
+        title={t('header.notifications')}
         onClick={() => {
           setIsOpen(o => !o);
           if (!isOpen) loadNotifications();
@@ -209,14 +218,14 @@ export default function NotificationDropdown() {
                 <Bell size={15} />
               </div>
               <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>
-                Thông Báo
+                {t('header.notifications')}
               </span>
               {unreadCount > 0 && (
                 <span style={{
                   fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 12,
                   background: '#fef2f2', color: '#ef4444', border: '1px solid #fecdd3',
                 }}>
-                  {unreadCount} mới
+                  {unreadCount}
                 </span>
               )}
             </div>
@@ -230,9 +239,9 @@ export default function NotificationDropdown() {
                   display: 'flex', alignItems: 'center', gap: 4, padding: '2px 6px',
                   borderRadius: 6, transition: 'background 0.15s',
                 }}
-                title="Đánh dấu tất cả là đã đọc"
+                title={t('header.markAllRead')}
               >
-                <CheckCheck size={14} /> Đã đọc
+                <CheckCheck size={14} /> {t('header.markAllRead')}
               </button>
             )}
           </div>
@@ -242,7 +251,7 @@ export default function NotificationDropdown() {
             {notifications.length === 0 ? (
               <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                 <Sparkles size={24} style={{ margin: '0 auto 8px', color: '#a1a1aa' }} />
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Không có thông báo mới</div>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{t('header.noNotifications')}</div>
               </div>
             ) : (
               notifications.map(item => {

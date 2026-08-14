@@ -6,9 +6,11 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { projectsService } from '../services/projects';
+import { useLang } from '../context/LanguageContext';
 import ConfirmModal from '../components/common/ConfirmModal';
 
 export default function ProjectsPage() {
+  const { t } = useLang();
   const nav = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,10 +153,10 @@ export default function ProjectsPage() {
           </div>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 900, color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-              Dự Án Theo Dõi &amp; Timeline
+              {t('projects.title')}
             </h1>
             <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>
-              Gom nhóm từ khóa mục tiêu để tự động quét tin tức và xây dựng dòng thời gian dự án
+              {t('projects.subtitle')}
             </p>
           </div>
         </div>
@@ -172,7 +174,7 @@ export default function ProjectsPage() {
           onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
           onMouseLeave={e => e.currentTarget.style.transform = 'none'}
         >
-          <Plus size={18} /> Tạo Dự Án Mới
+          <Plus size={18} /> {t('projects.createBtn')}
         </button>
       </div>
 
@@ -189,20 +191,20 @@ export default function ProjectsPage() {
             paddingBottom: 12, borderBottom: '1px solid var(--border-subtle)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <span>Danh Sách Dự Án ({projects.length})</span>
+            <span>{t('projects.projectList')} ({projects.length})</span>
             <Layers size={16} style={{ color: 'var(--brand-500)' }} />
           </div>
 
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
               <Loader2 size={24} className="spin" style={{ margin: '0 auto 8px' }} />
-              <div style={{ fontSize: 12 }}>Đang tải...</div>
+              <div style={{ fontSize: 12 }}>{t('common.loading')}</div>
             </div>
           ) : projects.length === 0 ? (
             <div style={{ padding: '30px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>📁</div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Chưa có dự án nào</div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>Bấm "Tạo Dự Án Mới" để bắt đầu theo dõi tin tức</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{t('projects.emptyTitle')}</div>
+              <div style={{ fontSize: 12, marginTop: 4 }}>{t('projects.emptySub')}</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -242,7 +244,7 @@ export default function ProjectsPage() {
                         e.stopPropagation();
                         setDeletingProject(p);
                       }}
-                      title="Xóa dự án"
+                      title={t('common.delete')}
                       style={{
                         background: 'transparent', border: 'none', color: '#ef4444',
                         cursor: 'pointer', padding: 6, borderRadius: 8, opacity: 0.7,
@@ -268,7 +270,7 @@ export default function ProjectsPage() {
           {!selectedProject ? (
             <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
               <FolderKanban size={48} style={{ opacity: 0.3, marginBottom: 12 }} />
-              <div style={{ fontSize: 16, fontWeight: 700 }}>Chọn một dự án để xem dòng thời gian</div>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>{t('projects.selectProject')}</div>
             </div>
           ) : (
             <div>
@@ -283,7 +285,7 @@ export default function ProjectsPage() {
                   </h2>
                   {selectedProject.keyword_filter && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Từ khóa theo dõi:</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{t('projects.trackedKeywords')}:</span>
                       {selectedProject.keyword_filter.split(',').map((kw, idx) => (
                         <span key={idx} style={{
                           fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
@@ -302,7 +304,7 @@ export default function ProjectsPage() {
                     fontSize: 13, fontWeight: 800, padding: '6px 16px', borderRadius: 20,
                     background: 'var(--bg-surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)',
                   }}>
-                    {timelineData.total || timelineData.items?.length || 0} bài viết tìm thấy
+                    {timelineData.total || timelineData.items?.length || 0} {t('projects.articlesFound')}
                   </div>
                 )}
               </div>
@@ -403,12 +405,12 @@ export default function ProjectsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px' }}>
-              ➕ Tạo Dự Án Theo Dõi Mới
+              ➕ {t('projects.modalTitle')}
             </h3>
 
             <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="form-label">Tên dự án *</label>
+                <label className="form-label">{t('projects.nameLabel')} *</label>
                 <input
                   type="text"
                   className="form-input"
@@ -420,17 +422,14 @@ export default function ProjectsPage() {
               </div>
 
               <div>
-                <label className="form-label">Các từ khóa theo dõi (phân tách bằng dấu phẩy)</label>
+                <label className="form-label">{t('projects.keywordsLabel')}</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: cao tốc, giải phóng mặt bằng, BOT"
+                  placeholder="Ví dụ: cao tốc, BOT, metro"
                   value={keywordFilter}
                   onChange={(e) => setKeywordFilter(e.target.value)}
                 />
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Hệ thống sẽ tự động quét các bài tin khớp bộ từ khóa này vào dòng thời gian dự án.
-                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
@@ -440,7 +439,7 @@ export default function ProjectsPage() {
                   onClick={() => setShowCreateModal(false)}
                   style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                 >
-                  Hủy
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -449,7 +448,7 @@ export default function ProjectsPage() {
                   style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                 >
                   {createLoading ? <Loader2 size={16} className="spin" /> : <Plus size={16} />}
-                  Tạo Dự Án
+                  {t('projects.createBtn')}
                 </button>
               </div>
             </form>
@@ -461,12 +460,14 @@ export default function ProjectsPage() {
       {deletingProject && (
         <ConfirmModal
           isOpen={true}
-          title="Xác nhận xóa dự án"
-          message={`Bạn có chắc chắn muốn xóa dự án "${deletingProject.name}" khỏi danh sách theo dõi?`}
-          confirmText="Xóa Dự Án"
-          confirmVariant="danger"
+          title={t('projects.deleteConfirmTitle')}
+          message={t('projects.deleteConfirmMsg')}
+          itemName={deletingProject?.name}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
+          type="danger"
           onConfirm={handleDeleteProject}
-          onCancel={() => setDeletingProject(null)}
+          onClose={() => setDeletingProject(null)}
         />
       )}
     </div>

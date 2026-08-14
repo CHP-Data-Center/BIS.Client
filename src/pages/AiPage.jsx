@@ -2,8 +2,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Cpu, Loader2, ExternalLink, Bot, User } from 'lucide-react';
 import { aiService } from '../services/ai';
+import { useLang } from '../context/LanguageContext';
 
 function MessageBubble({ msg }) {
+  const { t } = useLang();
   const isUser = msg.role === 'user';
   return (
     <div style={{
@@ -56,7 +58,7 @@ function MessageBubble({ msg }) {
         {!isUser && msg.sources?.length > 0 && (
           <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>
-              📎 Nguồn tham khảo:
+              📎 {t('ai.sources')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {msg.sources.map((s) => (
@@ -101,18 +103,12 @@ function MessageBubble({ msg }) {
   );
 }
 
-const SUGGESTED_QUESTIONS = [
-  'Có dự án hạ tầng giao thông nào mới không?',
-  'Tóm tắt các gói thầu đang mở hôm nay',
-  'Dự án ODA nào đang được đấu thầu?',
-  'Có tin tức nào về cao tốc mới không?',
-];
-
 export default function AiPage() {
+  const { lang, t } = useLang();
   const [messages, setMessages] = useState([
     {
       id: 0, role: 'assistant',
-      content: 'Xin chào! Tôi là trợ lý AI của BIS. Tôi có thể trả lời câu hỏi về tin tức đấu thầu, dự án ODA và mua sắm công dựa trên dữ liệu thực từ hệ thống.\n\nHãy hỏi tôi bất cứ điều gì!',
+      content: t('ai.greeting'),
       agent: 'BIS AI Assistant',
       sources: [],
     }
@@ -122,6 +118,29 @@ export default function AiPage() {
   const [isConfigured, setIsConfigured] = useState(true);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
+
+  // Sync greeting message when system language changes
+  useEffect(() => {
+    setMessages((prev) => {
+      if (!prev || prev.length === 0) {
+        return [{
+          id: 0,
+          role: 'assistant',
+          content: t('ai.greeting'),
+          agent: 'BIS AI Assistant',
+          sources: [],
+        }];
+      }
+      return prev.map(m => m.id === 0 ? { ...m, content: t('ai.greeting') } : m);
+    });
+  }, [lang, t]);
+
+  const SUGGESTED_QUESTIONS = [
+    t('ai.suggestion1'),
+    t('ai.suggestion2'),
+    t('ai.suggestion3'),
+    t('ai.suggestion4'),
+  ];
 
   useEffect(() => {
     aiService.status()
@@ -158,8 +177,8 @@ export default function AiPage() {
         id: Date.now() + 1,
         role: 'assistant',
         content: isUnavailable
-          ? 'Trợ lý AI chưa được bật (chưa cấu hình GEMINI_API_KEY trên server). Vui lòng liên hệ admin.'
-          : (err.response?.data?.detail || 'Đã xảy ra lỗi. Vui lòng thử lại.'),
+          ? (t('ai.notConfigured') || 'Trợ lý AI chưa được bật (chưa cấu hình API Key trên server).')
+          : (err.response?.data?.detail || t('ai.errorMsg')),
         isError: true,
         agent: null,
         sources: [],
@@ -187,10 +206,10 @@ export default function AiPage() {
           }}>
             <Bot size={20} color="white" />
           </div>
-          Trợ Lý AI BIS
+          {t('ai.title')}
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-          Hỏi đáp thông minh dựa trên dữ liệu tin tức thực từ hệ thống BIS
+          {t('ai.subtitle')}
         </p>
       </div>
 
@@ -200,13 +219,12 @@ export default function AiPage() {
           background: '#fffbebf0', border: '1.5px solid #fde68a', color: '#b45309',
           fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          ⚠️ Trợ lý AI chưa được cấu hình API Key trên máy chủ Server. Vui lòng liên hệ Admin hệ thống.
+          ⚠️ {t('ai.notConfigured') || 'Trợ lý AI chưa được cấu hình API Key trên máy chủ Server.'}
         </div>
       )}
 
       {/* Chat area */}
       <div style={{
-
         flex: 1, overflowY: 'auto',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',
@@ -232,7 +250,7 @@ export default function AiPage() {
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <Loader2 size={14} style={{ color: '#a855f7', animation: 'spin 0.8s linear infinite' }} />
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Đang phân tích...</span>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{t('ai.thinking')}</span>
             </div>
           </div>
         )}
@@ -287,7 +305,7 @@ export default function AiPage() {
             fontSize: 14, lineHeight: 1.5,
             overflowY: 'auto',
           }}
-          placeholder="Hỏi bất kỳ điều gì về tin tức đấu thầu, dự án ODA... (Enter để gửi)"
+          placeholder={t('ai.inputPlaceholder')}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -303,7 +321,7 @@ export default function AiPage() {
           {loading
             ? <Loader2 size={14} style={{ animation: 'spin 0.6s linear infinite' }} />
             : <Send size={14} />}
-          Gửi
+          {t('ai.sendBtn')}
         </button>
       </div>
     </div>

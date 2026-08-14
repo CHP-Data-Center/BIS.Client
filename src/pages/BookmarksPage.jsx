@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Bookmark, Trash2, ExternalLink, Calendar, Loader2, Eye, LayoutGrid, List } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { articlesService } from '../services/articles';
+import { useLang } from '../context/LanguageContext';
 import NewsCard from '../components/NewsCard';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 
@@ -269,6 +270,8 @@ export default function BookmarksPage() {
     amount: bm.amount ? formatProjectAmount(bm.amount, bm.source_type) : null,
   });
 
+  const { t } = useLang();
+
   return (
     <div style={{ width: '100%' }}>
       {/* Header */}
@@ -283,10 +286,10 @@ export default function BookmarksPage() {
             }}>
               <Bookmark size={20} color="white" />
             </div>
-            Bài Viết Đã Lưu
+            {t('bookmarks.title')}
           </div>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            Danh sách bài viết và dự án bạn đã đánh dấu lưu lại.
+            {t('bookmarks.subtitle')}
           </p>
         </div>
 
@@ -295,7 +298,7 @@ export default function BookmarksPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--bg-surface-2)', padding: 4, borderRadius: 10, border: '1px solid var(--border)' }}>
             <button
               onClick={() => setViewMode('list')}
-              title="Chế độ Danh sách"
+              title={t('bookmarks.listView')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, border: 'none',
                 background: viewMode === 'list' ? 'var(--bg-surface)' : 'transparent',
@@ -305,11 +308,11 @@ export default function BookmarksPage() {
                 transition: 'all 0.15s',
               }}
             >
-              <List size={15} /> Danh sách
+              <List size={15} /> {t('bookmarks.listView')}
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              title="Chế độ Lưới thẻ"
+              title={t('bookmarks.gridView')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, border: 'none',
                 background: viewMode === 'grid' ? 'var(--bg-surface)' : 'transparent',
@@ -319,7 +322,7 @@ export default function BookmarksPage() {
                 transition: 'all 0.15s',
               }}
             >
-              <LayoutGrid size={15} /> Lưới thẻ
+              <LayoutGrid size={15} /> {t('bookmarks.gridView')}
             </button>
           </div>
         )}
@@ -332,24 +335,24 @@ export default function BookmarksPage() {
         boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
       }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Bookmark của tôi</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{t('bookmarks.title')}</span>
           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: 'var(--brand-50)', color: 'var(--brand-700)', border: '1px solid var(--brand-200)' }}>
-            {bookmarks.length} mục
+            {bookmarks.length}
           </span>
         </div>
 
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
             <Loader2 size={24} style={{ animation: 'spin 0.8s linear infinite', margin: '0 auto 8px', display: 'block' }} />
-            Đang tải danh sách bài viết đã lưu...
+            {t('common.loading')}
           </div>
         ) : bookmarks.length === 0 ? (
           <div className="empty-state" style={{ minHeight: 200 }}>
             <div className="empty-icon">🔖</div>
-            <div className="empty-title">Chưa có bookmark nào</div>
-            <div className="empty-sub">Khi đọc bài viết hoặc dự án, bấm "Lưu lại" để bookmark xuất hiện ở đây.</div>
+            <div className="empty-title">{t('bookmarks.emptyTitle')}</div>
+            <div className="empty-sub">{t('bookmarks.emptySub')}</div>
             <button className="btn btn-primary" onClick={() => nav('/news/all')} style={{ marginTop: 12 }}>
-              Xem tin tức
+              {t('common.viewAll')}
             </button>
           </div>
         ) : viewMode === 'grid' ? (

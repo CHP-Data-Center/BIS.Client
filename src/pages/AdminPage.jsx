@@ -21,11 +21,13 @@ import { adminService } from '../services/admin';
 import { orgService } from '../services/organizations';
 import { useAuth } from '../context/AuthContext';
 import { useCrawl } from '../context/CrawlContext';
+import { useLang } from '../context/LanguageContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import ScopePanel from '../components/admin/ScopePanel';
 import ConfirmModal from '../components/common/ConfirmModal';
 
 export default function AdminPage() {
+  const { lang, t } = useLang();
   const { user, isSuperAdmin, isRegionalAdmin, userRegion } = useAuth();
   const { isCrawling, triggerCrawl } = useCrawl();
   const [activeTab, setActiveTab] = useState('crawl');
@@ -598,13 +600,13 @@ export default function AdminPage() {
   };
 
   const tabs = [
-    { id: 'crawl',     label: 'Nguồn & Crawler', icon: <Database size={16} />, badge: sources.length },
-    { id: 'users',     label: 'Tài Khoản User',  icon: <Users size={16} />,    badge: users.length },
+    { id: 'crawl',     label: t('admin.sourcesTab'), icon: <Database size={16} />, badge: sources.length },
+    { id: 'users',     label: t('admin.usersTab'),  icon: <Users size={16} />,    badge: users.length },
     // Đa tổ chức (ADR-005): super admin quản tổ chức; org admin đặt phạm vi tổ chức mình.
-    ...(isSuperAdmin ? [{ id: 'orgs', label: 'Tổ Chức', icon: <Building2 size={16} /> }] : []),
-    ...(isRegionalAdmin ? [{ id: 'scope', label: 'Phạm Vi Dữ Liệu', icon: <Sliders size={16} /> }] : []),
-    { id: 'filters',   label: 'Bộ Lọc Từ Khóa', icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
-    { id: 'digest',    label: 'Email Digest',    icon: <Mail size={16} /> },
+    ...(isSuperAdmin ? [{ id: 'orgs', label: t('admin.orgsTab'), icon: <Building2 size={16} /> }] : []),
+    ...(isRegionalAdmin ? [{ id: 'scope', label: t('admin.tabScope') || 'Phạm Vi Dữ Liệu', icon: <Sliders size={16} /> }] : []),
+    { id: 'filters',   label: t('admin.keywordsTab'), icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
+    { id: 'digest',    label: t('admin.digestTab'),    icon: <Mail size={16} /> },
   ];
 
   return (
@@ -627,10 +629,10 @@ export default function AdminPage() {
               <ShieldCheck size={13} /> CENTER CONTROL PANEL
             </div>
             <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.5px' }}>
-              Bảng Quản Trị Hệ Thống BIS
+              {t('admin.title')}
             </h1>
             <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 6, maxWidth: 520, lineHeight: 1.5 }}>
-              Điều hành tiến trình crawl tự động, quản lý nguồn dữ liệu, danh sách tài khoản và bộ lọc thông minh.
+              {t('admin.subtitle')}
             </p>
           </div>
 
@@ -644,7 +646,7 @@ export default function AdminPage() {
                 backdropFilter: 'blur(8px)', cursor: 'pointer', transition: 'all 0.15s',
               }}
             >
-              <RefreshCw size={14} className={loading ? 'spin' : ''} /> Làm Mới Data
+              <RefreshCw size={14} className={loading ? 'spin' : ''} /> {t('admin.refreshData')}
             </button>
 
             <button
@@ -664,7 +666,7 @@ export default function AdminPage() {
               onMouseLeave={e => e.currentTarget.style.transform = 'none'}
             >
               {actionLoading || isCrawling ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Zap size={15} style={{ color: '#fef08a' }} />}
-              {isCrawling ? 'Đang Crawl Dữ Liệu...' : '⚡ Kích Hoạt Crawl Ngay'}
+              {isCrawling ? t('admin.crawling') : `⚡ ${t('admin.triggerCrawl')}`}
             </button>
           </div>
         </div>
@@ -675,10 +677,10 @@ export default function AdminPage() {
           marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.1)',
         }}>
           {[
-            { label: 'Nguồn Crawler', val: sources.length, icon: <Database size={15} style={{ color: '#818cf8' }} />, sub: 'Nguồn tự động' },
-            { label: 'Tài Khoản', val: users.length, icon: <Users size={15} style={{ color: '#38bdf8' }} />, sub: 'Người dùng' },
-            { label: 'Từ Khóa Lọc', val: blacklist.length + whitelist.length, icon: <ShieldAlert size={15} style={{ color: '#f472b6' }} />, sub: `${blacklist.length} cấm · ${whitelist.length} ưu tiên` },
-            { label: 'Trạng Thái', val: isCrawling ? 'Crawling...' : 'Online', icon: <Activity size={15} style={{ color: isCrawling ? '#818cf8' : '#4ade80' }} />, sub: isCrawling ? 'Đang quét dữ liệu...' : 'Crawler mỗi 4h' },
+            { label: t('admin.sourcesTab'), val: sources.length, icon: <Database size={15} style={{ color: '#818cf8' }} />, sub: t('admin.sourceCount') },
+            { label: t('admin.usersTab'), val: users.length, icon: <Users size={15} style={{ color: '#38bdf8' }} />, sub: t('admin.userCount') },
+            { label: t('admin.keywordsTab'), val: blacklist.length + whitelist.length, icon: <ShieldAlert size={15} style={{ color: '#f472b6' }} />, sub: `${blacklist.length} cấm · ${whitelist.length} ưu tiên` },
+            { label: 'STATUS', val: isCrawling ? t('admin.crawling') : t('admin.online'), icon: <Activity size={15} style={{ color: isCrawling ? '#818cf8' : '#4ade80' }} />, sub: isCrawling ? t('admin.crawling') : t('admin.crawlerEvery4h') },
           ].map((st, idx) => (
             <div key={idx} style={{
               background: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: '12px 16px',
@@ -751,7 +753,7 @@ export default function AdminPage() {
       {loading ? (
         <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-muted)' }}>
           <Loader2 size={32} style={{ animation: 'spin 0.8s linear infinite', margin: '0 auto 12px', display: 'block', color: '#3b82f6' }} />
-          <span style={{ fontWeight: 600, fontSize: 14 }}>Đang tải cấu hình quản trị hệ thống...</span>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>...</span>
         </div>
       ) : (
         <>
@@ -818,7 +820,7 @@ export default function AdminPage() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(168, 85, 247, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
                     <Zap size={18} />
                   </div>
-                  Bộ Công Cụ &amp; Điều Khiển Crawler ODA / Mua Sắm Công
+                  {t('admin.crawlerTools')}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
@@ -894,28 +896,28 @@ export default function AdminPage() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-600, #2563eb)' }}>
                     <Plus size={16} />
                   </div>
-                  {isSuperAdmin ? 'Thêm Nguồn Crawl Tự Động Mới' : `Đề Xuất Nguồn Crawl Mới (${userRegion || 'Phân Vùng'})`}
+                  {isSuperAdmin ? t('admin.addSource') : `Đề Xuất Nguồn Crawl Mới (${userRegion || 'Phân Vùng'})`}
                 </div>
 
                 <form onSubmit={handleCreateSource} className="responsive-grid-form" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
                   <div>
-                    <label className="form-label">Tên nguồn tin *</label>
+                    <label className="form-label">{t('admin.sourceName')} *</label>
                     <input className="form-input" placeholder="vd: VnExpress Kinh Doanh" value={newSource.name} onChange={e => setNewSource({ ...newSource, name: e.target.value })} required />
                   </div>
                   <div>
-                    <label className="form-label">Loại nguồn *</label>
+                    <label className="form-label">{t('admin.sourceType')} *</label>
                     <select className="form-input" value={newSource.source_type} onChange={e => setNewSource({ ...newSource, source_type: e.target.value })}>
                       <option value="press">📰 Báo Chí (press)</option>
                       <option value="gov">📋 Đấu Thầu (gov)</option>
                     </select>
                   </div>
                   <div>
-                    <label className="form-label">Đường dẫn RSS / Endpoint API *</label>
+                    <label className="form-label">{t('admin.sourceUrl')} *</label>
                     <input className="form-input" placeholder="https://vnexpress.net/rss/kinh-doanh.rss" value={newSource.url} onChange={e => setNewSource({ ...newSource, url: e.target.value })} required />
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
-                    {isSuperAdmin ? 'Thêm Nguồn' : 'Gửi Đề Xuất'}
+                    {isSuperAdmin ? t('admin.addSourceBtn') : 'Gửi Đề Xuất'}
                   </button>
                 </form>
               </div>
@@ -932,7 +934,7 @@ export default function AdminPage() {
                 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Database size={16} style={{ color: '#3b82f6' }} />
-                    Danh Sách Nguồn Đang Theo Dõi ({sources.length})
+                    {t('admin.sourceList')} ({sources.length})
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <div style={{ position: 'relative' }}>
@@ -946,7 +948,7 @@ export default function AdminPage() {
                       />
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: '#ecfdf5', padding: '3px 10px', borderRadius: 20, border: '1px solid #a7f3d0' }}>
-                      🟢 Crawler Active
+                      🟢 {t('admin.online')}
                     </span>
                   </div>
                 </div>
@@ -954,11 +956,11 @@ export default function AdminPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      <th style={{ padding: '12px 20px' }}>Tên Nguồn</th>
-                      <th style={{ padding: '12px 20px' }}>Loại Nguồn</th>
+                      <th style={{ padding: '12px 20px' }}>{t('admin.sourceName')}</th>
+                      <th style={{ padding: '12px 20px' }}>{t('admin.sourceType')}</th>
                       <th style={{ padding: '12px 20px' }}>URL / Target</th>
-                      <th style={{ padding: '12px 20px' }}>Lần Crawl Cuối</th>
-                      <th style={{ padding: '12px 20px', textAlign: 'right' }}>Hành Động</th>
+                      <th style={{ padding: '12px 20px' }}>{t('admin.lastCrawled')}</th>
+                      <th style={{ padding: '12px 20px', textAlign: 'right' }}>{t('admin.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>

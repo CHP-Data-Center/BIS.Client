@@ -1,20 +1,27 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, HelpCircle, Loader2, X, AlertCircle } from 'lucide-react';
+import { useLang } from '../../context/LanguageContext';
 
 export default function ConfirmModal({
   isOpen,
-  title = 'Xác nhận thao tác',
-  message = 'Bạn có chắc chắn muốn thực hiện thao tác này?',
+  title,
+  message,
   itemName = '',
   itemSub = '',
-  confirmText = 'Xác Nhận Xóa',
-  cancelText = 'Hủy Bỏ',
+  confirmText,
+  cancelText,
   type = 'danger', // 'danger' | 'warning' | 'info'
   loading = false,
   onConfirm,
   onClose,
 }) {
+  const { t } = useLang();
+  const modalTitle = title || t('common.confirm');
+  const modalMsg = message || t('common.deleteWarning');
+  const modalConfirm = confirmText || (type === 'danger' ? t('common.delete') : t('common.confirm'));
+  const modalCancel = cancelText || t('common.cancel');
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isOpen) return;
@@ -156,7 +163,7 @@ export default function ConfirmModal({
           letterSpacing: '-0.4px',
           lineHeight: 1.3
         }}>
-          {title}
+          {modalTitle}
         </h3>
 
         {/* Message / Description */}
@@ -167,7 +174,7 @@ export default function ConfirmModal({
           lineHeight: 1.55,
           padding: '0 8px'
         }}>
-          {message}
+          {modalMsg}
         </p>
 
         {/* Item Preview Callout Card (If itemName provided) */}
@@ -223,7 +230,7 @@ export default function ConfirmModal({
             borderRadius: 20,
             marginTop: 14
           }}>
-            <AlertCircle size={12} /> Hành động này không thể hoàn tác
+            <AlertCircle size={12} /> {t('common.deleteWarning')}
           </div>
         )}
 
@@ -262,7 +269,7 @@ export default function ConfirmModal({
               e.currentTarget.style.borderColor = 'var(--border, #e2e8f0)';
             }}
           >
-            {cancelText}
+            {modalCancel}
           </button>
 
           <button
@@ -301,7 +308,7 @@ export default function ConfirmModal({
             }}
           >
             {loading && <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} />}
-            {confirmText}
+            {modalConfirm}
           </button>
         </div>
       </div>

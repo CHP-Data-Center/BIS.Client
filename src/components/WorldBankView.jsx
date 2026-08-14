@@ -141,17 +141,46 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   // `kind` dùng chung 2 ngữ cảnh nên PHẢI xét normType trước, tránh trang ADB mang nhãn TBMT.
   const isAdb = normType === 'adb';
   const pageTitle = isAdb
-    ? (kind === 'notice' ? 'Thông Báo Mời Thầu ADB' : config.title)
-    : kind === 'notice' ? 'Thông Báo Mời Thầu (TBMT)'
-    : kind === 'plan' ? 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)'
-    : config.title;
+    ? (kind === 'notice' ? t('projects.adbTendersTitle') : t('projects.adbTitle'))
+    : normType === 'worldbank'
+    ? t('projects.wbTitle')
+    : kind === 'notice' ? t('projects.procTitle')
+    : kind === 'plan' ? t('projects.planTitle')
+    : t('projects.procTitle');
   const pageSubtitle = isAdb
     ? (kind === 'notice'
-        ? 'Thông báo mời thầu (Invitation for Bids) theo các khoản vay/viện trợ của ADB'
-        : config.subtitle)
-    : kind
-      ? `Tra cứu ${kind === 'notice' ? 'thông báo mời thầu (TBMT)' : 'kế hoạch lựa chọn nhà thầu (KHLCNT)'} — bấm mã để mở trang chi tiết trên Hệ thống mạng đấu thầu quốc gia`
+        ? t('projects.adbTendersSub')
+        : t('projects.adbSub'))
+    : normType === 'worldbank'
+    ? t('projects.wbSub')
+    : kind === 'notice'
+      ? t('projects.procSub')
+      : kind === 'plan'
+      ? t('projects.planSub')
       : config.subtitle;
+
+  const getHeaderDisplay = (h) => {
+    switch (h.key) {
+      case 'bookmark': return t('projects.thBookmark');
+      case 'project_name': return isAdb ? t('projects.thName') : normType === 'worldbank' ? t('projects.thWbName') : t('projects.thNoticeTitle');
+      case 'countryshortname': return normType === 'procurement' ? t('projects.thProcuringEntity') : t('projects.thCountry');
+      case 'id': return normType === 'procurement' ? t('projects.thNoticeCode') : t('projects.thId');
+      case 'totalCommitmentAmount': return normType === 'procurement' ? t('projects.thPackage') : t('projects.thCommitment');
+      case 'projectstatusdisplay': return t('projects.thStatus');
+      case 'boardapprovaldate': return isAdbNotice ? t('projects.thPublishNotice') : normType === 'procurement' ? t('projects.thPublishDate') : t('projects.thApprovalDate');
+      case 'proj_last_upd_date': return isAdbNotice ? t('projects.thCollectNotice') : normType === 'procurement' ? t('projects.thCloseDate') : t('projects.thLastUpdate');
+      case 'last_stage_reached_name': return normType === 'procurement' ? t('projects.thClassification') : t('projects.thSectorStage');
+      default: return h.display;
+    }
+  };
+
+  const getEntityStatsLabel = () => normType === 'procurement' ? t('projects.totalTenders') : t('projects.totalProjects');
+  const getOrgStatsLabel = () => normType === 'procurement' ? t('projects.totalBidders') : t('projects.totalOrg');
+  const getAmountStatsLabel = () => normType === 'procurement' ? t('projects.totalPackages') : t('projects.totalCommitment');
+  const getOrgFilterLabel = () => normType === 'procurement' ? t('projects.thProcuringEntity') : t('projects.thCountry');
+  const getStageFilterLabel = () => normType === 'procurement' ? t('projects.thClassification') : t('projects.thSectorStage');
+  const getDate1FilterLabel = () => isAdbNotice ? t('projects.thPublishNotice') : normType === 'procurement' ? t('projects.thPublishDate') : t('projects.thApprovalDate');
+  const getDate2FilterLabel = () => isAdbNotice ? t('projects.thCollectNotice') : normType === 'procurement' ? t('projects.thCloseDate') : t('projects.thLastUpdate');
 
   // === STATE ===
   const [allProjects, setAllProjects] = useState([]);
@@ -666,7 +695,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             style={{ gap: 6, display: 'flex', alignItems: 'center', fontSize: 12, padding: '4px 10px' }}
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            Làm Mới Dữ Liệu
+            {t('projects.refreshData')}
           </button>
           <button
             className="btn btn-primary btn-sm"
@@ -674,7 +703,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             style={{ gap: 6, display: 'flex', alignItems: 'center', background: config.exportBtnBg, border: 'none', fontSize: 12, padding: '4px 10px' }}
           >
             <Download size={14} />
-            Xuất Excel / CSV
+            {t('projects.exportExcel')}
           </button>
         </div>
       </div>
@@ -699,11 +728,11 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             }}
           >
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>TỔNG {config.entityLabel.toUpperCase()}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{getEntityStatsLabel()}</div>
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)' }}>{stats.totalProjects.toLocaleString()}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{config.orgLabel.toUpperCase()}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{getOrgStatsLabel()}</div>
               <div style={{ fontSize: 17, fontWeight: 800, color: config.brandColor }}>{stats.orgCount}</div>
             </div>
             <div style={{ gridColumn: 'span 2' }}>
@@ -713,7 +742,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 ) : (
                   <DollarSign size={11} color={config.brandColor} />
                 )}
-                TỔNG {config.amountLabel.toUpperCase()}
+                {getAmountStatsLabel()}
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: config.brandColor }}>{formatAmountDisplay(stats.totalCommitmentUSD)}</div>
             </div>
@@ -770,7 +799,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
               }}
             >
               {onlySaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-              {onlySaved ? `${t('news.saved')}: ${config.entityLabel}` : `Chỉ ${config.entityLabel} ${t('news.saved')}`}
+              {onlySaved ? `${t('news.saved')}` : t('filter.savedOnly')}
               {savedIds.size > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 800, background: onlySaved ? 'rgba(255,255,255,0.25)' : 'var(--brand-100)', color: onlySaved ? 'white' : 'var(--brand-700)', padding: '1px 6px', borderRadius: 10 }}>
                   {savedIds.size}
@@ -786,7 +815,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: 30, paddingRight: 26, fontSize: 12, height: 36, width: '100%' }}
-                  placeholder={t('news.searchPlaceholder')}
+                  placeholder={t('filter.searchPlaceholder')}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -827,7 +856,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
             {/* Org / Country Dropdown Filter */}
             <div style={{ position: 'relative' }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{config.orgLabel}:</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{getOrgFilterLabel()}:</label>
               <div
                 className="form-input"
                 onClick={() => setCountryDropdownOpen((v) => !v)}
@@ -839,7 +868,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 }}
               >
                 <span>
-                  {selectedCountries.length > 0 ? `${config.orgLabel} (${selectedCountries.length})` : `Tất cả ${config.orgLabel}`}
+                  {selectedCountries.length > 0 ? `${getOrgFilterLabel()} (${selectedCountries.length})` : `${t('filter.all')} ${getOrgFilterLabel()}`}
                 </span>
                 <ChevronDown size={14} />
               </div>
@@ -855,7 +884,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 >
                   <input
                     type="text"
-                    placeholder={`Lọc ${config.orgLabel.toLowerCase()}...`}
+                    placeholder={`Lọc ${getOrgFilterLabel()}...`}
                     value={countrySearch}
                     onChange={(e) => setCountrySearch(e.target.value)}
                     style={{ width: '100%', padding: '4px 8px', fontSize: 11, marginBottom: 6, borderRadius: 6, border: '1px solid var(--border)' }}
@@ -887,14 +916,14 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
             {/* Status Dropdown Filter */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Trạng thái:</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{t('projects.thStatus')}:</label>
               <select
                 className="form-input"
                 style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
                 value={selectedStatuses[0] || ''}
                 onChange={(e) => setSelectedStatuses(e.target.value ? [e.target.value] : [])}
               >
-                <option value="">Tất cả Trạng Thái</option>
+                <option value="">{t('filter.allStatuses')}</option>
                 {uniqueStatuses.map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -905,14 +934,14 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
             {/* Stage Dropdown Filter */}
             <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{config.stageLabel}:</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{getStageFilterLabel()}:</label>
               <select
                 className="form-input"
                 style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
                 value={selectedStages[0] || ''}
                 onChange={(e) => setSelectedStages(e.target.value ? [e.target.value] : [])}
               >
-                <option value="">Tất cả {config.stageLabel}</option>
+                <option value="">{t('filter.all')} {getStageFilterLabel()}</option>
                 {uniqueStages.map((stg) => (
                   <option key={stg} value={stg}>
                     {stg}
@@ -924,7 +953,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             {/* Date Filters */}
             <div style={{ paddingTop: 8, borderTop: '1px dashed var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{config.date1Label}:</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{getDate1FilterLabel()}:</span>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
                     type="date"
@@ -945,7 +974,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
               </div>
 
               <div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{config.date2Label}:</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{getDate2FilterLabel()}:</span>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
                     type="date"
@@ -982,7 +1011,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
           {/* Results Control Header */}
           <div style={{ flex: '0 0 auto', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Hiển thị <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{filteredProjects.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> - <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{Math.min(currentPage * pageSize, filteredProjects.length)}</span> trên tổng <span style={{ color: config.brandColor, fontWeight: 800 }}>{filteredProjects.length.toLocaleString()}</span> {config.entityLabel}
+              {t('projects.showing')} <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{filteredProjects.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> - <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{Math.min(currentPage * pageSize, filteredProjects.length)}</span> {t('projects.ofTotal')} <span style={{ color: config.brandColor, fontWeight: 800 }}>{filteredProjects.length.toLocaleString()}</span> {t('news.itemsCount')}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -997,7 +1026,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
                   }}
                 >
-                  <List size={13} /> Bảng
+                  <List size={13} /> {t('projects.viewTable')}
                 </button>
                 <button
                   onClick={() => setViewMode('grid')}
@@ -1008,13 +1037,13 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
                   }}
                 >
-                  <LayoutGrid size={13} /> Thẻ
+                  <LayoutGrid size={13} /> {t('projects.viewGrid')}
                 </button>
               </div>
 
               {/* Page size select */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Trang:</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('projects.pageSize')}</span>
                 <select
                   className="form-input"
                   style={{ fontSize: 11, padding: '2px 6px', height: 26, width: 55 }}
@@ -1035,24 +1064,24 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             {loading ? (
               <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
                 <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 12px', display: 'block', color: config.brandColor }} />
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Đang tải dữ liệu {config.title}...</div>
-                <div style={{ fontSize: 12, marginTop: 4 }}>Quá trình tải danh sách có thể mất vài giây</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{t('projects.loadingData')}</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>{t('projects.loadingWait')}</div>
               </div>
             ) : error ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
                 <AlertCircle size={36} color="#ef4444" style={{ margin: '0 auto 12px' }} />
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{error}</div>
                 <button className="btn btn-secondary btn-sm" onClick={loadData} style={{ marginTop: 14 }}>
-                  Thử lại
+                  {t('common.tryAgain') || 'Thử lại'}
                 </button>
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="empty-state" style={{ minHeight: 250 }}>
                 <div className="empty-icon">📭</div>
-                <div className="empty-title">Không tìm thấy {config.entityLabel} nào</div>
-                <div className="empty-sub">Hãy thử thay đổi từ khóa tìm kiếm hoặc xóa bớt các bộ lọc.</div>
+                <div className="empty-title">{t('projects.emptyTitle')}</div>
+                <div className="empty-sub">{t('projects.emptySub')}</div>
                 <button className="btn btn-secondary btn-sm" onClick={handleClearFilters} style={{ marginTop: 12 }}>
-                  Xóa bộ lọc
+                  {t('projects.clearFilters')}
                 </button>
               </div>
             ) : viewMode === 'table' ? (
@@ -1079,7 +1108,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                             }}
                           >
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                              {h.display}
+                              {getHeaderDisplay(h)}
                               {h.sortable && (
                                 <span style={{ opacity: isSorted ? 1 : 0.4 }}>
                                   {isSorted ? (

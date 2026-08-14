@@ -17,20 +17,22 @@ import { mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcuremen
 import { apiCache } from '../utils/apiCache';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useLang } from '../context/LanguageContext';
 
 const PAGE_SIZE = 6;
 
 // ── Trending marquee strip ───────────────────────────────────
 function TrendingStrip({ keywords, onSelectKeyword }) {
+  const { t } = useLang();
   if (!keywords || keywords.length === 0) {
     return (
       <div className="trending-strip" style={{ opacity: 0.75 }}>
         <div className="trending-strip-header">
           <div className="trending-strip-title">
             <Zap size={15} style={{ color: '#f59e0b' }} />
-            <span>Từ Khóa Đang Nổi Bật</span>
+            <span>{t('dashboard.trendingTitle')}</span>
           </div>
-          <span className="hot-badge" style={{ animation: 'pulse 1.5s infinite' }}>⏳ ĐANG TẢI...</span>
+          <span className="hot-badge" style={{ animation: 'pulse 1.5s infinite' }}>{t('badge.loading')}</span>
         </div>
         <div style={{ height: 32, display: 'flex', gap: 10, alignItems: 'center', overflow: 'hidden' }}>
           <div className="skeleton" style={{ height: 28, width: 110, borderRadius: 20 }} />
@@ -102,9 +104,9 @@ function TrendingStrip({ keywords, onSelectKeyword }) {
       <div className="trending-strip-header">
         <div className="trending-strip-title">
           <Zap size={15} style={{ color: '#f59e0b', animation: 'pulse 1.8s ease-in-out infinite' }} />
-          <span>Từ Khóa Đang Nổi Bật</span>
+          <span>{t('dashboard.trendingTitle')}</span>
         </div>
-        <span className="hot-badge">🔥 LIVE</span>
+        <span className="hot-badge">{t('badge.live')}</span>
 
         {keywords.slice(0, 1).map((kw, i) => (
           <span
@@ -120,7 +122,7 @@ function TrendingStrip({ keywords, onSelectKeyword }) {
         ))}
 
         <span className="trending-hint">
-          ↔ Di chuột để dừng · Click từ khóa để tìm bài
+          {t('dashboard.trendingHint')}
         </span>
       </div>
 
@@ -134,7 +136,7 @@ function TrendingStrip({ keywords, onSelectKeyword }) {
                 key={i}
                 className={`trending-keyword-chip ${getRankClass(originalRank)}`}
                 onClick={() => onSelectKeyword && onSelectKeyword(kw.term)}
-                title={`Hạng ${originalRank}: Bấm để tìm bài viết chứa từ khóa "${kw.term}"`}
+                title={t('dashboard.trendingRankTooltip', { rank: originalRank, term: kw.term })}
               >
                 {isTop3 && renderRankIcon(originalRank)}
                 <span className="chip-term-text">{kw.term}</span>
@@ -334,6 +336,7 @@ function MapFlyTo({ items, source, country, sector, status }) {
 
 // ── MultiSelectDropdown ──────────────────────────────────────
 function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -354,7 +357,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
     ? placeholder
     : selCount === 1
       ? (options.find(o => o.value === [...selected][0])?.label || placeholder)
-      : `${selCount} đã chọn`;
+      : `${selCount} ${t('common.selected')}`;
 
   return (
     <div ref={ref} style={{ position: 'relative', zIndex: open ? 2000 : 1 }}>
@@ -404,7 +407,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
             }}>
               {selCount === 0 && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
             </div>
-            Tất cả
+            {t('common.all')}
           </div>
           {options.map(opt => {
             const isChecked = selected.has(opt.value);
@@ -440,6 +443,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
 }
 
 function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SECTOR_ICONS, SECTOR_NAMES, STATUS_ICONS }) {
+  const { t } = useLang();
   const [viewMode, setViewMode] = useState('card');
   const [currIdx, setCurrIdx] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -509,7 +513,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                 fontSize: 10, fontWeight: 800, padding: '1px 6px',
                 borderRadius: 20, flexShrink: 0, lineHeight: '14px',
               }}>
-                {formatCount(items.length)} dự án
+                {formatCount(items.length)} {t('dashboard.unitProjects')}
               </span>
             </div>
 
@@ -522,9 +526,9 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                   borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 700,
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}
-                title="Xem dạng thẻ"
+                title={t('common.details')}
               >
-                🎴 Thẻ
+                🎴 {t('common.details')}
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setViewMode('list'); }}
@@ -534,9 +538,9 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                   borderRadius: 6, padding: '2px 6px', fontSize: 10, fontWeight: 700,
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}
-                title="Xem danh sách"
+                title={t('common.viewAll')}
               >
-                📜 Danh sách
+                📜 {t('common.all')}
               </button>
             </div>
           </div>
@@ -550,7 +554,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                   width: 20, height: 20, cursor: 'pointer', fontSize: 12, fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
-                title="Dự án trước"
+                title={t('common.previous')}
               >
                 ‹
               </button>
@@ -564,7 +568,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
                   width: 20, height: 20, cursor: 'pointer', fontSize: 12, fontWeight: 800,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
-                title="Dự án tiếp"
+                title={t('common.next')}
               >
                 ›
               </button>
@@ -577,7 +581,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', color: 'white', background: cfg.color, padding: '3px 9px', borderRadius: 20 }}>
-              {activeItem?.type || 'Dự án'}
+              {activeItem?.type || t('dashboard.unitProjects')}
             </span>
             <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{String(activeItem?.id || '').slice(0, 12)}</span>
           </div>
@@ -590,7 +594,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
               display: 'flex', alignItems: 'flex-start', gap: 4,
               transition: 'color 0.15s ease',
             }}
-            title="Bấm để chuyển hướng tới trang chi tiết dự án"
+            title={t('common.details')}
           >
             <span style={{ flex: 1, textDecoration: 'underline', textDecorationColor: 'transparent' }}>
               {(activeItem.title || '').length > 85 ? (activeItem.title || '').slice(0, 85) + '…' : activeItem.title}
@@ -626,7 +630,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
               fontSize: 10,
               marginBottom: 4,
             }}>
-              <Cpu size={10} /> PHÂN TÍCH AI
+              <Cpu size={10} /> {t('news.aiSummary')}
             </div>
             <div style={{
               maxHeight: 100,
@@ -643,7 +647,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
           {items.length > 3 && (
             <input
               type="text"
-              placeholder="🔍 Tìm trong vị trí này..."
+              placeholder={`🔍 ${t('common.search')}...`}
               value={searchQuery}
               onClick={(e) => e.stopPropagation()}
               onChange={e => setSearchQuery(e.target.value)}
@@ -698,6 +702,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
 }
 
 function ProjectDistributionMap() {
+  const { t, tCountry, tSector, tStatus } = useLang();
   const [selSources,   setSelSources]   = useState(new Set());
   const [selCountries, setSelCountries] = useState(new Set());
   const [selStatuses,  setSelStatuses]  = useState(new Set());
@@ -727,10 +732,10 @@ function ProjectDistributionMap() {
   }, []);
 
   const mockItems = [
-    ...mockAdbProjects.map(p => ({ ...p, source: 'adb', type: 'Dự án ADB' })),
-    ...mockWbProjects.map(p => ({ ...p, source: 'worldbank', type: 'Dự án World Bank' })),
-    ...mockProcurementNotices.map(p => ({ ...p, source: 'dauthau', type: 'TB Mời thầu', sector: p.sector || 'Transport' })),
-    ...mockProcurementPlans.map(p => ({ ...p, source: 'dauthau', type: 'Kế hoạch thầu', sector: p.sector || 'Transport' }))
+    ...mockAdbProjects.map(p => ({ ...p, source: 'adb', type: 'ADB' })),
+    ...mockWbProjects.map(p => ({ ...p, source: 'worldbank', type: 'World Bank' })),
+    ...mockProcurementNotices.map(p => ({ ...p, source: 'dauthau', type: 'TBMT', sector: p.sector || 'Transport' })),
+    ...mockProcurementPlans.map(p => ({ ...p, source: 'dauthau', type: 'KHLCNT', sector: p.sector || 'Transport' }))
   ].filter(item => MAP_COORDS[item.id]);
 
   const usingReal = realItems != null;
@@ -753,11 +758,6 @@ function ProjectDistributionMap() {
     Thailand: 'th', Cambodia: 'kh', 'South Africa': 'za',
     Tajikistan: 'tj', Brazil: 'br',
   };
-  const COUNTRY_NAMES = {
-    Vietnam: 'Việt Nam', Philippines: 'Philippines', Indonesia: 'Indonesia',
-    Thailand: 'Thái Lan', Cambodia: 'Campuchia', 'South Africa': 'Nam Phi',
-    Tajikistan: 'Tajikistan', Brazil: 'Brazil', Regional: 'Khu vực', GMS: 'GMS',
-  };
   const FlagImg = ({ country, size = 18 }) => {
     const code = FLAG_CODES[country];
     if (!code) return <span style={{ fontSize: size * 0.85 }}>🌏</span>;
@@ -769,15 +769,15 @@ function ProjectDistributionMap() {
       />
     );
   };
-  const countryLabel = c => COUNTRY_NAMES[c] || c;
+  const countryLabel = c => tCountry(c) || c;
 
   const SECTOR_ICONS = {
     Energy: '⚡', 'Urban Dev': '🏙️', Finance: '💰', Climate: '🌱',
     Transport: '🛣️', Water: '💧', Nutrition: '🍏', Agriculture: '🌾',
   };
   const SECTOR_NAMES = {
-    Energy: 'Năng lượng', 'Urban Dev': 'Đô thị', Finance: 'Tài chính', Climate: 'Khí hậu',
-    Transport: 'Giao thông', Water: 'Nước sạch', Nutrition: 'Dinh dưỡng', Agriculture: 'Nông nghiệp',
+    Energy: tSector('energy'), 'Urban Dev': tSector('urban'), Finance: tSector('finance'), Climate: tSector('environment'),
+    Transport: tSector('transport'), Water: tSector('water'), Nutrition: tSector('health'), Agriculture: tSector('agriculture'),
   };
   const STATUS_ICONS = { Active: '🟢', Planned: '🔵', Completed: '✅', Pipeline: '🟡' };
 
@@ -835,7 +835,7 @@ function ProjectDistributionMap() {
           </div>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <span>Bàn Đồ Phân Bố Dự Án ODA &amp; Đấu Thầu</span>
+              <span>{t('dashboard.title')}</span>
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
                 background: usingReal ? '#dcfce7' : '#fef3c7',
@@ -843,19 +843,19 @@ function ProjectDistributionMap() {
                 border: `1px solid ${usingReal ? '#bbf7d0' : '#fde68a'}`,
                 whiteSpace: 'nowrap',
               }}>
-                {usingReal ? '🟢 Dữ liệu thật (Top 400 mới nhất)' : '📌 Dữ liệu mẫu minh họa'}
+                {usingReal ? t('badge.realData') : t('badge.mockData')}
               </span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
               <Cpu size={11} style={{ color: '#a855f7', flexShrink: 0 }} />
-              <span>AI Powered · {filteredItems.length} dự án ({locationGroupList.length} điểm cụm)</span>
+              <span>{t('dashboard.mapAiPowered', { count: filteredItems.length, clusters: locationGroupList.length })}</span>
             </div>
           </div>
         </div>
         <div className="dashboard-map-source-pills">
           {Object.entries(sourceConfig).map(([key, cfg]) => {
             const count = allItems.filter(i => i.source === key).length;
-            const unit = key === 'dauthau' ? 'gói thầu' : 'dự án';
+            const unit = key === 'dauthau' ? t('dashboard.unitPackages') : t('dashboard.unitProjects');
             return (
               <div key={key} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
@@ -945,8 +945,8 @@ function ProjectDistributionMap() {
           <div style={{ position:'absolute', inset:0, zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(15,23,42,0.5)', backdropFilter:'blur(6px)', borderRadius: 16 }}>
             <div style={{ background:'white', borderRadius:16, padding:'20px 28px', textAlign:'center', boxShadow:'0 16px 48px rgba(0,0,0,0.2)' }}>
               <div style={{ fontSize:36, marginBottom:10 }}>🔍</div>
-              <div style={{ fontWeight:700, color:'#0f172a', fontSize:15 }}>Không khớp bộ lọc</div>
-              <div style={{ fontSize:12, color:'#64748b', marginTop:4 }}>Thử thay đổi điều kiện lọc</div>
+              <div style={{ fontWeight:700, color:'#0f172a', fontSize:15 }}>{t('dashboard.noFilterMatch')}</div>
+              <div style={{ fontSize:12, color:'#64748b', marginTop:4 }}>{t('dashboard.tryChangeFilter')}</div>
             </div>
           </div>
         )}
@@ -963,10 +963,10 @@ function ProjectDistributionMap() {
               cursor: 'pointer',
             }}
           >
-            <span style={{ fontSize: 12, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}>
-              🗺️ Bộ lọc <span className="mobile-filter-toggle-hint" style={{ fontSize: 10, opacity: 0.85, fontWeight: 600 }}>(400 mới nhất)</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+              🗺️ {t('dashboard.filterMapTitle')} <span className="mobile-filter-toggle-hint" style={{ fontSize: 10, opacity: 0.85, fontWeight: 600, whiteSpace: 'nowrap' }}>{t('dashboard.filterMapLatest')}</span>
             </span>
-            <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: 'white' }}>
+            <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: 'white', whiteSpace: 'nowrap', flexShrink: 0 }}>
               {filteredItems.length}/{allItems.length}
             </span>
           </div>
@@ -974,7 +974,7 @@ function ProjectDistributionMap() {
           {mobileFilterOpen && (
             <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Nguồn dữ liệu</div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>{t('dashboard.filterSource')}</div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 {Object.entries(sourceConfig).map(([key, cfg]) => {
                   const active = selSources.has(key);
@@ -1004,25 +1004,25 @@ function ProjectDistributionMap() {
             </div>
 
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Quốc gia</div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>{t('dashboard.filterCountry')}</div>
               <MultiSelectDropdown
                 selected={selCountries}
                 onChange={setSelCountries}
-                placeholder="🌏 Tất cả quốc gia"
+                placeholder={t('dashboard.filterAllCountries')}
                 options={countryList.map(c => ({
                   value: c,
-                  label: COUNTRY_NAMES[c] || c,
+                  label: countryLabel(c),
                   icon: <FlagImg country={c} size={20} />,
                 }))}
               />
             </div>
 
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Lĩnh vực</div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>{t('dashboard.filterSector')}</div>
               <MultiSelectDropdown
                 selected={selSectors}
                 onChange={setSelSectors}
-                placeholder="📦 Tất cả lĩnh vực"
+                placeholder={t('dashboard.filterAllSectors')}
                 options={sectorList.map(s => ({
                   value: s,
                   label: SECTOR_NAMES[s] || s,
@@ -1032,22 +1032,22 @@ function ProjectDistributionMap() {
             </div>
 
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>Trạng thái</div>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#94a3b8', marginBottom: 5 }}>{t('dashboard.filterStatus')}</div>
               <MultiSelectDropdown
                 selected={selStatuses}
                 onChange={setSelStatuses}
-                placeholder="⚙️ Tất cả trạng thái"
+                placeholder={t('dashboard.filterAllStatuses')}
                 options={statusList.map(st => ({
                   value: st,
-                  label: st,
+                  label: tStatus(st) || st,
                   icon: STATUS_ICONS[st] || '⚙️',
                 }))}
               />
             </div>
 
             <div style={{
-              background: 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(59,130,246,0.08))',
-              border: '1px solid rgba(16,185,129,0.2)', borderRadius: 9, padding: '7px 9px',
+              background: 'linear-gradient(135deg,rgba(168,85,247,0.08),rgba(59,130,246,0.08))',
+              border: '1px solid rgba(168,85,247,0.2)', borderRadius: 9, padding: '7px 9px',
             }}>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4, gap: 4 }}>
                 {sourceBreakdown.filter(s => s.count > 0).map(s => (
@@ -1058,7 +1058,7 @@ function ProjectDistributionMap() {
                 ))}
               </div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', borderTop:'1px solid rgba(0,0,0,0.06)', paddingTop:5 }}>
-                <span style={{ fontSize:10, color:'#64748b' }}>💰 Ước vốn</span>
+                <span style={{ fontSize:10, color:'#64748b' }}>💰 {t('dashboard.estBudget')}</span>
                 <span style={{ fontWeight:800, color:'#10b981', fontSize:12 }}>${(totalBudget/1e6).toFixed(0)}M</span>
               </div>
             </div>
@@ -1070,7 +1070,7 @@ function ProjectDistributionMap() {
                   background: 'transparent', color: '#64748b',
                   fontWeight: 600, fontSize: 11, cursor: 'pointer', transition: 'all 0.15s',
                 }}>
-                🔄 Đặt lại bộ lọc
+                {t('dashboard.resetFilter')}
               </button>
             )}
           </div>
@@ -1091,6 +1091,7 @@ const SOURCE_CONFIG = {
 
 // ── Main Dashboard ───────────────────────────────────────────
 export default function DashboardPage() {
+  const { lang, t } = useLang();
   const nav = useNavigate();
   const [loading, setLoading]         = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
@@ -1141,12 +1142,12 @@ export default function DashboardPage() {
         setArticles((data.items || []).map(adaptProcToCard));
         setTotal(data.total || 0);
       } else if (filter === 'press') {
-        const data = await articlesService.getArticles({ page: p, size: PAGE_SIZE, sort: 'newest', source_type: 'press' });
+        const data = await articlesService.getArticles({ page: p, size: PAGE_SIZE, sort: 'newest', source_type: 'press', ...(lang !== 'vi' ? { lang } : {}) });
         setArticles(data.items || []);
         setTotal(data.total || 0);
       } else {
         // 'all'
-        const data = await articlesService.getArticles({ page: p, size: PAGE_SIZE, sort: 'newest' });
+        const data = await articlesService.getArticles({ page: p, size: PAGE_SIZE, sort: 'newest', ...(lang !== 'vi' ? { lang } : {}) });
         setArticles(data.items || []);
         setTotal(data.total || 0);
       }
@@ -1171,12 +1172,12 @@ export default function DashboardPage() {
     };
     window.addEventListener('bis:data_updated', onDataUpdated);
     return () => window.removeEventListener('bis:data_updated', onDataUpdated);
-  }, []);
+  }, [lang]);
 
-  // Khi filter/page thay đổi
+  // Khi filter/page/lang thay đổi
   useEffect(() => {
     fetchArticles(activeFilter, page);
-  }, [activeFilter, page]);
+  }, [activeFilter, page, lang]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -1204,11 +1205,11 @@ export default function DashboardPage() {
   const aiProcessed      = overview?.ai_processed ?? 0;
 
   const chips = [
-    { id: 'all',       label: '🗂️ Tất Cả',    count: totalCount },
-    { id: 'press',     label: '📰 Báo Chí',    count: pressCount },
-    { id: 'adb',       label: '🏦 ADB',        count: adbCount },
-    { id: 'worldbank', label: '🌍 World Bank',  count: wbCount },
-    { id: 'gov',       label: '📋 Đấu Thầu',   count: govCount },
+    { id: 'all',       label: `🗂️ ${t('common.all')}`,        count: totalCount },
+    { id: 'press',     label: `📰 ${t('nav.press')}`,          count: pressCount },
+    { id: 'adb',       label: `🏦 ${t('nav.adb')}`,            count: adbCount },
+    { id: 'worldbank', label: `🌍 ${t('nav.worldbank')}`,      count: wbCount },
+    { id: 'gov',       label: `📋 ${t('nav.procGroup')}`,      count: govCount },
   ];
 
   return (
@@ -1221,50 +1222,50 @@ export default function DashboardPage() {
         <StatsCard
           loading={!overview}
           icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
-          label="Tổng Bài Viết"
+          label={t('dashboard.totalArticles')}
           value={totalCount}
-          sub={`+${todayCount} hôm nay`}
+          sub={t('dashboard.todayArticles', { count: todayCount })}
           trend={todayCount > 0 ? `+${todayCount}` : null}
           accentColor="#3b82f6" iconBg="var(--brand-50)"
         />
         <StatsCard
           loading={!overview}
           icon={<Building2 size={20} style={{ color: '#f59e0b' }} />}
-          label="ADB"
+          label={t('nav.adb')}
           value={adbCount}
-          sub="Ngân hàng Phát triển Châu Á"
+          sub={t('dashboard.adbBank')}
           accentColor="#f59e0b" iconBg="#fffbeb"
         />
         <StatsCard
           loading={!overview}
           icon={<Globe size={20} style={{ color: '#10b981' }} />}
-          label="World Bank"
+          label={t('nav.worldbank')}
           value={wbCount}
-          sub="Ngân hàng Thế giới"
+          sub={t('dashboard.wbBank')}
           accentColor="#10b981" iconBg="#ecfdf5"
         />
         <StatsCard
           loading={!overview}
           icon={<ShoppingBag size={20} style={{ color: '#8b5cf6' }} />}
-          label="Đấu Thầu Công"
+          label={t('dashboard.govProc')}
           value={govCount}
-          sub="Mua sắm công quốc gia"
+          sub={t('dashboard.govSub')}
           accentColor="#8b5cf6" iconBg="#f5f3ff"
         />
         <StatsCard
           loading={!overview}
           icon={<Newspaper size={20} style={{ color: '#3b82f6' }} />}
-          label="Báo Chí"
+          label={t('dashboard.press')}
           value={pressCount}
-          sub="Tin tức tổng hợp"
+          sub={t('dashboard.pressSub')}
           accentColor="#3b82f6" iconBg="#eff6ff"
         />
         <StatsCard
           loading={!overview}
           icon={<Cpu size={20} style={{ color: '#ec4899' }} />}
-          label="AI Đã Xử Lý"
+          label={t('dashboard.aiProcessed')}
           value={aiProcessed}
-          sub={`${totalCount > 0 ? Math.round(aiProcessed/totalCount*100) : 0}% tổng bài`}
+          sub={t('dashboard.aiPct', { pct: totalCount > 0 ? Math.round(aiProcessed/totalCount*100) : 0 })}
           accentColor="#ec4899" iconBg="#fdf2f8"
         />
       </div>
@@ -1280,14 +1281,14 @@ export default function DashboardPage() {
         <div className="section-header dashboard-news-section-header">
           <div className="section-title">
             <span className="dot" />
-            <span style={{ whiteSpace: 'nowrap', fontWeight: 800 }}>Tin Tức Mới Nhất</span>
+            <span style={{ whiteSpace: 'nowrap', fontWeight: 800 }}>{t('dashboard.latestNews')}</span>
             <span style={{
               fontSize: 12, fontWeight: 600, color: 'var(--text-muted)',
               padding: '2px 8px', background: 'var(--bg-surface-2)',
               borderRadius: 'var(--radius-full)', border: '1px solid var(--border)',
               whiteSpace: 'nowrap',
             }}>
-              {totalArticles} bài
+              {t('dashboard.articlesCount', { count: totalArticles })}
             </span>
           </div>
           <div className="dashboard-news-actions">
@@ -1295,10 +1296,10 @@ export default function DashboardPage() {
               {refreshing
                 ? <Loader2 size={13} style={{ animation: 'spin 0.7s linear infinite' }} />
                 : <RefreshCw size={13} />}
-              Làm mới
+              {t('common.refresh')}
             </button>
             <button className="btn btn-secondary btn-sm" onClick={() => nav('/news/all')} id="btn-view-all" style={{ gap: 5 }}>
-              Xem tất cả <ArrowRight size={13} />
+              {t('common.viewAll')} <ArrowRight size={13} />
             </button>
           </div>
         </div>
@@ -1334,8 +1335,8 @@ export default function DashboardPage() {
               ? (
                 <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 200 }}>
                   <div className="empty-icon">📭</div>
-                  <div className="empty-title">Chưa có bài viết</div>
-                  <div className="empty-sub">Hệ thống sẽ crawl tự động mỗi 4h. Admin có thể crawl ngay trong phần Cài đặt.</div>
+                  <div className="empty-title">{t('dashboard.emptyNewsTitle')}</div>
+                  <div className="empty-sub">{t('dashboard.emptyNewsSub')}</div>
                 </div>
               )
               : articles.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)
@@ -1370,10 +1371,10 @@ export default function DashboardPage() {
             }}>
               <TrendingUp size={16} />
             </div>
-            Phân Bổ Theo Nguồn Dữ Liệu
+            {t('dashboard.sourceBreakdown')}
           </div>
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-subtle)' }}>
-            {overview ? `${totalCount} bài viết tổng` : 'Đang tải...'}
+            {overview ? t('dashboard.totalOverviewArticles', { count: totalCount }) : t('common.loading')}
           </span>
         </div>
 
@@ -1386,6 +1387,7 @@ export default function DashboardPage() {
             else if (key === 'worldbank') count = wbCount;
 
             const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+            const label = key === 'press' ? t('nav.press') : key === 'adb' ? t('nav.adb') : key === 'worldbank' ? t('nav.worldbank') : t('nav.procGroup');
             return (
               <div
                 key={key}
@@ -1421,7 +1423,7 @@ export default function DashboardPage() {
                     }}>
                       {src.icon}
                     </span>
-                    {src.label}
+                    {label}
                   </span>
                   <span style={{ fontSize: 22, fontWeight: 900, color: src.color, letterSpacing: '-0.5px' }}>
                     {overview ? count : <span className="skeleton" style={{ display: 'inline-block', width: 40, height: 24, borderRadius: 6 }} />}
@@ -1437,10 +1439,10 @@ export default function DashboardPage() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 10.5, fontWeight: 700, color: src.color, background: `${src.color}15`, padding: '2px 8px', borderRadius: 12 }}>
-                    {overview ? `${pct}% tổng số` : '---'}
+                    {overview ? t('dashboard.pctTotal', { pct }) : '---'}
                   </span>
                   <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {overview ? `${count} bài viết` : '---'}
+                    {overview ? t('dashboard.articlesCount', { count }) : '---'}
                   </span>
                 </div>
               </div>

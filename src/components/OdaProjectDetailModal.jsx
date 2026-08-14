@@ -5,18 +5,29 @@
 import { useState } from 'react';
 import { X, ExternalLink, Building2, Globe2, Landmark, CalendarDays, Wallet, FileText, Users, Layers } from 'lucide-react';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import { useLang } from '../context/LanguageContext';
 
 const SOURCE_META = {
-  worldbank: { brand: '#10b981', Icon: Globe2, label: 'World Bank', dataNote: 'Dữ liệu từ World Bank API' },
-  adb: { brand: '#f59e0b', Icon: Building2, label: 'ADB', dataNote: 'Dữ liệu từ ADB' },
+  worldbank: { brand: '#10b981', Icon: Globe2, label: 'World Bank', dataNote: 'World Bank API' },
+  adb: { brand: '#f59e0b', Icon: Building2, label: 'ADB', dataNote: 'ADB API' },
 };
 
-const fmtDate = (d) => {
+const fmtDate = (d, lang = 'vi') => {
   if (!d) return null;
-  try { return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  try {
+    const locale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'vi-VN';
+    return new Date(d).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
   catch { return d; }
 };
-const fmtM = (usd) => (usd == null || usd === 0 ? null : `US$ ${(usd / 1e6).toFixed(2)} triệu`);
+
+const fmtM = (usd, lang = 'vi') => {
+  if (usd == null || usd === 0) return null;
+  const num = (usd / 1e6).toFixed(2);
+  if (lang === 'ja') return `US$ ${num} 百万`;
+  if (lang === 'en') return `US$ ${num} M`;
+  return `US$ ${num} triệu`;
+};
 
 function Row({ label, value }) {
   if (value == null || value === '' || value === 'N/A') return null;
@@ -38,6 +49,7 @@ function SectionTitle({ children, icon: Ic }) {
 
 // ── Body giàu cho World Bank (như trang detail thật) ──────────────────────────
 function WbRichBody({ d, extId }) {
+  const { t, lang } = useLang();
   const [more, setMore] = useState(false);
   const abstract = d.abstract || '';
   const showToggle = abstract.length > 420;
@@ -51,12 +63,12 @@ function WbRichBody({ d, extId }) {
     <>
       {abstract && (
         <>
-          <SectionTitle icon={FileText}>Tóm tắt (Abstract)</SectionTitle>
+          <SectionTitle icon={FileText}>{t('oda.overview')}</SectionTitle>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-primary)', margin: 0 }}>
             {abstractText}{' '}
             {showToggle && (
               <button onClick={() => setMore((v) => !v)} style={{ background: 'none', border: 'none', color: '#10b981', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 13 }}>
-                {more ? 'Thu gọn' : 'Xem thêm +'}
+                {more ? t('common.close') : `${t('common.readMore')} +`}
               </button>
             )}
           </p>
@@ -65,56 +77,56 @@ function WbRichBody({ d, extId }) {
 
       {d.pdo && d.pdo !== abstract && (
         <>
-          <SectionTitle>Mục tiêu phát triển (PDO)</SectionTitle>
+          <SectionTitle>{t('oda.overview')}</SectionTitle>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-primary)', margin: 0 }}>{d.pdo}</p>
         </>
       )}
 
-      <SectionTitle icon={Landmark}>Thông tin chính (Key Details)</SectionTitle>
+      <SectionTitle icon={Landmark}>{t('oda.keySpecs')}</SectionTitle>
       <div>
-        <Row label="Mã dự án" value={extId} />
-        <Row label="Trạng thái" value={d.status} />
-        <Row label="Quốc gia" value={d.country} />
-        <Row label="Khu vực" value={d.region} />
-        <Row label="Chủ nhiệm dự án" value={d.team_leader} />
-        <Row label="Bên vay" value={d.borrower} />
-        <Row label="Cơ quan thực hiện" value={d.impagency} />
-        <Row label="Công cụ vay" value={d.lending_instrument} />
-        <Row label="Năm tài khóa" value={d.fiscal_year} />
-        <Row label="Ngày công bố" value={fmtDate(dt.disclosure)} />
-        <Row label="Ngày phê duyệt" value={fmtDate(dt.approval)} />
-        <Row label="Ngày hiệu lực" value={fmtDate(dt.effective)} />
-        <Row label="Ngày đóng" value={fmtDate(dt.closing)} />
+        <Row label={t('oda.id')} value={extId} />
+        <Row label={t('oda.status')} value={d.status} />
+        <Row label={t('oda.country')} value={d.country} />
+        <Row label={t('common.country')} value={d.region} />
+        <Row label={t('common.action')} value={d.team_leader} />
+        <Row label={t('oda.borrower')} value={d.borrower} />
+        <Row label={t('oda.implementingAgency')} value={d.impagency} />
+        <Row label={t('oda.stage')} value={d.lending_instrument} />
+        <Row label={t('common.date')} value={d.fiscal_year} />
+        <Row label={t('oda.publishedDate')} value={fmtDate(dt.disclosure, lang)} />
+        <Row label={t('oda.approvalDate')} value={fmtDate(dt.approval, lang)} />
+        <Row label={t('oda.publishedDate')} value={fmtDate(dt.effective, lang)} />
+        <Row label={t('oda.closingDate')} value={fmtDate(dt.closing, lang)} />
       </div>
 
       {(financers.length > 0 || fin.total || fin.ida || fin.ibrd) && (
         <>
-          <SectionTitle icon={Wallet}>Tài chính (Finances)</SectionTitle>
+          <SectionTitle icon={Wallet}>{t('oda.financing')}</SectionTitle>
           {financers.length > 0 && (
             <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ display: 'flex', background: 'var(--bg-surface-2)', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '8px 12px' }}>
-                <div style={{ flex: 1 }}>Nguồn tài trợ</div><div style={{ width: 150, textAlign: 'right' }}>Cam kết</div>
+                <div style={{ flex: 1 }}>{t('common.source')}</div><div style={{ width: 150, textAlign: 'right' }}>{t('oda.amount')}</div>
               </div>
               {financers.map((f, i) => (
                 <div key={i} style={{ display: 'flex', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--border-subtle)' }}>
                   <div style={{ flex: 1, color: 'var(--text-primary)' }}>{f.name}</div>
-                  <div style={{ width: 150, textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{fmtM(f.amount) || 'N/A'}</div>
+                  <div style={{ width: 150, textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>{fmtM(f.amount, lang) || 'N/A'}</div>
                 </div>
               ))}
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-            <Row label="Cam kết IBRD" value={fmtM(fin.ibrd) || (fin.ibrd === 0 ? 'US$ 0.00' : null)} />
-            <Row label="Cam kết IDA" value={fmtM(fin.ida)} />
-            <Row label="Viện trợ (Grant)" value={fmtM(fin.grant) || (fin.grant === 0 ? 'US$ 0.00' : null)} />
-            <Row label="Tổng tài chính" value={fmtM(fin.total)} />
+            <Row label="IBRD" value={fmtM(fin.ibrd, lang) || (fin.ibrd === 0 ? 'US$ 0.00' : null)} />
+            <Row label="IDA" value={fmtM(fin.ida, lang)} />
+            <Row label="Grant" value={fmtM(fin.grant, lang) || (fin.grant === 0 ? 'US$ 0.00' : null)} />
+            <Row label={t('common.total')} value={fmtM(fin.total, lang)} />
           </div>
         </>
       )}
 
       {sectors.length > 0 && (
         <>
-          <SectionTitle icon={Layers}>Lĩnh vực (Sectors)</SectionTitle>
+          <SectionTitle icon={Layers}>{t('oda.sector')}</SectionTitle>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {sectors.map((s, i) => (
               <span key={i} style={{ fontSize: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>
@@ -280,38 +292,40 @@ function AdbRichBody({ d }) {
 
 // ── Body gọn (ADB / khi chưa có details) ──────────────────────────────────────
 function SimpleBody({ item }) {
+  const { t, lang } = useLang();
   const objective = item.development_objective || item.ai_summary;
   return (
     <>
       {objective && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FileText size={13} /> Mục tiêu / Tóm tắt
+            <FileText size={13} /> {t('oda.overview')}
           </div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-primary)', margin: 0 }}>{objective}</p>
         </div>
       )}
       <div>
-        <Row label={<><Globe2 size={12} style={{ verticalAlign: -1 }} /> Quốc gia</>} value={item.countryshortname} />
-        <Row label="Khu vực" value={item.region} />
-        <Row label="Lĩnh vực" value={item.sector} />
-        <Row label={<><Wallet size={12} style={{ verticalAlign: -1 }} /> Cam kết (USD)</>} value={item.amount_display} />
-        <Row label="Tổng vốn dự án" value={item.total_cost} />
-        <Row label="Công cụ vay" value={item.lending_instrument} />
-        <Row label="Năm tài khóa" value={item.fiscal_year} />
-        <Row label="Giai đoạn" value={item.last_stage_reached_name} />
-        <Row label={<><CalendarDays size={12} style={{ verticalAlign: -1 }} /> Ngày phê duyệt</>} value={fmtDate(item.boardapprovaldate)} />
-        <Row label="Cập nhật cuối" value={fmtDate(item.proj_last_upd_date)} />
-        <Row label="Ngày đóng" value={fmtDate(item.closing_date)} />
-        <Row label={<><Landmark size={12} style={{ verticalAlign: -1 }} /> Bên vay</>} value={item.borrower} />
-        <Row label={<><Building2 size={12} style={{ verticalAlign: -1 }} /> Cơ quan thực hiện</>} value={item.implementing_agency} />
-        <Row label={<><Users size={12} style={{ verticalAlign: -1 }} /> Chủ nhiệm dự án</>} value={item.team_leader} />
+        <Row label={<><Globe2 size={12} style={{ verticalAlign: -1 }} /> {t('oda.country')}</>} value={item.countryshortname} />
+        <Row label={t('common.country')} value={item.region} />
+        <Row label={t('oda.sector')} value={item.sector} />
+        <Row label={<><Wallet size={12} style={{ verticalAlign: -1 }} /> {t('oda.amount')}</>} value={item.amount_display} />
+        <Row label={t('common.total')} value={item.total_cost} />
+        <Row label={t('oda.stage')} value={item.lending_instrument} />
+        <Row label={t('common.date')} value={item.fiscal_year} />
+        <Row label={t('oda.stage')} value={item.last_stage_reached_name} />
+        <Row label={<><CalendarDays size={12} style={{ verticalAlign: -1 }} /> {t('oda.approvalDate')}</>} value={fmtDate(item.boardapprovaldate, lang)} />
+        <Row label={t('common.date')} value={fmtDate(item.proj_last_upd_date, lang)} />
+        <Row label={t('oda.closingDate')} value={fmtDate(item.closing_date, lang)} />
+        <Row label={<><Landmark size={12} style={{ verticalAlign: -1 }} /> {t('oda.borrower')}</>} value={item.borrower} />
+        <Row label={<><Building2 size={12} style={{ verticalAlign: -1 }} /> {t('oda.implementingAgency')}</>} value={item.implementing_agency} />
+        <Row label={<><Users size={12} style={{ verticalAlign: -1 }} /> {t('common.action')}</>} value={item.team_leader} />
       </div>
     </>
   );
 }
 
 export default function OdaProjectDetailModal({ item, source = 'worldbank', stageLabel = 'Giai đoạn', onClose }) { // eslint-disable-line no-unused-vars
+  const { t } = useLang();
   if (!item) return null;
 
   const meta = SOURCE_META[source] || SOURCE_META.worldbank;
@@ -322,14 +336,9 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
     : worldBankProjectUrl(item.url || extId);
   const isWbRich = source === 'worldbank' && item.details;
   const isAdbRich = source === 'adb' && item.details;
-  // Thông báo mời thầu ADB: bản gốc chỉ là file PDF (bị chặn) và ADB KHÔNG có trang
-  // chi tiết riêng cho nó → link đưa về trang tra cứu dự án theo số khoản vay.
-  // Nói rõ ở nhãn nút để người dùng không bất ngờ khi ra trang tìm kiếm.
   const isNotice = Boolean(item.details?.notice);
   const goesToSearch = isNotice && externalUrl.includes('/projects?terms=');
-  const externalLabel = goesToSearch
-    ? `Tra cứu khoản vay trên ${meta.label}`
-    : `Xem trên ${meta.label}`;
+  const externalLabel = `${t('oda.openOfficial')} (${meta.label})`;
 
   return (
     <div
@@ -352,7 +361,7 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
             </div>
             <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 0', lineHeight: 1.35 }}>{item.project_name}</h2>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }} title="Đóng"><X size={20} /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }} title={t('common.close')}><X size={20} /></button>
         </div>
 
         {/* Body */}
@@ -365,15 +374,13 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
         {/* Footer */}
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            {goesToSearch
-              ? 'ADB không có trang riêng cho thông báo mời thầu — mở trang tra cứu theo số khoản vay'
-              : `${meta.dataNote} · bấm để mở trang gốc`}
+            {meta.dataNote}
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
             <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, textDecoration: 'none' }}>
               {externalLabel} <ExternalLink size={13} />
             </a>
-            <button onClick={onClose} className="btn btn-primary btn-sm" style={{ fontSize: 12, background: meta.brand, border: 'none' }}>Đóng</button>
+            <button onClick={onClose} className="btn btn-primary btn-sm" style={{ fontSize: 12, background: meta.brand, border: 'none' }}>{t('common.close')}</button>
           </div>
         </div>
       </div>

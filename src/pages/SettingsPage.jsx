@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Settings, Lock, Mail, Clock, Loader2, Check, ShieldCheck, User, Sparkles, KeyRound, BellRing, CheckCircle2, AlertCircle, Palette } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import { authService } from '../services/auth';
 import { settingsService } from '../services/settings';
 import animeBg from '../assets/anime_bg.png';
@@ -16,6 +17,7 @@ import AdminDigestConfig from '../components/AdminDigestConfig';
 
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth();
+  const { t } = useLang();
   const nav = useNavigate();
 
   // Saved theme state
@@ -180,7 +182,7 @@ export default function SettingsPage() {
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'none'}
           >
-            <ShieldCheck size={18} /> Đến Bảng Quản Trị Admin
+            <ShieldCheck size={18} /> {t('header.adminPanel')}
           </button>
         )}
       </div>
@@ -202,8 +204,8 @@ export default function SettingsPage() {
                 <KeyRound size={22} />
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>Bảo Mật &amp; Mật Khẩu</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Thay đổi mật khẩu đăng nhập định kỳ</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>{t('settings.passwordTab')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.passwordSub')}</div>
               </div>
             </div>
 
@@ -211,7 +213,7 @@ export default function SettingsPage() {
 
             <form onSubmit={handleChangePw} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="form-label">Mật khẩu hiện tại *</label>
+                <label className="form-label">{t('settings.oldPassword')} *</label>
                 <input
                   id="input-old-password"
                   type="password"
@@ -225,12 +227,12 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="form-label">Mật khẩu mới *</label>
+                <label className="form-label">{t('settings.newPassword')} *</label>
                 <input
                   id="input-new-password"
                   type="password"
                   className="form-input"
-                  placeholder="≥ 8 ký tự, chữ hoa, chữ số..."
+                  placeholder="≥ 8 ký tự..."
                   value={newPw}
                   onChange={(e) => setNewPw(e.target.value)}
                   required
@@ -239,24 +241,17 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="form-label">Xác nhận mật khẩu mới *</label>
+                <label className="form-label">{t('settings.confirmNewPassword')} *</label>
                 <input
                   id="input-confirm-password"
                   type="password"
                   className="form-input"
-                  placeholder="Nhập lại mật khẩu mới"
+                  placeholder="••••••••"
                   value={newPw2}
                   onChange={(e) => setNewPw2(e.target.value)}
                   required
                   autoComplete="new-password"
                 />
-              </div>
-
-              <div style={{
-                background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)',
-                borderRadius: 12, padding: '10px 14px', fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.5,
-              }}>
-                🔒 Mật khẩu phải dài ít nhất 8 ký tự. Bạn sẽ cần đăng nhập lại sau khi đổi mật khẩu thành công.
               </div>
 
               <button
@@ -267,7 +262,7 @@ export default function SettingsPage() {
                 id="btn-change-password"
               >
                 {pwLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Lock size={16} />}
-                Cập Nhật Mật Khẩu
+                {t('settings.updatePasswordBtn')}
               </button>
             </form>
           </div>
@@ -288,8 +283,8 @@ export default function SettingsPage() {
                 <BellRing size={22} />
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>Email Digest Thông Minh</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Tóm tắt tin tức tự động gửi về Email</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>{t('settings.digestTab')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.digestSub')}</div>
               </div>
             </div>
 
@@ -301,8 +296,7 @@ export default function SettingsPage() {
                 borderRadius: 14, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>Tự động gửi Digest hàng ngày</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>Gửi thông báo tin tức khớp với từ khóa của bạn</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>{t('settings.digestEnable')}</div>
                 </div>
 
                 <input
@@ -317,7 +311,7 @@ export default function SettingsPage() {
               {digestEnabled && (
                 <>
                   <div>
-                    <label className="form-label">Giờ nhận email trong ngày (0 – 23h)</label>
+                    <label className="form-label">{t('settings.digestHour')}</label>
                     <input
                       type="number" min={0} max={23}
                       className="form-input"
@@ -328,10 +322,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div>
-                    <label className="form-label">Múi giờ làm việc (Timezone)</label>
+                    <label className="form-label">{t('settings.digestTimezone')}</label>
                     <select className="form-input" value={timezone} onChange={(e) => setTimezone(e.target.value)} id="select-timezone">
                       <option value="Asia/Ho_Chi_Minh">🇻🇳 Asia/Ho_Chi_Minh (UTC+7)</option>
-                      <option value="UTC">🌐 UTC (Quốc tế)</option>
+                      <option value="UTC">🌐 UTC</option>
                       <option value="Asia/Tokyo">🇯🇵 Asia/Tokyo (UTC+9)</option>
                       <option value="Asia/Bangkok">🇹🇭 Asia/Bangkok (UTC+7)</option>
                     </select>
@@ -342,18 +336,18 @@ export default function SettingsPage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
                 <button className="btn btn-primary" onClick={handleSaveDigest} disabled={digestLoading} style={{ flex: 1, gap: 6, height: 42, justifyContent: 'center' }} id="btn-save-digest">
                   {digestLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={15} />}
-                  Lưu Cấu Hình
+                  {t('settings.saveDigestBtn')}
                 </button>
                 <button className="btn btn-secondary" onClick={handleRunDigest} disabled={runLoading} style={{ flex: 1, gap: 6, height: 42, justifyContent: 'center' }} id="btn-run-digest">
                   {runLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Mail size={15} />}
-                  Gửi Thử Ngay
+                  {t('settings.testDigestBtn')}
                 </button>
               </div>
 
               {runResult && (
                 <div style={{ padding: '12px 16px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14, fontSize: 12.5, color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Sparkles size={16} />
-                  Đã kích hoạt: Tổng hợp {runResult.total_items} tin tức · Đã gửi {runResult.emails_sent} email.
+                  {t('settings.digestSuccessMsg')}
                 </div>
               )}
             </div>
@@ -361,7 +355,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── Admin: Cấu hình Bản Tin Chung (gộp từ trang /email-digest cũ) ── */}
+      {/* ── Admin: Cấu hình Bản Tin Chung ── */}
       {isAdmin && <AdminDigestConfig />}
 
       {/* ── 3rd Section: Persistent UI/UX Theme Selection ── */}
@@ -378,28 +372,18 @@ export default function SettingsPage() {
               <Palette size={22} />
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>Tùy Chỉnh Giao Diện Hệ Thống (UI/UX Themes)</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Thay đổi giao diện làm việc cố định cho tài khoản của bạn</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>{t('settings.themeTab')}</div>
             </div>
           </div>
-          {user?.role === 'super_admin' ? (
-            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20, background: 'linear-gradient(135deg, #f59e0b, #ec4899)', color: 'white', boxShadow: '0 2px 8px rgba(245,158,11,0.3)' }}>
-              👑 SUPER ADMIN — UNLOCKED TOÀN BỘ THEMES
-            </span>
-          ) : user?.role === 'admin' ? (
-            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: 'white', boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}>
-              🔰 ADMIN PHÂN VÙNG — QUẢN LÝ GÓI & CẦN MUA THEMES
-            </span>
-          ) : null}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, alignItems: 'stretch' }}>
           {[
-            { key: 'basic', title: 'BIS Modern Glassmorphism', desc: 'Giao diện mượt mà hiện đại mặc định.', colors: ['#3b82f6', '#10b981', '#ffffff'], tag: 'MẶC ĐỊNH', img: basicBg },
-            { key: 'classic', title: 'Classic Retro PC (Windows 98 OS)', desc: 'Giao diện máy tính cổ điển Win 98/2000 — Cửa sổ nổi 3D Bevel, phông MS Sans Serif/Tahoma, hình nền Teal Cổ Máy.', colors: ['#008080', '#c0c0c0', '#000080'], tag: 'VINTAGE PC 98', img: classicBg },
-            { key: 'sapphire', title: 'Royal Sapphire Executive', desc: 'Hoàng Gia Sapphire Thượng Lưu — Đen Obsidian Sapphire kết hợp Kính Kim Cương & Ánh Bạc Bạch Kim Độc Quyền.', colors: ['#050914', '#1d4ed8', '#38bdf8'], tag: 'ROYAL SAPPHIRE', img: sapphireBg },
-            { key: 'luxury', title: 'Bloomberg Luxury Executive', desc: 'Doanh Nhân Thượng Lưu — Đen Obsidian huyền bí, Viền Vàng Gold 24K & Ánh Kim Sang Trọng.', colors: ['#08080a', '#d4af37', '#fef1c9'], tag: 'LUXURY GOLD 24K', img: luxuryBg },
-            { key: 'anime', title: 'Anime Twilight Sakura (新海誠)', desc: 'Hoàng Hôn Anime Dịu Mộng — Đêm Twilight Tím Mộng Mơ, Cánh Hoa Anh Đào (桜) Rơi Nhẹ & Ánh Sao Lấp Lánh.', colors: ['#0f0d19', '#f472b6', '#a855f7'], tag: 'ANIME SAKURA 🌸', img: animeBg },
+            { key: 'basic', tag: 'DEFAULT', colors: ['#3b82f6', '#10b981', '#ffffff'], img: basicBg },
+            { key: 'classic', tag: 'RETRO 98', colors: ['#008080', '#c0c0c0', '#000080'], img: classicBg },
+            { key: 'sapphire', tag: 'SAPPHIRE', colors: ['#050914', '#1d4ed8', '#38bdf8'], img: sapphireBg },
+            { key: 'luxury', tag: 'GOLD 24K', colors: ['#08080a', '#d4af37', '#fef1c9'], img: luxuryBg },
+            { key: 'anime', tag: 'SAKURA 🌸', colors: ['#0f0d19', '#f472b6', '#a855f7'], img: animeBg },
           ].map(theme => {
             const isUnlocked = isThemeUnlocked(user, theme.key);
             const isCurrent = savedTheme === theme.key;
@@ -423,13 +407,13 @@ export default function SettingsPage() {
                     <span style={{ fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 6, background: isCurrent ? 'var(--brand-600)' : '#334155', color: '#ffffff' }}>
                       {theme.tag}
                     </span>
-                    {isCurrent && <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--brand-500)' }}>✓ ĐANG DÙNG</span>}
+                    {isCurrent && <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--brand-500)' }}>✓ {t('settings.currentTheme')}</span>}
                   </div>
                   <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6, minHeight: 38, display: 'flex', alignItems: 'center' }}>
-                    {theme.title}
+                    {t(`theme.${theme.key}.title`)}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.45, marginBottom: 14, minHeight: 52, display: 'flex', alignItems: 'flex-start' }}>
-                    {theme.desc}
+                    {t(`theme.${theme.key}.desc`)}
                   </div>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 16, marginTop: 'auto' }}>
                     {theme.colors.map((c, i) => (
@@ -444,7 +428,7 @@ export default function SettingsPage() {
                   className={isCurrent ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
                   style={{ width: '100%', fontSize: 12, fontWeight: 700, position: 'relative', zIndex: 1, marginTop: 4 }}
                 >
-                  {isCurrent ? '✓ Đang Áp Dụng' : isUnlocked ? 'Áp Dụng Giao Diện' : '🔒 Cần Nâng Cấp Gói'}
+                  {isCurrent ? `✓ ${t('settings.currentTheme')}` : isUnlocked ? t('settings.applyTheme') : `🔒 ${t('badge.upgrade')}`}
                 </button>
               </div>
             );
