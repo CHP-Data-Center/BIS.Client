@@ -187,8 +187,9 @@ const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick, tCategory, t })
     <LangFlag lang={kw.lang} size={18} />
     
     {/* Term Title */}
-    <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-      {kw.term}
+    <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}
+          title={kw.display_term ? `Gốc: ${kw.term}` : undefined}>
+      {kw.display_term || kw.term}
     </span>
 
     {/* Primary Star Badge */}
@@ -834,8 +835,9 @@ export default function KeywordsPage() {
                       )}
                     </div>
 
-                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12, wordBreak: 'break-word' }}>
-                      {kw.term}
+                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12, wordBreak: 'break-word' }}
+                         title={kw.display_term ? `Gốc: ${kw.term}` : undefined}>
+                      {kw.display_term || kw.term}
                     </div>
                   </div>
 
