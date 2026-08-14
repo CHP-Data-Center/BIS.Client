@@ -10,7 +10,10 @@ export const odaService = {
    * @param {{ source?: 'adb'|'worldbank', country?, status?, sector?, q?, page?, size? }} params
    * @param {boolean} force - Có bỏ qua cache không
    */
-  async getProjects(params = {}, force = false) {
+  async getProjects(rawParams = {}, force = false) {
+    // Tự gắn ngôn ngữ đang chọn (🌐) — tiêu đề dự án hiện bản dịch nếu có.
+    const lang = currentLang();
+    const params = 'lang' in rawParams || lang === 'en' ? rawParams : { ...rawParams, lang };
     const cacheKey = `oda:projects:${JSON.stringify(params)}`;
     if (!force) {
       const cached = apiCache.get(cacheKey);
