@@ -1,6 +1,7 @@
 // src/services/worldbank.js
 import api from './api';
 import { apiCache } from '../utils/apiCache';
+import { currentLang } from './articles';
 
 const WB_SAVED_KEY = 'saved_worldbank_projects';
 const WB_PUBLIC_API = 'https://search.worldbank.org/api/v2/projects';
@@ -36,7 +37,10 @@ export const worldBankService = {
    * Fetch World Bank projects exclusively from local Server Database.
    * Direct fetching from World Bank in browser is disabled to preserve historical data in DB.
    */
-  async fetchProjects(params = {}, force = false) {
+  async fetchProjects(rawParams = {}, force = false) {
+    // Tiêu đề dự án WB vốn tiếng Anh → gắn lang để lấy bản dịch VI/JA (bỏ qua khi 'en').
+    const lang = currentLang();
+    const params = 'lang' in rawParams || lang === 'en' ? rawParams : { ...rawParams, lang };
     const cacheKey = `worldbank:projects:${JSON.stringify(params)}`;
     if (!force) {
       const cached = apiCache.get(cacheKey);

@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck,
 import { useState, useEffect } from 'react';
 import { articlesService } from '../services/articles';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import { getSourceStyle } from '../utils/sourceStyle';
 
 function stripAccents(str = '') {
@@ -28,6 +29,7 @@ export default function ArticlePage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const currentQ = searchParams.get('q') || '';
+  const { t } = useLang();
   const { isPersonalUser } = useAuth();
 
   // Article có thể được truyền qua navigation state (từ NewsCard click)
@@ -156,7 +158,7 @@ export default function ArticlePage() {
         <div className="empty-title">Không tìm thấy bài viết</div>
         <div className="empty-sub">Bài viết này có thể đã bị xóa hoặc không tồn tại</div>
         <button className="btn btn-primary" onClick={() => nav(-1)} style={{ marginTop: 20 }}>
-          <ArrowLeft size={14} /> Quay lại
+          <ArrowLeft size={14} /> {t('article.back')}
         </button>
       </div>
     );
@@ -177,10 +179,10 @@ export default function ArticlePage() {
       {/* Breadcrumb */}
       <div className="breadcrumb">
         <a onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
-          {isPersonalUser ? 'Trang Chủ' : 'Dashboard'}
+          {isPersonalUser ? t('nav.press') : t('nav.dashboard')}
         </a>
         <ChevronRight size={12} className="breadcrumb-sep" />
-        <a onClick={() => nav(-1)} style={{ cursor: 'pointer' }}>Tin tức</a>
+        <a onClick={() => nav(-1)} style={{ cursor: 'pointer' }}>{t('nav.allNews')}</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
         <span style={{ color: 'var(--text-primary)', fontWeight: 600, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {article.title?.slice(0, 40)}…
@@ -272,7 +274,7 @@ export default function ArticlePage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                     <span className="ai-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
-                      <Cpu size={11} /> Tóm Tắt Bài Viết
+                      <Cpu size={11} /> {t('article.summary')}
                     </span>
                   </div>
                   <p style={{ fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.65, margin: 0, fontWeight: 500 }}>
@@ -304,9 +306,9 @@ export default function ArticlePage() {
                   📖
                 </div>
                 <div>
-                  <div style={{ lineHeight: 1.2 }}>Nội Dung Chi Tiết Bài Viết</div>
+                  <div style={{ lineHeight: 1.2 }}>{t('article.fullContent')}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Chi tiết toàn văn & thông tin phân tích chuyên sâu
+                    {t('article.fullContentSub')}
                   </div>
                 </div>
               </div>
@@ -353,10 +355,10 @@ export default function ArticlePage() {
                         </div>
                         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 7 }}>
                           <li><strong>Tiêu đề bài viết:</strong> {article.title}</li>
-                          <li><strong>Nguồn trích xuất:</strong> {srcName}</li>
+                          <li><strong>{t('article.extractSource')}:</strong> {srcName}</li>
                           <li><strong>Phân loại hệ thống:</strong> {article.source_type === 'gov' ? 'Gói thầu / Mua sắm công (GOV)' : 'Báo chí & Truyền thông (PRESS)'}</li>
                           {publishedDate && <li><strong>Thời gian phát hành:</strong> {publishedDate}</li>}
-                          {article.matched_keywords?.length > 0 && <li><strong>Từ khóa hệ thống khớp:</strong> {article.matched_keywords.join(', ')}</li>}
+                          {article.matched_keywords?.length > 0 && <li><strong>{t('article.systemKeywords')}:</strong> {article.matched_keywords.join(', ')}</li>}
                           {article.url && (
                             <li>
                               <strong>Liên kết bài gốc:</strong>{' '}
@@ -389,7 +391,7 @@ export default function ArticlePage() {
               )}
               {article.sources?.length > 0 && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Globe size={12} /> {article.sources.length} nguồn đăng
+                  <Globe size={12} /> {article.sources.length} {t('article.sourcesCount')}
                 </span>
               )}
             </div>
@@ -434,7 +436,7 @@ export default function ArticlePage() {
                 style={{ gap: 6 }}
                 id="btn-read-original"
               >
-                <ExternalLink size={14} /> Xem bài gốc
+                <ExternalLink size={14} /> {t('article.viewOriginal')}
               </a>
               <button
                 className={`btn ${bookmarked ? 'btn-primary' : 'btn-secondary'}`}
@@ -446,13 +448,13 @@ export default function ArticlePage() {
                 {bookmarkLoading
                   ? <Loader2 size={14} style={{ animation: 'spin 0.6s linear infinite' }} />
                   : bookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-                {bookmarked ? 'Đã lưu' : 'Lưu lại'}
+                {bookmarked ? t('article.saved') : t('article.save')}
               </button>
               <button className="btn btn-secondary" style={{ gap: 6 }} id="btn-share" onClick={handleShare}>
-                <Share2 size={14} /> Chia sẻ
+                <Share2 size={14} /> {t('article.share')}
               </button>
               <button className="btn btn-ghost" onClick={() => nav(-1)} id="btn-back" style={{ marginLeft: 'auto', gap: 6 }}>
-                <ArrowLeft size={14} /> Quay lại
+                <ArrowLeft size={14} /> {t('article.back')}
               </button>
             </div>
           </article>
@@ -466,7 +468,7 @@ export default function ArticlePage() {
               <span>{srcIcon}</span> Về {srcName}
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Bài viết được thu thập tự động từ nguồn tin {srcName} thông qua hệ thống BIS Crawler.
+              {t('article.crawlNote', { source: srcName })}
             </p>
             {article.url && (
               <a
@@ -479,7 +481,7 @@ export default function ArticlePage() {
                   color: srcColor, textDecoration: 'none',
                 }}
               >
-                <ExternalLink size={11} /> Xem bài gốc
+                <ExternalLink size={11} /> {t('article.viewOriginal')}
               </a>
             )}
           </div>
@@ -487,7 +489,7 @@ export default function ArticlePage() {
           {/* Matched keywords */}
           {article.matched_keywords?.length > 0 && (
             <div className="article-sidebar-card">
-              <div className="article-sidebar-title">🏷️ Từ Khóa Khớp</div>
+              <div className="article-sidebar-title">🏷️ {t('article.matchedKeywords')}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {article.matched_keywords.map((kw) => {
                   const matched = isTagMatched(kw, currentQ);
@@ -524,7 +526,7 @@ export default function ArticlePage() {
           {/* Related articles */}
           {related.length > 0 && (
             <div className="article-sidebar-card">
-              <div className="article-sidebar-title">📰 Bài Viết Liên Quan</div>
+              <div className="article-sidebar-title">📰 {t('article.related')}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {related.map((ra) => {
                   const isGov = ra.source_type === 'gov';
