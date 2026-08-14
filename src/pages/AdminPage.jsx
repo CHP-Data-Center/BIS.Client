@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2,
+  ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
   Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2,
   ChevronDown, Eye
@@ -24,6 +24,7 @@ import { useCrawl } from '../context/CrawlContext';
 import { useLang } from '../context/LanguageContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import ScopePanel from '../components/admin/ScopePanel';
+import KeywordSuggestionsPanel from '../components/admin/KeywordSuggestionsPanel';
 import ConfirmModal from '../components/common/ConfirmModal';
 
 export default function AdminPage() {
@@ -606,6 +607,7 @@ export default function AdminPage() {
     ...(isSuperAdmin ? [{ id: 'orgs', label: t('admin.orgsTab'), icon: <Building2 size={16} /> }] : []),
     ...(isRegionalAdmin ? [{ id: 'scope', label: t('admin.tabScope') || 'Phạm Vi Dữ Liệu', icon: <Sliders size={16} /> }] : []),
     { id: 'filters',   label: t('admin.keywordsTab'), icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
+    { id: 'suggest',   label: t('admin.suggestTab'),  icon: <Sparkles size={16} /> },
     { id: 'digest',    label: t('admin.digestTab'),    icon: <Mail size={16} /> },
   ];
 
@@ -1618,6 +1620,10 @@ export default function AdminPage() {
           )}
 
           {/* TAB 4: DIGEST */}
+          {activeTab === 'suggest' && (
+            <KeywordSuggestionsPanel onMessage={showAlert} />
+          )}
+
           {activeTab === 'digest' && (
             <div style={{
               background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
