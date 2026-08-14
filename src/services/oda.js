@@ -2,6 +2,7 @@
 // Dự án ODA (ADB / World Bank) + mua sắm công (TBMT / KHLCNT) cho bản đồ Dashboard.
 import api from './api';
 import { apiCache } from '../utils/apiCache';
+import { currentLang } from './articles';
 
 export const odaService = {
   /**
@@ -25,7 +26,10 @@ export const odaService = {
    * @param {{ kind?: 'notice'|'plan', status?, sector?, q?, page?, size? }} params
    * @param {boolean} force - Có bỏ qua cache không
    */
-  async getProcurement(params = {}, force = false) {
+  async getProcurement(rawParams = {}, force = false) {
+    // Tự gắn ngôn ngữ đang chọn (🌐) — mọi trang gọi hàm này đều hiện tiêu đề đã dịch.
+    const lang = currentLang();
+    const params = 'lang' in rawParams || lang === 'vi' ? rawParams : { ...rawParams, lang };
     const cacheKey = `oda:procurement:${JSON.stringify(params)}`;
     if (!force) {
       const cached = apiCache.get(cacheKey);
