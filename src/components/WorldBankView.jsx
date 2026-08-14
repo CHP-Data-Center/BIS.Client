@@ -545,19 +545,52 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
     }
   };
 
+  const getStatusLabel = (status) => {
+    if (!status) return 'N/A';
+    const s = String(status).toLowerCase().trim();
+    if (s.includes('đang đăng tải') || s.includes('đang đăng')) return t('status.published');
+    if (s === 'active' || s.includes('triển khai') || s.includes('hoạt động')) return t('status.active');
+    if (s === 'closed' || s.includes('hoàn thành') || s.includes('đóng')) return t('status.closed');
+    if (s === 'pipeline' || s.includes('chuẩn bị') || s.includes('concept') || s.includes('proposed') || s.includes('kế hoạch')) return t('status.pipeline');
+    if (s.includes('hết hạn') || s.includes('expired')) return t('status.expired');
+    if (s.includes('hủy') || s.includes('cancelled')) return t('status.cancelled');
+    return status;
+  };
+
+  const getStageLabel = (stage) => {
+    if (!stage) return 'N/A';
+    const s = String(stage).toLowerCase().trim();
+    if (s.includes('tbmt') || s.includes('mời thầu')) return t('stage.tbmt');
+    if (s.includes('khlcnt') || s.includes('kế hoạch')) return t('stage.khlcnt');
+    if (s.includes('concept review') || s.includes('concept')) return t('stage.conceptReview');
+    if (s.includes('appraisal') || s.includes('thẩm định')) return t('stage.appraisal');
+    if (s.includes('negotiation') || s.includes('đàm phán')) return t('stage.negotiation');
+    if (s.includes('implementation') || s.includes('thực hiện')) return t('stage.implementation');
+    if (s.includes('completion') || s.includes('hoàn tất')) return t('stage.completion');
+    if (s.includes('approved') || s.includes('phê duyệt')) return t('stage.approved');
+    if (s.includes('nông nghiệp') || s.includes('agriculture')) return t('stage.agriculture');
+    if (s.includes('giao thông') || s.includes('transport')) return t('stage.transport');
+    if (s.includes('năng lượng') || s.includes('energy')) return t('stage.energy');
+    if (s.includes('giáo dục') || s.includes('education')) return t('stage.education');
+    if (s.includes('y tế') || s.includes('health')) return t('stage.health');
+    if (s.includes('nước') || s.includes('water')) return t('stage.water');
+    return stage;
+  };
+
   // Status Badge Helper
   const getStatusBadge = (status) => {
     const s = (status || '').toLowerCase();
+    const label = getStatusLabel(status);
     if (s.includes('active') || s.includes('approved') || s.includes('đang') || s.includes('mời thầu')) {
-      return { bg: '#ecfdf5', color: '#059669', border: '#a7f3d0', label: status || 'Active' };
+      return { bg: '#ecfdf5', color: '#059669', border: '#a7f3d0', label };
     }
     if (s.includes('closed') || s.includes('completed') || s.includes('đóng')) {
-      return { bg: '#f3f4f6', color: '#4b5563', border: '#e5e7eb', label: status || 'Closed' };
+      return { bg: '#f3f4f6', color: '#4b5563', border: '#e5e7eb', label };
     }
     if (s.includes('pipeline') || s.includes('concept') || s.includes('proposed') || s.includes('kế hoạch')) {
-      return { bg: '#fffbeb', color: '#d97706', border: '#fde68a', label: status || 'Pipeline' };
+      return { bg: '#fffbeb', color: '#d97706', border: '#fde68a', label };
     }
-    return { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: status || 'N/A' };
+    return { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label };
   };
 
   // Refresh
@@ -926,7 +959,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 <option value="">{t('filter.allStatuses')}</option>
                 {uniqueStatuses.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {getStatusLabel(s)}
                   </option>
                 ))}
               </select>
@@ -944,7 +977,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 <option value="">{t('filter.all')} {getStageFilterLabel()}</option>
                 {uniqueStages.map((stg) => (
                   <option key={stg} value={stg}>
-                    {stg}
+                    {getStageLabel(stg)}
                   </option>
                 ))}
               </select>
@@ -1235,7 +1268,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
                           {/* Stage */}
                           <td style={{ padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 12 }}>
-                            {p.last_stage_reached_name || 'N/A'}
+                            {getStageLabel(p.last_stage_reached_name)}
                           </td>
                         </tr>
                       );

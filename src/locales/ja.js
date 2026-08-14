@@ -259,6 +259,28 @@ export default {
   'projects.planTitle': '調達計画 (KHLCNT)',
   'projects.planSub': '調達計画（KHLCNT）の閲覧・検索 — 番号をクリックして国家入札システムの詳細を開く',
 
+  // ── Status & Stage Localization ──
+  'status.published': '公示中 / 募集中',
+  'status.active': '実施中 / 進行中',
+  'status.closed': '完了 / 終了',
+  'status.pipeline': '準備中 / 計画中',
+  'status.expired': '期限切れ',
+  'status.cancelled': '中止 / 取消',
+  'stage.tbmt': '入札公示 (TBMT)',
+  'stage.khlcnt': '調達計画 (KHLCNT)',
+  'stage.conceptReview': 'コンセプト審査',
+  'stage.appraisal': '事前評価・審査',
+  'stage.negotiation': '交渉中',
+  'stage.implementation': '実施フェーズ',
+  'stage.completion': '完了フェーズ',
+  'stage.approved': '承認済み',
+  'stage.agriculture': '農業・天然資源',
+  'stage.transport': '交通・運輸',
+  'stage.energy': 'エネルギー',
+  'stage.education': '教育',
+  'stage.health': '保健・医療',
+  'stage.water': '水資源・都市開発',
+
   'news.articlesCount': '件',
   'news.itemsCount': '件',
 

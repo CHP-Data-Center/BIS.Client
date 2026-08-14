@@ -439,21 +439,6 @@ export default function NewsPage() {
           </select>
         </div>
 
-        {/* Ngôn ngữ (đồng bộ công tắc 🌐 toàn cục ở header) */}
-        <div>
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>{t('news.lang')}</label>
-          <select
-            className="form-input"
-            style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
-            value={lang}
-            onChange={e => { setLang(e.target.value); setPage(1); }}
-          >
-            <option value="vi">🇻🇳 Tiếng Việt</option>
-            <option value="en">🇬🇧 English</option>
-            <option value="ja">🇯🇵 日本語</option>
-          </select>
-        </div>
-
         {/* Khoảng thời gian */}
         <div style={{ paddingTop: 8, borderTop: '1px dashed var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div>

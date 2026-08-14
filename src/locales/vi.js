@@ -259,6 +259,28 @@ export default {
   'projects.planTitle': 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)',
   'projects.planSub': 'Tra cứu kế hoạch lựa chọn nhà thầu (KHLCNT) — bấm mã để mở trang chi tiết trên Hệ thống mạng đấu thầu quốc gia',
 
+  // ── Status & Stage Localization ──
+  'status.published': 'Đang đăng tải',
+  'status.active': 'Đang triển khai',
+  'status.closed': 'Đã đóng / Hoàn thành',
+  'status.pipeline': 'Đang chuẩn bị',
+  'status.expired': 'Hết hạn',
+  'status.cancelled': 'Đã hủy',
+  'stage.tbmt': 'TBMT (Mời thầu)',
+  'stage.khlcnt': 'KHLCNT (Kế hoạch)',
+  'stage.conceptReview': 'Xét duyệt ý tưởng (Concept Review)',
+  'stage.appraisal': 'Thẩm định (Appraisal)',
+  'stage.negotiation': 'Đàm phán',
+  'stage.implementation': 'Triển khai thực hiện',
+  'stage.completion': 'Hoàn thành',
+  'stage.approved': 'Đã phê duyệt',
+  'stage.agriculture': 'Nông nghiệp & TNTN',
+  'stage.transport': 'Giao thông',
+  'stage.energy': 'Năng lượng',
+  'stage.education': 'Giáo dục',
+  'stage.health': 'Y tế',
+  'stage.water': 'Nước & Đô thị',
+
   'news.articlesCount': 'bài',
   'news.itemsCount': 'mục',
 

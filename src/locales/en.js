@@ -259,6 +259,28 @@ export default {
   'projects.planTitle': 'Procurement Plans (KHLCNT)',
   'projects.planSub': 'Lookup procurement plans (KHLCNT) — click code to open details on the National E-Procurement System',
 
+  // ── Status & Stage Localization ──
+  'status.published': 'Published / Active',
+  'status.active': 'Active / Ongoing',
+  'status.closed': 'Closed / Completed',
+  'status.pipeline': 'Pipeline / Preparation',
+  'status.expired': 'Expired',
+  'status.cancelled': 'Cancelled',
+  'stage.tbmt': 'Invitation for Bids (TBMT)',
+  'stage.khlcnt': 'Procurement Plan (KHLCNT)',
+  'stage.conceptReview': 'Concept Review',
+  'stage.appraisal': 'Appraisal',
+  'stage.negotiation': 'Negotiations',
+  'stage.implementation': 'Implementation',
+  'stage.completion': 'Completion',
+  'stage.approved': 'Approved',
+  'stage.agriculture': 'Agriculture & Resources',
+  'stage.transport': 'Transport',
+  'stage.energy': 'Energy',
+  'stage.education': 'Education',
+  'stage.health': 'Health',
+  'stage.water': 'Water & Urban',
+
   'news.articlesCount': 'articles',
   'news.itemsCount': 'items',
 
