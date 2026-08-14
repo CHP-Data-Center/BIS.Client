@@ -8,6 +8,7 @@ import { useLang } from '../context/LanguageContext';
 import { authService } from '../services/auth';
 import { syncUserTheme } from '../utils/theme';
 import logoImg from '../assets/logo.png';
+import { tUI } from '../locales';
 
 
 // Google Icon Component
@@ -139,7 +140,7 @@ export default function LoginPage() {
     setResetMsg(null);
     try {
       await authService.resetPassword(resetToken.trim(), resetNewPw);
-      setResetMsg({ type: 'success', text: 'Đặt lại mật khẩu thành công! Hãy đăng nhập với mật khẩu mới.' });
+      setResetMsg({ type: 'success', text: tUI('ui.dat-lai-mat-khau-thanh-cong-hay-dang-nhap-voi-ma') });
       setTimeout(() => {
         setShowResetModal(false);
         setResetNewPw('');
@@ -263,7 +264,7 @@ export default function LoginPage() {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
       }}>
         {[
-          { code: 'vi', label: 'Tiếng Việt', flag: <FlagVN size={16} /> },
+          { code: 'vi', label: tUI('ui.tieng-viet'), flag: <FlagVN size={16} /> },
           { code: 'en', label: 'English', flag: <FlagUK size={16} /> },
           { code: 'ja', label: '日本語', flag: <FlagJP size={16} /> },
         ].map((item) => {
@@ -453,7 +454,7 @@ export default function LoginPage() {
           <div className="login-demo-hint">
             <div className="demo-hint-title">
               <ShieldCheck size={13} style={{ color: 'var(--brand-600)' }} />
-              <span>TÀI KHOẢN DÙNG THỬ (DEV ONLY)</span>
+              <span>{tUI('ui.tai-khoan-dung-thu-dev-only')}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
               <button
@@ -533,8 +534,8 @@ export default function LoginPage() {
                 <KeyRound size={22} />
               </div>
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>Quên Mật Khẩu</h3>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Gửi link đặt lại mật khẩu qua email</div>
+                <h3 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>{tUI('ui.quen-mat-khau')}</h3>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.gui-link-dat-lai-mat-khau-qua-email')}</div>
               </div>
             </div>
 
@@ -550,7 +551,7 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleSendForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 12 }}>
                 <div>
-                  <label className="form-label">Nhập email tài khoản của bạn *</label>
+                  <label className="form-label">{tUI('ui.nhap-email-tai-khoan-cua-ban')}</label>
                   <input
                     type="email"
                     className="form-input"
@@ -566,7 +567,7 @@ export default function LoginPage() {
                   disabled={forgotLoading}
                   style={{ marginTop: 8 }}
                 >
-                  {forgotLoading ? <><Loader2 size={16} className="spin" /> Đang gửi...</> : 'Gửi link khôi phục'}
+                  {forgotLoading ? <><Loader2 size={16} className="spin" /> {tUI('ui.dang-gui')}</> : 'Gửi link khôi phục'}
                 </button>
               </form>
             )}
@@ -611,8 +612,8 @@ export default function LoginPage() {
                 <KeyRound size={22} />
               </div>
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>Đặt Lai Mật Khẩu</h3>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Tạo mật khẩu mới cho tài khoản</div>
+                <h3 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>{tUI('ui.dat-lai-mat-khau')}</h3>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.tao-mat-khau-moi-cho-tai-khoan')}</div>
               </div>
             </div>
 
@@ -631,11 +632,11 @@ export default function LoginPage() {
 
             <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label className="form-label">Token khôi phục *</label>
+                <label className="form-label">{tUI('ui.token-khoi-phuc')}</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Mã token nhận qua email"
+                  placeholder={tUI('ui.ma-token-nhan-qua-email')}
                   value={resetToken}
                   onChange={(e) => setResetToken(e.target.value)}
                   required
@@ -643,11 +644,11 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="form-label">Mật khẩu mới *</label>
+                <label className="form-label">{tUI('ui.mat-khau-moi')}</label>
                 <input
                   type="password"
                   className="form-input"
-                  placeholder="≥ 8 ký tự"
+                  placeholder={tUI('ui.8-ky-tu')}
                   value={resetNewPw}
                   onChange={(e) => setResetNewPw(e.target.value)}
                   required
@@ -660,7 +661,7 @@ export default function LoginPage() {
                 disabled={resetLoading}
                 style={{ marginTop: 8 }}
               >
-                {resetLoading ? <><Loader2 size={16} className="spin" /> Đang xử lý...</> : 'Cập nhật mật khẩu mới'}
+                {resetLoading ? <><Loader2 size={16} className="spin" /> {tUI('ui.dang-xu-ly')}</> : 'Cập nhật mật khẩu mới'}
               </button>
             </form>
           </div>

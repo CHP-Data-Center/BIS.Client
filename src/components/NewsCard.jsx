@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import { articlesService } from '../services/articles';
 import { getSourceStyle } from '../utils/sourceStyle';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 function stripAccents(str = '') {
   return str
@@ -301,7 +302,7 @@ export default function NewsCard({ article, index = 0 }) {
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
                   }}
-                  title="Rê chuột hoặc bấm để xem thêm từ khóa"
+                  title={tUI('ui.re-chuot-hoac-bam-de-xem-them-tu-khoa')}
                 >
                   +{remainingTags.length}...
                 </span>
@@ -405,7 +406,7 @@ export default function NewsCard({ article, index = 0 }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              title="Xem bài gốc"
+              title={tUI('ui.xem-bai-goc')}
               style={{
                 color: 'var(--text-muted)',
                 padding: 4, borderRadius: 4, display: 'flex', alignItems: 'center',

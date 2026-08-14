@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SOURCES } from '../data/mockData';
+import { tUI } from '../locales';
 
 export default function SourceDropdown() {
   const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ export default function SourceDropdown() {
 
       {open && (
         <div className="source-menu">
-          <div className="source-menu-header">Chọn nguồn theo dõi</div>
+          <div className="source-menu-header">{tUI('ui.chon-nguon-theo-doi')}</div>
 
           {Object.values(SOURCES).map(src => (
             <div
@@ -72,8 +73,8 @@ export default function SourceDropdown() {
                 <span style={{ fontSize: 18 }}>🗂️</span>
               </div>
               <div className="source-item-info">
-                <div className="source-item-name">Tất cả nguồn</div>
-                <div className="source-item-desc">Xem tổng hợp mọi nguồn</div>
+                <div className="source-item-name">{tUI('ui.tat-ca-nguon')}</div>
+                <div className="source-item-desc">{tUI('ui.xem-tong-hop-moi-nguon')}</div>
               </div>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { X, ExternalLink, Building2, Globe2, Landmark, CalendarDays, Wallet, FileText, Users, Layers } from 'lucide-react';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 const SOURCE_META = {
   worldbank: { brand: '#10b981', Icon: Globe2, label: 'World Bank', dataNote: 'World Bank API' },
@@ -225,22 +226,22 @@ function AdbRichBody({ d }) {
     <>
       {fields.Description && (
         <>
-          <SectionTitle icon={FileText}>Mô tả dự án (Description)</SectionTitle>
+          <SectionTitle icon={FileText}>{tUI('ui.mo-ta-du-an-description')}</SectionTitle>
           <LongText text={fields.Description} />
         </>
       )}
 
-      <SectionTitle icon={Landmark}>Thông tin chính</SectionTitle>
+      <SectionTitle icon={Landmark}>{tUI('ui.thong-tin-chinh')}</SectionTitle>
       <div>
         {shortRows.map(([k, v]) => <Row key={k} label={adbLabel(k)} value={v} />)}
       </div>
 
       {(d.funding || []).length > 0 && (
         <>
-          <SectionTitle icon={Wallet}>Nguồn vốn (Funding)</SectionTitle>
+          <SectionTitle icon={Wallet}>{tUI('ui.nguon-von-funding')}</SectionTitle>
           <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ display: 'flex', background: 'var(--bg-surface-2)', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '8px 12px' }}>
-              <div style={{ flex: 1 }}>Nguồn tài trợ</div><div style={{ width: 150, textAlign: 'right' }}>Số tiền</div>
+              <div style={{ flex: 1 }}>{tUI('ui.nguon-tai-tro')}</div><div style={{ width: 150, textAlign: 'right' }}>{tUI('ui.so-tien')}</div>
             </div>
             {d.funding.map((f, i) => (
               <div key={i} style={{ display: 'flex', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--border-subtle)' }}>
@@ -254,7 +255,7 @@ function AdbRichBody({ d }) {
 
       {ms && (
         <>
-          <SectionTitle icon={CalendarDays}>Mốc chính (Milestones)</SectionTitle>
+          <SectionTitle icon={CalendarDays}>{tUI('ui.moc-chinh-milestones')}</SectionTitle>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
             <Row label="Phê duyệt" value={ms.approval} />
             <Row label="Ký kết" value={ms.signing} />
@@ -275,7 +276,7 @@ function AdbRichBody({ d }) {
 
       {(d.documents || []).length > 0 && (
         <>
-          <SectionTitle icon={FileText}>Tài liệu dự án</SectionTitle>
+          <SectionTitle icon={FileText}>{tUI('ui.tai-lieu-du-an')}</SectionTitle>
           <div>
             {d.documents.map((doc, i) => (
               <div key={i} style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px dashed var(--border-subtle)', fontSize: 13 }}>

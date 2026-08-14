@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { projectsService } from '../services/projects';
 import { useLang } from '../context/LanguageContext';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { tUI } from '../locales';
 
 export default function ProjectsPage() {
   const { t } = useLang();
@@ -313,13 +314,13 @@ export default function ProjectsPage() {
               {timelineLoading ? (
                 <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)' }}>
                   <Loader2 size={28} className="spin" style={{ margin: '0 auto 12px' }} />
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>Đang quét tin tức theo dòng thời gian...</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{tUI('ui.dang-quet-tin-tuc-theo-dong-thoi-gian')}</div>
                 </div>
               ) : !timelineData?.items || timelineData.items.length === 0 ? (
                 <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                   <div style={{ fontSize: 40, marginBottom: 12 }}>🗞️</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Chưa tìm thấy tin tức khớp bộ từ khóa này</div>
-                  <div style={{ fontSize: 13, marginTop: 4 }}>Dữ liệu tin tức mới sẽ tự động cập nhật khi crawler quét bài viết mới.</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{tUI('ui.chua-tim-thay-tin-tuc-khop-bo-tu-khoa-nay')}</div>
+                  <div style={{ fontSize: 13, marginTop: 4 }}>{tUI('ui.du-lieu-tin-tuc-moi-se-tu-dong-cap-nhat-khi-craw')}</div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -414,7 +415,7 @@ export default function ProjectsPage() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: Dự án Cao tốc Bắc - Nam"
+                  placeholder={tUI('ui.vi-du-du-an-cao-toc-bac-nam')}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -426,7 +427,7 @@ export default function ProjectsPage() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: cao tốc, BOT, metro"
+                  placeholder={tUI('ui.vi-du-cao-toc-bot-metro')}
                   value={keywordFilter}
                   onChange={(e) => setKeywordFilter(e.target.value)}
                 />

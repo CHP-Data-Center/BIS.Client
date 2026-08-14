@@ -1,6 +1,7 @@
 // src/components/ScrollToTop.jsx
 import { useState, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { tUI } from '../locales';
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
@@ -19,7 +20,7 @@ export default function ScrollToTop() {
     <button
       onClick={scrollUp}
       id="btn-scroll-top"
-      title="Lên đầu trang"
+      title={tUI('ui.len-dau-trang')}
       style={{
         position: 'fixed',
         bottom: 28,

@@ -18,6 +18,7 @@ import { apiCache } from '../utils/apiCache';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 const PAGE_SIZE = 6;
 
@@ -187,7 +188,7 @@ function Pagination({ page, total, pageSize, onChange }) {
         onClick={() => onChange(page - 1)}
         disabled={page === 1}
         id="btn-page-prev"
-        title="Trang trước"
+        title={tUI('ui.trang-truoc')}
       >
         <ChevronLeft size={15} />
       </button>
@@ -784,7 +785,7 @@ function ProjectDistributionMap() {
   const sourceConfig = {
     adb:       { color: '#f59e0b', glow: 'rgba(245,158,11,0.45)',  label: 'ADB',       icon: '🏦' },
     worldbank: { color: '#10b981', glow: 'rgba(16,185,129,0.45)', label: 'World Bank', icon: '🌍' },
-    dauthau:   { color: '#8b5cf6', glow: 'rgba(139,92,246,0.45)', label: 'Đấu Thầu',  icon: '📋' },
+    dauthau:   { color: '#8b5cf6', glow: 'rgba(139,92,246,0.45)', label: tUI('ui.dau-thau'),  icon: '📋' },
   };
 
   const toggleSource = (key) => {
@@ -1083,10 +1084,10 @@ function ProjectDistributionMap() {
 
 // ── Source breakdown config ───────────────────────────────────
 const SOURCE_CONFIG = {
-  press:     { label: 'Báo Chí',        icon: '📰', color: '#3b82f6', bg: '#eff6ff' },
-  adb:       { label: 'ADB (Châu Á)',   icon: '🏦', color: '#f59e0b', bg: '#fffbeb' },
+  press:     { label: tUI('ui.bao-chi-2'),        icon: '📰', color: '#3b82f6', bg: '#eff6ff' },
+  adb:       { label: tUI('ui.adb-chau-a'),   icon: '🏦', color: '#f59e0b', bg: '#fffbeb' },
   worldbank: { label: 'World Bank',     icon: '🌍', color: '#10b981', bg: '#ecfdf5' },
-  gov:       { label: 'Đấu Thầu Công', icon: '📋', color: '#8b5cf6', bg: '#f5f3ff' },
+  gov:       { label: tUI('ui.dau-thau-cong'), icon: '📋', color: '#8b5cf6', bg: '#f5f3ff' },
 };
 
 // ── Main Dashboard ───────────────────────────────────────────

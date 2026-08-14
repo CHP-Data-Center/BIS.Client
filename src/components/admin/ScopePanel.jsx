@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Save, Loader2, X, Plus, Globe, Tag, Database } from 'lucide-react';
 import { orgService } from '../../services/organizations';
+import { tUI } from '../../locales';
 
 function TagInput({ label, icon, values, onChange, placeholder }) {
   const [text, setText] = useState('');
@@ -16,7 +17,7 @@ function TagInput({ label, icon, values, onChange, placeholder }) {
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
         {icon} {label}
-        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>(để trống = không giới hạn)</span>
+        <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{tUI('ui.de-trong-khong-gioi-han')}</span>
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <input
@@ -30,7 +31,7 @@ function TagInput({ label, icon, values, onChange, placeholder }) {
         </button>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {values.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>Chưa giới hạn — thấy tất cả</span>}
+        {values.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>{tUI('ui.chua-gioi-han-thay-tat-ca')}</span>}
         {values.map(v => (
           <span key={v} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20, background: 'var(--brand-50)', color: 'var(--brand-700)', border: '1px solid var(--brand-200)' }}>
             {v}
@@ -48,10 +49,10 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   const [scope, setScope] = useState({ sources: [], countries: [], keywords: [], article_types: [], categories: [] });
 
   const ARTICLE_TYPE_OPTIONS = [
-    { id: 'press', label: 'Báo chí', icon: '📰' },
-    { id: 'adb', label: 'Dự án ADB', icon: '🏛️' },
+    { id: 'press', label: tUI('ui.bao-chi'), icon: '📰' },
+    { id: 'adb', label: tUI('ui.du-an-adb'), icon: '🏛️' },
     { id: 'worldbank', label: 'World Bank', icon: '🌍' },
-    { id: 'procurement', label: 'Đấu thầu & Mua sắm công', icon: '📜' },
+    { id: 'procurement', label: tUI('ui.dau-thau-mua-sam-cong'), icon: '📜' },
   ];
 
   const load = useCallback(async () => {
@@ -109,7 +110,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   };
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}><Loader2 className="spin" /> Đang tải…</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}><Loader2 className="spin" /> {tUI('ui.dang-tai')}</div>;
   }
 
   return (
@@ -117,14 +118,14 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0, marginBottom: 20, lineHeight: 1.5 }}>
         Cấu hình dữ liệu phân vùng cho phép Admin phân vùng chọn **Loại bài** (Báo chí, ADB, World Bank, Đấu thầu), **Loại từ khóa**, **Từ khóa** và **Quốc gia**.
         <br />
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>* Để trống một mục = Không giới hạn theo mục đó (người dùng xem được tất cả).</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.de-trong-mot-muc-khong-gioi-han-theo-muc-do-nguo')}</span>
       </p>
 
       {/* 1. Loại bài / Nguồn thông tin */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
           <Tag size={14} /> Loại bài & Nguồn dữ liệu chính
-          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>(bỏ chọn tất cả = xem mọi loại bài)</span>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{tUI('ui.bo-chon-tat-ca-xem-moi-loai-bai')}</span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {ARTICLE_TYPE_OPTIONS.map(opt => {
@@ -149,10 +150,10 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
           <Database size={14} /> Nguồn báo chí cụ thể
-          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>(bỏ chọn tất cả = xem mọi nguồn báo chí)</span>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{tUI('ui.bo-chon-tat-ca-xem-moi-nguon-bao-chi')}</span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
-          {sources.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Không có nguồn nào.</span>}
+          {sources.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.khong-co-nguon-nao')}</span>}
           {sources.map(s => {
             const on = scope.sources.includes(s.id);
             return (
@@ -172,7 +173,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
 
       {/* 3. Loại từ khóa / Lĩnh vực */}
       <TagInput label="Loại từ khóa / Lĩnh vực" icon={<Tag size={14} />} values={scope.categories}
-        onChange={v => setScope(s => ({ ...s, categories: v }))} placeholder="VD: Giao thông, Cầu, Đường sắt, ODA, Đấu thầu…" />
+        onChange={v => setScope(s => ({ ...s, categories: v }))} placeholder={tUI('ui.vd-giao-thong-cau-duong-sat-oda-dau-thau')} />
 
       {/* 4. Quốc gia */}
       <TagInput label="Quốc gia (dự án ODA & Tin tức)" icon={<Globe size={14} />} values={scope.countries}
@@ -180,7 +181,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
 
       {/* 5. Từ khóa chi tiết */}
       <TagInput label="Từ khóa chi tiết" icon={<Tag size={14} />} values={scope.keywords}
-        onChange={v => setScope(s => ({ ...s, keywords: v }))} placeholder="VD: cao tốc, đấu thầu, tín dụng, khoản vay…" />
+        onChange={v => setScope(s => ({ ...s, keywords: v }))} placeholder={tUI('ui.vd-cao-toc-dau-thau-tin-dung-khoan-vay')} />
 
       <button className="btn btn-primary" onClick={save} disabled={saving} style={{ gap: 8, marginTop: 12, width: '100%', justifyContent: 'center' }}>
         {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />} Lưu cấu hình phạm vi dữ liệu phân vùng

@@ -8,6 +8,7 @@ import NotificationDropdown from './NotificationDropdown';
 import logoImg from '../assets/logo.png';
 import { SapphireDiamondSvg, SapphireStarSvg, LuxuryCrownSvg, LuxuryMoneyBagSvg } from './common/ThemeFxOverlay';
 import { FlagIcon, FlagVN, FlagUK, FlagJA } from './common/FlagIcons';
+import { tUI } from '../locales';
 
 
 function LiveClock() {
@@ -226,7 +227,7 @@ function LanguageSwitcher() {
       <button
         id="btn-lang-switch"
         onClick={() => setOpen(o => !o)}
-        title="Đổi ngôn ngữ / Change language / 言語を変更"
+        title={tUI('ui.doi-ngon-ngu-change-language')}
         style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px',
           background: 'var(--bg-surface-2)', border: '1px solid var(--border)',

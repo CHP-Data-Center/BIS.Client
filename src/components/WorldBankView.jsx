@@ -10,6 +10,7 @@ import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -25,7 +26,7 @@ function safeParseDetails(s) {
 const CONFIG_MAP = {
   worldbank: {
     title: 'World Bank Projects & Operations',
-    subtitle: 'Quản lý, tìm kiếm và tra cứu dữ liệu dự án Ngân hàng Thế giới (World Bank) toàn cầu',
+    subtitle: tUI('ui.quan-ly-tim-kiem-va-tra-cuu-du-lieu-du-an-ngan-h'),
     icon: Globe,
     brandColor: '#10b981',
     bannerBg: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.05))',
@@ -54,7 +55,7 @@ const CONFIG_MAP = {
   },
   adb: {
     title: 'ADB Projects & Operations',
-    subtitle: 'Quản lý, tìm kiếm và tra cứu dữ liệu dự án Ngân hàng Phát triển Châu Á (ADB)',
+    subtitle: tUI('ui.quan-ly-tim-kiem-va-tra-cuu-du-lieu-du-an-ngan-h-2'),
     icon: Building2,
     brandColor: '#f59e0b',
     bannerBg: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.05))',
@@ -81,8 +82,8 @@ const CONFIG_MAP = {
     getUrl: (id) => `https://www.adb.org/projects?searchstax[query]=${encodeURIComponent(id)}`,
   },
   procurement: {
-    title: 'Mua Sắm Công & Đấu Thầu Quốc Gia',
-    subtitle: 'Quản lý, tìm kiếm và tra cứu thông báo mời thầu (TBMT) và kế hoạch lựa chọn nhà thầu (KHLCNT)',
+    title: tUI('ui.mua-sam-cong-dau-thau-quoc-gia'),
+    subtitle: tUI('ui.quan-ly-tim-kiem-va-tra-cuu-thong-bao-moi-thau-t'),
     icon: ShoppingBag,
     brandColor: '#8b5cf6',
     bannerBg: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(124, 58, 237, 0.05))',
@@ -521,7 +522,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   // Formatters
   const formatAmountDisplay = (amount) => {
     if (normType === 'procurement') {
-      if (!amount || amount <= 0) return 'Thông báo';
+      if (!amount || amount <= 0) return tUI('ui.thong-bao');
       return `${amount} gói thầu`;
     }
     if (!amount || amount <= 0) return 'N/A';
@@ -1195,7 +1196,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                   width: '100%', gap: 8, lineHeight: 1.4,
                                 }}
-                                title="Xem chi tiết dự án"
+                                title={tUI('ui.xem-chi-tiet-du-an')}
                               >
                                 <span style={{ flex: 1 }}>{p.project_name}</span>
                                 <ExternalLink size={13} style={{ flexShrink: 0, opacity: 0.65 }} />
@@ -1309,7 +1310,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                             <button
                               onClick={() => openDetail(p)}
                               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit', textAlign: 'left', color: 'inherit' }}
-                              title="Xem chi tiết dự án"
+                              title={tUI('ui.xem-chi-tiet-du-an')}
                             >
                               {p.project_name}
                             </button>
@@ -1353,7 +1354,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                             <button
                               onClick={() => openDetail(p)}
                               style={{ background: 'none', border: 'none', cursor: 'pointer', color: config.brandColor, padding: 4 }}
-                              title="Xem chi tiết dự án"
+                              title={tUI('ui.xem-chi-tiet-du-an')}
                             >
                               <ExternalLink size={18} />
                             </button>
@@ -1391,7 +1392,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                   id="btn-wb-prev"
-                  title="Trang trước"
+                  title={tUI('ui.trang-truoc')}
                 >
                   <ChevronLeft size={15} />
                 </button>

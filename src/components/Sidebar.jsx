@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 // Nhãn qua khóa i18n (t('nav.…')) — đổi ngôn ngữ giao diện là menu đổi theo.
 const navItems = [
@@ -166,7 +167,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
                 }}
-                title="Tính năng có phí — Bấm để xem gói nâng cấp"
+                title={tUI('ui.tinh-nang-co-phi-bam-de-xem-goi-nang-cap')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
                   <span style={{ color: item.color, flexShrink: 0 }}>{item.icon}</span>
@@ -257,7 +258,7 @@ export default function Sidebar({ isOpen, onClose }) {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
             }}
-            title="Tính năng AI có phí — Bấm để nâng cấp"
+            title={tUI('ui.tinh-nang-ai-co-phi-bam-de-nang-cap')}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
               <span style={{ color: '#a855f7', flexShrink: 0 }}><Bot size={16} /></span>

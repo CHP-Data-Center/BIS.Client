@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw, Bug, Copy, Check, Trash2, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
 import { apiCache } from '../../utils/apiCache';
+import { tUI } from '../../locales';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -148,7 +149,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
               marginLeft: 'auto',
               marginRight: 'auto',
             }}>
-              Một phần của giao diện gặp sự cố khi xử lý dữ liệu. Bạn hãy thử <strong>tải lại trang</strong> hoặc <strong>xóa cache</strong>. Nếu sự cố tiếp diễn, vui lòng gửi <strong>báo cáo sự cố</strong> cho quản trị viên.
+              Một phần của giao diện gặp sự cố khi xử lý dữ liệu. Bạn hãy thử <strong>{tUI('ui.tai-lai-trang')}</strong> {tUI('ui.hoac')} <strong>{tUI('ui.xoa-cache')}</strong>{tUI('ui.neu-su-co-tiep-dien-vui-long-gui')} <strong>{tUI('ui.bao-cao-su-co')}</strong> cho quản trị viên.
             </p>
 
             {/* Main Action Buttons */}

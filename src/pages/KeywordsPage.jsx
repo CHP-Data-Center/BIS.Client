@@ -7,6 +7,7 @@ import { keywordsService } from '../services/keywords';
 import { categoriesService } from '../services/categories';
 import { useLang } from '../context/LanguageContext';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { tUI } from '../locales';
 
 const MAX_KEYWORDS = 50;
 
@@ -45,7 +46,7 @@ const LangFlag = ({ lang, size = 18 }) => {
 };
 
 const LANG_OPTIONS = [
-  { value: 'vi', label: 'Tiếng Việt', flag: <FlagVN size={18} /> },
+  { value: 'vi', label: tUI('ui.tieng-viet'), flag: <FlagVN size={18} /> },
   { value: 'en', label: 'English',    flag: <FlagUK size={18} /> },
   { value: 'ja', label: '日本語',      flag: <FlagJP size={18} /> },
 ];
@@ -211,7 +212,7 @@ const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick, tCategory, t })
     <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 4 }}>
       <button
         onClick={() => startEdit(kw)}
-        title="Sửa"
+        title={tUI('ui.sua')}
         style={{
           width: 22, height: 22, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: 'var(--text-muted)', border: 'none', background: 'transparent', cursor: 'pointer',
@@ -224,7 +225,7 @@ const KeywordChipItem = ({ kw, catMap, startEdit, onDeleteClick, tCategory, t })
       </button>
       <button
         onClick={() => onDeleteClick(kw)}
-        title="Xóa"
+        title={tUI('ui.xoa')}
         style={{
           width: 22, height: 22, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: 'var(--text-muted)', border: 'none', background: 'transparent', cursor: 'pointer',

@@ -3,13 +3,14 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { CrawlProvider } from './context/CrawlContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLang } from './context/LanguageContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { syncUserTheme } from './utils/theme';
 import ThemeFxOverlay from './components/common/ThemeFxOverlay';
+import { tUI } from './locales';
 
 // Dynamic imports for route-level Code Splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -40,7 +41,7 @@ function PageLoader() {
         border: '3px solid var(--brand-200)', borderTopColor: 'var(--brand-500)',
         animation: 'spin 0.8s linear infinite',
       }} />
-      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Đang tải trang...</span>
+      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{tUI('ui.dang-tai-trang')}</span>
     </div>
   );
 }
@@ -134,9 +135,16 @@ function ComingSoon({ title }) {
     <div className="empty-state" style={{ minHeight: '60vh' }}>
       <div className="empty-icon">🚧</div>
       <div className="empty-title">{title}</div>
-      <div className="empty-sub">Tính năng đang được phát triển — sẽ ra mắt sớm</div>
+      <div className="empty-sub">{tUI('ui.tinh-nang-dang-duoc-phat-trien-se-ra-mat-som')}</div>
     </div>
   );
+}
+
+/** Bọc cây route và remount khi đổi ngôn ngữ — các nhãn dùng tUI() (không phải
+ *  hook) đọc ngôn ngữ từ localStorage nên cần remount mới cập nhật. */
+function LocalizedTree({ children }) {
+  const { lang } = useLang();
+  return <div key={lang} style={{ display: 'contents' }}>{children}</div>;
 }
 
 export default function App() {
@@ -146,6 +154,7 @@ export default function App() {
       <CrawlProvider>
         <ThemeFxOverlay />
         <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <LocalizedTree>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public */}
@@ -260,19 +269,19 @@ export default function App() {
 
               <Route path="/trending" element={
                 <EnterpriseRoute>
-                  <AppLayout><ComingSoon title="Xu Hướng & Analytics" /></AppLayout>
+                  <AppLayout><ComingSoon title={tUI('ui.xu-huong-analytics')} /></AppLayout>
                 </EnterpriseRoute>
               } />
 
               <Route path="/reports" element={
                 <EnterpriseRoute>
-                  <AppLayout><ComingSoon title="Báo Cáo AI" /></AppLayout>
+                  <AppLayout><ComingSoon title={tUI('ui.bao-cao-ai')} /></AppLayout>
                 </EnterpriseRoute>
               } />
 
               <Route path="/help" element={
                 <ProtectedRoute>
-                  <AppLayout><ComingSoon title="Trung Tâm Hỗ Trợ" /></AppLayout>
+                  <AppLayout><ComingSoon title={tUI('ui.trung-tam-ho-tro')} /></AppLayout>
                 </ProtectedRoute>
               } />
 
@@ -281,6 +290,7 @@ export default function App() {
               <Route path="*" element={<DefaultRedirect />} />
             </Routes>
           </Suspense>
+          </LocalizedTree>
         </BrowserRouter>
       </CrawlProvider>
       </LanguageProvider>

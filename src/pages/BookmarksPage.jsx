@@ -6,6 +6,7 @@ import { articlesService } from '../services/articles';
 import { useLang } from '../context/LanguageContext';
 import NewsCard from '../components/NewsCard';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import { tUI } from '../locales';
 
 function stripAccents(str = '') {
   return str
@@ -25,12 +26,12 @@ function isTagMatched(tag, query) {
 
 // Color & icon mapping for source tags
 const SOURCE_STYLE = {
-  adb:       { color: '#f59e0b', bg: '#fffbeb', icon: '🏦', name: 'ADB', label: 'Dự Án ADB' },
+  adb:       { color: '#f59e0b', bg: '#fffbeb', icon: '🏦', name: 'ADB', label: tUI('ui.du-an-adb-2') },
   worldbank: { color: '#10b981', bg: '#ecfdf5', icon: '🌍', name: 'World Bank', label: 'World Bank' },
-  dauthau:   { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Mua Sắm Công', label: 'Đấu Thầu' },
-  gov:       { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: 'Mua Sắm Công', label: 'Đấu Thầu' },
-  press:     { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: 'Báo Chí', label: 'Tin Tức' },
-  default:   { color: '#3b82f6', bg: '#eff6ff', icon: '📄', name: 'Nguồn Tin', label: 'Tin Tức' },
+  dauthau:   { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: tUI('ui.mua-sam-cong'), label: tUI('ui.dau-thau') },
+  gov:       { color: '#3b82f6', bg: '#eff6ff', icon: '📋', name: tUI('ui.mua-sam-cong'), label: tUI('ui.dau-thau') },
+  press:     { color: '#3b82f6', bg: '#eff6ff', icon: '📰', name: tUI('ui.bao-chi-2'), label: tUI('ui.tin-tuc') },
+  default:   { color: '#3b82f6', bg: '#eff6ff', icon: '📄', name: tUI('ui.nguon-tin'), label: tUI('ui.tin-tuc') },
 };
 
 function getSourceInfo(bm) {
@@ -53,7 +54,7 @@ function getSourceInfo(bm) {
   if (type === 'press' || name) {
     return { ...SOURCE_STYLE.press, name: name || 'Báo Chí' };
   }
-  return { ...SOURCE_STYLE.default, name: 'Nguồn tin' };
+  return { ...SOURCE_STYLE.default, name: tUI('ui.nguon-tin-2') };
 }
 
 function formatProjectAmount(val, sourceType) {
@@ -480,7 +481,7 @@ export default function BookmarksPage() {
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={(e) => handleViewDetail(bm, e)}
-                          title="Xem chi tiết"
+                          title={tUI('ui.xem-chi-tiet')}
                           style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
                         >
                           <Eye size={15} />
@@ -492,7 +493,7 @@ export default function BookmarksPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            title="Xem bài gốc"
+                            title={tUI('ui.xem-bai-goc')}
                             style={{ padding: '6px 10px', display: 'flex', alignItems: 'center' }}
                           >
                             <ExternalLink size={15} />
@@ -504,7 +505,7 @@ export default function BookmarksPage() {
                             e.stopPropagation();
                             handleRemove(bm.article_id || bm.id);
                           }}
-                          title="Bỏ bookmark"
+                          title={tUI('ui.bo-bookmark')}
                           id={`btn-remove-bm-${bm.article_id || bm.id}`}
                           disabled={removing === (bm.article_id || bm.id)}
                           style={{ padding: '6px 10px', color: '#ef4444' }}
@@ -533,14 +534,14 @@ export default function BookmarksPage() {
                           <>
                             {bm.country && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ color: 'var(--text-muted)' }}>🏛️ Bên mời thầu:</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.ben-moi-thau')}</span>
                                 <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{bm.country}</strong>
                               </div>
                             )}
 
                             {formattedAmt && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ color: 'var(--text-muted)' }}>📦 Số lượng gói thầu:</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.so-luong-goi-thau')}</span>
                                 <strong style={{ color: '#7c3aed', fontWeight: 800, background: '#f5f3ff', padding: '1px 8px', borderRadius: 4, border: '1px solid #ddd6fe' }}>
                                   {formattedAmt}
                                 </strong>
@@ -549,7 +550,7 @@ export default function BookmarksPage() {
 
                             {bm.stage && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ color: 'var(--text-muted)' }}>📑 Phân loại:</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.phan-loai')}</span>
                                 <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bm.stage}</strong>
                               </div>
                             )}
@@ -559,14 +560,14 @@ export default function BookmarksPage() {
                           <>
                             {bm.country && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ color: 'var(--text-muted)' }}>📍 Quốc gia:</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.quoc-gia')}</span>
                                 <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{bm.country}</strong>
                               </div>
                             )}
 
                             {formattedAmt && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ color: 'var(--text-muted)' }}>💰 Cam kết ODA:</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.cam-ket-oda')}</span>
                                 <strong style={{ color: '#059669', fontWeight: 800, background: '#ecfdf5', padding: '1px 8px', borderRadius: 4, border: '1px solid #a7f3d0' }}>
                                   {formattedAmt}
                                 </strong>
@@ -575,7 +576,7 @@ export default function BookmarksPage() {
 
                             {bm.stage && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ color: 'var(--text-muted)' }}>📑 Giai đoạn:</span>
+                                <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.giai-doan')}</span>
                                 <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bm.stage}</strong>
                               </div>
                             )}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import { tUI } from '../locales';
 
 const fmtDate = (d) => {
   if (!d) return 'N/A';
@@ -140,7 +141,7 @@ export default function WbProjectDetailPage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
         <Loader2 size={32} style={{ color: '#10b981', animation: 'spin 0.8s linear infinite' }} />
-        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Đang tải chi tiết dự án World Bank...</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{tUI('ui.dang-tai-chi-tiet-du-an-world-bank')}</span>
       </div>
     );
   }
@@ -149,8 +150,8 @@ export default function WbProjectDetailPage() {
     return (
       <div className="empty-state" style={{ minHeight: '60vh' }}>
         <div className="empty-icon">🌐</div>
-        <div className="empty-title">Không tìm thấy dự án</div>
-        <div className="empty-sub">Dự án này không tồn tại hoặc đã bị gỡ khỏi cơ sở dữ liệu.</div>
+        <div className="empty-title">{tUI('ui.khong-tim-thay-du-an')}</div>
+        <div className="empty-sub">{tUI('ui.du-an-nay-khong-ton-tai-hoac-da-bi-go-khoi-co-so')}</div>
         <button className="btn btn-primary" onClick={() => nav('/worldbank')} style={{ marginTop: 20 }}>
           <ArrowLeft size={14} /> Quay lại danh sách World Bank
         </button>
@@ -278,7 +279,7 @@ export default function WbProjectDetailPage() {
 
               {/* Amount Highlight */}
               <div style={{ marginTop: 12, zIndex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Cam Kết Tài Chính (USD)</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{tUI('ui.cam-ket-tai-chinh-usd')}</span>
                 <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981', lineHeight: 1.2 }}>
                   {formatAmountDisplay(project.totalCommitmentAmount)}
                 </div>
@@ -344,7 +345,7 @@ export default function WbProjectDetailPage() {
                   📖
                 </div>
                 <div>
-                  <div style={{ lineHeight: 1.2 }}>Nội Dung Chi Tiết Dự Án World Bank</div>
+                  <div style={{ lineHeight: 1.2 }}>{tUI('ui.noi-dung-chi-tiet-du-an-world-bank')}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
                     Thông tin toàn văn & phân tích kỹ thuật được trích xuất trực tiếp
                   </div>
@@ -357,7 +358,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Globe size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Quốc Gia / Khu Vực</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.quoc-gia-khu-vuc')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.countryshortname} {project.region ? `(${project.region})` : ''}
                       </div>
@@ -369,7 +370,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Tag size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Mã Dự Án (External ID)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ma-du-an-external-id')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)' }}>
                         {extId}
                       </div>
@@ -381,7 +382,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Wallet size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cam Kết Vốn (Commitment)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cam-ket-von-commitment')}</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981' }}>
                         {formatAmountDisplay(project.totalCommitmentAmount)}
                       </div>
@@ -393,7 +394,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Wallet size={16} color="#3b82f6" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tổng Kinh Phí Dự Án</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.tong-kinh-phi-du-an')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
                         {project.total_cost}
                       </div>
@@ -405,7 +406,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <CheckCircle2 size={16} color={statusInfo.color} style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Trạng Thái Dự Án</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.trang-thai-du-an')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 700, color: statusInfo.color }}>
                         {project.projectstatusdisplay}
                       </div>
@@ -417,7 +418,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Layers size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Giai Đoạn Cuối</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.giai-doan-cuoi')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.last_stage_reached_name}
                       </div>
@@ -429,7 +430,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Calendar size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ngày Phê Duyệt</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ngay-phe-duyet')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fmtShortDate(project.boardapprovaldate)}
                       </div>
@@ -441,7 +442,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <RefreshCw size={16} color="#6b7280" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cập Nhật Cuối</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cap-nhat-cuoi')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fmtShortDate(project.proj_last_upd_date)}
                       </div>
@@ -453,7 +454,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Calendar size={16} color="#ef4444" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ngày Đóng Dự Án</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ngay-dong-du-an')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fmtShortDate(project.closing_date)}
                       </div>
@@ -465,7 +466,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Landmark size={16} color="#8b5cf6" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Công Cụ Vay (Lending)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cong-cu-vay-lending')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.lending_instrument}
                       </div>
@@ -477,7 +478,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Calendar size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Năm Tài Khóa</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.nam-tai-khoa')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.fiscal_year}
                       </div>
@@ -489,7 +490,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Landmark size={16} color="#f59e0b" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bên Vay (Borrower)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ben-vay-borrower')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.borrower}
                       </div>
@@ -501,7 +502,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Building2 size={16} color="#3b82f6" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cơ Quan Thực Hiện</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.co-quan-thuc-hien')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.implementing_agency}
                       </div>
@@ -513,7 +514,7 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Users size={16} color="#ec4899" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Chủ Nhiệm Dự Án (TTL)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.chu-nhiem-du-an-ttl')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.team_leader}
                       </div>
@@ -532,8 +533,8 @@ export default function WbProjectDetailPage() {
                   {financers.length > 0 && (
                     <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
                       <div style={{ display: 'flex', background: 'var(--bg-surface-2)', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '8px 12px' }}>
-                        <div style={{ flex: 1 }}>Nguồn Tài Trợ / Đối Tác</div>
-                        <div style={{ width: 160, textAlign: 'right' }}>Số Tiền Cam Kết</div>
+                        <div style={{ flex: 1 }}>{tUI('ui.nguon-tai-tro-doi-tac')}</div>
+                        <div style={{ width: 160, textAlign: 'right' }}>{tUI('ui.so-tien-cam-ket')}</div>
                       </div>
                       {financers.map((f, i) => (
                         <div key={i} style={{ display: 'flex', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--border-subtle)' }}>
@@ -547,8 +548,8 @@ export default function WbProjectDetailPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, background: 'var(--bg-surface-2)', padding: 12, borderRadius: 10 }}>
                     {financing.ibrd > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>IBRD:</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.ibrd)}</strong></div>}
                     {financing.ida > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>IDA:</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.ida)}</strong></div>}
-                    {financing.grant > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Grant (Viện trợ):</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.grant)}</strong></div>}
-                    {financing.total > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Tổng tài chính:</span> <strong style={{ color: '#10b981' }}>{fmtM(financing.total)}</strong></div>}
+                    {financing.grant > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.grant-vien-tro')}</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.grant)}</strong></div>}
+                    {financing.total > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.tong-tai-chinh')}</span> <strong style={{ color: '#10b981' }}>{fmtM(financing.total)}</strong></div>}
                   </div>
                 </div>
               )}
@@ -581,13 +582,13 @@ export default function WbProjectDetailPage() {
                   <span>📌</span> Thông Tin Phân Tích Kỹ Thuật (System Metadata):
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <li><strong>Tên dự án đầy đủ:</strong> {project.project_name}</li>
-                  <li><strong>Nguồn trích xuất:</strong> World Bank Projects API & Operations / BIS Crawler</li>
-                  <li><strong>Mã quản lý hệ thống:</strong> {extId}</li>
-                  {publishedDate !== 'N/A' && <li><strong>Thời gian phê duyệt:</strong> {publishedDate}</li>}
+                  <li><strong>{tUI('ui.ten-du-an-day-du')}</strong> {project.project_name}</li>
+                  <li><strong>{tUI('ui.nguon-trich-xuat')}</strong> World Bank Projects API & Operations / BIS Crawler</li>
+                  <li><strong>{tUI('ui.ma-quan-ly-he-thong')}</strong> {extId}</li>
+                  {publishedDate !== 'N/A' && <li><strong>{tUI('ui.thoi-gian-phe-duyet')}</strong> {publishedDate}</li>}
                   {externalUrl && (
                     <li>
-                      <strong>Liên kết bài gốc:</strong>{' '}
+                      <strong>{tUI('ui.lien-ket-bai-goc')}</strong>{' '}
                       <a href={externalUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: 700, textDecoration: 'underline' }}>
                         Trích xuất trực tiếp từ World Bank Official ↗
                       </a>

@@ -16,6 +16,7 @@ import sapphireBg from '../assets/theme_sapphire_bg.png';
 import luxuryBg from '../assets/theme_luxury_bg.png';
 
 import { getUserTheme, setUserTheme, syncUserTheme, applyTheme, isThemeUnlocked, unlockThemeForUser } from '../utils/theme';
+import { tUI } from '../locales';
 
 export default function UpgradePage() {
   const { user, isPersonalUser, isSuperAdmin, isRegionalAdmin } = useAuth();
@@ -298,7 +299,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
 
             <div style={{ margin: '20px 0 20px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, whiteSpace: 'nowrap' }}>
-                <span style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)' }}>0đ</span>
+                <span style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)' }}>{tUI('ui.0d')}</span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>{t('upgrade.perMonth')}</span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
@@ -325,27 +326,27 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Toàn bộ <b>Tin Tức Báo Chí</b></span>
+              <span>{tUI('ui.toan-bo')} <b>{tUI('ui.tin-tuc-bao-chi')}</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Quản lý từ khóa cá nhân</span>
+              <span>{tUI('ui.quan-ly-tu-khoa-ca-nhan')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Lưu bài viết yêu thích (Bookmarks)</span>
+              <span>{tUI('ui.luu-bai-viet-yeu-thich-bookmarks')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
               <X size={15} style={{ color: '#ef4444', flexShrink: 0 }} />
-              <span>Dự án ADB & World Bank</span>
+              <span>{tUI('ui.du-an-adb-world-bank')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
               <X size={15} style={{ color: '#ef4444', flexShrink: 0 }} />
-              <span>Thông báo Đấu Thầu Công</span>
+              <span>{tUI('ui.thong-bao-dau-thau-cong')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
               <X size={15} style={{ color: '#ef4444', flexShrink: 0 }} />
-              <span>Trợ lý AI hỏi-đáp 24/7</span>
+              <span>{tUI('ui.tro-ly-ai-hoi-dap-24-7')}</span>
             </div>
           </div>
         </div>
@@ -388,7 +389,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   {[
                     { key: 'adb', label: 'ADB', icon: <Building2 size={11} color="#f59e0b" /> },
                     { key: 'worldbank', label: 'World Bank', icon: <Globe size={11} color="#10b981" /> },
-                    { key: 'gov', label: 'Đấu Thầu', icon: <ShoppingBag size={11} color="#8b5cf6" /> },
+                    { key: 'gov', label: tUI('ui.dau-thau'), icon: <ShoppingBag size={11} color="#8b5cf6" /> },
                   ].map(s => {
                     const isSelected = selectedComboSources.includes(s.key);
                     return (
@@ -456,7 +457,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             ) : activeDataPackage === 'full' ? (
               <button
                 disabled
-                title="Tài khoản của bạn đã sở hữu trọn bộ 3 nguồn từ gói Full Data Pack"
+                title={tUI('ui.tai-khoan-cua-ban-da-so-huu-tron-bo-3-nguon-tu-g')}
                 style={{
                   width: '100%', padding: '11px 0', fontSize: 12, fontWeight: 800, borderRadius: 12, marginBottom: 24,
                   background: 'var(--bg-surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)',
@@ -488,22 +489,22 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>TÍNH NĂNG BAO GỒM:</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{tUI('ui.tinh-nang-bao-gom')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Mở khóa <b>2 Nguồn chuyên sâu</b> đã chọn</span>
+              <span>{tUI('ui.mo-khoa')} <b>{tUI('ui.2-nguon-chuyen-sau')}</b> {tUI('ui.da-chon')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Tra cứu không giới hạn thông báo & dự án</span>
+              <span>{tUI('ui.tra-cuu-khong-gioi-han-thong-bao-du-an')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Tự động quét cập nhật 4h/lần</span>
+              <span>{tUI('ui.tu-dong-quet-cap-nhat-4h-lan')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Miễn phí toàn bộ tin tức báo chí</span>
+              <span>{tUI('ui.mien-phi-toan-bo-tin-tuc-bao-chi')}</span>
             </div>
           </div>
         </div>
@@ -574,7 +575,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <button
                 onClick={() => handleOpenUpgradeModal({
                   pkgType: 'full',
-                  name: 'Gói Full Data Pack (ADB + WB + Đấu Thầu)',
+                  name: tUI('ui.goi-full-data-pack-adb-wb-dau-thau'),
                   price: Math.round(499000 * discount),
                   cycle: billingCycle,
                 })}
@@ -590,19 +591,19 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span><b>Dự án ADB Châu Á</b></span>
+              <span><b>{tUI('ui.du-an-adb-chau-a')}</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span><b>Dự án World Bank</b> toàn cầu</span>
+              <span><b>{tUI('ui.du-an-world-bank')}</b> {tUI('ui.toan-cau')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span><b>Mua sắm công / Đấu thầu quốc gia</b></span>
+              <span><b>{tUI('ui.mua-sam-cong-dau-thau-quoc-gia')}</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Lọc nâng cao theo ngành & giai đoạn</span>
+              <span>{tUI('ui.loc-nang-cao-theo-nganh-giai-doan')}</span>
             </div>
           </div>
         </div>
@@ -683,7 +684,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <button
                 onClick={() => handleOpenUpgradeModal({
                   pkgType: 'enterprise',
-                  name: 'Gói Enterprise (Full Data + Quản Trị 10 User)',
+                  name: tUI('ui.goi-enterprise-full-data-quan-tri-10-user'),
                   price: Math.round(999000 * discount),
                   cycle: billingCycle,
                 })}
@@ -699,23 +700,23 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span><b>Full Data Pack (ADB, WB, Đấu Thầu)</b></span>
+              <span><b>{tUI('ui.full-data-pack-adb-wb-dau-thau')}</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Quyền Admin Phân Vùng / Tổ Chức</span>
+              <span>{tUI('ui.quyen-admin-phan-vung-to-chuc')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Tự quản lý <b>tối đa 10 tài khoản thành viên</b></span>
+              <span>{tUI('ui.tu-quan-ly')} <b>{tUI('ui.toi-da-10-tai-khoan-thanh-vien')}</b></span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
-              <span>Thành viên tự động kế thừa Full Data</span>
+              <span>{tUI('ui.thanh-vien-tu-dong-ke-thua-full-data')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
               <X size={15} style={{ color: '#a855f7', flexShrink: 0 }} />
-              <span>Trợ lý AI Gemini 2.0 (Mua thêm 149k/tháng)</span>
+              <span>{tUI('ui.tro-ly-ai-gemini-2-0-mua-them-149k-thang')}</span>
             </div>
           </div>
         </div>
@@ -750,7 +751,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               </div>
 
               <div style={{ background: 'rgba(168,85,247,0.08)', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(168,85,247,0.2)', fontSize: 11, color: '#a855f7', fontWeight: 600 }}>
-                <span>Trợ lý AI phân tích & tóm tắt báo cáo 24/7.</span>
+                <span>{tUI('ui.tro-ly-ai-phan-tich-tom-tat-bao-cao-24-7')}</span>
               </div>
             </div>
 
@@ -796,7 +797,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <button
                 onClick={() => handleOpenUpgradeModal({
                   pkgType: 'ai',
-                  name: 'Trợ Lý AI Gemini Hỏi-Đáp',
+                  name: tUI('ui.tro-ly-ai-gemini-hoi-dap'),
                   price: Math.round(149000 * discount),
                   cycle: billingCycle,
                 })}
@@ -816,15 +817,15 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#a855f7', flexShrink: 0 }} />
-              <span>Hỏi-đáp tự nhiên trên kho dữ liệu tin tức</span>
+              <span>{tUI('ui.hoi-dap-tu-nhien-tren-kho-du-lieu-tin-tuc')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#a855f7', flexShrink: 0 }} />
-              <span>Mô hình Gemini 2.0 Flash phân tích siêu nhanh</span>
+              <span>{tUI('ui.mo-hinh-gemini-2-0-flash-phan-tich-sieu-nhanh')}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#a855f7', flexShrink: 0 }} />
-              <span>Trích xuất tóm tắt nội dung báo cáo & dự án</span>
+              <span>{tUI('ui.trich-xuat-tom-tat-noi-dung-bao-cao-du-an')}</span>
             </div>
           </div>
         </div>
@@ -1005,10 +1006,10 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
           alignItems: 'stretch', scrollbarWidth: 'thin',
         }}>
           {[
-            { key: 'adb', title: 'Nguồn ADB (Châu Á)', price: 199000, color: '#f59e0b', icon: <Building2 size={18} color="#f59e0b" />, desc: 'Dự án ODA Ngân hàng Châu Á' },
-            { key: 'wb', title: 'Nguồn World Bank', price: 199000, color: '#10b981', icon: <Globe size={18} color="#10b981" />, desc: 'Dự án ODA Ngân hàng Thế giới' },
-            { key: 'dau-thau', title: 'Đấu Thầu Công', price: 299000, color: '#8b5cf6', icon: <ShoppingBag size={18} color="#8b5cf6" />, desc: 'Thông báo mời thầu & KHLCNT' },
-            { key: 'user-slots', title: '+10 Slot User Enterprise', price: 50000, color: '#9333ea', icon: <Zap size={18} color="#9333ea" />, desc: 'Thêm 10 slot cho Admin Phân Vùng' },
+            { key: 'adb', title: tUI('ui.nguon-adb-chau-a'), price: 199000, color: '#f59e0b', icon: <Building2 size={18} color="#f59e0b" />, desc: tUI('ui.du-an-oda-ngan-hang-chau-a') },
+            { key: 'wb', title: tUI('ui.nguon-world-bank'), price: 199000, color: '#10b981', icon: <Globe size={18} color="#10b981" />, desc: tUI('ui.du-an-oda-ngan-hang-the-gioi') },
+            { key: 'dau-thau', title: tUI('ui.dau-thau-cong'), price: 299000, color: '#8b5cf6', icon: <ShoppingBag size={18} color="#8b5cf6" />, desc: tUI('ui.thong-bao-moi-thau-khlcnt') },
+            { key: 'user-slots', title: '+10 Slot User Enterprise', price: 50000, color: '#9333ea', icon: <Zap size={18} color="#9333ea" />, desc: tUI('ui.them-10-slot-cho-admin-phan-vung') },
           ].map(addon => (
             <div key={addon.key} style={{
               flex: '0 0 280px', minWidth: 280, padding: 20, borderRadius: 16,
@@ -1028,7 +1029,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <div style={{ textAlign: 'right' }}>
                 <div className="price-text-anim" style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   {Math.round(addon.price * discount).toLocaleString('vi-VN')}đ
-                  <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>/tháng</span>
+                  <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>{tUI('ui.thang')}</span>
                 </div>
                 {(() => {
                   const normalizedKey = addon.key === 'wb' ? 'worldbank' : addon.key === 'dau-thau' ? 'gov' : addon.key;
@@ -1041,7 +1042,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                       <button
                         onClick={() => handleOpenUpgradeModal({
                           pkgType: 'user_slots',
-                          name: 'Gói Mua Thêm +10 Slot User Enterprise',
+                          name: tUI('ui.goi-mua-them-10-slot-user-enterprise'),
                           price: Math.round(addon.price * discount),
                           cycle: billingCycle,
                         })}
@@ -1107,22 +1108,22 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border)' }}>
-              <th style={{ textAlign: 'left', padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 700 }}>TÍNH NĂNG</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: 'var(--text-primary)', fontWeight: 800 }}>CÁ NHÂN (FREE)</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#3b82f6', fontWeight: 800 }}>COMBO 2 NGUỒN</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#a855f7', fontWeight: 800 }}>GÓI AI ASSISTANT</th>
+              <th style={{ textAlign: 'left', padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 700 }}>{tUI('ui.tinh-nang')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: 'var(--text-primary)', fontWeight: 800 }}>{tUI('ui.ca-nhan-free')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#3b82f6', fontWeight: 800 }}>{tUI('ui.combo-2-nguon')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#a855f7', fontWeight: 800 }}>{tUI('ui.goi-ai-assistant')}</th>
               <th style={{ textAlign: 'center', padding: '14px 16px', color: '#9333ea', fontWeight: 800 }}>ENTERPRISE</th>
             </tr>
           </thead>
           <tbody>
             {[
-              { name: 'Tin Tức Báo Chí Toàn Quốc', free: true, combo: true, ai: true, enterprise: true },
-              { name: 'Dự Án ADB & World Bank', free: false, combo: '2 Nguồn chọn', ai: false, enterprise: true },
-              { name: 'Thông Báo Đấu Thầu Công', free: false, combo: '2 Nguồn chọn', ai: false, enterprise: true },
-              { name: 'Trợ Lý AI Gemini 2.0 Hỏi-Đáp', free: false, combo: false, ai: true, enterprise: true },
-              { name: 'Dashboard Thống Kê Tổng Quan', free: false, combo: false, ai: false, enterprise: true },
-              { name: 'Phân Quyền Phân Vùng & Tổ Chức', free: false, combo: false, ai: false, enterprise: true },
-              { name: 'Tần Suất Crawl Cập Nhật', free: '4h / lần', combo: '4h / lần', ai: 'Tức thì', enterprise: 'Tức thì' },
+              { name: tUI('ui.tin-tuc-bao-chi-toan-quoc'), free: true, combo: true, ai: true, enterprise: true },
+              { name: tUI('ui.du-an-adb-world-bank'), free: false, combo: '2 Nguồn chọn', ai: false, enterprise: true },
+              { name: tUI('ui.thong-bao-dau-thau-cong-2'), free: false, combo: '2 Nguồn chọn', ai: false, enterprise: true },
+              { name: tUI('ui.tro-ly-ai-gemini-2-0-hoi-dap'), free: false, combo: false, ai: true, enterprise: true },
+              { name: tUI('ui.dashboard-thong-ke-tong-quan'), free: false, combo: false, ai: false, enterprise: true },
+              { name: tUI('ui.phan-quyen-phan-vung-to-chuc'), free: false, combo: false, ai: false, enterprise: true },
+              { name: tUI('ui.tan-suat-crawl-cap-nhat'), free: '4h / lần', combo: '4h / lần', ai: 'Tức thì', enterprise: 'Tức thì' },
             ].map((row, idx) => (
               <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)', background: idx % 2 === 0 ? 'transparent' : 'var(--bg-surface-2)' }}>
                 <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--text-primary)' }}>{row.name}</td>
@@ -1176,7 +1177,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--text-muted)', transition: 'all 0.2s ease',
               }}
-              title="Đóng (Bấm ESC)"
+              title={tUI('ui.dong-bam-esc')}
             >
               <X size={18} />
             </button>
@@ -1185,7 +1186,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-600)', marginBottom: 8 }}>
                   <Zap size={20} style={{ color: '#2563eb' }} />
-                  <span style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>XÁC NHẬN NÂNG CẤP GÓI</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>{tUI('ui.xac-nhan-nang-cap-goi')}</span>
                 </div>
 
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
@@ -1197,20 +1198,20 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   border: '1px solid var(--border)', margin: '16px 0 20px',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Chi phí gói:</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{tUI('ui.chi-phi-goi')}</span>
                     <span style={{ fontWeight: 900, fontSize: 16, color: 'var(--text-primary)' }}>
                       {selectedPackage?.themeKey ? `${selectedPackage?.price?.toLocaleString('vi-VN')}đ (Dùng vĩnh viễn)` : `${selectedPackage?.price?.toLocaleString('vi-VN')}đ / tháng`}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Hình thức:</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{tUI('ui.hinh-thuc')}</span>
                     <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--brand-600)' }}>
                       {selectedPackage?.themeKey ? 'Thanh toán 1 lần duy nhất' : (selectedPackage?.cycle || billingCycle) === 'yearly' ? 'Thanh toán 12 tháng (Giảm 20%)' : 'Thanh toán từng tháng'}
                     </span>
                   </div>
                   {!selectedPackage?.themeKey && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Thời hạn gói:</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{tUI('ui.thoi-han-goi')}</span>
                       <span style={{ fontWeight: 700, fontSize: 13, color: '#10b981' }}>
                         📅 {getCalculatedExpiration(selectedPackage?.cycle || billingCycle)} ({(selectedPackage?.cycle || billingCycle) === 'yearly' ? '1 năm' : '1 tháng'})
                       </span>
@@ -1220,7 +1221,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
 
                 <form onSubmit={handleConfirmUpgrade} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>Email tài khoản nâng cấp:</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>{tUI('ui.email-tai-khoan-nang-cap')}</label>
                     <input
                       type="email"
                       className="form-input"
@@ -1231,13 +1232,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>Số điện thoại liên hệ / Zalo:</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>{tUI('ui.so-dien-thoai-lien-he-zalo')}</label>
                     <input
                       type="tel"
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Nhập số điện thoại của bạn (VD: 0987xxxxxx)"
+                      placeholder={tUI('ui.nhap-so-dien-thoai-cua-ban-vd-0987xxxxxx')}
                       className="form-input"
                       style={{ fontSize: 13, padding: '10px 14px' }}
                     />
@@ -1273,7 +1274,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   Yêu Cầu Nâng Cấp Đã Được Gửi!
                 </h3>
                 <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
-                  Chuyên viên hỗ trợ sẽ liên hệ với bạn qua SĐT/Zalo <b>{phone || 'của bạn'}</b> trong ít phút để kích hoạt gói <b>{selectedPackage?.name}</b>.
+                  Chuyên viên hỗ trợ sẽ liên hệ với bạn qua SĐT/Zalo <b>{phone || 'của bạn'}</b> {tUI('ui.trong-it-phut-de-kich-hoat-goi')} <b>{selectedPackage?.name}</b>.
                 </p>
                 <button
                   type="button"

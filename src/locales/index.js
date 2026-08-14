@@ -58,3 +58,15 @@ export const TRANSLATIONS = {
     'giáo dục': { vi: 'Giáo dục', en: 'Education', ja: '教育' },
   }
 };
+
+/**
+ * Dịch ĐỘC LẬP (không cần React hook) — dùng cho các chuỗi giao diện được trích tự
+ * động bằng scripts/i18n_extract.mjs. Nhờ không phải hook, script có thể thay chuỗi
+ * ở BẤT KỲ đâu (kể cả ngoài component) mà không phải sửa cấu trúc file.
+ *
+ * Đổi ngôn ngữ vẫn cập nhật ngay vì App remount toàn cây theo `lang` (xem App.jsx).
+ */
+export function tUI(key, fallback) {
+  const lang = localStorage.getItem('app_lang') || localStorage.getItem('news_lang') || 'vi';
+  return DICT[lang]?.[key] ?? DICT.vi?.[key] ?? fallback ?? key;
+}

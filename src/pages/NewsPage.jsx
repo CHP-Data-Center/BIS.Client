@@ -9,23 +9,24 @@ import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
 import WorldBankView from '../components/WorldBankView';
+import { tUI } from '../locales';
 
 const PAGE_SIZE = 12;
 
 // Ánh xạ URL param -> nguồn. api: 'articles' (tin bài) | 'oda' (ADB/WB) | 'proc' (đấu thầu).
 // ADB/WB nằm ở bảng oda_projects, đấu thầu ở procurement_items — KHÔNG phải /articles.
 const SOURCE_MAP = {
-  all:       { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  press:     { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  tintuc:    { labelKey: 'nav.press', label: 'Tin Tức Báo Chí', api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
-  adb:       { labelKey: 'nav.adbProjects', label: 'Dự Án ADB (Châu Á)', api: 'oda', odaSource: 'adb', kind: 'project', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
-  'adb-tenders': { labelKey: 'nav.adbTenders', label: 'Thông Báo Mời Thầu ADB', api: 'oda', odaSource: 'adb', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#f59e0b' }} /> },
-  worldbank: { labelKey: 'nav.worldbank', label: 'Dự Án World Bank', api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
-  gov:       { labelKey: 'nav.procGroup', label: 'Mua Sắm Công / Đấu Thầu', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
-  dauthau:   { labelKey: 'nav.procGroup', label: 'Mua Sắm Công Quốc Gia', api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  all:       { labelKey: 'nav.press', label: tUI('ui.tin-tuc-bao-chi'), api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  press:     { labelKey: 'nav.press', label: tUI('ui.tin-tuc-bao-chi'), api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  tintuc:    { labelKey: 'nav.press', label: tUI('ui.tin-tuc-bao-chi'), api: 'articles', type: 'press', icon: <Newspaper size={18} style={{ color: '#3b82f6' }} /> },
+  adb:       { labelKey: 'nav.adbProjects', label: tUI('ui.du-an-adb-chau-a-2'), api: 'oda', odaSource: 'adb', kind: 'project', icon: <Building2 size={18} style={{ color: '#f59e0b' }} /> },
+  'adb-tenders': { labelKey: 'nav.adbTenders', label: tUI('ui.thong-bao-moi-thau-adb'), api: 'oda', odaSource: 'adb', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#f59e0b' }} /> },
+  worldbank: { labelKey: 'nav.worldbank', label: tUI('ui.du-an-world-bank-2'), api: 'oda', odaSource: 'worldbank', icon: <Globe size={18} style={{ color: '#10b981' }} /> },
+  gov:       { labelKey: 'nav.procGroup', label: tUI('ui.mua-sam-cong-dau-thau'), api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  dauthau:   { labelKey: 'nav.procGroup', label: tUI('ui.mua-sam-cong-quoc-gia'), api: 'proc', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
   // Tách 2 trang riêng, cùng khu vực "Đấu Thầu Công" (kind lọc notice/plan).
-  tbmt:      { labelKey: 'nav.tbmt', label: 'Thông Báo Mời Thầu (TBMT)', api: 'proc', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
-  khlcnt:    { labelKey: 'nav.khlcnt', label: 'Kế Hoạch Lựa Chọn Nhà Thầu (KHLCNT)', api: 'proc', kind: 'plan', icon: <FileText size={18} style={{ color: '#8b5cf6' }} /> },
+  tbmt:      { labelKey: 'nav.tbmt', label: tUI('ui.thong-bao-moi-thau-tbmt'), api: 'proc', kind: 'notice', icon: <ShoppingBag size={18} style={{ color: '#8b5cf6' }} /> },
+  khlcnt:    { labelKey: 'nav.khlcnt', label: tUI('ui.ke-hoach-lua-chon-nha-thau-khlcnt'), api: 'proc', kind: 'plan', icon: <FileText size={18} style={{ color: '#8b5cf6' }} /> },
 };
 
 
@@ -62,7 +63,7 @@ function Pagination({ page, total, pageSize, onChange }) {
         onClick={() => onChange(page - 1)}
         disabled={page === 1}
         id="btn-news-prev"
-        title="Trang trước"
+        title={tUI('ui.trang-truoc')}
       >
         <ChevronLeft size={15} />
       </button>
@@ -294,7 +295,7 @@ export default function NewsPage() {
           <Filter size={16} color="var(--brand-500)" />
           <span>{srcConfig.api === 'oda' ? 'Bộ Lọc Dự Án' : srcConfig.api === 'proc' ? 'Bộ Lọc Đấu Thầu' : 'Bộ Lọc Tin Tức'}</span>
           {(search || dateFrom || dateTo || onlyMyKw || onlyBookmarked) && (
-            <span className="filter-active-dot" title="Đang áp dụng bộ lọc" />
+            <span className="filter-active-dot" title={tUI('ui.dang-ap-dung-bo-loc')} />
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

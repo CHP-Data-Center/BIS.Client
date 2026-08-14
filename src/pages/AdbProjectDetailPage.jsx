@@ -7,6 +7,7 @@ import {
   Layers, FileText, CheckCircle2, Tag, Cpu, RefreshCw, CalendarDays, ShieldCheck
 } from 'lucide-react';
 import { adbService } from '../services/adb';
+import { tUI } from '../locales';
 
 const ADB_LABEL_VI = {
   'Project Number': 'Mã dự án',
@@ -169,7 +170,7 @@ export default function AdbProjectDetailPage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
         <Loader2 size={32} style={{ color: '#f59e0b', animation: 'spin 0.8s linear infinite' }} />
-        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Đang tải chi tiết dự án ADB...</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{tUI('ui.dang-tai-chi-tiet-du-an-adb')}</span>
       </div>
     );
   }
@@ -178,8 +179,8 @@ export default function AdbProjectDetailPage() {
     return (
       <div className="empty-state" style={{ minHeight: '60vh' }}>
         <div className="empty-icon">⚠️</div>
-        <div className="empty-title">Không tìm thấy thông tin dự án ADB</div>
-        <div className="empty-sub">Dự án không tồn tại hoặc đã bị gỡ khỏi hệ thống</div>
+        <div className="empty-title">{tUI('ui.khong-tim-thay-thong-tin-du-an-adb')}</div>
+        <div className="empty-sub">{tUI('ui.du-an-khong-ton-tai-hoac-da-bi-go-khoi-he-thong')}</div>
         <button className="btn btn-primary" onClick={() => nav('/news/adb')} style={{ marginTop: 20 }}>
           <ArrowLeft size={14} /> Quay lại danh sách ADB
         </button>
@@ -240,7 +241,7 @@ export default function AdbProjectDetailPage() {
       <div className="breadcrumb">
         <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>Dashboard</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
-        <a onClick={() => nav('/news/adb')} style={{ cursor: 'pointer' }}>ADB (Châu Á)</a>
+        <a onClick={() => nav('/news/adb')} style={{ cursor: 'pointer' }}>{tUI('ui.adb-chau-a')}</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
         <span style={{ color: 'var(--text-primary)', fontWeight: 600, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {project.project_name?.slice(0, 45)}…
@@ -316,7 +317,7 @@ export default function AdbProjectDetailPage() {
 
               {/* Amount Highlight */}
               <div style={{ marginTop: 12, zIndex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Cam Kết Tài Chính / Vốn Hỗ Trợ (USD)</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{tUI('ui.cam-ket-tai-chinh-von-ho-tro-usd')}</span>
                 <div style={{ fontSize: 24, fontWeight: 800, color: '#d97706', lineHeight: 1.2 }}>
                   {formatAmountDisplay(project.totalamt || project.totalCommitmentAmount)}
                 </div>
@@ -382,7 +383,7 @@ export default function AdbProjectDetailPage() {
                   📖
                 </div>
                 <div>
-                  <div style={{ lineHeight: 1.2 }}>Nội Dung Chi Tiết Dự Án ADB</div>
+                  <div style={{ lineHeight: 1.2 }}>{tUI('ui.noi-dung-chi-tiet-du-an-adb')}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
                     Thông tin toàn văn &amp; thông số kỹ thuật được trích xuất từ adb.org
                   </div>
@@ -395,7 +396,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Globe size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Quốc Gia / Nền Kinh Tế</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.quoc-gia-nen-kinh-te')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.countryshortname} {project.region ? `(${project.region})` : ''}
                       </div>
@@ -407,7 +408,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Tag size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Mã Dự Án (Project Number)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ma-du-an-project-number')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)' }}>
                         {extId}
                       </div>
@@ -419,7 +420,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Wallet size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cam Kết Vốn (Commitment)</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cam-ket-von-commitment')}</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>
                         {formatAmountDisplay(project.totalamt || project.totalCommitmentAmount)}
                       </div>
@@ -431,7 +432,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <CheckCircle2 size={16} color={statusInfo.color} style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Trạng Thái Dự Án</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.trang-thai-du-an')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 700, color: statusInfo.color }}>
                         {project.projectstatusdisplay}
                       </div>
@@ -443,7 +444,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Layers size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Lĩnh Vực / Phân Ngành</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.linh-vuc-phan-nganh')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {project.sector || fields['Sector / Subsector']}
                       </div>
@@ -455,7 +456,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Calendar size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Ngày Phê Duyệt</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ngay-phe-duyet')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fmtShortDate(project.boardapprovaldate)}
                       </div>
@@ -467,7 +468,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <RefreshCw size={16} color="#6b7280" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cập Nhật Cuối</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cap-nhat-cuoi')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fmtShortDate(project.proj_last_upd_date)}
                       </div>
@@ -479,7 +480,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Landmark size={16} color="#8b5cf6" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Hình Thức Hỗ Trợ / Vay</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.hinh-thuc-ho-tro-vay')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fields['Project Type / Modality of Assistance'] || project.lending_instrument}
                       </div>
@@ -491,7 +492,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Users size={16} color="#ec4899" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cán Bộ ADB Phụ Trách</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.can-bo-adb-phu-trach')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fields['Responsible ADB Officer'] || project.team_leader}
                       </div>
@@ -503,7 +504,7 @@ export default function AdbProjectDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <Building2 size={16} color="#3b82f6" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cơ Quan Thực Hiện</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.co-quan-thuc-hien')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
                         {fields['Executing Agencies'] || project.implementing_agency}
                       </div>
@@ -538,8 +539,8 @@ export default function AdbProjectDetailPage() {
 
                   <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
                     <div style={{ display: 'flex', background: 'var(--bg-surface-2)', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', padding: '8px 12px' }}>
-                      <div style={{ flex: 1 }}>Nguồn Tài Trợ / Đối Tác</div>
-                      <div style={{ width: 160, textAlign: 'right' }}>Số Tiền Cam Kết</div>
+                      <div style={{ flex: 1 }}>{tUI('ui.nguon-tai-tro-doi-tac')}</div>
+                      <div style={{ width: 160, textAlign: 'right' }}>{tUI('ui.so-tien-cam-ket')}</div>
                     </div>
                     {funding.map((f, i) => (
                       <div key={i} style={{ display: 'flex', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--border-subtle)' }}>
@@ -558,11 +559,11 @@ export default function AdbProjectDetailPage() {
                     <CalendarDays size={15} color="#d97706" /> Các Mốc Tiến Độ (Milestones)
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, background: 'var(--bg-surface-2)', padding: 14, borderRadius: 10 }}>
-                    {milestones.approval && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Phê duyệt:</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.approval}</strong></div>}
-                    {milestones.signing && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ký kết:</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.signing}</strong></div>}
-                    {milestones.effectivity && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Hiệu lực:</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.effectivity}</strong></div>}
-                    {milestones.closing?.original && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Đóng kế hoạch:</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.closing.original}</strong></div>}
-                    {milestones.closing?.actual && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Đóng thực tế:</span> <strong style={{ color: '#d97706' }}>{milestones.closing.actual}</strong></div>}
+                    {milestones.approval && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.phe-duyet')}</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.approval}</strong></div>}
+                    {milestones.signing && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.ky-ket')}</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.signing}</strong></div>}
+                    {milestones.effectivity && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.hieu-luc')}</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.effectivity}</strong></div>}
+                    {milestones.closing?.original && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.dong-ke-hoach')}</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.closing.original}</strong></div>}
+                    {milestones.closing?.actual && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.dong-thuc-te')}</span> <strong style={{ color: '#d97706' }}>{milestones.closing.actual}</strong></div>}
                   </div>
                 </div>
               )}
@@ -608,13 +609,13 @@ export default function AdbProjectDetailPage() {
                   <span>📌</span> Thông Tin Phân Tích Kỹ Thuật (System Metadata):
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <li><strong>Tên dự án đầy đủ:</strong> {project.project_name}</li>
-                  <li><strong>Nguồn trích xuất:</strong> Asian Development Bank (ADB) / BIS Crawler</li>
-                  <li><strong>Mã quản lý hệ thống:</strong> {extId}</li>
-                  {publishedDate !== 'N/A' && <li><strong>Thời gian phê duyệt:</strong> {publishedDate}</li>}
+                  <li><strong>{tUI('ui.ten-du-an-day-du')}</strong> {project.project_name}</li>
+                  <li><strong>{tUI('ui.nguon-trich-xuat')}</strong> Asian Development Bank (ADB) / BIS Crawler</li>
+                  <li><strong>{tUI('ui.ma-quan-ly-he-thong')}</strong> {extId}</li>
+                  {publishedDate !== 'N/A' && <li><strong>{tUI('ui.thoi-gian-phe-duyet')}</strong> {publishedDate}</li>}
                   {externalUrl && (
                     <li>
-                      <strong>Liên kết bài gốc:</strong>{' '}
+                      <strong>{tUI('ui.lien-ket-bai-goc')}</strong>{' '}
                       <a href={externalUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#d97706', fontWeight: 700, textDecoration: 'underline' }}>
                         Trích xuất trực tiếp từ adb.org Official ↗
                       </a>

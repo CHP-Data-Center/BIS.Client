@@ -14,7 +14,7 @@ const getSourceDomain = (s) => {
   try {
     return new URL(getSourceUrl(s)).hostname.replace(/^www\./, '');
   } catch {
-    return 'khác';
+    return tUI('ui.khac');
   }
 };
 import { adminService } from '../services/admin';
@@ -26,6 +26,7 @@ import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import ScopePanel from '../components/admin/ScopePanel';
 import KeywordSuggestionsPanel from '../components/admin/KeywordSuggestionsPanel';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { tUI } from '../locales';
 
 export default function AdminPage() {
   const { lang, t } = useLang();
@@ -372,7 +373,7 @@ export default function AdminPage() {
     setDeleteConfirm({
       type: 'user',
       item: u,
-      title: 'Xóa Tài Khoản Người Dùng',
+      title: tUI('ui.xoa-tai-khoan-nguoi-dung'),
       message: 'Bạn có chắc chắn muốn xóa tài khoản này khỏi hệ thống?',
       itemName: u.email,
       itemSub: u.display_name ? `Họ tên: ${u.display_name}` : ''
@@ -530,7 +531,7 @@ export default function AdminPage() {
     setDeleteConfirm({
       type: 'source',
       item: s,
-      title: 'Xóa Nguồn Tin',
+      title: tUI('ui.xoa-nguon-tin'),
       message: 'Bạn có chắc chắn muốn xóa nguồn tin này khỏi hệ thống?',
       itemName: s.name,
       itemSub: s.url
@@ -605,7 +606,7 @@ export default function AdminPage() {
     { id: 'users',     label: t('admin.usersTab'),  icon: <Users size={16} />,    badge: users.length },
     // Đa tổ chức (ADR-005): super admin quản tổ chức; org admin đặt phạm vi tổ chức mình.
     ...(isSuperAdmin ? [{ id: 'orgs', label: t('admin.orgsTab'), icon: <Building2 size={16} /> }] : []),
-    ...(isRegionalAdmin ? [{ id: 'scope', label: t('admin.tabScope') || 'Phạm Vi Dữ Liệu', icon: <Sliders size={16} /> }] : []),
+    ...(isRegionalAdmin ? [{ id: 'scope', label: t('admin.tabScope', 'Phạm Vi Dữ Liệu'), icon: <Sliders size={16} /> }] : []),
     { id: 'filters',   label: t('admin.keywordsTab'), icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
     { id: 'suggest',   label: t('admin.suggestTab'),  icon: <Sparkles size={16} /> },
     { id: 'digest',    label: t('admin.digestTab'),    icon: <Mail size={16} /> },
@@ -681,7 +682,7 @@ export default function AdminPage() {
           {[
             { label: t('admin.sourcesTab'), val: sources.length, icon: <Database size={15} style={{ color: '#818cf8' }} />, sub: t('admin.sourceCount') },
             { label: t('admin.usersTab'), val: users.length, icon: <Users size={15} style={{ color: '#38bdf8' }} />, sub: t('admin.userCount') },
-            { label: t('admin.keywordsTab'), val: blacklist.length + whitelist.length, icon: <ShieldAlert size={15} style={{ color: '#f472b6' }} />, sub: `${blacklist.length} cấm · ${whitelist.length} ưu tiên` },
+            { label: t('admin.keywordsTab'), val: blacklist.length + whitelist.length, icon: <ShieldAlert size={15} style={{ color: '#f472b6' }} />, sub: `${blacklist.length} ${tUI('ui.cam-tu')} · ${whitelist.length} ${tUI('ui.uu-tien-tu')}` },
             { label: 'STATUS', val: isCrawling ? t('admin.crawling') : t('admin.online'), icon: <Activity size={15} style={{ color: isCrawling ? '#818cf8' : '#4ade80' }} />, sub: isCrawling ? t('admin.crawling') : t('admin.crawlerEvery4h') },
           ].map((st, idx) => (
             <div key={idx} style={{
@@ -898,7 +899,7 @@ export default function AdminPage() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-600, #2563eb)' }}>
                     <Plus size={16} />
                   </div>
-                  {isSuperAdmin ? t('admin.addSource') : `Đề Xuất Nguồn Crawl Mới (${userRegion || 'Phân Vùng'})`}
+                  {isSuperAdmin ? t('admin.addSource') : `${tUI('ui.de-xuat-nguon-crawl-moi')} (${userRegion || tUI('ui.phan-vung')})`}
                 </div>
 
                 <form onSubmit={handleCreateSource} className="responsive-grid-form" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
@@ -909,8 +910,8 @@ export default function AdminPage() {
                   <div>
                     <label className="form-label">{t('admin.sourceType')} *</label>
                     <select className="form-input" value={newSource.source_type} onChange={e => setNewSource({ ...newSource, source_type: e.target.value })}>
-                      <option value="press">📰 Báo Chí (press)</option>
-                      <option value="gov">📋 Đấu Thầu (gov)</option>
+                      <option value="press">{tUI('ui.bao-chi-press')}</option>
+                      <option value="gov">{tUI('ui.dau-thau-gov')}</option>
                     </select>
                   </div>
                   <div>
@@ -919,7 +920,7 @@ export default function AdminPage() {
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
-                    {isSuperAdmin ? t('admin.addSourceBtn') : 'Gửi Đề Xuất'}
+                    {isSuperAdmin ? t('admin.addSourceBtn') : tUI('ui.gui-de-xuat')}
                   </button>
                 </form>
               </div>
@@ -944,7 +945,7 @@ export default function AdminPage() {
                       <input
                         value={sourceSearch}
                         onChange={e => setSourceSearch(e.target.value)}
-                        placeholder="Tìm nguồn theo tên / URL..."
+                        placeholder={tUI('ui.tim-nguon-theo-ten-url')}
                         className="form-input"
                         style={{ paddingLeft: 30, height: 34, fontSize: 12, width: 230 }}
                       />
@@ -1019,7 +1020,7 @@ export default function AdminPage() {
                                   className="btn btn-ghost btn-sm"
                                   onClick={() => handleOpenEditSource(s)}
                                   style={{ color: 'var(--brand-600, #2563eb)', padding: '6px 10px' }}
-                                  title="Chỉnh sửa nguồn tin"
+                                  title={tUI('ui.chinh-sua-nguon-tin')}
                                 >
                                   <Edit size={14} /> Sửa
                                 </button>
@@ -1027,13 +1028,13 @@ export default function AdminPage() {
                                   <button
                                     className="btn btn-ghost btn-sm"
                                     onClick={() => handleDeleteSource(s)}
-                                    title="Xóa nguồn"
+                                    title={tUI('ui.xoa-nguon')}
                                     style={{ color: '#ef4444', padding: '6px 10px' }}
                                   >
                                     <Trash2 size={14} /> Xóa
                                   </button>
                                 ) : (
-                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Chỉ Super Admin được xóa</span>
+                                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.chi-super-admin-duoc-xoa')}</span>
                                 )}
                               </div>
                             </td>
@@ -1043,8 +1044,8 @@ export default function AdminPage() {
 
                       // Cây 2 tầng: Loại nguồn → Tên miền → feed.
                       const TYPE_META = {
-                        gov:   { label: 'Đấu Thầu (GOV)',  icon: '📋', color: 'var(--color-dau-thau, #8b5cf6)', bg: 'rgba(139, 92, 246, 0.08)', border: 'rgba(139, 92, 246, 0.2)' },
-                        press: { label: 'Báo Chí (Press)', icon: '📰', color: 'var(--brand-500, #3b82f6)', bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.2)' },
+                        gov:   { label: tUI('ui.dau-thau-gov'),  icon: '📋', color: 'var(--color-dau-thau, #8b5cf6)', bg: 'rgba(139, 92, 246, 0.08)', border: 'rgba(139, 92, 246, 0.2)' },
+                        press: { label: tUI('ui.bao-chi-press'), icon: '📰', color: 'var(--brand-500, #3b82f6)', bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.2)' },
                       };
                       const byType = {};
                       filtered.forEach(s => {
@@ -1072,9 +1073,9 @@ export default function AdminPage() {
                                 <span style={{ fontSize: 16 }}>{meta.icon}</span>
                                 {meta.label}
                                 <span className="group-count-badge" style={{ fontSize: 11, fontWeight: 800, color: meta.color, background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: 12, border: `1px solid ${meta.border}` }}>
-                                  {typeList.length} nguồn
+                                  {typeList.length} {tUI('ui.nguon-dv')}
                                 </span>
-                                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>· {tOpen ? 'thu gọn' : 'xổ ra'}</span>
+                                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>· {tOpen ? tUI('ui.thu-gon') : tUI('ui.xo-ra')}</span>
                               </div>
                             </td>
                           </tr>
@@ -1198,7 +1199,7 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => setDeleteConfirm({
                             type: 'cancel_extra_slots',
-                            title: 'Hủy Gia Hạn Mua Thêm Slot User',
+                            title: tUI('ui.huy-gia-han-mua-them-slot-user'),
                             message: `Bạn có chắc chắn muốn hủy tự động gia hạn gói mua thêm slot (+50.000đ/tháng/10 user)? Bạn vẫn tiếp tục được sử dụng đầy đủ ${myMaxUsers} User cho tới hết ngày ${slotExpDate || 'hạn thanh toán hiện tại'}.`,
                             itemName: `Phân vùng: ${userRegion}`,
                             itemSub: `Hạn ngạch hiện tại: ${myMaxUsers} User (Vẫn giữ nguyên sử dụng tới hết ${slotExpDate || 'hạn dùng'})`,
@@ -1211,7 +1212,7 @@ export default function AdminPage() {
                             display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
                             transition: 'all 0.15s ease',
                           }}
-                          title="Hủy tự động tính tiền gia hạn cho các tháng tiếp theo"
+                          title={tUI('ui.huy-tu-dong-tinh-tien-gia-han-cho-cac-thang-tiep')}
                         >
                           ❌ Hủy Đăng Ký Mua Thêm
                         </button>
@@ -1232,7 +1233,7 @@ export default function AdminPage() {
                             display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
                             transition: 'all 0.15s ease',
                           }}
-                          title="Bật lại tính năng tự động gia hạn hằng tháng"
+                          title={tUI('ui.bat-lai-tinh-nang-tu-dong-gia-han-hang-thang')}
                         >
                           🔄 Khôi Phục Gia Hạn Tự Động
                         </button>
@@ -1255,40 +1256,40 @@ export default function AdminPage() {
 
                 <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, alignItems: 'end' }}>
                   <div>
-                    <label className="form-label">Email tài khoản *</label>
+                    <label className="form-label">{tUI('ui.email-tai-khoan')}</label>
                     <input className="form-input" type="email" placeholder="user@ckjvn.vn" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} required />
                   </div>
                   <div>
-                    <label className="form-label">Mật khẩu khởi tạo *</label>
+                    <label className="form-label">{tUI('ui.mat-khau-khoi-tao')}</label>
                     <input className="form-input" type="password" placeholder="••••••••" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
                   </div>
                   <div>
-                    <label className="form-label">Họ và tên hiển thị</label>
-                    <input className="form-input" placeholder="Nguyễn Văn A" value={newUser.display_name} onChange={e => setNewUser({ ...newUser, display_name: e.target.value })} />
+                    <label className="form-label">{tUI('ui.ho-va-ten-hien-thi')}</label>
+                    <input className="form-input" placeholder={tUI('ui.nguyen-van-a')} value={newUser.display_name} onChange={e => setNewUser({ ...newUser, display_name: e.target.value })} />
                   </div>
 
                   <div>
-                    <label className="form-label">Phân quyền vai trò</label>
+                    <label className="form-label">{tUI('ui.phan-quyen-vai-tro')}</label>
                     <select
                       className="form-input"
                       value={newUser.role}
                       disabled={isRegionalAdmin}
                       onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                     >
-                      {isSuperAdmin && <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>}
-                      {isSuperAdmin && <option value="admin">🔰 Admin Phân Vùng</option>}
-                      <option value="staff">🧑‍💼 Nhân viên (Staff)</option>
-                      <option value="user">👤 Người dùng (User)</option>
+                      {isSuperAdmin && <option value="super_admin">{tUI('ui.super-admin-quan-tri-toi-cao')}</option>}
+                      {isSuperAdmin && <option value="admin">{tUI('ui.admin-phan-vung')}</option>}
+                      <option value="staff">{tUI('ui.nhan-vien-staff')}</option>
+                      <option value="user">{tUI('ui.nguoi-dung-user')}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="form-label">Phân vùng hoạt động</label>
+                    <label className="form-label">{tUI('ui.phan-vung-hoat-dong')}</label>
                     {isAddingNewRegion ? (
                       <div style={{ display: 'flex', gap: 6 }}>
                         <input
                           className="form-input"
-                          placeholder="Nhập tên phân vùng mới..."
+                          placeholder={tUI('ui.nhap-ten-phan-vung-moi')}
                           value={newCustomRegionInput}
                           onChange={e => {
                             setNewCustomRegionInput(e.target.value);
@@ -1305,7 +1306,7 @@ export default function AdminPage() {
                             }
                             setIsAddingNewRegion(false);
                           }}
-                          title="Xác nhận"
+                          title={tUI('ui.xac-nhan')}
                           style={{ padding: '0 10px', color: '#10b981', fontWeight: 800 }}
                         >
                           <Check size={16} />
@@ -1317,7 +1318,7 @@ export default function AdminPage() {
                             setIsAddingNewRegion(false);
                             setNewUser({ ...newUser, region: 'Toàn quốc' });
                           }}
-                          title="Hủy"
+                          title={tUI('ui.huy')}
                           style={{ padding: '0 8px', color: '#ef4444' }}
                         >
                           <X size={16} />
@@ -1362,7 +1363,7 @@ export default function AdminPage() {
                             <option key={r} value={r}>📍 {r}</option>
                           ))}
                         </optgroup>
-                        <option value="__add_new__">➕ Thêm phân vùng mới...</option>
+                        <option value="__add_new__">{tUI('ui.them-phan-vung-moi')}</option>
                       </select>
                     )}
                   </div>
@@ -1385,20 +1386,20 @@ export default function AdminPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                   <span>Danh Sách Người Dùng ({users.length})</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Tự động cấp quyền JWT</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{tUI('ui.tu-dong-cap-quyen-jwt')}</span>
                 </div>
 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      <th style={{ padding: '12px 20px' }}>Họ &amp; Tên</th>
+                      <th style={{ padding: '12px 20px' }}>{tUI('ui.ho-amp-ten')}</th>
                       <th style={{ padding: '12px 20px' }}>Email</th>
-                      <th style={{ padding: '12px 20px' }}>Vai Trò</th>
-                      <th style={{ padding: '12px 20px' }}>Gói Dữ Liệu &amp; Hạn Dùng</th>
-                      <th style={{ padding: '12px 20px' }}>Theme UI Sở Hữu</th>
-                      <th style={{ padding: '12px 20px' }}>Trạng Thái</th>
-                      <th style={{ padding: '12px 20px' }}>Ngày Tạo</th>
-                      <th style={{ padding: '12px 20px', textAlign: 'right' }}>Hành Động</th>
+                      <th style={{ padding: '12px 20px' }}>{tUI('ui.vai-tro')}</th>
+                      <th style={{ padding: '12px 20px' }}>{tUI('ui.goi-du-lieu-amp-han-dung')}</th>
+                      <th style={{ padding: '12px 20px' }}>{tUI('ui.theme-ui-so-huu')}</th>
+                      <th style={{ padding: '12px 20px' }}>{tUI('ui.trang-thai')}</th>
+                      <th style={{ padding: '12px 20px' }}>{tUI('ui.ngay-tao')}</th>
+                      <th style={{ padding: '12px 20px', textAlign: 'right' }}>{tUI('ui.hanh-dong')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1457,7 +1458,7 @@ export default function AdminPage() {
                           </td>
                           <td style={{ padding: '14px 20px' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 180 }}>
-                              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569' }}>Mặc định</span>
+                              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569' }}>{tUI('ui.mac-dinh')}</span>
                               {(u.purchased_themes || []).map(tKey => (
                                 <span key={tKey} style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
                                   {tKey === 'classic' ? 'Win98' : tKey === 'sapphire' ? 'Sapphire' : tKey === 'luxury' ? 'Luxury' : tKey === 'anime' ? 'Anime 🌸' : tKey}
@@ -1485,7 +1486,7 @@ export default function AdminPage() {
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => setViewingUser(u)}
                                 style={{ color: '#8b5cf6', padding: '6px 10px' }}
-                                title="Xem chi tiết tài khoản"
+                                title={tUI('ui.xem-chi-tiet-tai-khoan')}
                               >
                                 <Eye size={14} /> Chi tiết
                               </button>
@@ -1493,7 +1494,7 @@ export default function AdminPage() {
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => handleOpenEditUser(u)}
                                 style={{ color: '#2563eb', padding: '6px 10px' }}
-                                title="Chỉnh sửa tài khoản"
+                                title={tUI('ui.chinh-sua-tai-khoan')}
                               >
                                 <Edit size={14} /> Sửa
                               </button>
@@ -1501,7 +1502,7 @@ export default function AdminPage() {
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => handleDeleteUser(u)}
                                 style={{ color: '#ef4444', padding: '6px 10px' }}
-                                title="Xóa tài khoản"
+                                title={tUI('ui.xoa-tai-khoan')}
                               >
                                 <Trash2 size={14} /> Xóa
                               </button>
@@ -1541,7 +1542,7 @@ export default function AdminPage() {
                   Các tin tức chứa từ khóa trong danh sách này sẽ bị tự động bỏ qua khi crawl.
                 </p>
                 <form onSubmit={handleAddBlacklist} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  <input className="form-input" placeholder="Nhập từ khóa cấm..." value={newBlacklist} onChange={e => setNewBlacklist(e.target.value)} />
+                  <input className="form-input" placeholder={tUI('ui.nhap-tu-khoa-cam')} value={newBlacklist} onChange={e => setNewBlacklist(e.target.value)} />
                   <button type="submit" className="btn btn-primary" style={{ gap: 4, padding: '0 16px' }}>
                     <Plus size={15} /> Thêm
                   </button>
@@ -1549,7 +1550,7 @@ export default function AdminPage() {
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {blacklist.length === 0 ? (
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Chưa có từ khóa nào.</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.chua-co-tu-khoa-nao')}</span>
                   ) : blacklist.map(b => (
                     <span key={b.id} style={{
                       background: '#fff1f2', border: '1px solid #fecdd3', color: '#e11d48',
@@ -1561,12 +1562,12 @@ export default function AdminPage() {
                         onClick={() => setDeleteConfirm({
                           type: 'blacklist',
                           item: b,
-                          title: 'Xóa Từ Khóa Blacklist',
+                          title: tUI('ui.xoa-tu-khoa-blacklist'),
                           message: 'Bạn có chắc chắn muốn xóa từ khóa cấm này?',
                           itemName: b.term
                         })} 
                         style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e11d48', padding: 0, fontSize: 14, lineHeight: 1 }}
-                        title="Xóa khỏi Blacklist"
+                        title={tUI('ui.xoa-khoi-blacklist')}
                       >×</button>
                     </span>
                   ))}
@@ -1585,7 +1586,7 @@ export default function AdminPage() {
                   Các tin tức chứa từ khóa ưu tiên sẽ được gắn cờ mốc quan trọng và đưa lên đầu.
                 </p>
                 <form onSubmit={handleAddWhitelist} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  <input className="form-input" placeholder="Nhập từ khóa ưu tiên..." value={newWhitelist} onChange={e => setNewWhitelist(e.target.value)} />
+                  <input className="form-input" placeholder={tUI('ui.nhap-tu-khoa-uu-tien')} value={newWhitelist} onChange={e => setNewWhitelist(e.target.value)} />
                   <button type="submit" className="btn btn-primary" style={{ gap: 4, padding: '0 16px' }}>
                     <Plus size={15} /> Thêm
                   </button>
@@ -1593,7 +1594,7 @@ export default function AdminPage() {
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {whitelist.length === 0 ? (
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Chưa có từ khóa nào.</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.chua-co-tu-khoa-nao')}</span>
                   ) : whitelist.map(w => (
                     <span key={w.id} style={{
                       background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#047857',
@@ -1605,12 +1606,12 @@ export default function AdminPage() {
                         onClick={() => setDeleteConfirm({
                           type: 'whitelist',
                           item: w,
-                          title: 'Xóa Từ Khóa Whitelist',
+                          title: tUI('ui.xoa-tu-khoa-whitelist'),
                           message: 'Bạn có chắc chắn muốn xóa từ khóa ưu tiên này?',
                           itemName: w.term
                         })} 
                         style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#047857', padding: 0, fontSize: 14, lineHeight: 1 }}
-                        title="Xóa khỏi Whitelist"
+                        title={tUI('ui.xoa-khoi-whitelist')}
                       >×</button>
                     </span>
                   ))}
@@ -1686,7 +1687,7 @@ export default function AdminPage() {
                   <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
                     Chỉnh Sửa Tài Khoản Người Dùng
                   </h3>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Cập nhật phân quyền, mật khẩu và cài đặt cá nhân</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.cap-nhat-phan-quyen-mat-khau-va-cai-dat-ca-nhan')}</span>
                 </div>
               </div>
               <button
@@ -1701,7 +1702,7 @@ export default function AdminPage() {
             <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
               <div className="custom-modal-scroll" style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, alignContent: 'start' }}>
                 <div>
-                  <label className="form-label">Email tài khoản *</label>
+                  <label className="form-label">{tUI('ui.email-tai-khoan')}</label>
                 <input
                   className="form-input"
                   type="email"
@@ -1712,18 +1713,18 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="form-label">Họ và tên hiển thị</label>
+                <label className="form-label">{tUI('ui.ho-va-ten-hien-thi')}</label>
                 <input
                   className="form-input"
                   type="text"
                   value={editingUser.display_name}
                   onChange={e => setEditingUser({ ...editingUser, display_name: e.target.value })}
-                  placeholder="Họ và tên"
+                  placeholder={tUI('ui.ho-va-ten')}
                 />
               </div>
 
               <div>
-                <label className="form-label">Phân quyền vai trò</label>
+                <label className="form-label">{tUI('ui.phan-quyen-vai-tro')}</label>
                 <select
                   className="form-input"
                   value={editingUser.role || 'user'}
@@ -1731,23 +1732,23 @@ export default function AdminPage() {
                   onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
                 >
                   {(isSuperAdmin || editingUser.role === 'super_admin') && (
-                    <option value="super_admin">👑 Super Admin (Quản trị Tối cao)</option>
+                    <option value="super_admin">{tUI('ui.super-admin-quan-tri-toi-cao')}</option>
                   )}
                   {(isSuperAdmin || editingUser.role === 'admin') && (
-                    <option value="admin">🔰 Admin Phân Vùng</option>
+                    <option value="admin">{tUI('ui.admin-phan-vung')}</option>
                   )}
-                  <option value="staff">🧑‍💼 Nhân viên (Staff)</option>
-                  <option value="user">👤 Người dùng (User)</option>
+                  <option value="staff">{tUI('ui.nhan-vien-staff')}</option>
+                  <option value="user">{tUI('ui.nguoi-dung-user')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="form-label">Phân vùng hoạt động</label>
+                <label className="form-label">{tUI('ui.phan-vung-hoat-dong')}</label>
                 {isAddingEditRegion ? (
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input
                       className="form-input"
-                      placeholder="Nhập tên phân vùng mới..."
+                      placeholder={tUI('ui.nhap-ten-phan-vung-moi')}
                       value={editingUser.region || ''}
                       onChange={e => setEditingUser({ ...editingUser, region: e.target.value })}
                       autoFocus
@@ -1761,7 +1762,7 @@ export default function AdminPage() {
                         }
                         setIsAddingEditRegion(false);
                       }}
-                      title="Xác nhận"
+                      title={tUI('ui.xac-nhan')}
                       style={{ padding: '0 10px', color: '#10b981', fontWeight: 800 }}
                     >
                       <Check size={16} />
@@ -1770,7 +1771,7 @@ export default function AdminPage() {
                       type="button"
                       className="btn btn-ghost btn-sm"
                       onClick={() => setIsAddingEditRegion(false)}
-                      title="Hủy"
+                      title={tUI('ui.huy')}
                       style={{ padding: '0 8px', color: '#ef4444' }}
                     >
                       <X size={16} />
@@ -1814,20 +1815,20 @@ export default function AdminPage() {
                         <option key={r} value={r}>📍 {r}</option>
                       ))}
                     </optgroup>
-                    <option value="__add_new__">➕ Thêm phân vùng mới...</option>
+                    <option value="__add_new__">{tUI('ui.them-phan-vung-moi')}</option>
                   </select>
                 )}
               </div>
 
               <div>
-                <label className="form-label">Trạng thái tài khoản</label>
+                <label className="form-label">{tUI('ui.trang-thai-tai-khoan')}</label>
                 <select
                   className="form-input"
                   value={editingUser.is_active ? 'true' : 'false'}
                   onChange={e => setEditingUser({ ...editingUser, is_active: e.target.value === 'true' })}
                 >
-                  <option value="true">🟢 Hoạt động</option>
-                  <option value="false">🔴 Đã khóa tài khoản</option>
+                  <option value="true">{tUI('ui.hoat-dong')}</option>
+                  <option value="false">{tUI('ui.da-khoa-tai-khoan')}</option>
                 </select>
               </div>
 
@@ -1838,11 +1839,11 @@ export default function AdminPage() {
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, fontSize: 12.5 }}>
                   {[
-                    { key: 'can_view_press', label: '📰 Xem Tin Báo Chí' },
-                    { key: 'can_view_bidding', label: '📋 Xem Gói Thầu GOV' },
-                    { key: 'can_view_oda', label: '🌐 Xem Dự Án ODA & WB' },
-                    { key: 'can_manage_keywords', label: '🏷️ Đăng Ký Từ Khóa Lọc' },
-                    { key: 'can_export_data', label: '📥 Xuất Báo Cáo Data' },
+                    { key: 'can_view_press', label: tUI('ui.xem-tin-bao-chi') },
+                    { key: 'can_view_bidding', label: tUI('ui.xem-goi-thau-gov') },
+                    { key: 'can_view_oda', label: tUI('ui.xem-du-an-oda-wb') },
+                    { key: 'can_manage_keywords', label: tUI('ui.dang-ky-tu-khoa-loc') },
+                    { key: 'can_export_data', label: tUI('ui.xuat-bao-cao-data') },
                   ].map(p => (
                     <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600 }}>
                       <input
@@ -1868,12 +1869,12 @@ export default function AdminPage() {
                 <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1.5px solid rgba(99, 102, 241, 0.3)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Zap size={16} style={{ color: '#a855f7' }} />
-                    <span>Quản Lý Gói Dịch Vụ &amp; UI Themes Đã Cấp</span>
+                    <span>{tUI('ui.quan-ly-goi-dich-vu-amp-ui-themes-da-cap')}</span>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
                     <div>
-                      <label className="form-label">Gói Nguồn Dữ Liệu</label>
+                      <label className="form-label">{tUI('ui.goi-nguon-du-lieu')}</label>
                       <select
                         className="form-input"
                         value={editingUser.active_package || 'free'}
@@ -1885,23 +1886,23 @@ export default function AdminPage() {
                           setEditingUser({ ...editingUser, active_package: pkg, package_expiration: defaultExp });
                         }}
                       >
-                        <option value="free">📰 Báo Chí Miễn Phí</option>
-                        <option value="single">🎯 Mua Lẻ 1 Nguồn Dữ Liệu</option>
-                        <option value="combo2">⚡ Combo 2 Nguồn Dữ Liệu</option>
-                        <option value="full">👑 Full Data Pack (Trọn Bộ 3 Nguồn)</option>
-                        <option value="enterprise">🏢 Gói Enterprise (Full Data + Quản Trị 10 User)</option>
+                        <option value="free">{tUI('ui.bao-chi-mien-phi')}</option>
+                        <option value="single">{tUI('ui.mua-le-1-nguon-du-lieu')}</option>
+                        <option value="combo2">{tUI('ui.combo-2-nguon-du-lieu')}</option>
+                        <option value="full">{tUI('ui.full-data-pack-tron-bo-3-nguon')}</option>
+                        <option value="enterprise">{tUI('ui.goi-enterprise-full-data-quan-tri-10-user')}</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Hạn Sử Dụng Gói</span>
+                        <span>{tUI('ui.han-su-dung-goi')}</span>
                       </label>
                       <input
                         className="form-input"
                         value={editingUser.package_expiration || ''}
                         onChange={e => setEditingUser({ ...editingUser, package_expiration: e.target.value })}
-                        placeholder="VD: 07/08/2026 - 07/09/2026 hoặc Vĩnh viễn"
+                        placeholder={tUI('ui.vd-07-08-2026-07-09-2026-hoac-vinh-vien')}
                       />
                       {/* Quick Presets for Duration */}
                       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
@@ -1949,9 +1950,9 @@ export default function AdminPage() {
                         </label>
                         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                           {[
-                            { key: 'adb', label: '🏛️ Dự Án ADB Châu Á' },
-                            { key: 'worldbank', label: '🌐 Dự Án World Bank' },
-                            { key: 'gov', label: '📋 Thông Báo Đấu Thầu Công' },
+                            { key: 'adb', label: tUI('ui.du-an-adb-chau-a') },
+                            { key: 'worldbank', label: tUI('ui.du-an-world-bank') },
+                            { key: 'gov', label: tUI('ui.thong-bao-dau-thau-cong') },
                           ].map(src => (
                             <label key={src.key} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 700, fontSize: 12.5, color: 'var(--text-primary)' }}>
                               <input
@@ -1976,14 +1977,14 @@ export default function AdminPage() {
                             ⚡ Chọn 2 Nguồn Dữ Liệu Trong Gói Combo 2:
                           </label>
                           <span style={{ fontSize: 11, fontWeight: 800, color: (editingUser.selected_sources || []).length === 2 ? '#10b981' : '#f59e0b' }}>
-                            {(editingUser.selected_sources || []).length === 2 ? '✓ Đã chọn 2/2 nguồn' : `⚠️ Vui lòng chọn 2 nguồn (Hiện tại: ${(editingUser.selected_sources || []).length}/2)`}
+                            {(editingUser.selected_sources || []).length === 2 ? tUI('ui.da-chon-2-2-nguon') : `${tUI('ui.vui-long-chon-2-nguon')} (${(editingUser.selected_sources || []).length}/2)`}
                           </span>
                         </div>
                         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                           {[
-                            { key: 'adb', label: '🏛️ Dự Án ADB Châu Á' },
-                            { key: 'worldbank', label: '🌐 Dự Án World Bank' },
-                            { key: 'gov', label: '📋 Thông Báo Đấu Thầu Công' },
+                            { key: 'adb', label: tUI('ui.du-an-adb-chau-a') },
+                            { key: 'worldbank', label: tUI('ui.du-an-world-bank') },
+                            { key: 'gov', label: tUI('ui.thong-bao-dau-thau-cong') },
                           ].map(src => {
                             const selected = (editingUser.selected_sources || ['adb', 'worldbank']).includes(src.key);
                             return (
@@ -2088,30 +2089,30 @@ export default function AdminPage() {
               )}
 
               <div style={{ gridColumn: 'span 2' }}>
-                <label className="form-label">Mật khẩu mới (Đặt lại mật khẩu)</label>
+                <label className="form-label">{tUI('ui.mat-khau-moi-dat-lai-mat-khau')}</label>
                 <input
                   className="form-input"
                   type="password"
                   value={editingUser.password}
                   onChange={e => setEditingUser({ ...editingUser, password: e.target.value })}
-                  placeholder="Để trống nếu không muốn đổi mật khẩu (Mật khẩu cần ≥8 ký tự, có chữ hoa, số & ký tự đặc biệt)"
+                  placeholder={tUI('ui.de-trong-neu-khong-muon-doi-mat-khau-mat-khau-ca')}
                 />
               </div>
 
               <div>
-                <label className="form-label">Bản tin Email Digest</label>
+                <label className="form-label">{tUI('ui.ban-tin-email-digest')}</label>
                 <select
                   className="form-input"
                   value={editingUser.email_digest_enabled ? 'true' : 'false'}
                   onChange={e => setEditingUser({ ...editingUser, email_digest_enabled: e.target.value === 'true' })}
                 >
-                  <option value="true">📧 Bật nhận Email Digest</option>
-                  <option value="false">🔕 Tắt Email Digest</option>
+                  <option value="true">{tUI('ui.bat-nhan-email-digest')}</option>
+                  <option value="false">{tUI('ui.tat-email-digest')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="form-label">Giờ nhận Digest (0 - 23h)</label>
+                <label className="form-label">{tUI('ui.gio-nhan-digest-0-23h')}</label>
                 <input
                   className="form-input"
                   type="number"
@@ -2232,7 +2233,7 @@ export default function AdminPage() {
                   {viewingUser.role === 'super_admin' ? '👑 FULL DATA (SUPER ADMIN)' : viewingUser.active_package === 'enterprise' || viewingUser.role === 'admin' ? `🏢 Gói Enterprise (Max ${viewingUser.max_users || 10} User)` : viewingUser.active_package === 'full' ? '👑 Full Data Pack (3 Nguồn)' : viewingUser.active_package === 'single' ? `🎯 Gói 1 Nguồn (${({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[(viewingUser.selected_sources || ['adb'])[0]] || '1 Nguồn'})` : viewingUser.active_package === 'combo2' ? `⚡ Combo 2 Nguồn (${(viewingUser.selected_sources || ['adb', 'worldbank']).map(k => ({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[k] || k).join(' + ')})` : '📰 Báo Chí Miễn Phí'}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>📅 Hạn dùng:</span>
+                  <span>{tUI('ui.han-dung')}</span>
                   <b style={{ color: 'var(--text-primary)' }}>
                     {viewingUser.active_package === 'free' || viewingUser.role === 'super_admin' ? 'Vĩnh viễn' : (viewingUser.package_expiration || 'Vĩnh viễn')}
                   </b>
@@ -2271,11 +2272,11 @@ export default function AdminPage() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, fontSize: 12 }}>
                   {[
-                    { key: 'can_view_press', label: '📰 Xem Tin Báo Chí' },
-                    { key: 'can_view_bidding', label: '📋 Xem Gói Thầu GOV' },
-                    { key: 'can_view_oda', label: '🌐 Xem Dự Án ODA & WB' },
-                    { key: 'can_manage_keywords', label: '🏷️ Đăng Ký Từ Khóa Lọc' },
-                    { key: 'can_export_data', label: '📥 Xuất Báo Cáo Data' },
+                    { key: 'can_view_press', label: tUI('ui.xem-tin-bao-chi') },
+                    { key: 'can_view_bidding', label: tUI('ui.xem-goi-thau-gov') },
+                    { key: 'can_view_oda', label: tUI('ui.xem-du-an-oda-wb') },
+                    { key: 'can_manage_keywords', label: tUI('ui.dang-ky-tu-khoa-loc') },
+                    { key: 'can_export_data', label: tUI('ui.xuat-bao-cao-data') },
                   ].map(p => {
                     const hasPerm = viewingUser.permissions?.[p.key] !== false;
                     return (
@@ -2295,7 +2296,7 @@ export default function AdminPage() {
                   <b>{viewingUser.email_digest_enabled ? `📧 Đã bật (${viewingUser.digest_hour ?? 7}h)` : '🔕 Tắt'}</b>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Ngày tạo: </span>
+                  <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.ngay-tao-2')} </span>
                   <b>{viewingUser.created_at ? new Date(viewingUser.created_at).toLocaleDateString('vi-VN') : '-'}</b>
                 </div>
               </div>
@@ -2373,7 +2374,7 @@ export default function AdminPage() {
             <form onSubmit={handleUpdateSource} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}>
               <div className="custom-modal-scroll" style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, alignContent: 'start' }}>
                 <div style={{ gridColumn: 'span 2' }}>
-                <label className="form-label">Tên nguồn tin *</label>
+                <label className="form-label">{tUI('ui.ten-nguon-tin')}</label>
                 <input
                   className="form-input"
                   value={editingSource.name}
@@ -2383,19 +2384,19 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="form-label">Loại nguồn *</label>
+                <label className="form-label">{tUI('ui.loai-nguon')}</label>
                 <select
                   className="form-input"
                   value={editingSource.source_type}
                   onChange={e => setEditingSource({ ...editingSource, source_type: e.target.value })}
                 >
-                  <option value="press">📰 Báo Chí (press)</option>
-                  <option value="gov">📋 Đấu Thầu (gov)</option>
+                  <option value="press">{tUI('ui.bao-chi-press')}</option>
+                  <option value="gov">{tUI('ui.dau-thau-gov')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="form-label">Phương thức Crawl *</label>
+                <label className="form-label">{tUI('ui.phuong-thuc-crawl')}</label>
                 <select
                   className="form-input"
                   value={editingSource.parser_type}
@@ -2407,7 +2408,7 @@ export default function AdminPage() {
               </div>
 
               <div style={{ gridColumn: 'span 2' }}>
-                <label className="form-label">Đường dẫn URL / RSS Endpoint *</label>
+                <label className="form-label">{tUI('ui.duong-dan-url-rss-endpoint')}</label>
                 <input
                   className="form-input"
                   value={editingSource.url}
@@ -2417,12 +2418,12 @@ export default function AdminPage() {
               </div>
 
               <div style={{ gridColumn: 'span 2' }}>
-                <label className="form-label">Phân vùng áp dụng</label>
+                <label className="form-label">{tUI('ui.phan-vung-ap-dung')}</label>
                 {isAddingSourceEditRegion ? (
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input
                       className="form-input"
-                      placeholder="Nhập tên phân vùng mới..."
+                      placeholder={tUI('ui.nhap-ten-phan-vung-moi')}
                       value={editingSource.region || ''}
                       onChange={e => setEditingSource({ ...editingSource, region: e.target.value })}
                       autoFocus
@@ -2436,7 +2437,7 @@ export default function AdminPage() {
                         }
                         setIsAddingSourceEditRegion(false);
                       }}
-                      title="Xác nhận"
+                      title={tUI('ui.xac-nhan')}
                       style={{ padding: '0 10px', color: '#10b981', fontWeight: 800 }}
                     >
                       <Check size={16} />
@@ -2445,7 +2446,7 @@ export default function AdminPage() {
                       type="button"
                       className="btn btn-ghost btn-sm"
                       onClick={() => setIsAddingSourceEditRegion(false)}
-                      title="Hủy"
+                      title={tUI('ui.huy')}
                       style={{ padding: '0 8px', color: '#ef4444' }}
                     >
                       <X size={16} />
@@ -2467,7 +2468,7 @@ export default function AdminPage() {
                     {allRegions.map(r => (
                       <option key={r} value={r}>📍 {r}</option>
                     ))}
-                    <option value="__add_new__">➕ Thêm phân vùng mới...</option>
+                    <option value="__add_new__">{tUI('ui.them-phan-vung-moi')}</option>
                   </select>
                 )}
               </div>
@@ -2491,7 +2492,7 @@ export default function AdminPage() {
                   style={{ padding: '10px 24px', borderRadius: 12, gap: 8, fontWeight: 800 }}
                 >
                   {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
-                  {isSuperAdmin ? 'Lưu Thay Đổi' : 'Gửi Đề Xuất Cập Nhật'}
+                  {isSuperAdmin ? tUI('ui.luu-thay-doi') : tUI('ui.gui-de-xuat-cap-nhat')}
                 </button>
               </div>
             </form>
@@ -2622,10 +2623,10 @@ export default function AdminPage() {
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {[
-                      { months: 1, label: '1 Tháng', tag: 'Tiêu chuẩn' },
-                      { months: 3, label: '3 Tháng', tag: 'Giảm 5%' },
-                      { months: 6, label: '6 Tháng', tag: 'Giảm 10%' },
-                      { months: 12, label: '12 Tháng', tag: 'Giảm 20%' },
+                      { months: 1, label: tUI('ui.1-thang'), tag: 'Tiêu chuẩn' },
+                      { months: 3, label: tUI('ui.3-thang'), tag: 'Giảm 5%' },
+                      { months: 6, label: tUI('ui.6-thang'), tag: 'Giảm 10%' },
+                      { months: 12, label: tUI('ui.12-thang'), tag: 'Giảm 20%' },
                     ].map(mOpt => {
                       const isSelected = selectedSlotMonths === mOpt.months;
                       return (
@@ -2662,11 +2663,11 @@ export default function AdminPage() {
                   return (
                     <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Gói bổ sung chọn:</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.goi-bo-sung-chon')}</span>
                         <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ {selectedSlotPackage} Slot User ({selectedSlotMonths} tháng)</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Hạn ngạch sau nâng cấp:</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.han-ngach-sau-nang-cap')}</span>
                         <b style={{ color: '#10b981' }}>{currentMax} ➔ {newMax} User</b>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 8 }}>
@@ -2678,7 +2679,7 @@ export default function AdminPage() {
                 })()}
 
                 <div style={{ marginBottom: 20 }}>
-                  <label className="form-label">Số điện thoại / Zalo liên hệ xác nhận *</label>
+                  <label className="form-label">{tUI('ui.so-dien-thoai-zalo-lien-he-xac-nhan')}</label>
                   <input
                     className="form-input"
                     type="tel"

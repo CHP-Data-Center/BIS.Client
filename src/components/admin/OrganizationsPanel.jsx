@@ -6,6 +6,7 @@ import { orgService } from '../../services/organizations';
 import { useAuth } from '../../context/AuthContext';
 import ScopePanel from './ScopePanel';
 import ConfirmModal from '../common/ConfirmModal';
+import { tUI } from '../../locales';
 
 export default function OrganizationsPanel({ sources = [], allUsers = [], onMessage, onUserUpdated }) {
   const { user: currentUser } = useAuth();
@@ -168,11 +169,11 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
       {/* ── Cột trái: danh sách + tạo tổ chức ── */}
       <div style={{ flex: '1 1 300px', minWidth: 280, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 800, marginBottom: 14 }}>
-          <Building2 size={16} /> Tổ chức <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>({orgs.length})</span>
+          <Building2 size={16} /> {tUI('ui.to-chuc')} <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>({orgs.length})</span>
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          <input className="form-input" style={{ fontSize: 13 }} placeholder="Tên công ty / phân vùng mới…"
+          <input className="form-input" style={{ fontSize: 13 }} placeholder={tUI('ui.ten-cong-ty-phan-vung-moi')}
             value={newOrgName} onChange={e => setNewOrgName(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') createOrg(); }} />
           <button className="btn btn-primary btn-sm" onClick={createOrg} disabled={creating} style={{ gap: 4, flexShrink: 0 }}>
@@ -226,10 +227,10 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
                       <span>#{org.slug}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 2 }} onClick={e => e.stopPropagation()}>
-                        <button className="btn btn-ghost btn-xs" onClick={() => handleStartEdit(org)} title="Đổi tên tổ chức" style={{ padding: '2px 4px', height: 22, color: 'var(--text-muted)' }}>
+                        <button className="btn btn-ghost btn-xs" onClick={() => handleStartEdit(org)} title={tUI('ui.doi-ten-to-chuc')} style={{ padding: '2px 4px', height: 22, color: 'var(--text-muted)' }}>
                           <Pencil size={12} />
                         </button>
-                        <button className="btn btn-ghost btn-xs" onClick={() => handleDeleteOrg(org)} title="Xóa tổ chức" style={{ padding: '2px 4px', height: 22, color: '#ef4444' }}>
+                        <button className="btn btn-ghost btn-xs" onClick={() => handleDeleteOrg(org)} title={tUI('ui.xoa-to-chuc')} style={{ padding: '2px 4px', height: 22, color: '#ef4444' }}>
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -247,7 +248,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
         {!selected ? (
           <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-surface)', border: '1px dashed var(--border)', borderRadius: 16 }}>
             <Building2 size={32} style={{ opacity: 0.4 }} />
-            <div style={{ marginTop: 8, fontSize: 13 }}>Chọn một tổ chức để quản lý.</div>
+            <div style={{ marginTop: 8, fontSize: 13 }}>{tUI('ui.chon-mot-to-chuc-de-quan-ly')}</div>
           </div>
         ) : (
           <div>
@@ -270,7 +271,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                     className="btn btn-primary btn-sm"
                     onClick={() => handleSaveEdit(selected.id)}
                     disabled={updating}
-                    title="Lưu tên"
+                    title={tUI('ui.luu-ten')}
                     style={{ gap: 4 }}
                   >
                     {updating ? <Loader2 size={14} className="spin" /> : <Check size={14} />} Lưu
@@ -279,7 +280,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                     className="btn btn-ghost btn-sm"
                     onClick={() => setEditingOrgId(null)}
                     disabled={updating}
-                    title="Hủy"
+                    title={tUI('ui.huy')}
                   >
                     <X size={14} />
                   </button>
@@ -290,7 +291,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                   <button
                     className="btn btn-ghost btn-sm"
                     onClick={() => handleStartEdit(selected)}
-                    title="Đổi tên tổ chức"
+                    title={tUI('ui.doi-ten-to-chuc')}
                     style={{ padding: '4px 6px', color: 'var(--text-muted)' }}
                   >
                     <Pencil size={14} />
@@ -307,7 +308,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                   onClick={() => handleDeleteOrg(selected)}
                   disabled={deleting}
                   style={{ color: '#ef4444', gap: 4 }}
-                  title="Xóa tổ chức"
+                  title={tUI('ui.xoa-to-chuc')}
                 >
                   {deleting ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />} Xóa tổ chức
                 </button>
@@ -318,8 +319,8 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid var(--border-subtle)' }}>
               {[
                 { id: 'users', label: `Người dùng (${orgUsers.length})`, icon: <Users size={14} /> },
-                { id: 'scope', label: 'Phạm vi dữ liệu', icon: <Sliders size={14} /> },
-                { id: 'admin', label: 'Cấp quyền Admin', icon: <ShieldCheck size={14} /> },
+                { id: 'scope', label: tUI('ui.pham-vi-du-lieu'), icon: <Sliders size={14} /> },
+                { id: 'admin', label: tUI('ui.cap-quyen-admin'), icon: <ShieldCheck size={14} /> },
               ].map(t => (
                 <button key={t.id} onClick={() => setDetailTab(t.id)}
                   style={{
@@ -336,7 +337,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
             {detailTab === 'users' && (
               <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 18 }}>
                 {orgUsers.length === 0 ? (
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Chưa có người dùng trong tổ chức này.</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{tUI('ui.chua-co-nguoi-dung-trong-to-chuc-nay')}</div>
                 ) : orgUsers.map(u => {
                   const isMe = currentUser && (u.id === currentUser.id || (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()));
                   return (
@@ -344,7 +345,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600 }}>
                           {u.display_name}
-                          {isMe && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 6 }}>(bạn)</span>}
+                          {isMe && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 6 }}>{tUI('ui.ban')}</span>}
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
                       </div>
@@ -387,7 +388,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {u.display_name || u.email}
-                                {isMe && <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 4 }}>(bạn)</span>}
+                                {isMe && <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 4 }}>{tUI('ui.ban')}</span>}
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {u.email}
@@ -445,7 +446,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                         value={selectedExistingUserId}
                         onChange={e => setSelectedExistingUserId(e.target.value)}
                       >
-                        <option value="">-- Chọn tài khoản từ danh sách --</option>
+                        <option value="">{tUI('ui.chon-tai-khoan-tu-danh-sach')}</option>
                         {assignableUsers.map(u => (
                           <option key={u.id} value={u.id}>
                             👤 {u.display_name || u.email} ({u.email})
@@ -468,9 +469,9 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
                         <input className="form-input" style={{ fontSize: 13 }} placeholder="Email (*)"
                           value={newAdmin.email} onChange={e => setNewAdmin({ ...newAdmin, email: e.target.value })} />
-                        <input className="form-input" style={{ fontSize: 13 }} type="password" placeholder="Mật khẩu (*)"
+                        <input className="form-input" style={{ fontSize: 13 }} type="password" placeholder={tUI('ui.mat-khau')}
                           value={newAdmin.password} onChange={e => setNewAdmin({ ...newAdmin, password: e.target.value })} />
-                        <input className="form-input" style={{ fontSize: 13 }} placeholder="Tên hiển thị (tùy chọn)"
+                        <input className="form-input" style={{ fontSize: 13 }} placeholder={tUI('ui.ten-hien-thi-tuy-chon')}
                           value={newAdmin.display_name} onChange={e => setNewAdmin({ ...newAdmin, display_name: e.target.value })} />
                       </div>
                       <button className="btn btn-primary" onClick={createAdmin} style={{ gap: 6, width: 'fit-content', alignSelf: 'flex-end' }}>
@@ -488,7 +489,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
       {/* ── Modal xác nhận xóa tổ chức ── */}
       <ConfirmModal
         isOpen={!!deletingOrg}
-        title="Xóa Tổ Chức"
+        title={tUI('ui.xoa-to-chuc-2')}
         message="Tất cả người dùng thuộc tổ chức này sẽ được tự động chuyển thành chưa thuộc tổ chức."
         itemName={deletingOrg?.name}
         confirmText="Xóa Tổ Chức"

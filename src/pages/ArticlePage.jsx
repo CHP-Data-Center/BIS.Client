@@ -6,6 +6,7 @@ import { articlesService } from '../services/articles';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import { getSourceStyle } from '../utils/sourceStyle';
+import { tUI } from '../locales';
 
 function stripAccents(str = '') {
   return str
@@ -146,7 +147,7 @@ export default function ArticlePage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
         <Loader2 size={32} style={{ color: 'var(--brand-500)', animation: 'spin 0.8s linear infinite' }} />
-        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Đang tải bài viết...</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{tUI('ui.dang-tai-bai-viet')}</span>
       </div>
     );
   }
@@ -155,8 +156,8 @@ export default function ArticlePage() {
     return (
       <div className="empty-state">
         <div className="empty-icon">📄</div>
-        <div className="empty-title">Không tìm thấy bài viết</div>
-        <div className="empty-sub">Bài viết này có thể đã bị xóa hoặc không tồn tại</div>
+        <div className="empty-title">{tUI('ui.khong-tim-thay-bai-viet')}</div>
+        <div className="empty-sub">{tUI('ui.bai-viet-nay-co-the-da-bi-xoa-hoac-khong-ton-tai')}</div>
         <button className="btn btn-primary" onClick={() => nav(-1)} style={{ marginTop: 20 }}>
           <ArrowLeft size={14} /> {t('article.back')}
         </button>
@@ -354,14 +355,14 @@ export default function ArticlePage() {
                           <span>📌</span> Thông Tin Phân Tích Kỹ Thuật (System Metadata):
                         </div>
                         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 7 }}>
-                          <li><strong>Tiêu đề bài viết:</strong> {article.title}</li>
+                          <li><strong>{tUI('ui.tieu-de-bai-viet')}</strong> {article.title}</li>
                           <li><strong>{t('article.extractSource')}:</strong> {srcName}</li>
-                          <li><strong>Phân loại hệ thống:</strong> {article.source_type === 'gov' ? 'Gói thầu / Mua sắm công (GOV)' : 'Báo chí & Truyền thông (PRESS)'}</li>
-                          {publishedDate && <li><strong>Thời gian phát hành:</strong> {publishedDate}</li>}
+                          <li><strong>{tUI('ui.phan-loai-he-thong')}</strong> {article.source_type === 'gov' ? 'Gói thầu / Mua sắm công (GOV)' : 'Báo chí & Truyền thông (PRESS)'}</li>
+                          {publishedDate && <li><strong>{tUI('ui.thoi-gian-phat-hanh')}</strong> {publishedDate}</li>}
                           {article.matched_keywords?.length > 0 && <li><strong>{t('article.systemKeywords')}:</strong> {article.matched_keywords.join(', ')}</li>}
                           {article.url && (
                             <li>
-                              <strong>Liên kết bài gốc:</strong>{' '}
+                              <strong>{tUI('ui.lien-ket-bai-goc')}</strong>{' '}
                               <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-600)', textDecoration: 'underline' }}>
                                 Trích xuất trực tiếp từ {srcName} ↗
                               </a>

@@ -1,4 +1,5 @@
 // src/utils/sourceStyle.js
+import { tUI } from '../locales';
 /**
  * Shared utility cho màu sắc, background, border và icon của thẻ Nguồn (Source Pill Tag)
  * Đồng bộ 100% màu xanh dương (#2563eb) cho các nguồn Báo Chí / Báo Đấu Thầu khớp với Tab Báo Chí.
@@ -7,10 +8,10 @@
 const SOURCE_MAP = {
   adb:       { color: '#d97706', bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.25)', icon: '🏦', name: 'ADB' },
   worldbank: { color: '#047857', bg: 'rgba(16, 185, 129, 0.08)', border: 'rgba(16, 185, 129, 0.25)', icon: '🌍', name: 'World Bank' },
-  dauthau:   { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📋', name: 'Đấu Thầu' },
-  gov:       { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📋', name: 'Mua Sắm Công' },
-  press:     { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: 'Báo Chí' },
-  default:   { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: 'Nguồn tin' },
+  dauthau:   { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📋', name: tUI('ui.dau-thau') },
+  gov:       { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📋', name: tUI('ui.mua-sam-cong') },
+  press:     { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: tUI('ui.bao-chi-2') },
+  default:   { color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(59, 130, 246, 0.22)', icon: '📰', name: tUI('ui.nguon-tin-2') },
 };
 
 export function getSourceStyle(article = {}) {

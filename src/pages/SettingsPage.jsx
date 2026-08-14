@@ -14,6 +14,7 @@ import luxuryBg from '../assets/theme_luxury_bg.png';
 
 import { getUserTheme, setUserTheme, isThemeUnlocked } from '../utils/theme';
 import AdminDigestConfig from '../components/AdminDigestConfig';
+import { tUI } from '../locales';
 
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth();
@@ -163,7 +164,7 @@ export default function SettingsPage() {
             <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
               <span>✉️ {user?.email}</span>
               <span>•</span>
-              <span style={{ color: '#4ade80', fontWeight: 600 }}>🟢 Đã xác thực JWT</span>
+              <span style={{ color: '#4ade80', fontWeight: 600 }}>{tUI('ui.da-xac-thuc-jwt')}</span>
             </div>
           </div>
         </div>
@@ -232,7 +233,7 @@ export default function SettingsPage() {
                   id="input-new-password"
                   type="password"
                   className="form-input"
-                  placeholder="≥ 8 ký tự..."
+                  placeholder={tUI('ui.8-ky-tu-2')}
                   value={newPw}
                   onChange={(e) => setNewPw(e.target.value)}
                   required
