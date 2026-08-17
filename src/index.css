@@ -991,6 +991,220 @@ html[data-ui-theme="classic"],
   border-bottom-color: #ffffff !important;
 }
 
+/* Classic Win98 High-Contrast Tables: World Bank, ADB, Procurement & ODA */
+[data-ui-theme="classic"] .wb-container,
+[data-ui-theme="classic"] .wb-layout,
+[data-ui-theme="classic"] .projects-container {
+  color: #000000 !important;
+}
+
+/* Sidebar container: transparent to eliminate blank bottom area */
+[data-ui-theme="classic"] .wb-sidebar {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Sidebar individual widget cards: neat 3D Win98 frames */
+[data-ui-theme="classic"] .wb-sidebar > div {
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0px !important;
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .wb-sidebar div,
+[data-ui-theme="classic"] .wb-sidebar span,
+[data-ui-theme="classic"] .wb-sidebar label,
+[data-ui-theme="classic"] .wb-sidebar p {
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .wb-sidebar select,
+[data-ui-theme="classic"] .wb-sidebar input {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid !important;
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  border-radius: 0px !important;
+}
+
+/* Right Main Content Area: Classic Window 3D Frame */
+[data-ui-theme="classic"] .wb-main {
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Top bar inside table container */
+[data-ui-theme="classic"] .wb-main > div:first-child {
+  background: #d4d0c8 !important;
+  border-bottom: 2px solid #808080 !important;
+}
+
+[data-ui-theme="classic"] .wb-main > div:first-child * {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* Table Responsive Container */
+[data-ui-theme="classic"] .wb-container .table-responsive,
+[data-ui-theme="classic"] .wb-container table {
+  background: #ffffff !important;
+  border: 2px solid !important;
+  border-top-color: #808080 !important;
+  border-left-color: #808080 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Table Header (th) */
+[data-ui-theme="classic"] .wb-container table thead,
+[data-ui-theme="classic"] .wb-container table thead tr,
+[data-ui-theme="classic"] .wb-container table thead th {
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  color: #000000 !important;
+  font-weight: bold !important;
+  font-family: 'Tahoma', 'MS Sans Serif', sans-serif !important;
+  font-size: 12px !important;
+  padding: 8px 10px !important;
+  text-shadow: none !important;
+}
+
+[data-ui-theme="classic"] .wb-container table thead th * {
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+
+/* Table Body (td) */
+[data-ui-theme="classic"] .wb-container table tbody tr {
+  border-bottom: 1px solid #dfdfdf !important;
+  background: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .wb-container table tbody tr:nth-child(even) {
+  background: #f6f6f6 !important;
+}
+
+[data-ui-theme="classic"] .wb-container table tbody tr:hover {
+  background: #e8eef8 !important;
+}
+
+/* Project Titles (Tên Dự Án / Thông Báo) - Đen đậm dễ nhìn nhất */
+[data-ui-theme="classic"] .wb-container table tbody td button,
+[data-ui-theme="classic"] .wb-container table tbody td a,
+[data-ui-theme="classic"] .wb-container table tbody td a span,
+[data-ui-theme="classic"] .wb-container table tbody td button span,
+[data-ui-theme="classic"] .wb-container .cell-project-title,
+[data-ui-theme="classic"] .wb-container .cell-project-title * {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+}
+
+[data-ui-theme="classic"] .wb-container table tbody td button:hover,
+[data-ui-theme="classic"] .wb-container table tbody td a:hover,
+[data-ui-theme="classic"] .wb-container table tbody td button:hover span,
+[data-ui-theme="classic"] .wb-container table tbody td a:hover span {
+  color: #000080 !important;
+  text-decoration: underline !important;
+}
+
+/* Country, ID, Amounts, Dates & Classifications - Đen và Navy sắc nét */
+[data-ui-theme="classic"] .wb-container table tbody td {
+  color: #000000 !important;
+  font-weight: 500 !important;
+  border-right: 1px solid #efefef !important;
+  padding: 8px 12px !important;
+  font-size: 12.5px !important;
+}
+
+/* Mã Dự Án (ID) */
+[data-ui-theme="classic"] .wb-container table tbody td:nth-child(4),
+[data-ui-theme="classic"] .wb-container table tbody td:nth-child(4) * {
+  color: #000080 !important;
+  font-weight: bold !important;
+  font-family: 'Tahoma', monospace !important;
+  letter-spacing: 0px !important;
+}
+
+/* Cam Kết (USD) / Gói Thầu Amount */
+[data-ui-theme="classic"] .wb-container table tbody td:nth-child(5),
+[data-ui-theme="classic"] .wb-container table tbody td:nth-child(5) * {
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+/* Status Badges in Classic Retro Theme */
+[data-ui-theme="classic"] .wb-container .status-badge,
+[data-ui-theme="classic"] .status-badge,
+[data-ui-theme="classic"] .wb-container table tbody td span[style*="border-radius"] {
+  background: #d4d0c8 !important;
+  border: 1px solid #808080 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+}
+
+[data-ui-theme="classic"] .wb-container .status-badge *,
+[data-ui-theme="classic"] .status-badge * {
+  color: #000000 !important;
+  font-weight: 800 !important;
+}
+
+/* Bookmark and External Link Icons in Classic Theme */
+[data-ui-theme="classic"] .wb-container button svg,
+[data-ui-theme="classic"] .wb-container a svg {
+  color: #000080 !important;
+}
+
+/* Pagination controls in Classic Retro theme */
+[data-ui-theme="classic"] .pagination-btn,
+[data-ui-theme="classic"] .pagination button,
+[data-ui-theme="classic"] div[style*="justify-content: center"] button {
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  color: #000000 !important;
+  font-weight: bold !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .pagination-btn.active,
+[data-ui-theme="classic"] .pagination button.active {
+  background: #000080 !important;
+  color: #ffffff !important;
+}
+
 
 /* 2. Royal Sapphire Executive VIP Theme (Obsidian Sapphire, Diamond Glass & Platinum Metallic Sheen) */
 :root[data-ui-theme="sapphire"],
