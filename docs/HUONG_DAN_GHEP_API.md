@@ -211,6 +211,7 @@ Trả về:
 
 ```
 GET /procurement?kind=notice|plan&q=&sector=&status=&lang=&page=&size=
+GET /procurement/{id}?lang=&enrich=        ← chi tiết 1 gói (xem trong app)
 ```
 
 `kind=notice` = Thông báo mời thầu (TBMT, mã `IB…`) · `kind=plan` = Kế hoạch lựa chọn nhà thầu
@@ -265,6 +266,69 @@ muasamcong từ mã — link muasamcong cần `notifyId` nội bộ.
 `period`, `duration`, `start` (dạng `"Quý III/2026"`), `capital_detail`, `description`.
 
 Khóa nào cũng có thể `null` → render theo kiểu "có thì hiện", đừng hardcode danh sách cứng.
+
+### 5.1 Trang chi tiết trong app — `GET /procurement/{id}`
+
+Trước đây bấm vào gói thầu là nhảy thẳng sang muasamcong. Giờ mở **trang chi tiết trong hệ thống**
+(`/procurement/:id`, xem [ProcurementDetailPage.jsx](../src/pages/ProcurementDetailPage.jsx)),
+giống trang chi tiết ADB / World Bank.
+
+Endpoint này khác `GET /procurement` ở 3 điểm:
+
+| | `GET /procurement` (danh sách) | `GET /procurement/{id}` (chi tiết) |
+|---|---|---|
+| `details_json` | **chuỗi** JSON, FE tự parse | **không có** |
+| `details` | không có | **object đã parse sẵn** |
+| `detail_status` | không có | `ready` · `missing` · `unavailable` |
+
+```json
+{
+  "id": "IB2600429542-00", "kind": "notice",
+  "title": "Gói thầu số 03: Cải tạo khu vệ sinh…",
+  "procuring_entity": "Trung tâm Đối ngoại kinh tế quốc phòng",
+  "publish_date": "2026-08-10 15:12", "close_date": "2026-08-19 09:00",
+  "status": "Đang đăng tải", "sector": "Xây lắp",
+  "url": "https://muasamcong.mpi.gov.vn/…?notifyId=…",
+  "detail_status": "ready",
+  "details": { "kind": "notice", "notify_no": "IB2600429542", "bid_price": 3778601000, "…": "…" }
+}
+```
+
+**`detail_status` quyết định giao diện:**
+
+| Giá trị | Nghĩa | FE làm gì |
+|---|---|---|
+| `ready` | Có chi tiết đầy đủ | Render hết các khối |
+| `missing` | Có link nguồn nhưng chưa lấy được chi tiết | Gọi lại `?enrich=true`, hiện "đang lấy thêm chi tiết…" |
+| `unavailable` | Không có link nguồn → không thể lấy | Hiện phần đã có + nút mở trang gốc, **không** gọi `enrich` |
+
+**Luồng 2 bước (đang dùng ở trang chi tiết):**
+
+1. Gọi **không** `enrich` → hiển thị ngay phần đã có trong DB (nhanh, luôn < 1s).
+2. Nếu `detail_status === "missing"` → gọi lại với `enrich=true`. Server mở trình duyệt nền
+   lấy chi tiết từ muasamcong (**~15–30s**) rồi **lưu vào DB**, nên lần sau mở là có sẵn.
+
+```js
+const data = await odaService.getProcurementDetail(id);            // bước 1
+if (data.detail_status === 'missing') {
+  const full = await odaService.getProcurementDetail(id, { enrich: true }); // bước 2
+}
+```
+
+Bốn điểm phải nhớ:
+
+- ⏱️ `enrich=true` cần **timeout 90s** (đã đặt sẵn trong `odaService`); không có `enrich` thì 20s.
+- 🚦 Endpoint giới hạn **20 lượt/phút** vì `enrich` phải bật trình duyệt nền → 429 nếu spam.
+- 🟡 Enrich **thất bại vẫn trả 200** với `detail_status: "missing"` (mạng chặn, cổng reset, hoặc
+  loại thông báo mà cổng không phơi API). Đừng coi là lỗi — hiện cảnh báo vàng + nút thử lại +
+  link sang trang gốc, đúng như hiện tại. Hiện khoảng **48%** gói đã có chi tiết; job nền vẫn
+  đang lấp dần phần còn lại.
+- 📅 Ngày trong `details` là `"2026-08-19 09:00"` (không phải ISO) → format bằng regex, đừng ném
+  thẳng vào `new Date()`.
+
+Các chỗ khác cũng đã trỏ về trang này thay vì link ngoài: bảng TBMT/KHLCNT, tìm kiếm toàn cục,
+popup trên bản đồ Dashboard. Nếu thêm chỗ mới hiển thị gói thầu, dùng
+`/procurement/${encodeURIComponent(id)}` chứ đừng mở muasamcong.
 
 ---
 

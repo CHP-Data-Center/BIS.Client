@@ -26,6 +26,7 @@ const UpgradePage = lazy(() => import('./pages/UpgradePage'));
 const WorldBankView = lazy(() => import('./components/WorldBankView'));
 const WbProjectDetailPage = lazy(() => import('./pages/WbProjectDetailPage'));
 const AdbProjectDetailPage = lazy(() => import('./pages/AdbProjectDetailPage'));
+const ProcurementDetailPage = lazy(() => import('./pages/ProcurementDetailPage'));
 const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
@@ -204,6 +205,13 @@ export default function App() {
                 </EnterpriseRoute>
               } />
 
+
+              {/* Chi tiết gói thầu TBMT/KHLCNT — xem trong app thay vì sang muasamcong */}
+              <Route path="/procurement/:id" element={
+                <EnterpriseRoute>
+                  <AppLayout><ProcurementDetailPage /></AppLayout>
+                </EnterpriseRoute>
+              } />
 
               <Route path="/ai-chat" element={
                 <AiRoute>

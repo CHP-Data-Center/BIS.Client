@@ -42,5 +42,23 @@ export const odaService = {
     apiCache.set(cacheKey, data, 60000); // cache 60 giây
     return data; // ProcurementPage
   },
+
+  /**
+   * Chi tiết 1 gói thầu (TBMT/KHLCNT) để hiển thị NGAY TRONG APP.
+   * `details` đã được backend parse sẵn thành object; `detail_status`:
+   *   ready = có chi tiết · missing = chưa lấy được · unavailable = không có link nguồn.
+   * @param {string} id  Mã TBMT/KHLCNT
+   * @param {{ enrich?: boolean }} opts  enrich=true: chưa có chi tiết thì lấy ngay (CHẬM)
+   */
+  async getProcurementDetail(id, { enrich = false } = {}) {
+    const lang = currentLang();
+    const params = { ...(enrich ? { enrich: true } : {}), ...(lang === 'vi' ? {} : { lang }) };
+    // enrich phải mở trình duyệt nền phía server (~15-30s) → timeout riêng, vượt xa mặc định 15s.
+    const { data } = await api.get(`/procurement/${encodeURIComponent(id)}`, {
+      params,
+      timeout: enrich ? 90000 : 20000,
+    });
+    return data; // ProcurementDetailOut
+  },
 };
 

@@ -135,8 +135,10 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
     };
   }, [normType, isAdbNotice]);
   const HeaderIcon = config.icon;
-  // WB & ADB: bấm tên/icon dự án → xem chi tiết trong app (không mở trang gốc trực tiếp → tránh 403).
-  const usesDetailModal = normType === 'worldbank' || normType === 'adb';
+  // WB, ADB & mua sắm công: bấm tên/mã → xem chi tiết TRONG APP (không đá sang trang gốc:
+  // ADB/WB hay bị 403, muasamcong thì cần tra lại mã thủ công).
+  const usesDetailModal = normType === 'worldbank' || normType === 'adb'
+    || normType === 'procurement';
 
   // Tiêu đề riêng khi tách 2 trang con: ADB (dự án / mời thầu) và mua sắm công (TBMT / KHLCNT).
   // `kind` dùng chung 2 ngữ cảnh nên PHẢI xét normType trước, tránh trang ADB mang nhãn TBMT.
@@ -214,9 +216,10 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
 
-  // Bấm xem chi tiết: WB → trang chi tiết đầy đủ; ADB → trang chi tiết đầy đủ ADB (/adb/project/:id).
+  // Bấm xem chi tiết: mỗi nguồn có trang chi tiết riêng trong app.
   const openDetail = (p) => {
     if (normType === 'adb') nav(`/adb/project/${p.id}`, { state: { project: p } });
+    else if (normType === 'procurement') nav(`/procurement/${encodeURIComponent(p.id)}`);
     else nav(`/worldbank/project/${p.id}`, { state: { project: p } });
   };
 

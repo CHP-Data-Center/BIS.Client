@@ -445,6 +445,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
 
 function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SECTOR_ICONS, SECTOR_NAMES, STATUS_ICONS }) {
   const { t } = useLang();
+  const nav = useNavigate();
   const [viewMode, setViewMode] = useState('card');
   const [currIdx, setCurrIdx] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -468,12 +469,18 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
     if (e) e.stopPropagation();
     if (!item) return;
 
+    const rawId = item.original_id || String(item.id || '').replace(/^(adb|wb|proc|worldbank)-/, '');
+
+    // Mua sắm công: mở trang chi tiết TRONG APP thay vì đá sang muasamcong.
+    if (item.source === 'dauthau' && rawId) {
+      nav(`/procurement/${encodeURIComponent(rawId)}`);
+      return;
+    }
+
     if (item.url) {
       window.open(item.url, '_blank');
       return;
     }
-
-    const rawId = item.original_id || String(item.id || '').replace(/^(adb|wb|proc|worldbank)-/, '');
 
     if (item.source === 'worldbank') {
       window.open(`https://projects.worldbank.org/en/projects-operations/project-detail/${encodeURIComponent(rawId)}`, '_blank');

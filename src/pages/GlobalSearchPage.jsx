@@ -112,7 +112,7 @@ export default function GlobalSearchPage() {
                 key={p.id}
                 title={`${p.kind === 'plan' ? '[KHLCNT]' : '[TBMT]'} ${p.title}`}
                 sub={[p.id, p.procuring_entity, p.publish_date].filter(Boolean).join(' · ')}
-                href={p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`}
+                to={`/procurement/${encodeURIComponent(p.id)}`}
               />
             ))}
           </Section>
