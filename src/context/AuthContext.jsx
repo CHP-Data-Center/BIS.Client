@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []); // chỉ chạy khi mount
 
-  const login = useCallback(async (email, password, rememberMe = true) => {
+  const login = useCallback(async (email, password, rememberMe = false) => {
     setLoginError('');
     try {
       const res = await authService.login(email, password, rememberMe);
