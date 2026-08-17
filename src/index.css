@@ -854,6 +854,143 @@ html[data-ui-theme="classic"],
   border-radius: 0px !important;
 }
 
+/* Classic Win98 Retro AI Chat Elements */
+[data-ui-theme="classic"] .ai-agent-avatar,
+[data-ui-theme="classic"] .ai-user-avatar {
+  border-radius: 0px !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  background: #000080 !important;
+  box-shadow: none !important;
+}
+
+[data-ui-theme="classic"] .ai-bubble-assistant {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid !important;
+  border-top-color: #808080 !important;
+  border-left-color: #808080 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-ui-theme="classic"] .ai-bubble-user {
+  background: #000080 !important;
+  color: #ffffff !important;
+  border: 2px solid !important;
+  border-top-color: #1084d0 !important;
+  border-left-color: #1084d0 !important;
+  border-right-color: #000040 !important;
+  border-bottom-color: #000040 !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-ui-theme="classic"] .ai-agent-badge {
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0px !important;
+  font-weight: bold !important;
+  box-shadow: none !important;
+}
+
+[data-ui-theme="classic"] .ai-citation-pill {
+  background: #000080 !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0px !important;
+  font-weight: bold !important;
+  box-shadow: 1px 1px 0px #808080 !important;
+}
+
+[data-ui-theme="classic"] .ai-citation-pill:hover {
+  background: #ff6600 !important;
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .ai-sources-pill {
+  background: #c0c0c0 !important;
+  color: #000080 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  border-radius: 0px !important;
+  font-weight: bold !important;
+}
+
+[data-ui-theme="classic"] .ai-bullet-dot {
+  background: #000080 !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+[data-ui-theme="classic"] .ai-num-badge {
+  background: #d4d0c8 !important;
+  color: #000080 !important;
+  border: 1px solid #808080 !important;
+  border-radius: 0px !important;
+  font-weight: bold !important;
+}
+
+[data-ui-theme="classic"] .ai-sources-panel {
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-ui-theme="classic"] .ai-source-card {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid !important;
+  border-top-color: #808080 !important;
+  border-left-color: #808080 !important;
+  border-right-color: #dfdfdf !important;
+  border-bottom-color: #dfdfdf !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .ai-source-card.highlighted {
+  background: #ffffcc !important;
+  border: 2px solid #ff0000 !important;
+  outline: 1px solid #ff0000 !important;
+}
+
+[data-ui-theme="classic"] .ai-top-btn {
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  border-radius: 0px !important;
+  font-weight: bold !important;
+}
+
+[data-ui-theme="classic"] .ai-top-btn.active {
+  background: #000080 !important;
+  color: #ffffff !important;
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+}
+
 
 /* 2. Royal Sapphire Executive VIP Theme (Obsidian Sapphire, Diamond Glass & Platinum Metallic Sheen) */
 :root[data-ui-theme="sapphire"],
