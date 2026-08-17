@@ -400,6 +400,18 @@ export default {
   'ai.thinking': 'AI is analyzing data & extracting sources...',
   'ai.errorMsg': 'Unable to fetch response from AI. Please try again later.',
   'ai.notConfigured': 'AI Assistant is not configured with an API Key on the server. Please contact system admin.',
+  'ai.history': 'Chat history',
+  'ai.newChat': 'New chat',
+  'ai.noHistory': 'No conversations yet',
+  'ai.historyHint': 'History is visible only to your own account',
+  'ai.deleteChat': 'Delete this conversation',
+  'ai.confirmDeleteChat': 'Delete this conversation? This cannot be undone.',
+  'ai.clearAll': 'Clear all',
+  'ai.confirmClearAll': 'Delete ALL of your chat history? This cannot be undone.',
+  'ai.renameChat': 'Rename conversation',
+  'ai.renamePrompt': 'New name for this conversation:',
+  'ai.messagesCount': 'messages',
+  'ai.loadFailed': 'Could not load chat history.',
 
   // ── Settings ──
   'settings.title': 'System & Account Settings',

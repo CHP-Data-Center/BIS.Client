@@ -400,6 +400,18 @@ export default {
   'ai.thinking': 'AIがデータを分析しソースを抽出中...',
   'ai.errorMsg': 'AIからの応答を取得できませんでした。後でもう一度お試しください。',
   'ai.notConfigured': 'AIアシスタントのAPIキーがサーバーに設定されていません。システム管理者にお問い合わせください。',
+  'ai.history': 'チャット履歴',
+  'ai.newChat': '新しいチャット',
+  'ai.noHistory': '会話はまだありません',
+  'ai.historyHint': '履歴はご自身のアカウントにのみ表示されます',
+  'ai.deleteChat': 'この会話を削除',
+  'ai.confirmDeleteChat': 'この会話を削除しますか？元に戻せません。',
+  'ai.clearAll': 'すべて削除',
+  'ai.confirmClearAll': 'チャット履歴をすべて削除しますか？元に戻せません。',
+  'ai.renameChat': '会話の名前を変更',
+  'ai.renamePrompt': '会話の新しい名前:',
+  'ai.messagesCount': '件のメッセージ',
+  'ai.loadFailed': 'チャット履歴を読み込めませんでした。',
 
   // ── Settings ──
   'settings.title': 'システム・アカウント設定',

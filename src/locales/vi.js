@@ -400,6 +400,18 @@ export default {
   'ai.thinking': 'AI đang phân tích dữ liệu & trích xuất nguồn...',
   'ai.errorMsg': 'Không thể nhận phản hồi từ AI. Vui lòng thử lại sau.',
   'ai.notConfigured': 'Trợ lý AI chưa được cấu hình API Key trên máy chủ Server. Vui lòng liên hệ Admin hệ thống.',
+  'ai.history': 'Lịch sử trò chuyện',
+  'ai.newChat': 'Cuộc trò chuyện mới',
+  'ai.noHistory': 'Chưa có cuộc trò chuyện nào',
+  'ai.historyHint': 'Lịch sử chỉ hiển thị với riêng tài khoản của bạn',
+  'ai.deleteChat': 'Xóa cuộc trò chuyện này',
+  'ai.confirmDeleteChat': 'Xóa cuộc trò chuyện này? Không thể hoàn tác.',
+  'ai.clearAll': 'Xóa tất cả',
+  'ai.confirmClearAll': 'Xóa TOÀN BỘ lịch sử trò chuyện của bạn? Không thể hoàn tác.',
+  'ai.renameChat': 'Đổi tên cuộc trò chuyện',
+  'ai.renamePrompt': 'Tên mới cho cuộc trò chuyện:',
+  'ai.messagesCount': 'tin nhắn',
+  'ai.loadFailed': 'Không tải được lịch sử trò chuyện.',
 
   // ── Settings ──
   'settings.title': 'Cài Đặt Hệ Thống & Tài Khoản',
