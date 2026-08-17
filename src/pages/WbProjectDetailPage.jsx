@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import ThemePageLoader from '../components/common/ThemePageLoader';
 import { tUI } from '../locales';
 
 const fmtDate = (d) => {
@@ -138,12 +139,7 @@ export default function WbProjectDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
-        <Loader2 size={32} style={{ color: '#10b981', animation: 'spin 0.8s linear infinite' }} />
-        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{tUI('ui.dang-tai-chi-tiet-du-an-world-bank')}</span>
-      </div>
-    );
+    return <ThemePageLoader message={tUI('ui.dang-tai-chi-tiet-du-an-world-bank')} />;
   }
 
   if (!project) {

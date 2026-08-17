@@ -10,6 +10,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+      (function() {
+        try {
+          var userJson = localStorage.getItem('user');
+          var user = userJson ? JSON.parse(userJson) : null;
+          var userKey = user ? (user.email || user.id) : null;
+          var theme = (userKey && localStorage.getItem('bis_ui_theme_' + userKey)) || localStorage.getItem('bis_last_active_ui_theme') || 'basic';
+          document.documentElement.setAttribute('data-ui-theme', theme);
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

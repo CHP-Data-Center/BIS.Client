@@ -7,6 +7,7 @@ import {
   Layers, FileText, CheckCircle2, Tag, Cpu, RefreshCw, CalendarDays, ShieldCheck
 } from 'lucide-react';
 import { adbService } from '../services/adb';
+import ThemePageLoader from '../components/common/ThemePageLoader';
 import { tUI } from '../locales';
 
 const ADB_LABEL_VI = {
@@ -167,12 +168,7 @@ export default function AdbProjectDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: 12 }}>
-        <Loader2 size={32} style={{ color: '#f59e0b', animation: 'spin 0.8s linear infinite' }} />
-        <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{tUI('ui.dang-tai-chi-tiet-du-an-adb')}</span>
-      </div>
-    );
+    return <ThemePageLoader message={tUI('ui.dang-tai-chi-tiet-du-an-adb')} />;
   }
 
   if (!project) {
