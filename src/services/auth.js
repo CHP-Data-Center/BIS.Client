@@ -3,8 +3,12 @@ import api from './api';
 
 export const authService = {
   /** Đăng nhập → trả { access_token, token_type, expires_in_minutes } */
-  async login(email, password) {
-    const { data } = await api.post('/auth/login', { email, password });
+  async login(email, password, rememberMe = false) {
+    const { data } = await api.post('/auth/login', {
+      email,
+      password,
+      remember_me: Boolean(rememberMe),
+    });
     return data;
   },
 

@@ -84,7 +84,7 @@ export default function LoginPage() {
   const nav = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -209,33 +209,48 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     try {
       setGoogleLoading(true);
       setLoginError('');
 
-      if (window.google && window.google.accounts) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id.apps.googleusercontent.com',
-          callback: async (response) => {
-            if (response.credential) {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '227924702568-q0kmobftaj5crfve5vu9tmr6kkl2vvec.apps.googleusercontent.com';
+
+      if (window.google?.accounts?.oauth2) {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'email profile openid',
+          callback: async (tokenResponse) => {
+            if (tokenResponse?.access_token) {
               try {
-                const res = await loginWithGoogle(response.credential);
-                const target = res?.user?.role === 'personal' ? '/news/press' : '/dashboard';
-                nav(target);
+                const res = await loginWithGoogle(null, tokenResponse.access_token);
+                if (res) {
+                  const target = res?.role === 'personal' ? '/news/press' : '/dashboard';
+                  nav(target);
+                }
               } catch (err) {
-                setGoogleLoading(false);
                 setLoginError(err.response?.data?.detail || 'Đăng nhập Google thất bại. Hãy thử lại.');
+              } finally {
+                setGoogleLoading(false);
               }
             } else {
               setGoogleLoading(false);
-              if (response?.error !== 'popup_closed_by_user') {
-                setLoginError('Không lấy được thông tin đăng nhập từ Google.');
+              if (tokenResponse?.error && tokenResponse.error !== 'popup_closed_by_user') {
+                setLoginError('Đăng nhập Google không thành công.');
               }
             }
           },
+          error_callback: (err) => {
+            setGoogleLoading(false);
+            if (err?.type !== 'popup_closed') {
+              setLoginError('Không thể mở cửa sổ đăng nhập Google.');
+            }
+          },
         });
-        window.google.accounts.id.prompt();
+        client.requestAccessToken({ prompt: 'select_account' });
+      } else {
+        setGoogleLoading(false);
+        setLoginError('Dịch vụ Google Sign-In chưa sẵn sàng. Vui lòng tải lại trang.');
       }
     } catch (err) {
       setGoogleLoading(false);

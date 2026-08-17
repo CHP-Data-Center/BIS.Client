@@ -201,9 +201,9 @@ export default function WbProjectDetailPage() {
 
       {/* Breadcrumb */}
       <div className="breadcrumb">
-        <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>Dashboard</a>
+        <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>{tUI('nav.dashboard')}</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
-        <a onClick={() => nav('/worldbank')} style={{ cursor: 'pointer' }}>World Bank</a>
+        <a onClick={() => nav('/worldbank')} style={{ cursor: 'pointer' }}>{tUI('nav.worldbank')}</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
         <span style={{ color: 'var(--text-primary)', fontWeight: 600, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {project.project_name?.slice(0, 45)}…

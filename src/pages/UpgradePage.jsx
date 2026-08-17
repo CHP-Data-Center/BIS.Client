@@ -364,7 +364,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
             boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
           }}>
-            {activeDataPackage === 'combo2' ? '✓ COMBO 2 (ĐANG SỬ DỤNG)' : activeDataPackage === 'full' && !isSuperAdmin ? t('upgrade.includedInFull') : '🔥 COMBO 2'}
+            {activeDataPackage === 'combo2' ? t('upgrade.combo2ActiveBadge') : activeDataPackage === 'full' && !isSuperAdmin ? t('upgrade.includedInFull') : t('upgrade.combo2Badge')}
           </div>
 
           <div>
@@ -427,8 +427,8 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(349000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
-                  : 'Thanh toán linh hoạt'}
+                  ? t('upgrade.billedYearly', { amount: (Math.round(349000 * 0.8) * 12).toLocaleString('vi-VN') })
+                  : t('upgrade.flexibleBilling')}
               </div>
             </div>
 
@@ -484,12 +484,12 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
 
           {activeDataPackage === 'full' && !isSuperAdmin && (
             <div style={{ fontSize: 11, color: '#059669', background: '#ecfdf5', padding: '8px 10px', borderRadius: 8, marginTop: -14, marginBottom: 16, border: '1px solid #a7f3d0' }}>
-              💡 Bạn đang sử dụng gói Full Data Pack (Trọn bộ 3 nguồn), không cần mua thêm Combo 2.
+              {t('upgrade.alreadyFullPackNotice')}
             </div>
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: '1px dashed var(--border-subtle)', paddingTop: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{tUI('ui.tinh-nang-bao-gom')}</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{t('upgrade.featuresIncluded')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
               <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0 }} />
               <span>{tUI('ui.mo-khoa')} <b>{tUI('ui.2-nguon-chuyen-sau')}</b> {tUI('ui.da-chon')}</span>
@@ -544,8 +544,8 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(499000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
-                  : 'Thanh toán linh hoạt'}
+                  ? t('upgrade.billedYearly', { amount: (Math.round(499000 * 0.8) * 12).toLocaleString('vi-VN') })
+                  : t('upgrade.flexibleBilling')}
               </div>
             </div>
 
@@ -575,7 +575,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <button
                 onClick={() => handleOpenUpgradeModal({
                   pkgType: 'full',
-                  name: tUI('ui.goi-full-data-pack-adb-wb-dau-thau'),
+                  name: t('upgrade.fullPackTitle'),
                   price: Math.round(499000 * discount),
                   cycle: billingCycle,
                 })}
@@ -620,7 +620,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             color: 'white', fontSize: 10, fontWeight: 800, padding: '4px 12px',
             borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
           }}>
-            {activeDataPackage === 'enterprise' || isRegionalAdmin ? '✓ ĐANG SỬ DỤNG (ENTERPRISE)' : '🏢 QUẢN TRỊ TỔ CHỨC'}
+            {activeDataPackage === 'enterprise' || isRegionalAdmin ? t('upgrade.enterpriseActiveBadge') : t('upgrade.enterpriseBadgeTop')}
           </div>
 
           <div>
@@ -653,8 +653,8 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(999000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
-                  : 'Thanh toán linh hoạt'}
+                  ? t('upgrade.billedYearly', { amount: (Math.round(999000 * 0.8) * 12).toLocaleString('vi-VN') })
+                  : t('upgrade.flexibleBilling')}
               </div>
             </div>
 
@@ -684,7 +684,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <button
                 onClick={() => handleOpenUpgradeModal({
                   pkgType: 'enterprise',
-                  name: tUI('ui.goi-enterprise-full-data-quan-tri-10-user'),
+                  name: t('upgrade.enterpriseTitle'),
                   price: Math.round(999000 * discount),
                   cycle: billingCycle,
                 })}
@@ -733,7 +733,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             color: 'white', fontSize: 10, fontWeight: 800, padding: '4px 12px',
             borderRadius: 12, letterSpacing: '0.5px', textTransform: 'uppercase',
           }}>
-            {hasAiPackage ? '✓ AI (ĐANG SỬ DỤNG)' : '🤖 AI INTELLIGENCE'}
+            {hasAiPackage ? t('upgrade.aiActiveBadge') : t('upgrade.aiBadgeTop')}
           </div>
 
           <div>
@@ -766,8 +766,8 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               </div>
               <div style={{ fontSize: 11, color: billingCycle === 'yearly' ? '#10b981' : 'var(--text-muted)', fontWeight: billingCycle === 'yearly' ? 700 : 400, marginTop: 4, height: 16, whiteSpace: 'nowrap' }}>
                 {billingCycle === 'yearly'
-                  ? `(Thanh toán ${(Math.round(149000 * 0.8) * 12).toLocaleString('vi-VN')}đ/năm · -20%)`
-                  : 'Thanh toán linh hoạt'}
+                  ? t('upgrade.billedYearly', { amount: (Math.round(149000 * 0.8) * 12).toLocaleString('vi-VN') })
+                  : t('upgrade.flexibleBilling')}
               </div>
             </div>
 
@@ -797,7 +797,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <button
                 onClick={() => handleOpenUpgradeModal({
                   pkgType: 'ai',
-                  name: tUI('ui.tro-ly-ai-gemini-hoi-dap'),
+                  name: t('upgrade.aiTitle'),
                   price: Math.round(149000 * discount),
                   cycle: billingCycle,
                 })}
@@ -859,7 +859,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               key: 'basic',
               price: 0,
               colors: ['#3b82f6', '#10b981', '#ffffff'],
-              tag: 'MẶC ĐỊNH',
+              tag: t('upgrade.themeTagDefault'),
               img: basicBg
             },
             {
@@ -918,10 +918,10 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                       background: isActive ? '#2563eb' : isUnlocked ? '#10b981' : '#334155', color: '#ffffff', letterSpacing: '0.4px',
                       whiteSpace: 'nowrap', flexShrink: 0
                     }}>
-                      {isActive ? t('upgrade.themeApplied') : isUnlocked ? '✓ ĐÃ SỞ HỮU' : theme.tag}
+                      {isActive ? t('upgrade.themeApplied') : isUnlocked ? t('upgrade.ownedBadge') : theme.tag}
                     </span>
                     <span style={{ fontWeight: 800, fontSize: 13, color: isUnlocked ? '#10b981' : 'var(--text-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {theme.price === 0 ? '0đ' : isUnlocked ? 'Đã sở hữu' : `${theme.price.toLocaleString('vi-VN')}đ`}
+                      {theme.price === 0 ? '0đ' : isUnlocked ? t('upgrade.owned') : `${theme.price.toLocaleString('vi-VN')}đ`}
                     </span>
                   </div>
 
@@ -950,7 +950,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                       className={isActive ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'}
                       style={{ flex: 1, fontSize: 12, fontWeight: 700, borderRadius: 10 }}
                     >
-                      {isActive ? '✓ Đang Sử Dụng' : 'Áp Dụng Giao Diện'}
+                      {isActive ? t('upgrade.themeInUse') : t('upgrade.applyThemeBtn')}
                     </button>
                   ) : (
                     <>
@@ -960,19 +960,19 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                         className={isActive ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'}
                         style={{ flex: 1, fontSize: 12, fontWeight: 700, borderRadius: 10 }}
                       >
-                        {isActive ? '✓ Đang Dùng Thử' : 'Dùng Thử Live'}
+                        {isActive ? t('upgrade.themeTesting') : t('upgrade.livePreview')}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleOpenUpgradeModal({
-                          name: `Gói UI/UX Theme ${theme.title}`,
+                          name: `${t('upgrade.themePackagePrefix')} ${t(`theme.${theme.key}.title`)}`,
                           price: theme.price,
                           themeKey: theme.key,
                         })}
                         className="btn btn-ghost btn-sm"
                         style={{ color: '#a855f7', fontWeight: 700, fontSize: 12 }}
                       >
-                        Mua Gói UI
+                        {t('upgrade.buyThemeBtn')}
                       </button>
                     </>
                   )}
@@ -992,10 +992,10 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
           <Layers size={20} style={{ color: 'var(--brand-500)' }} />
           <div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              Thuê Lẻ Từng Nguồn Dữ Liệu Theo Tháng
+              {t('upgrade.addonSectionTitle')}
             </h3>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
-              Dành cho người dùng chỉ có nhu cầu theo dõi duy nhất 1 nguồn chuyên biệt.
+              {t('upgrade.addonSectionSub')}
             </div>
           </div>
         </div>
@@ -1009,7 +1009,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             { key: 'adb', title: tUI('ui.nguon-adb-chau-a'), price: 199000, color: '#f59e0b', icon: <Building2 size={18} color="#f59e0b" />, desc: tUI('ui.du-an-oda-ngan-hang-chau-a') },
             { key: 'wb', title: tUI('ui.nguon-world-bank'), price: 199000, color: '#10b981', icon: <Globe size={18} color="#10b981" />, desc: tUI('ui.du-an-oda-ngan-hang-the-gioi') },
             { key: 'dau-thau', title: tUI('ui.dau-thau-cong'), price: 299000, color: '#8b5cf6', icon: <ShoppingBag size={18} color="#8b5cf6" />, desc: tUI('ui.thong-bao-moi-thau-khlcnt') },
-            { key: 'user-slots', title: '+10 Slot User Enterprise', price: 50000, color: '#9333ea', icon: <Zap size={18} color="#9333ea" />, desc: tUI('ui.them-10-slot-cho-admin-phan-vung') },
+            { key: 'user-slots', title: t('upgrade.addon10Slots'), price: 50000, color: '#9333ea', icon: <Zap size={18} color="#9333ea" />, desc: tUI('ui.them-10-slot-cho-admin-phan-vung') },
           ].map(addon => (
             <div key={addon.key} style={{
               flex: '0 0 280px', minWidth: 280, padding: 20, borderRadius: 16,
@@ -1029,7 +1029,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <div style={{ textAlign: 'right' }}>
                 <div className="price-text-anim" style={{ fontWeight: 800, fontSize: 15, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                   {Math.round(addon.price * discount).toLocaleString('vi-VN')}đ
-                  <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>{tUI('ui.thang')}</span>
+                  <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text-muted)' }}>{t('upgrade.perMonthShort')}</span>
                 </div>
                 {(() => {
                   const normalizedKey = addon.key === 'wb' ? 'worldbank' : addon.key === 'dau-thau' ? 'gov' : addon.key;
@@ -1049,28 +1049,28 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                         className="btn btn-ghost btn-xs"
                         style={{ color: '#9333ea', fontWeight: 800, padding: '2px 8px', marginTop: 4, background: '#f3e8ff', border: '1px solid #e9d5ff' }}
                       >
-                        ➕ Mua +10 User →
+                        {t('upgrade.buy10SlotsBtn')}
                       </button>
                     );
                   }
                   if (isFull) {
                     return (
                       <span style={{ fontSize: 10.5, fontWeight: 800, color: '#10b981', display: 'block', marginTop: 4 }}>
-                        ✓ Đã Bao Gồm (Full)
+                        {t('upgrade.includedFullShort')}
                       </span>
                     );
                   }
                   if (isSingleActive) {
                     return (
                       <span style={{ fontSize: 10.5, fontWeight: 800, color: '#2563eb', display: 'block', marginTop: 4 }}>
-                        ✓ ĐANG SỬ DỤNG
+                        {t('upgrade.activeUsing')}
                       </span>
                     );
                   }
                   if (isComboActive) {
                     return (
                       <span style={{ fontSize: 10.5, fontWeight: 800, color: '#3b82f6', display: 'block', marginTop: 4 }}>
-                        ✓ Đã Có Trong Combo 2
+                        {t('upgrade.inCombo2')}
                       </span>
                     );
                   }
@@ -1079,14 +1079,14 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                       onClick={() => handleOpenUpgradeModal({
                         pkgType: 'single',
                         sourceKey: normalizedKey,
-                        name: `Gói Độc Lập 1 Nguồn ${addon.title}`,
+                        name: `${addon.title}`,
                         price: Math.round(addon.price * discount),
                         cycle: billingCycle,
                       })}
                       className="btn btn-ghost btn-xs"
                       style={{ color: 'var(--brand-600)', fontWeight: 700, padding: '2px 8px', marginTop: 4 }}
                     >
-                      Thuê Nguồn →
+                      {t('upgrade.subscribeSourceBtn')}
                     </button>
                   );
                 })()}
@@ -1102,28 +1102,28 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
         borderRadius: 20, padding: 28, overflowX: 'auto', position: 'relative', zIndex: 1,
       }}>
         <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>
-          Bảng So Sánh Chi Tiết Quyền Lợi Các Gói
+          {t('upgrade.compareTableTitle')}
         </h3>
 
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--border)' }}>
-              <th style={{ textAlign: 'left', padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 700 }}>{tUI('ui.tinh-nang')}</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: 'var(--text-primary)', fontWeight: 800 }}>{tUI('ui.ca-nhan-free')}</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#3b82f6', fontWeight: 800 }}>{tUI('ui.combo-2-nguon')}</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#a855f7', fontWeight: 800 }}>{tUI('ui.goi-ai-assistant')}</th>
-              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#9333ea', fontWeight: 800 }}>ENTERPRISE</th>
+              <th style={{ textAlign: 'left', padding: '14px 16px', color: 'var(--text-muted)', fontWeight: 700 }}>{t('upgrade.tableFeature')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: 'var(--text-primary)', fontWeight: 800 }}>{t('upgrade.tableFree')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#3b82f6', fontWeight: 800 }}>{t('upgrade.tableCombo2')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#a855f7', fontWeight: 800 }}>{t('upgrade.tableAi')}</th>
+              <th style={{ textAlign: 'center', padding: '14px 16px', color: '#9333ea', fontWeight: 800 }}>{t('upgrade.tableEnterprise')}</th>
             </tr>
           </thead>
           <tbody>
             {[
               { name: tUI('ui.tin-tuc-bao-chi-toan-quoc'), free: true, combo: true, ai: true, enterprise: true },
-              { name: tUI('ui.du-an-adb-world-bank'), free: false, combo: '2 Nguồn chọn', ai: false, enterprise: true },
-              { name: tUI('ui.thong-bao-dau-thau-cong-2'), free: false, combo: '2 Nguồn chọn', ai: false, enterprise: true },
+              { name: tUI('ui.du-an-adb-world-bank'), free: false, combo: t('upgrade.table2Sources'), ai: false, enterprise: true },
+              { name: tUI('ui.thong-bao-dau-thau-cong-2'), free: false, combo: t('upgrade.table2Sources'), ai: false, enterprise: true },
               { name: tUI('ui.tro-ly-ai-gemini-2-0-hoi-dap'), free: false, combo: false, ai: true, enterprise: true },
               { name: tUI('ui.dashboard-thong-ke-tong-quan'), free: false, combo: false, ai: false, enterprise: true },
               { name: tUI('ui.phan-quyen-phan-vung-to-chuc'), free: false, combo: false, ai: false, enterprise: true },
-              { name: tUI('ui.tan-suat-crawl-cap-nhat'), free: '4h / lần', combo: '4h / lần', ai: 'Tức thì', enterprise: 'Tức thì' },
+              { name: tUI('ui.tan-suat-crawl-cap-nhat'), free: t('upgrade.every4h'), combo: t('upgrade.every4h'), ai: t('upgrade.realtime'), enterprise: t('upgrade.realtime') },
             ].map((row, idx) => (
               <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)', background: idx % 2 === 0 ? 'transparent' : 'var(--bg-surface-2)' }}>
                 <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--text-primary)' }}>{row.name}</td>
@@ -1186,7 +1186,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-600)', marginBottom: 8 }}>
                   <Zap size={20} style={{ color: '#2563eb' }} />
-                  <span style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>{tUI('ui.xac-nhan-nang-cap-goi')}</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('upgrade.modalConfirmTitle')}</span>
                 </div>
 
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
@@ -1198,22 +1198,22 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   border: '1px solid var(--border)', margin: '16px 0 20px',
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{tUI('ui.chi-phi-goi')}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('upgrade.modalCost')}</span>
                     <span style={{ fontWeight: 900, fontSize: 16, color: 'var(--text-primary)' }}>
-                      {selectedPackage?.themeKey ? `${selectedPackage?.price?.toLocaleString('vi-VN')}đ (Dùng vĩnh viễn)` : `${selectedPackage?.price?.toLocaleString('vi-VN')}đ / tháng`}
+                      {selectedPackage?.themeKey ? `${selectedPackage?.price?.toLocaleString('vi-VN')}đ (${t('upgrade.modalLifetime')})` : `${selectedPackage?.price?.toLocaleString('vi-VN')}đ ${t('upgrade.perMonth')}`}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{tUI('ui.hinh-thuc')}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('upgrade.modalMethod')}</span>
                     <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--brand-600)' }}>
-                      {selectedPackage?.themeKey ? 'Thanh toán 1 lần duy nhất' : (selectedPackage?.cycle || billingCycle) === 'yearly' ? 'Thanh toán 12 tháng (Giảm 20%)' : 'Thanh toán từng tháng'}
+                      {selectedPackage?.themeKey ? t('upgrade.modalPaymentOnce') : (selectedPackage?.cycle || billingCycle) === 'yearly' ? t('upgrade.modalPaymentYearly') : t('upgrade.modalPaymentMonthly')}
                     </span>
                   </div>
                   {!selectedPackage?.themeKey && (
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{tUI('ui.thoi-han-goi')}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('upgrade.modalDuration')}</span>
                       <span style={{ fontWeight: 700, fontSize: 13, color: '#10b981' }}>
-                        📅 {getCalculatedExpiration(selectedPackage?.cycle || billingCycle)} ({(selectedPackage?.cycle || billingCycle) === 'yearly' ? '1 năm' : '1 tháng'})
+                        📅 {getCalculatedExpiration(selectedPackage?.cycle || billingCycle)} ({(selectedPackage?.cycle || billingCycle) === 'yearly' ? t('upgrade.oneYear') : t('upgrade.oneMonth')})
                       </span>
                     </div>
                   )}
@@ -1221,7 +1221,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
 
                 <form onSubmit={handleConfirmUpgrade} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>{tUI('ui.email-tai-khoan-nang-cap')}</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>{t('upgrade.modalEmailLabel')}</label>
                     <input
                       type="email"
                       className="form-input"
@@ -1232,13 +1232,13 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>{tUI('ui.so-dien-thoai-lien-he-zalo')}</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>{t('upgrade.modalPhoneLabel')}</label>
                     <input
                       type="tel"
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder={tUI('ui.nhap-so-dien-thoai-cua-ban-vd-0987xxxxxx')}
+                      placeholder={t('upgrade.modalPhonePlaceholder')}
                       className="form-input"
                       style={{ fontSize: 13, padding: '10px 14px' }}
                     />
@@ -1253,12 +1253,12 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                       boxShadow: '0 4px 14px rgba(37,99,235,0.35)', cursor: 'pointer',
                     }}
                   >
-                    🚀 Đăng Ký Nâng Cấp Ngay
+                    🚀 {t('upgrade.modalSubmitBtn')}
                   </button>
                 </form>
 
                 <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: 'var(--text-muted)' }}>
-                  🔒 Nhấn <b>[ESC]</b> hoặc bấm ra ngoài để đóng nhanh popup.
+                  {t('upgrade.modalEscHint')}
                 </div>
               </div>
             ) : (
@@ -1271,10 +1271,10 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   <Check size={34} />
                 </div>
                 <h3 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
-                  Yêu Cầu Nâng Cấp Đã Được Gửi!
+                  {t('upgrade.modalSuccessTitle')}
                 </h3>
                 <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 24 }}>
-                  Chuyên viên hỗ trợ sẽ liên hệ với bạn qua SĐT/Zalo <b>{phone || 'của bạn'}</b> {tUI('ui.trong-it-phut-de-kich-hoat-goi')} <b>{selectedPackage?.name}</b>.
+                  {t('upgrade.modalSuccessDesc', { phone: phone || t('upgrade.modalYourPhone'), pkgName: selectedPackage?.name || '' })}
                 </p>
                 <button
                   type="button"
@@ -1282,7 +1282,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                   className="btn btn-primary"
                   style={{ padding: '10px 28px', fontSize: 14, fontWeight: 700, borderRadius: 10 }}
                 >
-                  Hoàn Tất
+                  {t('upgrade.modalDoneBtn')}
                 </button>
               </div>
             )}

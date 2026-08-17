@@ -239,7 +239,7 @@ export default function AdbProjectDetailPage() {
 
       {/* Breadcrumb */}
       <div className="breadcrumb">
-        <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>Dashboard</a>
+        <a onClick={() => nav('/dashboard')} style={{ cursor: 'pointer' }}>{tUI('nav.dashboard')}</a>
         <ChevronRight size={12} className="breadcrumb-sep" />
         <a onClick={() => nav('/news/adb')} style={{ cursor: 'pointer' }}>{tUI('ui.adb-chau-a')}</a>
         <ChevronRight size={12} className="breadcrumb-sep" />

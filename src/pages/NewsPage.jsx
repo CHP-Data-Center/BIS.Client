@@ -542,7 +542,7 @@ export default function NewsPage() {
           {/* Breadcrumb */}
           <div className="breadcrumb">
             <a onClick={() => nav(isPersonalUser ? '/news/press' : '/dashboard')} style={{ cursor: 'pointer' }}>
-              {isPersonalUser ? t('nav.home') : 'Dashboard'}
+              {isPersonalUser ? t('nav.home') : t('nav.dashboard')}
             </a>
             <ChevronRight size={12} className="breadcrumb-sep" />
             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{t(srcConfig.labelKey) || srcConfig.label}</span>
