@@ -10,6 +10,7 @@ import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { syncUserTheme } from './utils/theme';
 import ThemeFxOverlay from './components/common/ThemeFxOverlay';
+import ThemePageLoader from './components/common/ThemePageLoader';
 import { tUI } from './locales';
 
 // Dynamic imports for route-level Code Splitting
@@ -31,20 +32,8 @@ const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
 
-function PageLoader() {
-  return (
-    <div style={{
-      minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexDirection: 'column', gap: 12, background: 'transparent',
-    }}>
-      <div style={{
-        width: 40, height: 40, borderRadius: '50%',
-        border: '3px solid var(--brand-200)', borderTopColor: 'var(--brand-500)',
-        animation: 'spin 0.8s linear infinite',
-      }} />
-      <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{tUI('ui.dang-tai-trang')}</span>
-    </div>
-  );
+function PageLoader({ message, fullScreen = true }) {
+  return <ThemePageLoader message={message} minHeight={fullScreen ? '100vh' : '65vh'} />;
 }
 
 // Layout wrapper cho các trang cần header + sidebar
