@@ -33,10 +33,10 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []); // chỉ chạy khi mount
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, rememberMe = true) => {
     setLoginError('');
     try {
-      const res = await authService.login(email, password);
+      const res = await authService.login(email, password, rememberMe);
       localStorage.setItem('bis_token', res.access_token);
       setToken(res.access_token);
 
