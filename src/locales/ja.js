@@ -392,6 +392,7 @@ export default {
   'ai.placeholder': 'プロジェクト、ニュース、入札について質問... (Enterで送信)',
   'ai.clearChat': '会話をクリア',
   'ai.sourcesTitle': '📎 参照ソース:',
+  'ai.sources': '参照ソース',
   'ai.suggestionsTitle': 'よくある質問:',
   'ai.suggestion1': 'ベトナムにおける最新のADB再生可能エネルギーODAプロジェクトを要約してください。',
   'ai.suggestion2': '現在入札募集中の世界銀行土木工事案件はどれですか？',
