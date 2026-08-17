@@ -464,6 +464,7 @@ export default {
   'ai.clearChat': 'Clear Conversation',
   'ai.sourcesTitle': '📎 Reference Sources:',
   'ai.sources': 'Reference sources',
+  'ai.sourceOriginal': 'Original site',
   'ai.suggestionsTitle': 'Popular Questions:',
   'ai.suggestion1': 'Summarize the latest renewable energy ODA projects funded by ADB in Vietnam?',
   'ai.suggestion2': 'Which World Bank civil works tenders are currently accepting bids?',

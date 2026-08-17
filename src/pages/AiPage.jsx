@@ -1,7 +1,8 @@
 // src/pages/AiPage.jsx
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Send, Cpu, Loader2, ExternalLink, Bot, User,
+  Send, Cpu, Loader2, ExternalLink, Bot, User, FileSearch,
   MessageSquarePlus, Trash2, Pencil, History, X,
 } from 'lucide-react';
 import { aiService } from '../services/ai';
@@ -63,23 +64,40 @@ function MessageBubble({ msg }) {
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6 }}>
               📎 {t('ai.sources')}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {msg.sources.map((s) => (
-                <a
-                  key={s.id}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    fontSize: 11, color: 'var(--brand-600)', textDecoration: 'none', fontWeight: 600,
-                  }}
-                >
-                  <ExternalLink size={10} style={{ flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {s.title}
-                  </span>
-                </a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {msg.sources.map((s, i) => (
+                <div key={`${s.kind || 'src'}-${s.id}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  {s.source_name && (
+                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: '1px 6px', borderRadius: 6, background: 'var(--bg-surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)', flexShrink: 0 }}>
+                      {s.source_name}
+                    </span>
+                  )}
+                  {/* Trang chi tiết TRONG APP (backend trả internal_path) — ưu tiên hơn link ngoài */}
+                  {s.internal_path ? (
+                    <Link
+                      to={s.internal_path}
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--brand-600)', textDecoration: 'none', fontWeight: 600, minWidth: 0, flex: 1 }}
+                    >
+                      <FileSearch size={10} style={{ flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</span>
+                    </Link>
+                  ) : (
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                      {s.title}
+                    </span>
+                  )}
+                  {s.url && (
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={t('ai.sourceOriginal')}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 600, flexShrink: 0 }}
+                    >
+                      {t('ai.sourceOriginal')} <ExternalLink size={9} />
+                    </a>
+                  )}
+                </div>
               ))}
             </div>
           </div>

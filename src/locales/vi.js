@@ -464,6 +464,7 @@ export default {
   'ai.clearChat': 'Xóa cuộc trò chuyện',
   'ai.sourcesTitle': '📎 Nguồn tham khảo:',
   'ai.sources': 'Nguồn tham khảo',
+  'ai.sourceOriginal': 'Web gốc',
   'ai.suggestionsTitle': 'Gợi ý câu hỏi phổ biến:',
   'ai.suggestion1': 'Tóm tắt các dự án ODA năng lượng tái tạo mới nhất của ADB tại Việt Nam?',
   'ai.suggestion2': 'Những gói thầu xây dựng nào của World Bank đang mở mời thầu?',
