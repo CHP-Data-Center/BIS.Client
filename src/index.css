@@ -455,7 +455,6 @@ html[data-ui-theme="classic"],
 [data-ui-theme="classic"] .stats-card,
 [data-ui-theme="classic"] .news-card,
 [data-ui-theme="classic"] .article-card,
-[data-ui-theme="classic"] .article-layout,
 [data-ui-theme="classic"] .wb-project-card,
 [data-ui-theme="classic"] .settings-card,
 [data-ui-theme="classic"] .trending-strip,
@@ -472,6 +471,13 @@ html[data-ui-theme="classic"],
   backdrop-filter: none !important;
   animation: none !important;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-ui-theme="classic"] .article-layout {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Reset text-shadow & enforce sharp black text inside all Win98 metallic gray cards & article detail pages */
@@ -1203,6 +1209,110 @@ html[data-ui-theme="classic"],
 [data-ui-theme="classic"] .pagination button.active {
   background: #000080 !important;
   color: #ffffff !important;
+}
+
+/* Classic Retro Win98 Article / Project Detail Sidebar Cards */
+[data-ui-theme="classic"] .article-sidebar-card {
+  background: #c0c0c0 !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0px !important;
+  margin-bottom: 12px !important;
+  padding: 12px 14px !important;
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-title {
+  color: #000080 !important;
+  font-weight: bold !important;
+  font-family: 'Tahoma', 'MS Sans Serif', sans-serif !important;
+  font-size: 12px !important;
+  border-bottom: 1px solid #808080 !important;
+  padding-bottom: 6px !important;
+  margin-bottom: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-title svg,
+[data-ui-theme="classic"] .article-sidebar-title span {
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card p {
+  color: #000000 !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card a {
+  color: #000080 !important;
+  font-weight: bold !important;
+  text-decoration: none !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card a:hover {
+  text-decoration: underline !important;
+}
+
+/* Keyword & Category Tags in Retro Detail Pages */
+[data-ui-theme="classic"] .article-sidebar-card span[style*="border-radius"],
+[data-ui-theme="classic"] .article-sidebar-card span[style*="cursor: pointer"] {
+  background: #d4d0c8 !important;
+  border: 1px solid #404040 !important;
+  color: #000080 !important;
+  font-weight: bold !important;
+  border-radius: 0px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  box-shadow: 1px 1px 0px #ffffff !important;
+  text-shadow: none !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card span[style*="border-radius"]:hover,
+[data-ui-theme="classic"] .article-sidebar-card span[style*="cursor: pointer"]:hover {
+  background: #000080 !important;
+  color: #ffffff !important;
+}
+
+/* Related articles / projects list cards inside sidebar */
+[data-ui-theme="classic"] .article-sidebar-card div[style*="cursor: pointer"],
+[data-ui-theme="classic"] .article-sidebar-card div[id*="related-"] {
+  background: #ffffff !important;
+  border: 1px solid #808080 !important;
+  border-radius: 0px !important;
+  padding: 8px 10px !important;
+  margin-bottom: 6px !important;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1) !important;
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card div[style*="cursor: pointer"]:hover,
+[data-ui-theme="classic"] .article-sidebar-card div[id*="related-"]:hover {
+  background: #e8eef8 !important;
+  border-color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card div[style*="cursor: pointer"] div,
+[data-ui-theme="classic"] .article-sidebar-card div[id*="related-"] div {
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card div[style*="cursor: pointer"] span,
+[data-ui-theme="classic"] .article-sidebar-card div[id*="related-"] span {
+  color: #000080 !important;
+  font-weight: bold !important;
+}
+
+[data-ui-theme="classic"] .article-sidebar-card img {
+  border: 1px solid #808080 !important;
+  border-radius: 0px !important;
 }
 
 
