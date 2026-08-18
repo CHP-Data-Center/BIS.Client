@@ -1,7 +1,165 @@
 // src/components/common/ThemePageLoader.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLang } from '../../context/LanguageContext';
-import { LuxuryCrownSvg, SapphireDiamondSvg } from './ThemeFxOverlay';
+import { LuxuryCrownSvg, LuxuryMoneyBagSvg, SapphireDiamondSvg, SapphireStarSvg } from './ThemeFxOverlay';
+
+const RAIN_TRAJECTORIES = [
+  { rotStart: '0deg', rotEnd: '0deg', driftX: '0px' },
+  { rotStart: '35deg', rotEnd: '50deg', driftX: '18px' },
+  { rotStart: '170deg', rotEnd: '190deg', driftX: '-15px' },
+  { rotStart: '-45deg', rotEnd: '-55deg', driftX: '-22px' },
+  { rotStart: '0deg', rotEnd: '360deg', driftX: '20px' },
+  { rotStart: '-140deg', rotEnd: '-120deg', driftX: '12px' },
+  { rotStart: '85deg', rotEnd: '95deg', driftX: '-28px' },
+  { rotStart: '-18deg', rotEnd: '-10deg', driftX: '0px' },
+];
+
+function getLoaderParticleSpec(i) {
+  const seed = (Math.sin(i * 17.1234 + 43.567) * 43758.5453) % 1;
+  const rand = Math.abs(seed);
+
+  if (rand < 0.25) {
+    const norm = rand / 0.25;
+    const size = 32 + Math.floor(norm * 14);
+    const opacity = 0.9;
+    return { size, opacity, tier: 'huge' };
+  } else if (rand < 0.60) {
+    const norm = (rand - 0.25) / 0.35;
+    const size = 20 + Math.floor(norm * 10);
+    const opacity = 0.8;
+    return { size, opacity, tier: 'large' };
+  } else {
+    const norm = (rand - 0.60) / 0.40;
+    const size = 11 + Math.floor(norm * 6);
+    const opacity = 0.55;
+    return { size, opacity, tier: 'small' };
+  }
+}
+
+function LoaderThemeRain({ theme }) {
+  const items = useRef(
+    Array.from({ length: 42 }).map((_, i) => {
+      const spec = getLoaderParticleSpec(i);
+      const left = `${(i * 2.3 + (i % 7) * 1.7) % 97}%`;
+      const durVal = 4.2 + (i % 8) * 0.75;
+      const duration = `${durVal.toFixed(2)}s`;
+      const delay = `-${((i * 0.4) % durVal).toFixed(2)}s`;
+      const traj = RAIN_TRAJECTORIES[i % RAIN_TRAJECTORIES.length];
+
+      return {
+        id: i,
+        ...spec,
+        left,
+        delay,
+        duration,
+        ...traj,
+        goldSymbol: i % 4 === 0 ? 'crown_svg' : i % 4 === 1 ? 'bag_svg' : i % 4 === 2 ? 'crown_svg' : '🪙',
+        sapphireSymbol: i % 2 === 0 ? 'diamond_svg' : 'star_svg',
+        animeSymbol:
+          i % 9 === 0 ? '🌸'
+          : i % 9 === 1 ? '(˶>⩊<˶)'
+          : i % 9 === 2 ? '💖'
+          : i % 9 === 3 ? 'ദ്ദി ˉ͈̀꒳ˉ͈́ )✧'
+          : i % 9 === 4 ? '🎀'
+          : i % 9 === 5 ? '( • ̀ω•́ )✧'
+          : i % 9 === 6 ? '(≡> ᴗ <≡)'
+          : i % 9 === 7 ? '「キラキラ」'
+          : '(≧◡≦)',
+      };
+    })
+  ).current;
+
+  if (theme !== 'luxury' && theme !== 'sapphire' && theme !== 'anime') return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
+    >
+      <style>{`
+        @keyframes loaderParticleFallFull {
+          0% {
+            transform: translateY(-50px) rotate(var(--rot-start, 0deg));
+            opacity: 0;
+          }
+          12% {
+            opacity: var(--particle-opacity, 0.85);
+          }
+          88% {
+            opacity: var(--particle-opacity, 0.85);
+          }
+          100% {
+            transform: translateY(calc(100vh + 60px)) translateX(var(--drift-x, 0px)) rotate(var(--rot-end, 0deg));
+            opacity: 0;
+          }
+        }
+      `}</style>
+      {items.map((it) => {
+        const glowFilter =
+          it.tier === 'huge'
+            ? theme === 'luxury'
+              ? 'drop-shadow(0 6px 18px rgba(234, 179, 8, 0.95))'
+              : theme === 'anime'
+              ? 'drop-shadow(0 6px 18px rgba(244, 114, 182, 0.95))'
+              : 'drop-shadow(0 6px 18px rgba(56, 189, 248, 0.95))'
+            : undefined;
+
+        const renderSymbol = () => {
+          if (theme === 'luxury') {
+            if (it.goldSymbol === 'crown_svg') return <LuxuryCrownSvg size={it.size} />;
+            if (it.goldSymbol === 'bag_svg') return <LuxuryMoneyBagSvg size={it.size} />;
+            return <span style={{ fontSize: it.size, lineHeight: 1 }}>{it.goldSymbol}</span>;
+          }
+          if (theme === 'anime') {
+            if (typeof it.animeSymbol === 'string' && (it.animeSymbol.includes('(') || it.animeSymbol.includes('「') || it.animeSymbol.includes('✧') || it.animeSymbol.length > 2)) {
+              return (
+                <span style={{ fontSize: Math.min(it.size, 17), fontWeight: 800, color: '#f472b6', whiteSpace: 'nowrap', textShadow: '0 0 8px rgba(244, 114, 182, 0.8)' }}>
+                  {it.animeSymbol}
+                </span>
+              );
+            }
+            return <span style={{ fontSize: it.size, lineHeight: 1, color: '#f472b6' }}>{it.animeSymbol}</span>;
+          }
+          if (it.sapphireSymbol === 'diamond_svg') return <SapphireDiamondSvg size={it.size + 4} />;
+          return <SapphireStarSvg size={it.size + 2} />;
+        };
+
+        return (
+          <div
+            key={it.id}
+            style={{
+              position: 'fixed',
+              top: '-50px',
+              left: it.left,
+              '--particle-opacity': it.opacity,
+              '--rot-start': it.rotStart,
+              '--rot-end': it.rotEnd,
+              '--drift-x': it.driftX,
+              animation: `loaderParticleFallFull ${it.duration} linear infinite both`,
+              animationDelay: it.delay,
+              willChange: 'transform',
+              userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              filter: glowFilter,
+            }}
+          >
+            {renderSymbol()}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function ThemePageLoader({ message, minHeight = '65vh' }) {
   const { lang } = useLang();
@@ -47,8 +205,12 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
           flexDirection: 'column',
           padding: '24px',
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Particles falling rain effect around the card */}
+        <LoaderThemeRain theme="luxury" />
+
         <div
           style={{
             background: 'linear-gradient(145deg, rgba(20, 16, 10, 0.94), rgba(12, 10, 6, 0.98))',
@@ -64,6 +226,7 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
             textAlign: 'center',
             backdropFilter: 'blur(16px)',
             position: 'relative',
+            zIndex: 2,
             overflow: 'hidden',
           }}
         >
@@ -393,8 +556,12 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
           flexDirection: 'column',
           padding: '24px',
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Particles falling rain effect around the card */}
+        <LoaderThemeRain theme="sapphire" />
+
         <div
           style={{
             background: 'linear-gradient(145deg, rgba(8, 16, 36, 0.94), rgba(4, 8, 20, 0.98))',
@@ -410,6 +577,7 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
             textAlign: 'center',
             backdropFilter: 'blur(16px)',
             position: 'relative',
+            zIndex: 2,
             overflow: 'hidden',
           }}
         >
@@ -556,8 +724,12 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
           flexDirection: 'column',
           padding: '24px',
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
+        {/* Particles falling rain effect around the card */}
+        <LoaderThemeRain theme="anime" />
+
         <div
           style={{
             background: 'linear-gradient(145deg, rgba(38, 16, 28, 0.94), rgba(20, 8, 16, 0.98))',
@@ -573,6 +745,7 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
             textAlign: 'center',
             backdropFilter: 'blur(16px)',
             position: 'relative',
+            zIndex: 2,
             overflow: 'hidden',
           }}
         >

@@ -222,43 +222,63 @@ function LanguageSwitcher() {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
+  const LANG_MAP = {
+    vi: { code: 'VN', label: 'Tiếng Việt (VN)' },
+    en: { code: 'EN', label: 'English (EN)' },
+    ja: { code: 'JP', label: '日本語 (JP)' },
+  };
+
+  const currentLang = LANG_MAP[lang] || LANG_MAP.vi;
+
   return (
     <div className="relative" ref={ref} style={{ position: 'relative' }}>
       <button
         id="btn-lang-switch"
+        className="lang-switcher-btn"
         onClick={() => setOpen(o => !o)}
         title={tUI('ui.doi-ngon-ngu-change-language')}
         style={{
-          display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px',
-          background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-full)', cursor: 'pointer',
+          height: 38,
+          padding: '0 12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'var(--bg-surface-2)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-full)',
+          cursor: 'pointer',
           boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
           transition: 'all 0.15s ease',
+          boxSizing: 'border-box',
         }}
       >
-        <FlagIcon lang={lang} size={15} />
-        <ChevronDown size={12} style={{ color: 'var(--text-muted)' }} />
+        <FlagIcon lang={lang} size={18} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
+          {currentLang.code}
+        </span>
+        <ChevronDown size={13} style={{ color: 'var(--text-muted)' }} />
       </button>
 
       {open && (
         <div style={{
-          position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 1000,
+          position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 1000,
           background: 'var(--bg-surface)', border: '1px solid var(--border)',
-          borderRadius: 12, boxShadow: '0 12px 32px rgba(0,0,0,0.18)', overflow: 'hidden', minWidth: 160,
-          padding: '4px 0',
+          borderRadius: 14, boxShadow: '0 12px 36px rgba(0,0,0,0.2)', overflow: 'hidden', minWidth: 175,
+          padding: '6px 0',
+          animation: 'dropInRight 180ms ease-out',
         }}>
           {[
-            ['vi', <FlagVN key="vi" size={16} />, 'Tiếng Việt'],
-            ['en', <FlagUK key="en" size={16} />, 'English'],
-            ['ja', <FlagJA key="ja" size={16} />, '日本語'],
+            ['vi', <FlagVN key="vi" size={18} />, 'Tiếng Việt (VN)'],
+            ['en', <FlagUK key="en" size={18} />, 'English (EN)'],
+            ['ja', <FlagJA key="ja" size={18} />, '日本語 (JP)'],
           ].map(([code, flagIcon, label]) => (
             <div
               key={code}
               onClick={() => { setLang(code); setOpen(false); }}
               style={{
-                padding: '9px 16px', fontSize: 13, cursor: 'pointer',
-                fontWeight: lang === code ? 800 : 500,
-                color: lang === code ? 'var(--brand-600)' : 'var(--text-primary)',
+                padding: '10px 16px', fontSize: 13, cursor: 'pointer',
+                fontWeight: lang === code ? 800 : 600,
+                color: lang === code ? 'var(--brand-600, #7c3aed)' : 'var(--text-primary)',
                 background: lang === code ? 'var(--bg-surface-2)' : 'transparent',
                 display: 'flex', alignItems: 'center', gap: 10,
                 transition: 'background-color 0.12s ease',
