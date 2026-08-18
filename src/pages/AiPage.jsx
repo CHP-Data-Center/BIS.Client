@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { aiService } from '../services/ai';
 import { useLang } from '../context/LanguageContext';
+import ConfirmModal from '../components/common/ConfirmModal';
 
 /**
  * Xác định route nội bộ của hệ thống dựa trên loại dữ liệu và mã ID của nguồn
@@ -899,6 +900,10 @@ export default function AiPage() {
   const [activeSources, setActiveSources] = useState([]);
   const [highlightedCitation, setHighlightedCitation] = useState(null);
 
+  // Modal xác nhận xóa
+  const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'single', conv } | { type: 'all' }
+  const [deleting, setDeleting] = useState(false);
+
   const convCacheRef = useRef(new Map());
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
@@ -1009,20 +1014,36 @@ export default function AiPage() {
     loadConversations();
   };
 
-  const deleteConversation = async (conv) => {
-    if (!window.confirm(t('ai.confirmDeleteChat'))) return;
-    convCacheRef.current.delete(conv.id);
-    await aiService.deleteConversation(conv.id);
-    if (conv.id === activeId) startNewChat();
-    loadConversations();
+  const deleteConversation = (conv) => {
+    setDeleteTarget({ type: 'single', conv });
   };
 
-  const clearAll = async () => {
-    if (!window.confirm(t('ai.confirmClearAll'))) return;
-    convCacheRef.current.clear();
-    await aiService.clearConversations();
-    startNewChat();
-    loadConversations();
+  const clearAll = () => {
+    setDeleteTarget({ type: 'all' });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      if (deleteTarget.type === 'single') {
+        const { conv } = deleteTarget;
+        convCacheRef.current.delete(conv.id);
+        await aiService.deleteConversation(conv.id);
+        if (conv.id === activeId) startNewChat();
+        await loadConversations();
+      } else if (deleteTarget.type === 'all') {
+        convCacheRef.current.clear();
+        await aiService.clearConversations();
+        startNewChat();
+        await loadConversations();
+      }
+    } catch (err) {
+      console.error('Delete conversation error:', err);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
   };
 
   const handleOpenSources = (sources) => {
@@ -1496,6 +1517,33 @@ export default function AiPage() {
           />
         )}
       </div>
+
+      {/* Modal xác nhận xóa cuộc trò chuyện */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={
+          deleteTarget?.type === 'all'
+            ? (t('ai.clearAllTitle') || t('ai.clearAll'))
+            : (t('ai.deleteChatTitle') || t('ai.deleteChat'))
+        }
+        message={
+          deleteTarget?.type === 'all'
+            ? t('ai.confirmClearAll')
+            : t('ai.confirmDeleteChat')
+        }
+        itemName={deleteTarget?.type === 'single' ? deleteTarget.conv?.title : ''}
+        itemSub={
+          deleteTarget?.type === 'single' && deleteTarget.conv?.message_count
+            ? `${deleteTarget.conv.message_count} ${t('ai.messagesCount')}`
+            : ''
+        }
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        type="danger"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => !deleting && setDeleteTarget(null)}
+      />
     </div>
   );
 }
