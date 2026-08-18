@@ -6,6 +6,7 @@ import {
   MessageSquarePlus, Trash2, Pencil, History, X,
   FileText, ShoppingBag, Globe, Building2, Sparkles,
   Layers, ArrowRight, CornerDownLeft, BookOpen, ChevronRight,
+  ChevronDown, ChevronUp, CheckCircle2, Search, Zap, Brain,
 } from 'lucide-react';
 import { aiService } from '../services/ai';
 import { useLang } from '../context/LanguageContext';
@@ -675,7 +676,7 @@ function MessageBubble({ msg, onOpenSources, onSelectCitation }) {
 }
 
 /** Sidebar: lịch sử trò chuyện của RIÊNG người đang đăng nhập (server lọc theo user). */
-function HistorySidebar({ items, activeId, onSelect, onNew, onRename, onDelete, onClearAll, onClose }) {
+function HistorySidebar({ items, activeId, pendingConvId, onSelect, onNew, onRename, onDelete, onClearAll, onClose }) {
   const { t } = useLang();
   return (
     <aside style={{
@@ -767,8 +768,13 @@ function HistorySidebar({ items, activeId, onSelect, onNew, onRename, onDelete, 
             {t('ai.noHistory')}
           </div>
         )}
-        {items.map((c) => {
+        {items.map((c, idx) => {
           const active = c.id === activeId;
+          const isItemPending = pendingConvId && (
+            pendingConvId === c.id ||
+            (!pendingConvId && idx === 0)
+          );
+
           return (
             <div
               key={c.id}
@@ -799,8 +805,14 @@ function HistorySidebar({ items, activeId, onSelect, onNew, onRename, onDelete, 
                 }}>
                   {c.title}
                 </div>
-                <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {c.message_count} {t('ai.messagesCount')}
+                <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {isItemPending ? (
+                    <span style={{ fontSize: 10, fontWeight: 800, color: '#a855f7', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <Loader2 size={10} style={{ animation: 'spin 0.8s linear infinite' }} /> ⚡ Đang tạo...
+                    </span>
+                  ) : (
+                    <span>{c.message_count} {t('ai.messagesCount')}</span>
+                  )}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
@@ -876,6 +888,278 @@ function HistorySidebar({ items, activeId, onSelect, onNew, onRename, onDelete, 
   );
 }
 
+// Module-level persistent cache across route switches (SPA lifetime)
+const aiChatStore = {
+  convCache: new Map(), // convId -> messages[]
+  pendingTask: null,    // { convId: string|null, prompt: string, messages: Array, startTime: number }
+  lastActiveId: null,
+  listeners: new Set(),
+
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  },
+
+  notify() {
+    this.listeners.forEach((fn) => fn());
+  },
+};
+
+/**
+ * Component hiển thị trạng thái AI đang suy nghĩ sinh động kiểu Gemini (Interactive Animated Loading)
+ * Hỗ trợ bấm mở rộng/thu gọn để xem chi tiết các bước phân tích dữ liệu & trích xuất nguồn.
+ */
+function GeminiThinkingBubble({ startTime }) {
+  // Mặc định tự động đóng theo yêu cầu người dùng
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  useEffect(() => {
+    const start = startTime || Date.now();
+    const timer = setInterval(() => {
+      const sec = Math.floor((Date.now() - start) / 1000);
+      setElapsedSec(sec);
+      if (sec < 2) setCurrentStepIndex(0);
+      else if (sec < 4) setCurrentStepIndex(1);
+      else if (sec < 7) setCurrentStepIndex(2);
+      else setCurrentStepIndex(3);
+    }, 400);
+
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  const THINKING_STEPS = [
+    {
+      title: 'Quét cơ sở dữ liệu & Tin tức ODA',
+      detail: 'Đang tìm kiếm dữ liệu ADB, World Bank & Mua sắm công...',
+      icon: Search,
+    },
+    {
+      title: 'Phân tích hồ sơ thầu & KHLCNT',
+      detail: 'Đang trích xuất thông tin gói thầu & điều kiện tham gia...',
+      icon: Zap,
+    },
+    {
+      title: 'Tổng hợp thông tin & Kiểm chứng nguồn',
+      detail: 'Đang đối chiếu dữ liệu và kiểm tra tính xác thực nguồn [P]...',
+      icon: Brain,
+    },
+    {
+      title: 'Đang hoàn thiện câu trả lời chi tiết',
+      detail: 'Đang định dạng bài viết và kết nối các nguồn trích dẫn...',
+      icon: Sparkles,
+    },
+  ];
+
+  const currentStep = THINKING_STEPS[currentStepIndex] || THINKING_STEPS[0];
+
+  return (
+    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 20, animation: 'fadeIn 0.25s ease' }}>
+      {/* Avatar AI kiểu Gemini với viền gradient xoay & phát sáng */}
+      <div
+        className="ai-gemini-avatar-container"
+        style={{
+          position: 'relative',
+          width: 38,
+          height: 38,
+          borderRadius: 13,
+          padding: 2,
+          background: 'linear-gradient(135deg, #7c3aed, #db2777, #3b82f6, #06b6d4)',
+          backgroundSize: '200% 200%',
+          animation: 'gradientShift 3s ease infinite',
+          boxShadow: '0 0 16px rgba(124, 58, 237, 0.45)',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: 11,
+          background: 'var(--bg-surface, #0f172a)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Sparkles size={18} style={{ color: '#a855f7', animation: 'pulseGlow 1.5s ease-in-out infinite' }} />
+        </div>
+      </div>
+
+      {/* Interactive Thinking Container */}
+      <div
+        style={{
+          maxWidth: '85%',
+          background: 'var(--bg-surface-2, rgba(30, 41, 59, 0.6))',
+          border: '1px solid rgba(124, 58, 237, 0.35)',
+          borderRadius: 18,
+          padding: '12px 16px',
+          boxShadow: '0 8px 30px rgba(124, 58, 237, 0.12), inset 0 0 15px rgba(124, 58, 237, 0.05)',
+          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        {/* Toggleable Header Bar */}
+        <div
+          onClick={() => setIsExpanded(!isExpanded)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            width: '100%',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#a855f7',
+                boxShadow: '0 0 10px #a855f7',
+                animation: 'pulseGlow 1s ease-in-out infinite',
+              }} />
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+                BIS AI đang suy nghĩ & phân tích dữ liệu...
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 800,
+                color: '#a855f7',
+                background: 'rgba(168, 85, 247, 0.15)',
+                padding: '2px 8px',
+                borderRadius: 10,
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                ⏱ {elapsedSec}s
+              </span>
+              <button
+                type="button"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Dòng chữ mờ nhỏ ở dưới khi tự động đóng */}
+          {!isExpanded && (
+            <div style={{
+              fontSize: 11.5,
+              color: 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              paddingLeft: 16,
+              marginTop: 2,
+              opacity: 0.85,
+              transition: 'all 0.2s ease',
+            }}>
+              <span style={{ color: '#a855f7', fontWeight: 800 }}>↳</span>
+              <span style={{ fontStyle: 'italic', color: '#c084fc' }}>{currentStep.title}...</span>
+              <span style={{ fontSize: 10.5, opacity: 0.65 }}>({currentStep.detail})</span>
+            </div>
+          )}
+        </div>
+
+        {/* Collapsible Details Panel */}
+        {isExpanded && (
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {THINKING_STEPS.map((step, idx) => {
+                const StepIcon = step.icon;
+                const isDone = idx < currentStepIndex;
+                const isCurrent = idx === currentStepIndex;
+
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 10,
+                      opacity: isDone ? 0.75 : isCurrent ? 1 : 0.4,
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    <div style={{ marginTop: 2, flexShrink: 0 }}>
+                      {isDone ? (
+                        <CheckCircle2 size={15} style={{ color: '#10b981' }} />
+                      ) : isCurrent ? (
+                        <Loader2 size={15} style={{ color: '#a855f7', animation: 'spin 0.8s linear infinite' }} />
+                      ) : (
+                        <StepIcon size={15} style={{ color: 'var(--text-muted)' }} />
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: 12.5,
+                        fontWeight: isCurrent ? 700 : 600,
+                        color: isCurrent ? '#c084fc' : isDone ? 'var(--text-primary)' : 'var(--text-muted)',
+                      }}>
+                        {step.title}
+                      </div>
+                      {isCurrent && (
+                        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>
+                          {step.detail}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Skeleton Wave Lines */}
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="ai-skeleton-line" style={{ width: '90%', height: 6, borderRadius: 4 }} />
+              <div className="ai-skeleton-line" style={{ width: '75%', height: 6, borderRadius: 4 }} />
+              <div className="ai-skeleton-line" style={{ width: '60%', height: 6, borderRadius: 4 }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.65; transform: scale(0.95); }
+        }
+        .ai-skeleton-line {
+          background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(168,85,247,0.2) 50%, rgba(255,255,255,0.06) 75%);
+          background-size: 200% 100%;
+          animation: skeletonWave 1.8s infinite ease-in-out;
+        }
+        @keyframes skeletonWave {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function AiPage() {
   const { lang, t } = useLang();
   const greeting = useCallback(() => ({
@@ -908,6 +1192,38 @@ export default function AiPage() {
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
+  // State thời gian bắt đầu suy nghĩ của AI
+  const [pendingStartTime, setPendingStartTime] = useState(null);
+
+  // Sync store với local state khi mount hoặc khi store notify (chuyển tab/route trong SPA)
+  const syncWithStore = useCallback(() => {
+    const targetId = activeId || aiChatStore.lastActiveId;
+
+    // Kiểm tra xem targetId có đang là pendingTask hay không
+    const isPendingTarget = aiChatStore.pendingTask && (
+      aiChatStore.pendingTask.convId === targetId ||
+      (!targetId && !aiChatStore.pendingTask.convId)
+    );
+
+    if (isPendingTarget) {
+      setMessages(aiChatStore.pendingTask.messages);
+      setLoading(true);
+      setPendingStartTime(aiChatStore.pendingTask.startTime);
+      return;
+    }
+
+    if (targetId && aiChatStore.convCache.has(targetId)) {
+      setMessages(aiChatStore.convCache.get(targetId));
+      setLoading(false);
+    }
+  }, [activeId]);
+
+  useEffect(() => {
+    syncWithStore();
+    const unsubscribe = aiChatStore.subscribe(syncWithStore);
+    return () => unsubscribe();
+  }, [syncWithStore]);
+
   // Sync greeting message when system language changes
   useEffect(() => {
     setMessages((prev) => {
@@ -925,7 +1241,12 @@ export default function AiPage() {
 
   const loadConversations = useCallback(async () => {
     try {
-      setConversations(await aiService.conversations());
+      const list = await aiService.conversations();
+      setConversations(list);
+      // Nếu đang có pendingTask chưa có convId, khớp lại với list nếu cần
+      if (aiChatStore.pendingTask && !aiChatStore.pendingTask.convId && list.length > 0) {
+        aiChatStore.pendingTask.convId = list[0].id;
+      }
     } catch {
       setConversations([]);
     }
@@ -940,7 +1261,7 @@ export default function AiPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, chatLoading]);
+  }, [messages, chatLoading, loading]);
 
   // Cập nhật nguồn hiển thị ở bảng bên phải theo tin nhắn AI mới nhất
   useEffect(() => {
@@ -954,14 +1275,31 @@ export default function AiPage() {
   }, [messages]);
 
   const openConversation = async (id) => {
-    if (loading || id === activeId) return;
+    if (id === activeId) return;
 
-    // 1. Đổi active tab lập tức (0ms)
+    // 1. Đổi active tab lập tức (0ms) sang cuộc trò chuyện được chọn
     setActiveId(id);
+    aiChatStore.lastActiveId = id;
 
-    // 2. Nếu đã có trong cache bộ nhớ -> nạp hiển thị tức thì (0ms)
-    if (convCacheRef.current.has(id)) {
-      const cachedMsgs = convCacheRef.current.get(id);
+    // 2. Kiểm tra xem ID này có đang pending trả lời không
+    const isPendingThis = aiChatStore.pendingTask && (
+      aiChatStore.pendingTask.convId === id ||
+      (!id && !aiChatStore.pendingTask.convId)
+    );
+
+    if (isPendingThis) {
+      setMessages(aiChatStore.pendingTask.messages);
+      setLoading(true);
+      setPendingStartTime(aiChatStore.pendingTask.startTime);
+      return;
+    }
+
+    // 3. Nếu chuyển sang cuộc trò chuyện khác KHÔNG PENDING: tắt loading view hiện tại
+    setLoading(false);
+
+    // Nạp từ cache bộ nhớ nếu có
+    if (aiChatStore.convCache.has(id)) {
+      const cachedMsgs = aiChatStore.convCache.get(id);
       setMessages(cachedMsgs);
       const lastMsgWithSources = [...cachedMsgs].reverse().find(m => m.role === 'assistant' && m.sources?.length > 0);
       if (lastMsgWithSources) {
@@ -980,11 +1318,15 @@ export default function AiPage() {
         agent: m.agent,
         sources: m.sources || [],
       }));
+
+      aiChatStore.convCache.set(detail.id, formattedMsgs);
       convCacheRef.current.set(detail.id, formattedMsgs);
 
+      // Chỉ cập nhật hiển thị nếu người dùng VẪN ĐANG XEM conversation này và không bị pending
       setActiveId((currentId) => {
-        if (currentId === detail.id) {
+        if (currentId === detail.id && (!aiChatStore.pendingTask || aiChatStore.pendingTask.convId !== detail.id)) {
           setMessages(formattedMsgs);
+          setLoading(false);
           const lastMsgWithSources = [...formattedMsgs].reverse().find(m => m.role === 'assistant' && m.sources?.length > 0);
           if (lastMsgWithSources) {
             setActiveSources(lastMsgWithSources.sources);
@@ -1002,8 +1344,17 @@ export default function AiPage() {
 
   const startNewChat = () => {
     setActiveId(null);
-    setMessages([greeting()]);
-    setActiveSources([]);
+    aiChatStore.lastActiveId = null;
+
+    if (aiChatStore.pendingTask && !aiChatStore.pendingTask.convId) {
+      setMessages(aiChatStore.pendingTask.messages);
+      setLoading(true);
+      setPendingStartTime(aiChatStore.pendingTask.startTime);
+    } else {
+      setMessages([greeting()]);
+      setActiveSources([]);
+      setLoading(false);
+    }
     inputRef.current?.focus();
   };
 
@@ -1029,11 +1380,13 @@ export default function AiPage() {
       if (deleteTarget.type === 'single') {
         const { conv } = deleteTarget;
         convCacheRef.current.delete(conv.id);
+        aiChatStore.convCache.delete(conv.id);
         await aiService.deleteConversation(conv.id);
         if (conv.id === activeId) startNewChat();
         await loadConversations();
       } else if (deleteTarget.type === 'all') {
         convCacheRef.current.clear();
+        aiChatStore.convCache.clear();
         await aiService.clearConversations();
         startNewChat();
         await loadConversations();
@@ -1079,18 +1432,33 @@ export default function AiPage() {
     if (!q || loading) return;
 
     const userMsg = { id: Date.now(), role: 'user', content: q };
-    const nextMessagesWithUser = [...messages, userMsg];
+    const cleanCurrentMsgs = messages.filter((m) => m.id !== 0);
+    const nextMessagesWithUser = [...cleanCurrentMsgs, userMsg];
+
+    const taskStartTime = Date.now();
+    const taskConvId = activeId;
+
+    // Lưu vào store toàn cục để khi người dùng chuyển tab/route khác và quay lại vẫn giữ tin nhắn & trạng thái loading sinh động
+    aiChatStore.pendingTask = {
+      convId: taskConvId,
+      prompt: q,
+      messages: nextMessagesWithUser,
+      startTime: taskStartTime,
+    };
+    if (taskConvId) {
+      aiChatStore.convCache.set(taskConvId, nextMessagesWithUser);
+    }
+    aiChatStore.notify();
+
     setMessages(nextMessagesWithUser);
     setInput('');
     setLoading(true);
+    setPendingStartTime(taskStartTime);
 
     try {
-      const ans = await aiService.ask(q, activeId);
-      const targetConvId = ans.conversation_id || activeId;
-      if (ans.conversation_id && ans.conversation_id !== activeId) {
-        setActiveId(ans.conversation_id);
-        loadConversations();
-      }
+      const ans = await aiService.ask(q, taskConvId);
+      const targetConvId = ans.conversation_id || taskConvId;
+
       const assistantMsg = {
         id: Date.now() + 1,
         role: 'assistant',
@@ -1099,14 +1467,29 @@ export default function AiPage() {
         sources: ans.sources || [],
       };
       const finalMsgs = [...nextMessagesWithUser, assistantMsg];
-      setMessages(finalMsgs);
-      if (ans.sources && ans.sources.length > 0) {
-        setActiveSources(ans.sources);
-        setShowSources(true);
+
+      // Đưa vào cache toàn cục & dọn dẹp pendingTask
+      aiChatStore.convCache.set(targetConvId, finalMsgs);
+      if (aiChatStore.pendingTask?.prompt === q) {
+        aiChatStore.pendingTask = null;
       }
-      if (targetConvId) {
-        convCacheRef.current.set(targetConvId, finalMsgs);
-      }
+      aiChatStore.lastActiveId = targetConvId;
+      aiChatStore.notify();
+
+      setActiveId((currentId) => {
+        if (currentId === targetConvId || currentId === taskConvId || !currentId) {
+          setMessages(finalMsgs);
+          setLoading(false);
+          if (ans.sources && ans.sources.length > 0) {
+            setActiveSources(ans.sources);
+            setShowSources(true);
+          }
+          return targetConvId;
+        }
+        return currentId;
+      });
+
+      loadConversations();
     } catch (err) {
       const isUnavailable = err.response?.status === 503;
       const errorMsg = {
@@ -1120,9 +1503,17 @@ export default function AiPage() {
         sources: [],
       };
       const finalMsgs = [...nextMessagesWithUser, errorMsg];
+      if (taskConvId) {
+        aiChatStore.convCache.set(taskConvId, finalMsgs);
+      }
+      if (aiChatStore.pendingTask?.prompt === q) {
+        aiChatStore.pendingTask = null;
+      }
+      aiChatStore.notify();
+
       setMessages(finalMsgs);
-    } finally {
       setLoading(false);
+    } finally {
       inputRef.current?.focus();
     }
   };
@@ -1303,6 +1694,7 @@ export default function AiPage() {
           <HistorySidebar
             items={conversations}
             activeId={activeId}
+            pendingConvId={aiChatStore.pendingTask?.convId}
             onSelect={openConversation}
             onNew={startNewChat}
             onRename={renameConversation}
@@ -1348,46 +1740,13 @@ export default function AiPage() {
               ))
             )}
 
-            {loading && (
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20 }}>
-                <div
-                  className="ai-agent-avatar"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 12,
-                    background: 'linear-gradient(135deg, #7c3aed, #db2777)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 14px rgba(124, 58, 237, 0.4)',
-                  }}
-                >
-                  <Cpu size={18} color="white" />
-                </div>
-                <div style={{
-                  padding: '12px 18px',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '18px 18px 18px 4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
-                }}>
-                  <Loader2 size={16} style={{ color: '#7c3aed', animation: 'spin 0.8s linear infinite' }} />
-                  <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-muted)' }}>
-                    {t('ai.thinking')}
-                  </span>
-                </div>
-              </div>
-            )}
+            {loading && <GeminiThinkingBubble startTime={pendingStartTime} />}
 
             <div ref={bottomRef} />
           </div>
 
           {/* Suggested questions */}
-          {messages.length <= 1 && (
+          {messages.some((m) => m.id === 0) && (
             <div style={{
               background: 'var(--bg-surface-2, rgba(255, 255, 255, 0.02))',
               borderLeft: '1px solid var(--border-subtle)',
