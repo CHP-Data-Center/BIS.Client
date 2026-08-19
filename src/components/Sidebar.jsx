@@ -93,46 +93,73 @@ const toolItems = [
 
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, isAdmin, isPersonalUser, isSuperAdmin } = useAuth();
+  const { user, isAdmin, isPersonalUser, isSuperAdmin, hasSourceAccess, hasDashboardAccess, hasAiAccess } = useAuth();
   const { t } = useLang();
   const location = useLocation();
-  const isUpgradePage = location.pathname === '/upgrade';
-
-  const userKey = user?.email || user?.id;
-  const hasAiAccess = isSuperAdmin || user?.has_ai === true || localStorage.getItem(`bis_ai_package_${userKey}`) === 'true';
 
   const filteredNavItems = navItems.filter(item => {
-    if (isPersonalUser && item.to === '/dashboard') return false;
+    if (item.to === '/dashboard' && !hasDashboardAccess) return false;
     return true;
   });
 
+  const renderLockedItem = (key, icon, labelKey, color) => (
+    <NavLink
+      key={key}
+      to="/upgrade"
+      id={`sidebar-${key}-locked`}
+      onClick={() => onClose?.()}
+      className="sidebar-nav-item locked-item"
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
+      }}
+      title={tUI('ui.tinh-nang-co-phi-bam-de-xem-goi-nang-cap')}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
+        <span style={{ color: color, flexShrink: 0 }}>{icon}</span>
+        <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>{t(labelKey)}</span>
+      </div>
+      <span className="upgrade-badge" style={{
+        marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
+        fontSize: 9, fontWeight: 800, padding: '2px 5px', height: 20,
+        display: 'inline-flex', alignItems: 'center', gap: 2,
+        borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
+      }}>
+        {t('badge.upgrade')}
+      </span>
+    </NavLink>
+  );
+
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-      {/* Main Nav */}
-      <div className="sidebar-section">
-        <div className="sidebar-label">{t('nav.main')}</div>
-        {filteredNavItems.map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
-            onClick={() => onClose?.()}
-            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-          >
-            {item.icon}
-            {t(item.labelKey)}
-            {item.badge != null && <span className="nav-badge">{item.badge}</span>}
-          </NavLink>
-        ))}
-      </div>
-
-      <div className="sidebar-divider" />
+      {/* Main Nav (CHÍNH) - Tự động ẩn hoàn toàn nếu user không có mục nào như Dashboard */}
+      {filteredNavItems.length > 0 && (
+        <>
+          <div className="sidebar-section">
+            <div className="sidebar-label">{t('nav.main')}</div>
+            {filteredNavItems.map(item => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
+                onClick={() => onClose?.()}
+                className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+              >
+                {item.icon}
+                {t(item.labelKey)}
+                {item.badge != null && <span className="nav-badge">{item.badge}</span>}
+              </NavLink>
+            ))}
+          </div>
+          <div className="sidebar-divider" />
+        </>
+      )}
 
       {/* Sources */}
       <div className="sidebar-section">
         <div className="sidebar-label">{t('nav.sources')}</div>
 
-        {/* 1. Unlocked Source: Báo Chí */}
+        {/* 1. Unlocked Source: Báo Chí (Miễn phí cho mọi tài khoản) */}
         <NavLink
           to="/news/press"
           id="sidebar-news-press"
@@ -143,70 +170,33 @@ export default function Sidebar({ isOpen, onClose }) {
           {t('nav.press')}
         </NavLink>
 
-        {/* 2. Nguồn trả phí (ADB, World Bank, Đấu Thầu). Personal user: khóa (mở khi vào /upgrade). */}
-        {isPersonalUser ? (
-          <div style={{
-            maxHeight: isUpgradePage ? 260 : 0,
-            opacity: isUpgradePage ? 1 : 0,
-            overflow: 'hidden',
-            transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-            pointerEvents: isUpgradePage ? 'auto' : 'none',
-            display: 'flex', flexDirection: 'column', gap: 2,
-          }}>
-            {[
-              ...sourceNavItems.filter(s => s.to !== '/news/press'),
-              { to: '/news/tbmt', icon: <ShoppingBag size={16} />, labelKey: 'nav.procGroup', color: '#8b5cf6' },
-            ].map(item => (
-              <NavLink
-                key={item.to}
-                to="/upgrade"
-                id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
-                onClick={() => onClose?.()}
-                className={() => "sidebar-nav-item locked-item"}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  gap: 6, opacity: 0.9, whiteSpace: 'nowrap', padding: '9px 10px'
-                }}
-                title={tUI('ui.tinh-nang-co-phi-bam-de-xem-goi-nang-cap')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', minWidth: 0 }}>
-                  <span style={{ color: item.color, flexShrink: 0 }}>{item.icon}</span>
-                  <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}>{t(item.labelKey)}</span>
-                </div>
-                <span className="upgrade-badge" style={{
-                  marginLeft: 'auto', flexShrink: 0, whiteSpace: 'nowrap',
-                  fontSize: 9, fontWeight: 800, padding: '2px 5px', height: 20,
-                  display: 'inline-flex', alignItems: 'center', gap: 2,
-                  borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a'
-                }}>
-                  {t('badge.upgrade')}
-                </span>
-              </NavLink>
-            ))}
-          </div>
+        {/* 2. Nguồn ADB */}
+        {hasSourceAccess('adb') ? (
+          <NavGroup group={adbGroup} id="sidebar-adb-group" t={t} onClose={onClose} />
         ) : (
-          <>
-            {/* Nhóm "ADB" — xổ ra 2 trang con (Dự án / Thông báo mời thầu) */}
-            <NavGroup group={adbGroup} id="sidebar-adb-group" t={t} onClose={onClose} />
+          renderLockedItem('adb', <Building2 size={16} />, 'nav.adb', '#f59e0b')
+        )}
 
-            {sourceNavItems
-              .filter(s => s.to !== '/news/press' && s.to !== '/news/adb')
-              .map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  id={`sidebar-${item.to.replace(/\//g, '-').slice(1)}`}
-                  onClick={() => onClose?.()}
-                  className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
-                >
-                  <span style={{ color: item.color }}>{item.icon}</span>
-                  {t(item.labelKey)}
-                </NavLink>
-              ))}
+        {/* 3. Nguồn World Bank */}
+        {hasSourceAccess('worldbank') ? (
+          <NavLink
+            to="/news/worldbank"
+            id="sidebar-news-worldbank"
+            onClick={() => onClose?.()}
+            className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <span style={{ color: '#10b981' }}><Globe size={16} /></span>
+            {t('nav.worldbank')}
+          </NavLink>
+        ) : (
+          renderLockedItem('worldbank', <Globe size={16} />, 'nav.worldbank', '#10b981')
+        )}
 
-            {/* Nhóm "Đấu Thầu Công" — bấm để xổ ra 2 trang con (TBMT/KHLCNT) */}
-            <NavGroup group={procurementGroup} id="sidebar-proc-group" t={t} onClose={onClose} />
-          </>
+        {/* 4. Nguồn Đấu Thầu Công */}
+        {hasSourceAccess('gov') ? (
+          <NavGroup group={procurementGroup} id="sidebar-proc-group" t={t} onClose={onClose} />
+        ) : (
+          renderLockedItem('procurement', <ShoppingBag size={16} />, 'nav.procGroup', '#8b5cf6')
         )}
       </div>
 

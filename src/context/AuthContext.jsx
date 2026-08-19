@@ -121,14 +121,75 @@ export function AuthProvider({ children }) {
     syncUserTheme(null);
   }, []);
 
+  const userKey = user?.email || user?.id;
+
+  // Active package: Kiểm tra user.active_package || user.permissions?.active_package || localStorage || fallback
+  const activePackage = (() => {
+    if (!user) return 'free';
+    if (user.role === 'super_admin') return 'full';
+    if (user.role === 'admin' || user.role === 'staff' || user.organization_id) return 'enterprise';
+    
+    const serverPkg = user.active_package || user.permissions?.active_package;
+    if (serverPkg) {
+      localStorage.setItem(`bis_active_package_${userKey}`, serverPkg);
+      return serverPkg;
+    }
+    const localPkg = localStorage.getItem(`bis_active_package_${userKey}`);
+    if (localPkg) return localPkg;
+    return 'free';
+  })();
+
+  const selectedSources = (() => {
+    if (!user) return [];
+    if (activePackage === 'full' || activePackage === 'enterprise' || user.role === 'super_admin' || user.role === 'admin' || user.role === 'staff' || user.organization_id) {
+      return ['adb', 'worldbank', 'gov'];
+    }
+    const serverSrcs = user.selected_sources || user.permissions?.selected_sources;
+    if (Array.isArray(serverSrcs) && serverSrcs.length > 0) {
+      localStorage.setItem(`bis_selected_sources_${userKey}`, JSON.stringify(serverSrcs));
+      return serverSrcs;
+    }
+    const local = localStorage.getItem(`bis_selected_sources_${userKey}`);
+    if (local) {
+      try { return JSON.parse(local); } catch { return ['adb', 'worldbank']; }
+    }
+    return ['adb', 'worldbank'];
+  })();
+
   const isGuest  = !user;
-  const isPersonalUser = user?.role === 'personal';
-  const isEnterpriseUser = user && user.role !== 'personal';
   const isSuperAdmin = user?.role === 'super_admin';
   const isRegionalAdmin = user?.role === 'admin';
   const isAdmin = isSuperAdmin || isRegionalAdmin;
+  const isFreeUser = !isAdmin && (user?.role === 'personal' || (activePackage === 'free' && user?.role !== 'staff' && !user?.organization_id));
+  const isPersonalUser = !isAdmin && user?.role !== 'staff' && !user?.organization_id && (user?.role === 'personal' || activePackage === 'free' || activePackage === 'single' || activePackage === 'combo2');
+  const isEnterpriseUser = isAdmin || user?.role === 'staff' || !!user?.organization_id || activePackage === 'enterprise' || activePackage === 'full';
   const isLoggedIn = !!user;
   const userRegion = user?.region || 'Toàn quốc';
+
+  const hasAiAccess = isSuperAdmin || user?.has_ai === true || user?.permissions?.has_ai === true || localStorage.getItem(`bis_ai_package_${userKey}`) === 'true';
+
+  const hasSourceAccess = useCallback((sourceKey) => {
+    if (!user) return false;
+    if (user.role === 'super_admin' || user.role === 'admin' || user.role === 'staff' || user.organization_id) return true;
+    if (sourceKey === 'press' || sourceKey === 'news') return true;
+    if (activePackage === 'free') return false;
+    if (activePackage === 'full' || activePackage === 'enterprise') return true;
+
+    let norm = sourceKey;
+    if (sourceKey === 'adb-tenders' || sourceKey === 'adb_projects') norm = 'adb';
+    if (sourceKey === 'tbmt' || sourceKey === 'khlcnt' || sourceKey === 'dauthau' || sourceKey === 'procurement') norm = 'gov';
+    if (sourceKey === 'wb') norm = 'worldbank';
+
+    return selectedSources.includes(norm);
+  }, [user, activePackage, selectedSources]);
+
+  const hasDashboardAccess =
+    isSuperAdmin ||
+    isRegionalAdmin ||
+    user?.can_view_dashboard === true ||
+    user?.permissions?.can_view_dashboard === true ||
+    localStorage.getItem(`bis_dashboard_access_${userKey}`) === 'true' ||
+    ((activePackage === 'full' || activePackage === 'enterprise') && user?.permissions?.can_view_dashboard !== false);
 
   const hasPermission = useCallback((permissionKey) => {
     if (!user) return false;
@@ -163,12 +224,18 @@ export function AuthProvider({ children }) {
         loginError,
         setLoginError,
         isGuest,
+        isFreeUser,
         isPersonalUser,
         isEnterpriseUser,
         isAdmin,
         isSuperAdmin,
         isRegionalAdmin,
         userRegion,
+        activePackage,
+        selectedSources,
+        hasSourceAccess,
+        hasDashboardAccess,
+        hasAiAccess,
         hasPermission,
         isLoggedIn,
         loading,
