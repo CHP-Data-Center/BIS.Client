@@ -82,10 +82,16 @@ export default function AdminPage() {
     role: 'user',
     organization_id: null,
     region: userRegion || 'Toàn quốc',
+    active_package: 'free',
+    package_expiration: 'Vĩnh viễn',
+    has_ai: false,
+    can_view_dashboard: false,
+    selected_sources: ['adb', 'worldbank'],
     permissions: {
       can_view_press: true,
-      can_view_bidding: true,
-      can_view_oda: true,
+      can_view_bidding: false,
+      can_view_oda: false,
+      can_view_dashboard: false,
       can_manage_keywords: true,
       can_export_data: true,
     },
@@ -118,7 +124,7 @@ export default function AdminPage() {
 
   const showAlert = (type, text) => {
     setMsg({ type, text });
-    setTimeout(() => setMsg(null), 5000);
+    setTimeout(() => setMsg(null), 4500);
   };
 
   const loadData = async () => {
@@ -138,14 +144,15 @@ export default function AdminPage() {
       setUsers((u || []).map(usr => {
         const uKey = usr.email || usr.id;
         const normalizedRole = (usr.role || 'user').toLowerCase();
-        const activePkg = localStorage.getItem(`bis_active_package_${uKey}`) || (normalizedRole === 'super_admin' ? 'full' : normalizedRole === 'admin' ? 'enterprise' : 'free');
-        const hasAi = localStorage.getItem(`bis_ai_package_${uKey}`) === 'true' || normalizedRole === 'super_admin';
-        const pkgExp = localStorage.getItem(`bis_pkg_exp_${uKey}`) || (normalizedRole === 'super_admin' || activePkg === 'free' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027');
-        const themes = JSON.parse(localStorage.getItem(`bis_purchased_themes_${uKey}`) || '[]');
-        const selectedSrcs = JSON.parse(localStorage.getItem(`bis_selected_sources_${uKey}`) || '["adb", "worldbank"]');
+        const activePkg = usr.permissions?.active_package || localStorage.getItem(`bis_active_package_${uKey}`) || (normalizedRole === 'super_admin' ? 'full' : normalizedRole === 'admin' ? 'enterprise' : 'free');
+        const hasAi = usr.permissions?.has_ai ?? (localStorage.getItem(`bis_ai_package_${uKey}`) === 'true' || normalizedRole === 'super_admin');
+        const canViewDash = usr.permissions?.can_view_dashboard ?? (localStorage.getItem(`bis_dashboard_access_${uKey}`) === 'true' || (activePkg === 'full' || activePkg === 'enterprise' || normalizedRole === 'super_admin' || normalizedRole === 'admin'));
+        const pkgExp = usr.permissions?.package_expiration || localStorage.getItem(`bis_pkg_exp_${uKey}`) || (normalizedRole === 'super_admin' || activePkg === 'free' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027');
+        const themes = usr.permissions?.purchased_themes || JSON.parse(localStorage.getItem(`bis_purchased_themes_${uKey}`) || '[]');
+        const selectedSrcs = usr.permissions?.selected_sources || JSON.parse(localStorage.getItem(`bis_selected_sources_${uKey}`) || '["adb", "worldbank"]');
         const expStr = localStorage.getItem(`bis_slot_exp_${uKey}`);
         const isCancelled = localStorage.getItem(`bis_slot_cancelled_${uKey}`) === 'true';
-        let maxUsers = parseInt(localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
+        let maxUsers = parseInt(usr.permissions?.max_users || localStorage.getItem(`bis_max_users_${uKey}`) || '10', 10);
 
         if (expStr && isCancelled) {
           const parts = expStr.split('/');
@@ -166,6 +173,7 @@ export default function AdminPage() {
           role: normalizedRole,
           active_package: activePkg,
           has_ai: hasAi,
+          can_view_dashboard: canViewDash,
           package_expiration: pkgExp,
           purchased_themes: themes,
           selected_sources: selectedSrcs,
@@ -341,13 +349,45 @@ export default function AdminPage() {
 
     setActionLoading(true);
     try {
+      const pkg = newUser.active_package || 'free';
+      const canViewDash = newUser.can_view_dashboard ?? (pkg === 'full' || pkg === 'enterprise');
+      const perms = {
+        can_view_press: true,
+        can_view_bidding: pkg === 'free' ? false : (pkg === 'full' || pkg === 'enterprise' ? true : (newUser.selected_sources || []).includes('gov')),
+        can_view_oda: pkg === 'free' ? false : (pkg === 'full' || pkg === 'enterprise' ? true : ((newUser.selected_sources || []).includes('adb') || (newUser.selected_sources || []).includes('worldbank'))),
+        can_view_dashboard: canViewDash,
+        can_manage_keywords: true,
+        can_export_data: true,
+        active_package: pkg,
+        selected_sources: newUser.selected_sources || ['adb', 'worldbank'],
+        package_expiration: newUser.package_expiration || 'Vĩnh viễn',
+        has_ai: newUser.has_ai || false,
+      };
+
       const payload = {
         ...newUser,
         organization_id: newUser.organization_id || null,
         region: isRegionalAdmin ? userRegion : newUser.region,
+        permissions: perms,
       };
       const created = await adminService.createUser(payload);
-      setUsers(prev => [...prev, created]);
+      const uKey = created.email || created.id;
+      localStorage.setItem(`bis_active_package_${uKey}`, pkg);
+      localStorage.setItem(`bis_ai_package_${uKey}`, newUser.has_ai ? 'true' : 'false');
+      localStorage.setItem(`bis_dashboard_access_${uKey}`, canViewDash ? 'true' : 'false');
+      localStorage.setItem(`bis_pkg_exp_${uKey}`, newUser.package_expiration || 'Vĩnh viễn');
+      localStorage.setItem(`bis_selected_sources_${uKey}`, JSON.stringify(newUser.selected_sources || ['adb', 'worldbank']));
+
+      const mergedCreated = {
+        ...created,
+        active_package: pkg,
+        has_ai: newUser.has_ai || false,
+        can_view_dashboard: canViewDash,
+        package_expiration: newUser.package_expiration || 'Vĩnh viễn',
+        selected_sources: newUser.selected_sources || ['adb', 'worldbank'],
+        permissions: perms,
+      };
+      setUsers(prev => [...prev, mergedCreated]);
       setNewUser({
         email: '',
         password: '',
@@ -355,10 +395,16 @@ export default function AdminPage() {
         role: 'user',
         organization_id: null,
         region: userRegion || 'Toàn quốc',
+        active_package: 'free',
+        package_expiration: 'Vĩnh viễn',
+        has_ai: false,
+        can_view_dashboard: false,
+        selected_sources: ['adb', 'worldbank'],
         permissions: {
           can_view_press: true,
-          can_view_bidding: true,
-          can_view_oda: true,
+          can_view_bidding: false,
+          can_view_oda: false,
+          can_view_dashboard: false,
           can_manage_keywords: true,
           can_export_data: true,
         },
@@ -396,8 +442,9 @@ export default function AdminPage() {
       region: u.region || userRegion || 'Toàn quốc',
       permissions: u.permissions || {
         can_view_press: true,
-        can_view_bidding: true,
-        can_view_oda: true,
+        can_view_bidding: u.active_package === 'free' ? false : true,
+        can_view_oda: u.active_package === 'free' ? false : true,
+        can_view_dashboard: u.active_package === 'full' || u.active_package === 'enterprise' || role === 'super_admin' || role === 'admin',
         can_manage_keywords: true,
         can_export_data: true,
       },
@@ -408,6 +455,7 @@ export default function AdminPage() {
       timezone: u.timezone || 'Asia/Ho_Chi_Minh',
       active_package: u.active_package || (role === 'admin' ? 'enterprise' : 'free'),
       has_ai: u.has_ai ?? false,
+      can_view_dashboard: u.can_view_dashboard ?? u.permissions?.can_view_dashboard ?? (u.active_package === 'full' || u.active_package === 'enterprise' || role === 'super_admin' || role === 'admin'),
       package_expiration: u.package_expiration || (u.active_package === 'free' || role === 'super_admin' ? 'Vĩnh viễn' : '12/05/2026 - 12/05/2027'),
       purchased_themes: u.purchased_themes || [],
       selected_sources: u.selected_sources || ['adb', 'worldbank'],
@@ -420,13 +468,29 @@ export default function AdminPage() {
     if (!editingUser) return;
     setActionLoading(true);
     try {
+      const pkg = editingUser.active_package || 'free';
+      const canViewDash = editingUser.can_view_dashboard ?? (pkg === 'full' || pkg === 'enterprise');
+      const perms = {
+        ...(editingUser.permissions || {}),
+        can_view_press: editingUser.permissions?.can_view_press ?? true,
+        can_view_bidding: pkg === 'free' ? false : (pkg === 'full' || pkg === 'enterprise' ? true : (editingUser.selected_sources || []).includes('gov')),
+        can_view_oda: pkg === 'free' ? false : (pkg === 'full' || pkg === 'enterprise' ? true : ((editingUser.selected_sources || []).includes('adb') || (editingUser.selected_sources || []).includes('worldbank'))),
+        can_view_dashboard: canViewDash,
+        active_package: editingUser.active_package,
+        selected_sources: editingUser.selected_sources,
+        package_expiration: editingUser.package_expiration,
+        has_ai: editingUser.has_ai,
+        purchased_themes: editingUser.purchased_themes,
+        max_users: editingUser.max_users,
+      };
+
       const payload = {
         email: editingUser.email,
         display_name: editingUser.display_name,
         role: editingUser.role,
         organization_id: editingUser.organization_id || null,
         region: editingUser.region,
-        permissions: editingUser.permissions,
+        permissions: perms,
         is_active: editingUser.is_active,
         email_digest_enabled: editingUser.email_digest_enabled,
         digest_hour: parseInt(editingUser.digest_hour, 10),
@@ -440,6 +504,7 @@ export default function AdminPage() {
       const uKey = editingUser.email || editingUser.id;
       localStorage.setItem(`bis_active_package_${uKey}`, editingUser.active_package);
       localStorage.setItem(`bis_ai_package_${uKey}`, editingUser.has_ai ? 'true' : 'false');
+      localStorage.setItem(`bis_dashboard_access_${uKey}`, canViewDash ? 'true' : 'false');
       localStorage.setItem(`bis_pkg_exp_${uKey}`, editingUser.package_expiration || 'Vĩnh viễn');
       localStorage.setItem(`bis_purchased_themes_${uKey}`, JSON.stringify(editingUser.purchased_themes || []));
       localStorage.setItem(`bis_selected_sources_${uKey}`, JSON.stringify(editingUser.selected_sources || ['adb', 'worldbank']));
@@ -457,10 +522,12 @@ export default function AdminPage() {
         ...updated,
         active_package: editingUser.active_package,
         has_ai: editingUser.has_ai,
+        can_view_dashboard: canViewDash,
         package_expiration: editingUser.package_expiration,
         purchased_themes: editingUser.purchased_themes,
         selected_sources: editingUser.selected_sources,
         max_users: editingUser.max_users || 10,
+        permissions: perms,
       };
 
       setUsers(prev => prev.map(u => u.id === editingUser.id ? mergedUser : u));
@@ -1277,7 +1344,22 @@ export default function AdminPage() {
                       className="form-input"
                       value={newUser.role}
                       disabled={isRegionalAdmin}
-                      onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                      onChange={e => {
+                        const newRole = e.target.value;
+                        if (newRole === 'user') {
+                          setNewUser({ ...newUser, role: 'user', organization_id: null, region: newUser.region || 'Toàn quốc' });
+                        } else if (newRole === 'staff') {
+                          const firstOrg = organizations[0];
+                          setNewUser({
+                            ...newUser,
+                            role: 'staff',
+                            organization_id: newUser.organization_id || (firstOrg ? firstOrg.id : null),
+                            region: newUser.organization_id ? newUser.region : (firstOrg ? firstOrg.name : newUser.region),
+                          });
+                        } else {
+                          setNewUser({ ...newUser, role: newRole });
+                        }
+                      }}
                     >
                       {isSuperAdmin && <option value="super_admin">{tUI('ui.super-admin-quan-tri-toi-cao')}</option>}
                       {isSuperAdmin && <option value="admin">{tUI('ui.admin-phan-vung')}</option>}
@@ -1340,6 +1422,7 @@ export default function AdminPage() {
                             setNewUser({
                               ...newUser,
                               organization_id: orgId,
+                              role: newUser.role === 'user' ? 'staff' : newUser.role,
                               region: selectedOrg ? selectedOrg.name : newUser.region,
                             });
                           } else if (val === '__add_new__') {
@@ -1349,6 +1432,7 @@ export default function AdminPage() {
                             setNewUser({
                               ...newUser,
                               organization_id: null,
+                              role: newUser.role === 'staff' ? 'user' : newUser.role,
                               region: val,
                             });
                           }
@@ -1444,7 +1528,7 @@ export default function AdminPage() {
                                 {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : u.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
                               </span>
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                                📍 {u.region || 'Toàn quốc'}
+                                {u.organization_id ? `🏢 ${organizations.find(o => o.id === u.organization_id)?.name || u.region || 'Tổ chức'}` : `📍 ${u.region || 'Toàn quốc'}`}
                               </span>
                             </div>
                           </td>
@@ -1732,7 +1816,22 @@ export default function AdminPage() {
                   className="form-input"
                   value={editingUser.role || 'user'}
                   disabled={isRegionalAdmin}
-                  onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}
+                  onChange={e => {
+                    const newRole = e.target.value;
+                    if (newRole === 'user') {
+                      setEditingUser({ ...editingUser, role: 'user', organization_id: null, region: editingUser.region || 'Toàn quốc' });
+                    } else if (newRole === 'staff') {
+                      const firstOrg = organizations[0];
+                      setEditingUser({
+                        ...editingUser,
+                        role: 'staff',
+                        organization_id: editingUser.organization_id || (firstOrg ? firstOrg.id : null),
+                        region: editingUser.organization_id ? editingUser.region : (firstOrg ? firstOrg.name : editingUser.region),
+                      });
+                    } else {
+                      setEditingUser({ ...editingUser, role: newRole });
+                    }
+                  }}
                 >
                   {(isSuperAdmin || editingUser.role === 'super_admin') && (
                     <option value="super_admin">{tUI('ui.super-admin-quan-tri-toi-cao')}</option>
@@ -1793,6 +1892,7 @@ export default function AdminPage() {
                         setEditingUser({
                           ...editingUser,
                           organization_id: orgId,
+                          role: editingUser.role === 'user' ? 'staff' : editingUser.role,
                           region: selectedOrg ? selectedOrg.name : editingUser.region,
                         });
                       } else if (val === '__add_new__') {
@@ -1801,6 +1901,7 @@ export default function AdminPage() {
                         setEditingUser({
                           ...editingUser,
                           organization_id: null,
+                          role: editingUser.role === 'staff' ? 'user' : editingUser.role,
                           region: val,
                         });
                       }
@@ -1843,6 +1944,7 @@ export default function AdminPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, fontSize: 12.5 }}>
                   {[
                     { key: 'can_view_press', label: tUI('ui.xem-tin-bao-chi') },
+                    { key: 'can_view_dashboard', label: '📊 Xem Dashboard Thống Kê' },
                     { key: 'can_view_bidding', label: tUI('ui.xem-goi-thau-gov') },
                     { key: 'can_view_oda', label: tUI('ui.xem-du-an-oda-wb') },
                     { key: 'can_manage_keywords', label: tUI('ui.dang-ky-tu-khoa-loc') },
@@ -2043,7 +2145,24 @@ export default function AdminPage() {
                       </div>
                     )}
 
-                    <div style={{ gridColumn: 'span 2' }}>
+                    <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 10, background: 'rgba(37, 99, 235, 0.05)', padding: 12, borderRadius: 12, border: '1px solid rgba(37, 99, 235, 0.2)' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13, color: '#2563eb' }}>
+                        <input
+                          type="checkbox"
+                          checked={editingUser.can_view_dashboard === true || (editingUser.can_view_dashboard === undefined && (editingUser.active_package === 'full' || editingUser.active_package === 'enterprise'))}
+                          onChange={e => setEditingUser({
+                            ...editingUser,
+                            can_view_dashboard: e.target.checked,
+                            permissions: {
+                              ...(editingUser.permissions || {}),
+                              can_view_dashboard: e.target.checked,
+                            }
+                          })}
+                          style={{ width: 16, height: 16, accentColor: '#2563eb' }}
+                        />
+                        📊 Cho phép xem Dashboard Analytics (Báo cáo & Thống kê tổng hợp)
+                      </label>
+
                       <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13, color: '#9333ea' }}>
                         <input
                           type="checkbox"
@@ -2212,7 +2331,7 @@ export default function AdminPage() {
               </span>
 
               <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
-                📍 {viewingUser.region || 'Toàn quốc'}
+                {viewingUser.organization_id ? `🏢 ${organizations.find(o => o.id === viewingUser.organization_id)?.name || viewingUser.region || 'Tổ chức'}` : `📍 ${viewingUser.region || 'Toàn quốc'}`}
               </span>
 
               <span style={{
@@ -2241,8 +2360,13 @@ export default function AdminPage() {
                     {viewingUser.active_package === 'free' || viewingUser.role === 'super_admin' ? 'Vĩnh viễn' : (viewingUser.package_expiration || 'Vĩnh viễn')}
                   </b>
                 </div>
-                <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: viewingUser.has_ai ? '#f3e8ff' : 'var(--bg-surface)', color: viewingUser.has_ai ? '#9333ea' : 'var(--text-muted)', border: `1px solid ${viewingUser.has_ai ? '#e9d5ff' : 'var(--border-subtle)'}` }}>
-                  🤖 AI Gemini 2.0: {viewingUser.has_ai ? 'Đã kích hoạt' : 'Chưa đăng ký'}
+                <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: viewingUser.can_view_dashboard ? '#eff6ff' : 'var(--bg-surface)', color: viewingUser.can_view_dashboard ? '#2563eb' : 'var(--text-muted)', border: `1px solid ${viewingUser.can_view_dashboard ? '#bfdbfe' : 'var(--border-subtle)'}` }}>
+                    📊 Dashboard: {viewingUser.can_view_dashboard ? 'Được phép xem' : 'Không có quyền'}
+                  </div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: viewingUser.has_ai ? '#f3e8ff' : 'var(--bg-surface)', color: viewingUser.has_ai ? '#9333ea' : 'var(--text-muted)', border: `1px solid ${viewingUser.has_ai ? '#e9d5ff' : 'var(--border-subtle)'}` }}>
+                    🤖 AI Gemini: {viewingUser.has_ai ? 'Đã kích hoạt' : 'Chưa đăng ký'}
+                  </div>
                 </div>
               </div>
 

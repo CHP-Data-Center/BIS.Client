@@ -82,33 +82,42 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// Route dành riêng cho Enterprise Users (Dashboard, ADB, WB, Đấu thầu, AI Assistant)
-function EnterpriseRoute({ children }) {
-  const { isLoggedIn, isPersonalUser, loading } = useAuth();
+// Route dành riêng cho Dashboard / Enterprise
+function DashboardRoute({ children }) {
+  const { isLoggedIn, hasDashboardAccess, loading } = useAuth();
   if (loading) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
-  if (isPersonalUser) return <Navigate to="/news/press" replace />;
+  if (!hasDashboardAccess) return <Navigate to="/news/press" replace />;
+  return children;
+}
+
+const EnterpriseRoute = DashboardRoute;
+
+// Route kiểm tra quyền truy cập theo từng nguồn dữ liệu (adb, worldbank, gov)
+function SourceRoute({ source, children }) {
+  const { isLoggedIn, hasSourceAccess, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (!hasSourceAccess(source)) return <Navigate to="/upgrade" replace />;
   return children;
 }
 
 // Route dành riêng cho Trợ Lý AI (Super Admin hoặc người dùng đã mua gói AI)
 function AiRoute({ children }) {
-  const { isLoggedIn, user, isSuperAdmin, loading } = useAuth();
+  const { isLoggedIn, hasAiAccess, loading } = useAuth();
   if (loading) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
-  const userKey = user?.email || user?.id;
-  const hasAiAccess = isSuperAdmin || user?.has_ai === true || localStorage.getItem(`bis_ai_package_${userKey}`) === 'true';
   if (!hasAiAccess) return <Navigate to="/upgrade" replace />;
   return children;
 }
 
 // Redirect mặc định theo vai trò người dùng
 function DefaultRedirect() {
-  const { isPersonalUser, isLoggedIn, loading } = useAuth();
+  const { hasDashboardAccess, isLoggedIn, loading } = useAuth();
   if (loading) return <PageLoader />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
-  if (isPersonalUser) return <Navigate to="/news/press" replace />;
-  return <Navigate to="/dashboard" replace />;
+  if (hasDashboardAccess) return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/news/press" replace />;
 }
 
 // Route dành riêng cho Admin
@@ -150,56 +159,56 @@ export default function App() {
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
 
-              {/* Protected — dành cho Enterprise */}
+              {/* Protected — Dashboard */}
               <Route path="/dashboard" element={
-                <EnterpriseRoute>
+                <DashboardRoute>
                   <AppLayout><DashboardPage /></AppLayout>
-                </EnterpriseRoute>
+                </DashboardRoute>
               } />
 
+              {/* Protected — World Bank */}
               <Route path="/worldbank" element={
-                <EnterpriseRoute>
+                <SourceRoute source="worldbank">
                   <AppLayout><WorldBankView /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
 
               <Route path="/worldbank/project/:id" element={
-                <EnterpriseRoute>
+                <SourceRoute source="worldbank">
                   <AppLayout><WbProjectDetailPage /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
 
               <Route path="/worldbank/:id" element={
-                <EnterpriseRoute>
+                <SourceRoute source="worldbank">
                   <AppLayout><WbProjectDetailPage /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
 
+              {/* Protected — ADB */}
               <Route path="/adb" element={
-                <EnterpriseRoute>
+                <SourceRoute source="adb">
                   <AppLayout><WorldBankView type="adb" /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
-
 
               <Route path="/adb/project/:id" element={
-                <EnterpriseRoute>
+                <SourceRoute source="adb">
                   <AppLayout><AdbProjectDetailPage /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
 
               <Route path="/adb/:id" element={
-                <EnterpriseRoute>
+                <SourceRoute source="adb">
                   <AppLayout><AdbProjectDetailPage /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
-
 
               {/* Chi tiết gói thầu TBMT/KHLCNT — xem trong app thay vì sang muasamcong */}
               <Route path="/procurement/:id" element={
-                <EnterpriseRoute>
+                <SourceRoute source="gov">
                   <AppLayout><ProcurementDetailPage /></AppLayout>
-                </EnterpriseRoute>
+                </SourceRoute>
               } />
 
               <Route path="/ai-chat" element={
@@ -265,15 +274,15 @@ export default function App() {
               } />
 
               <Route path="/trending" element={
-                <EnterpriseRoute>
+                <DashboardRoute>
                   <AppLayout><ComingSoon title={tUI('ui.xu-huong-analytics')} /></AppLayout>
-                </EnterpriseRoute>
+                </DashboardRoute>
               } />
 
               <Route path="/reports" element={
-                <EnterpriseRoute>
+                <DashboardRoute>
                   <AppLayout><ComingSoon title={tUI('ui.bao-cao-ai')} /></AppLayout>
-                </EnterpriseRoute>
+                </DashboardRoute>
               } />
 
               <Route path="/help" element={

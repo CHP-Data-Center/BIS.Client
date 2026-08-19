@@ -205,6 +205,7 @@ html[data-ui-theme="luxury"],
 
 /* Luxury Header Action Buttons (24K Gold Sheen) */
 [data-ui-theme="luxury"] .header .theme-toggle,
+[data-ui-theme="luxury"] .header .lang-switcher-btn,
 [data-ui-theme="luxury"] .header .notif-btn,
 [data-ui-theme="luxury"] .header .user-avatar-btn {
   background: linear-gradient(145deg, #1c1c24 0%, #0d0d10 100%) !important;
@@ -222,12 +223,14 @@ html[data-ui-theme="luxury"],
 }
 
 [data-ui-theme="luxury"] .header .theme-toggle *,
+[data-ui-theme="luxury"] .header .lang-switcher-btn *,
 [data-ui-theme="luxury"] .header .notif-btn *,
 [data-ui-theme="luxury"] .header .user-avatar-btn * {
   color: #d4af37 !important;
 }
 
 [data-ui-theme="luxury"] .header .theme-toggle:hover,
+[data-ui-theme="luxury"] .header .lang-switcher-btn:hover,
 [data-ui-theme="luxury"] .header .notif-btn:hover,
 [data-ui-theme="luxury"] .header .user-avatar-btn:hover {
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.28) 0%, rgba(28, 28, 36, 0.98) 100%) !important;
@@ -237,6 +240,7 @@ html[data-ui-theme="luxury"],
 }
 
 [data-ui-theme="luxury"] .header .theme-toggle:hover *,
+[data-ui-theme="luxury"] .header .lang-switcher-btn:hover *,
 [data-ui-theme="luxury"] .header .notif-btn:hover *,
 [data-ui-theme="luxury"] .header .user-avatar-btn:hover * {
   color: #ffffff !important;

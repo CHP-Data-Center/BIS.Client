@@ -102,11 +102,11 @@ export default function NewsPage() {
   const { source = 'all' } = useParams();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isPersonalUser } = useAuth();
+  const { isPersonalUser, hasSourceAccess } = useAuth();
   const scrollContainerRef = useRef(null);
 
-  if (isPersonalUser && (source === 'adb' || source === 'adb-tenders' || source === 'worldbank' || source === 'gov' || source === 'dauthau')) {
-    return <Navigate to="/news/press" replace />;
+  if (source !== 'all' && source !== 'press' && !hasSourceAccess(source)) {
+    return <Navigate to="/upgrade" replace />;
   }
 
   const [loading, setLoading]                 = useState(true);

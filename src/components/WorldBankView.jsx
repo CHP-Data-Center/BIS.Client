@@ -1046,7 +1046,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
           }}
         >
           {/* Results Control Header */}
-          <div style={{ flex: '0 0 auto', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ flex: '0 0 auto', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, background: 'var(--bg-surface)' }}>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>
               {t('projects.showing')} <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{filteredProjects.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> - <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{Math.min(currentPage * pageSize, filteredProjects.length)}</span> {t('projects.ofTotal')} <span style={{ color: config.brandColor, fontWeight: 800 }}>{filteredProjects.length.toLocaleString()}</span> {t('news.itemsCount')}
             </div>
@@ -1123,10 +1123,9 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
               </div>
             ) : viewMode === 'table' ? (
               /* TABLE VIEW */
-              <div className="table-responsive" style={{ overflowX: 'auto', width: '100%' }}>
-                <table className="table" style={{ width: '100%', minWidth: 980, borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-surface-2)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              <table className="table" style={{ width: '100%', minWidth: 980, borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                    <tr>
                       {config.headers.map((h) => {
                         const isSorted = sortBy === h.key;
                         return (
@@ -1142,6 +1141,9 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                               color: isSorted ? config.brandColor : 'var(--text-secondary)',
                               whiteSpace: 'nowrap',
                               width: h.width || 'auto',
+                              background: 'var(--bg-surface-2)',
+                              borderBottom: '1px solid var(--border)',
+                              boxShadow: '0 1px 0 var(--border)',
                             }}
                           >
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -1279,7 +1281,6 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                     })}
                   </tbody>
                 </table>
-              </div>
             ) : (
               /* GRID CARD VIEW */
               <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
