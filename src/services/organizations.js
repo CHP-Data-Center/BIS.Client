@@ -41,6 +41,16 @@ export const orgService = {
   },
 
   // ── Org admin: tổ chức MÌNH ───────────────────────────────────────
+  /** Phân vùng của admin đang đăng nhập (không thấy phân vùng khác). */
+  async getMyOrganization() {
+    const { data } = await api.get('/org/organization');
+    return data; // OrganizationOut
+  },
+  /** Đổi tên phân vùng của chính mình. Bật/tắt vùng vẫn là quyền super admin. */
+  async updateMyOrganization(payload) {
+    const { data } = await api.put('/org/organization', payload); // { name }
+    return data;
+  },
   async getMyScope() {
     const { data } = await api.get('/org/scope');
     return data;

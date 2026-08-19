@@ -113,6 +113,18 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  /** Nạp lại thông tin tài khoản từ server (vd sau khi đổi tên phân vùng). */
+  const refreshUser = useCallback(async () => {
+    if (!localStorage.getItem('bis_token')) return null;
+    try {
+      const me = await authService.getMe();
+      setUser(me);
+      return me;
+    } catch {
+      return null; // token hỏng sẽ được xử lý ở luồng gọi API khác
+    }
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('bis_token');
     localStorage.removeItem('bis_user');
@@ -160,6 +172,7 @@ export function AuthProvider({ children }) {
         login,
         loginWithGoogle,
         logout,
+        refreshUser,
         loginError,
         setLoginError,
         isGuest,

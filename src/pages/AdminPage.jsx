@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles,
   Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
-  Sliders, Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2,
+  Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2,
   ChevronDown, Eye
 } from 'lucide-react';
 
@@ -23,7 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCrawl } from '../context/CrawlContext';
 import { useLang } from '../context/LanguageContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
-import ScopePanel from '../components/admin/ScopePanel';
+import MyRegionPanel from '../components/admin/MyRegionPanel';
 import KeywordSuggestionsPanel from '../components/admin/KeywordSuggestionsPanel';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { tUI } from '../locales';
@@ -131,7 +131,9 @@ export default function AdminPage() {
         adminService.getCrawlLogs().catch(() => []),
         adminService.getBlacklist().catch(() => []),
         adminService.getWhitelist().catch(() => []),
-        orgService.listOrganizations().catch(() => []),
+        // Danh sách MỌI phân vùng là API của super admin — admin phân vùng gọi sẽ 403,
+        // và họ cũng chỉ cần vùng của mình (tab "Phân Vùng Của Tôi").
+        isSuperAdmin ? orgService.listOrganizations().catch(() => []) : Promise.resolve([]),
       ]);
       setUsers((u || []).map(usr => {
         const uKey = usr.email || usr.id;
@@ -604,9 +606,10 @@ export default function AdminPage() {
   const tabs = [
     { id: 'crawl',     label: t('admin.sourcesTab'), icon: <Database size={16} />, badge: sources.length },
     { id: 'users',     label: t('admin.usersTab'),  icon: <Users size={16} />,    badge: users.length },
-    // Đa tổ chức (ADR-005): super admin quản tổ chức; org admin đặt phạm vi tổ chức mình.
+    // Đa tổ chức (ADR-005): super admin quản MỌI phân vùng; admin phân vùng chỉ vùng mình
+    // (đổi tên + phạm vi dữ liệu) — gộp chung 1 tab để không phải nhảy qua lại.
     ...(isSuperAdmin ? [{ id: 'orgs', label: t('admin.orgsTab'), icon: <Building2 size={16} /> }] : []),
-    ...(isRegionalAdmin ? [{ id: 'scope', label: t('admin.tabScope', 'Phạm Vi Dữ Liệu'), icon: <Sliders size={16} /> }] : []),
+    ...(isRegionalAdmin ? [{ id: 'myRegion', label: t('admin.myRegionTab'), icon: <Building2 size={16} /> }] : []),
     { id: 'filters',   label: t('admin.keywordsTab'), icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
     { id: 'suggest',   label: t('admin.suggestTab'),  icon: <Sparkles size={16} /> },
     { id: 'digest',    label: t('admin.digestTab'),    icon: <Mail size={16} /> },
@@ -1522,9 +1525,9 @@ export default function AdminPage() {
             <OrganizationsPanel sources={sources} allUsers={users} onMessage={showAlert} onUserUpdated={loadData} />
           )}
 
-          {/* TAB: PHẠM VI DỮ LIỆU (org admin đặt cho tổ chức mình) — ADR-005 */}
-          {activeTab === 'scope' && (
-            <ScopePanel sources={sources} onMessage={showAlert} />
+          {/* TAB: PHÂN VÙNG CỦA TÔI (admin phân vùng: đổi tên + phạm vi dữ liệu) — ADR-005 */}
+          {activeTab === 'myRegion' && (
+            <MyRegionPanel sources={sources} onMessage={showAlert} onRegionRenamed={loadData} />
           )}
 
           {/* TAB 3: BLACK & WHITE LIST */}

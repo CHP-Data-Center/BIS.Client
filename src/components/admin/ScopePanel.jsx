@@ -1,7 +1,7 @@
 // src/components/admin/ScopePanel.jsx
 // Cấu hình PHẠM VI dữ liệu của tổ chức (ADR-005): nguồn + quốc gia + từ khóa.
 // orgId có -> chế độ super admin (đặt cho org khác); không -> org admin đặt tổ chức mình.
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Save, Loader2, X, Plus, Globe, Tag, Database } from 'lucide-react';
 import { orgService } from '../../services/organizations';
 import { tUI } from '../../locales';
@@ -55,6 +55,11 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
     { id: 'procurement', label: tUI('ui.dau-thau-mua-sam-cong'), icon: '📜' },
   ];
 
+  // Giữ onMessage trong ref: cha tạo lại hàm này mỗi lần render nên để trong deps của
+  // useCallback sẽ khiến effect nạp lại liên tục (gọi API lặp vô hạn khi lỗi).
+  const messageRef = useRef(onMessage);
+  messageRef.current = onMessage;
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -67,11 +72,11 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
         categories: data.categories || [],
       });
     } catch (e) {
-      onMessage?.('error', e.response?.data?.detail || 'Không tải được phạm vi.');
+      messageRef.current?.('error', e.response?.data?.detail || 'Không tải được phạm vi.');
     } finally {
       setLoading(false);
     }
-  }, [orgId, onMessage]);
+  }, [orgId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -110,7 +115,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   };
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}><Loader2 className="spin" /> {tUI('ui.dang-tai')}</div>;
+    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}><Loader2 className="spin" /> {tUI('common.loading')}</div>;
   }
 
   return (
