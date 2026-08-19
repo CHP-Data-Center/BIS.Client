@@ -347,7 +347,7 @@ export default function AdbProjectDetailPage() {
                         boxShadow: '0 2px 6px rgba(245, 158, 11, 0.25)',
                       }}
                     >
-                      <Cpu size={12} /> Tóm Tắt &amp; Mô Tả Tổng Quan Dự Án
+                      <Cpu size={12} /> Tóm Tắt & Mô Tả Tổng Quan Dự Án
                     </span>
                   </div>
                   <p style={{ fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0, fontWeight: 500, whiteSpace: 'pre-line' }}>
@@ -381,7 +381,7 @@ export default function AdbProjectDetailPage() {
                 <div>
                   <div style={{ lineHeight: 1.2 }}>{tUI('ui.noi-dung-chi-tiet-du-an-adb')}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Thông tin toàn văn &amp; thông số kỹ thuật được trích xuất từ adb.org
+                    Thông tin toàn văn & thông số kỹ thuật được trích xuất từ adb.org
                   </div>
                 </div>
               </div>
@@ -711,7 +711,7 @@ export default function AdbProjectDetailPage() {
           {tags.length > 0 && (
             <div className="article-sidebar-card">
               <div className="article-sidebar-title">
-                <Tag size={15} color="#d97706" /> Từ khóa &amp; Phân loại
+                <Tag size={15} color="#d97706" /> Từ khóa & Phân loại
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {tags.map((tag) => (
