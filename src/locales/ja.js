@@ -542,6 +542,8 @@ export default {
   'admin.myRegionRenameError': '地域名の変更に失敗しました。',
   'admin.myRegionLoadError': '地域情報を読み込めませんでした。',
   'admin.myRegionNote': '管理できるのはこの地域のみです。地域の作成・削除・停止はスーパー管理者が行います。',
+  'admin.myRegionUnavailable': '地域を開けません',
+  'common.retry': '再試行',
   'admin.tabScope': 'データ範囲',
   'admin.keywordsTab': 'フィルターキーワード',
   'admin.digestTab': 'メールダイジェスト',

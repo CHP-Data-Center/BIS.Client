@@ -542,6 +542,8 @@ export default {
   'admin.myRegionRenameError': 'Could not rename the region.',
   'admin.myRegionLoadError': 'Could not load region details.',
   'admin.myRegionNote': 'You manage this region only. Creating, deleting or suspending regions is done by the Super Admin.',
+  'admin.myRegionUnavailable': 'Region not available',
+  'common.retry': 'Try again',
   'admin.tabScope': 'Data Scope',
   'admin.keywordsTab': 'Keyword Filters',
   'admin.digestTab': 'Email Digest',

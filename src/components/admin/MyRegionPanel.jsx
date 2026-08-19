@@ -2,7 +2,7 @@
 // Admin phân vùng tự quản CHÍNH phân vùng mình (ADR-005): xem/đổi tên + đặt phạm vi dữ liệu.
 // Cố ý KHÔNG có danh sách phân vùng khác, không tạo/xóa vùng — đó là quyền super admin.
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Building2, Loader2, Pencil, Check, X, ShieldCheck } from 'lucide-react';
+import { Building2, Loader2, Pencil, Check, X, ShieldCheck, AlertTriangle, RefreshCw } from 'lucide-react';
 import { orgService } from '../../services/organizations';
 import { useAuth } from '../../context/AuthContext';
 import ScopePanel from './ScopePanel';
@@ -11,6 +11,7 @@ import { tUI } from '../../locales';
 export default function MyRegionPanel({ sources = [], onMessage, onRegionRenamed }) {
   const { user, refreshUser } = useAuth();
   const [org, setOrg] = useState(null);
+  const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -25,8 +26,13 @@ export default function MyRegionPanel({ sources = [], onMessage, onRegionRenamed
     setLoading(true);
     try {
       setOrg(await orgService.getMyOrganization());
+      setLoadError('');
     } catch (e) {
-      messageRef.current?.('error', e.response?.data?.detail || tUI('admin.myRegionLoadError'));
+      // 403 = phân vùng đang bị super admin tạm dừng; nêu đúng lý do server trả về thay vì
+      // để trơ ra thẻ rỗng rồi ScopePanel bên dưới lại lỗi tiếp.
+      const detail = e.response?.data?.detail || tUI('admin.myRegionLoadError');
+      setLoadError(detail);
+      messageRef.current?.('error', detail);
     } finally {
       setLoading(false);
     }
@@ -65,6 +71,29 @@ export default function MyRegionPanel({ sources = [], onMessage, onRegionRenamed
     return (
       <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
         <Loader2 className="spin" /> {tUI('common.loading')}
+      </div>
+    );
+  }
+
+  if (loadError || !org) {
+    return (
+      <div style={{
+        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+        borderRadius: 16, padding: 32, display: 'flex', gap: 14, alignItems: 'flex-start',
+      }}>
+        <AlertTriangle size={22} style={{ flexShrink: 0, color: '#d97706', marginTop: 2 }} />
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+            {tUI('admin.myRegionUnavailable')}
+          </div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            {loadError || tUI('admin.myRegionLoadError')}
+          </div>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={load}
+                  style={{ marginTop: 14, gap: 6 }}>
+            <RefreshCw size={14} /> {tUI('common.retry')}
+          </button>
+        </div>
       </div>
     );
   }

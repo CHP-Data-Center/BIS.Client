@@ -542,6 +542,8 @@ export default {
   'admin.myRegionRenameError': 'Đổi tên phân vùng thất bại.',
   'admin.myRegionLoadError': 'Không tải được thông tin phân vùng.',
   'admin.myRegionNote': 'Bạn chỉ quản lý được phân vùng này. Việc tạo, xóa hoặc tạm dừng phân vùng do Super Admin thực hiện.',
+  'admin.myRegionUnavailable': 'Chưa mở được phân vùng',
+  'common.retry': 'Thử lại',
   'admin.tabScope': 'Phạm Vi Dữ Liệu',
   'admin.keywordsTab': 'Bộ Lọc Từ Khóa',
   'admin.digestTab': 'Email Digest',
