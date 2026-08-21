@@ -35,7 +35,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Vite nhúng biến VITE_* vào bundle LÚC BUILD, không đọc lúc chạy. Thiếu biến này
+      # thì bản deploy gọi API vào http://localhost:8000 của chính máy người xem — và vì
+      # trang chạy HTTPS nên trình duyệt chặn luôn (mixed content).
+      # Đặt giá trị ở: Settings → Secrets and variables → Actions → Variables →
+      # VITE_API_BASE_URL = https://<backend-that>/api/v1
+      - name: Kiểm tra cấu hình API backend
+        run: |
+          if [ -z "${{ vars.VITE_API_BASE_URL }}" ]; then
+            echo "::warning title=Thiếu VITE_API_BASE_URL::Chưa đặt biến VITE_API_BASE_URL — bản deploy sẽ gọi API vào http://localhost:8000 và KHÔNG dùng được. Đặt tại Settings → Secrets and variables → Actions → Variables."
+          else
+            echo "API backend: ${{ vars.VITE_API_BASE_URL }}"
+          fi
+
       - name: Build project
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: npm run build
 
       - name: Copy index.html to 404.html for SPA routing fallback
