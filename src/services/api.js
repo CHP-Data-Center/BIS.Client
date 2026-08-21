@@ -5,7 +5,13 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    // Khi backend đi qua ngrok bản miễn phí, ngrok chèn một trang cảnh báo HTML trước mọi
+    // request trông giống trình duyệt -> API trả HTML thay vì JSON và app hỏng toàn bộ.
+    // Header này tắt trang đó. Vô hại khi không dùng ngrok.
+    'ngrok-skip-browser-warning': 'true',
+  },
 });
 
 // ── Helper: Tạo AbortController cho phép hủy request đang chạy ────
