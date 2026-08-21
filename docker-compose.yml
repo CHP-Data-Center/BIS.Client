@@ -3,8 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Mặc định /api/v1 (tương đối) — nginx trong container tự chuyển tiếp sang backend.
+        # Đổi khi cần trỏ ra backend ở máy khác:
+        #   VITE_API_BASE_URL=https://bis-api.example.com/api/v1 docker compose up -d --build
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
     container_name: bis-client
     restart: always
     ports:
       - "3003:80"
-
+    # nginx chuyển tiếp /api/ tới host.docker.internal:8080 (nơi backend publish cổng).
+    # Docker Desktop (Windows/macOS) có sẵn tên này; Docker trên Linux thì cần dòng dưới.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

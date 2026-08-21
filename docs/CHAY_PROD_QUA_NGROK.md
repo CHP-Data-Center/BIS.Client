@@ -1,5 +1,23 @@
 # Cho bản GitHub Pages chạy được, backend đặt tại máy server (qua ngrok)
 
+> ### Cân nhắc trước: nếu chỉ dùng trong nội bộ thì KHÔNG cần đường hầm
+>
+> Máy server đã chạy sẵn container `bis-client` (cổng 3003). Container đó nay có nginx
+> **chuyển tiếp `/api/` sang backend**, và frontend được build với địa chỉ API **tương đối**
+> (`/api/v1`). Nghĩa là frontend và API dùng chung một origin:
+>
+> - Không còn CORS, không còn mixed content.
+> - Mở bằng `http://localhost:3003` (ngồi ở server) hay `http://<IP-server>:3003` (máy khác
+>   trong mạng công ty) đều chạy, **không phải build lại** khi đổi cách truy cập.
+>
+> Chỉ cần đường hầm khi muốn dùng **ngoài mạng công ty**. Khi đó trỏ Cloudflare Tunnel /
+> ngrok vào **cổng 3003** (frontend) thay vì 8080 — API đi kèm luôn qua `/api/`.
+>
+> Bản GitHub Pages là chuyện khác: nó nằm trên máy chủ của GitHub, không có nginx để chuyển
+> tiếp, nên bắt buộc phải có URL backend công khai dạng https. Phần dưới đây nói về trường
+> hợp đó.
+
+
 Trang `https://chp-data-center.github.io/BIS.Client/` chỉ là **frontend tĩnh**. Nó cần một
 địa chỉ API **công khai và HTTPS** để gọi. Cách nhanh nhất khi chưa dựng server thật: chạy
 backend ở máy mình rồi mở một đường hầm ngrok ra ngoài.
