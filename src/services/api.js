@@ -2,8 +2,25 @@
 // Axios instance trung tâm — JWT interceptor + 401 logout + Retry + Cancel token helper
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+// Bản deploy chạy HTTPS mà gọi API http:// thì trình duyệt CHẶN (mixed content): request
+// không bao giờ rời khỏi máy người dùng, app chỉ thấy "lỗi mạng" chung chung nên rất khó
+// đoán. Nhận diện sớm để báo đúng nguyên nhân thay vì để người dùng ngồi thử lại mật khẩu.
+export const isApiUnreachableByDesign =
+  typeof window !== 'undefined' &&
+  window.location.protocol === 'https:' &&
+  API_BASE_URL.startsWith('http://');
+
+if (isApiUnreachableByDesign) {
+  console.error(
+    `[BIS] Trang chạy HTTPS nhưng địa chỉ API là ${API_BASE_URL} — trình duyệt sẽ chặn mọi ` +
+      'request. Bản deploy cần build lại với biến VITE_API_BASE_URL trỏ tới backend https.',
+  );
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -36,7 +53,12 @@ api.interceptors.response.use(
     } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
       err.userMessage = 'Yêu cầu phản hồi quá lâu (hết thời gian chờ). Vui lòng thử lại.';
     } else if (!err.response) {
-      err.userMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.';
+      // Cấu hình sai thì nói thẳng là sai cấu hình — bảo người dùng "kiểm tra kết nối mạng"
+      // chỉ khiến họ ngồi thử lại mật khẩu trong khi request chưa từng rời khỏi trình duyệt.
+      err.userMessage = isApiUnreachableByDesign
+        ? 'Bản web này chưa được cấu hình địa chỉ máy chủ (đang trỏ vào localhost). '
+          + 'Vui lòng báo quản trị viên build lại với địa chỉ API https.'
+        : 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.';
     }
 
     // Retry tự động tối đa 2 lần với phương thức GET khi gặp 502/503/504 hoặc lỗi mạng/timeout
