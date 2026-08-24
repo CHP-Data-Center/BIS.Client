@@ -15,9 +15,18 @@
 // nguyên tắc ở đây: dùng `url` đã crawl nếu có, còn không thì đưa vào trang chi tiết
 // TRONG APP — tuyệt đối không bịa URL ngoài.
 
-/** Trang tra cứu còn sống của muasamcong (đã kiểm: HTTP 200). Dùng làm lối thoát cuối. */
+/**
+ * Trang tra cứu thông tin đấu thầu của muasamcong.
+ *
+ * `?render=index` là BẮT BUỘC. Thiếu nó, cổng vẫn trả HTTP 200 nhưng portlet không dựng
+ * được và trang chỉ hiện "egp-portal-contractor-selection-v2 tạm thời không có" — mã
+ * trạng thái 200 ở đây gây hiểu nhầm là link tốt.
+ *
+ * Không kèm được từ khoá vào URL: ô tra cứu tìm phía client, URL không đổi sau khi tìm.
+ * Vì vậy chỗ dùng nên kèm nút chép mã TBMT để người dùng dán vào ô "Số TBMT / Tên gói thầu".
+ */
 export const MUASAMCONG_SEARCH_URL =
-  'https://muasamcong.mpi.gov.vn/web/guest/contractor-selection';
+  'https://muasamcong.mpi.gov.vn/web/guest/contractor-selection?render=index';
 
 /**
  * Mã TBMT/KHLCNT hiển thị cho người dùng.
