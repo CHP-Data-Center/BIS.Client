@@ -7,9 +7,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, ExternalLink, Bookmark, BookmarkCheck, Share2, ChevronRight,
   Loader2, Building2, Wallet, Landmark, Layers, FileText, CheckCircle2, Tag,
-  MapPin, Gavel, Clock, RefreshCw, AlertTriangle,
+  MapPin, Gavel, Clock, RefreshCw, AlertTriangle, Copy,
 } from 'lucide-react';
 import { odaService } from '../services/oda';
+import { MUASAMCONG_SEARCH_URL, tbmtCode } from '../utils/procurementLink';
 import { useLang } from '../context/LanguageContext';
 
 const BRAND = '#0ea5e9';           // xanh dương — phân biệt với ADB (cam) / WB (xanh lá)
@@ -214,7 +215,12 @@ export default function ProcurementDetailPage() {
   const d = item.details || {};
   const listPath = isNotice ? '/news/tbmt' : '/news/khlcnt';
   const listLabel = isNotice ? t('projects.procTitle') : t('projects.planTitle');
-  const sourceUrl = item.url || `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(item.id)}`;
+  // Link chi tiết muasamcong cần notifyId (UUID), không suy ra được từ mã TBMT. Thiếu url
+  // đã crawl thì đưa về trang tra cứu còn sống — trước đây ghép ?keyword=<id> và luôn 404.
+  const hasSourceUrl = Boolean(item.url);
+  const sourceUrl = item.url || MUASAMCONG_SEARCH_URL;
+  // Mã in trên cổng không có hậu tố phiên bản (id `IB2600458335-01` -> mã `IB2600458335`).
+  const codeToSearch = tbmtCode(item.id);
   const title = d.name || item.title;
   const price = fmtMoney(d.bid_price, d.price_unit) || fmtMoney(d.invest_total, d.invest_total_unit);
   const left = daysUntil(d.close_date || item.close_date);
@@ -467,10 +473,25 @@ export default function ProcurementDetailPage() {
 
             {/* Thanh hành động */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {/* Không có link chi tiết thì nói rõ là sang trang TRA CỨU, kèm nút chép mã
+                  để người dùng dán vào ô tìm kiếm — thay vì hứa "xem bản gốc" rồi ra 404. */}
               <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary"
                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-                <ExternalLink size={15} /> {t('proc.openSource')}
+                <ExternalLink size={15} /> {hasSourceUrl ? t('proc.openSource') : t('proc.searchSource')}
               </a>
+              {!hasSourceUrl && codeToSearch && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  onClick={() => {
+                    navigator.clipboard?.writeText(codeToSearch)
+                      .then(() => showToast(t('proc.copied'), 'success'))
+                      .catch(() => {});
+                  }}
+                >
+                  <Copy size={15} /> {t('proc.copyCode')}: {codeToSearch}
+                </button>
+              )}
               <button
                 className="btn btn-secondary"
                 onClick={handleBookmark}
@@ -500,7 +521,7 @@ export default function ProcurementDetailPage() {
             </p>
             <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
                style={{ fontSize: 12, fontWeight: 700, color: BRAND, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              {t('proc.openSource')} <ExternalLink size={12} />
+              {hasSourceUrl ? t('proc.openSource') : t('proc.searchSource')} <ExternalLink size={12} />
             </a>
           </div>
 

@@ -300,6 +300,8 @@ export default {
   'proc.noDetailSub': 'この入札の詳細を取得できませんでした。再試行するか、元のページをご覧ください。',
   'proc.retryDetail': '詳細を再取得',
   'proc.openSource': '国家入札システムで見る',
+  'proc.searchSource': '国家入札システムで検索',
+  'proc.copyCode': 'コードをコピー',
   'proc.sourceNote': 'muasamcong.mpi.gov.vn から自動収集',
   'proc.aboutTitle': '国家入札システムについて',
   'proc.aboutText': '入札公示と調達計画は、BISが muasamcong.mpi.gov.vn から自動的に収集し、一元的に検索できるようにしています。',

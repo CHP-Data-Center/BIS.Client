@@ -300,6 +300,8 @@ export default {
   'proc.noDetailSub': 'We could not retrieve details for this tender. Try again or open the original page.',
   'proc.retryDetail': 'Try fetching details again',
   'proc.openSource': 'View on the National E-Procurement System',
+  'proc.searchSource': 'Search the National E-Procurement System',
+  'proc.copyCode': 'Copy code',
   'proc.sourceNote': 'Collected automatically from muasamcong.mpi.gov.vn',
   'proc.aboutTitle': 'About the National E-Procurement System',
   'proc.aboutText': 'Bidding invitations and procurement plans are collected automatically by BIS from muasamcong.mpi.gov.vn for centralised lookup.',

@@ -9,6 +9,7 @@ import {
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import { MUASAMCONG_SEARCH_URL } from '../utils/procurementLink';
 import { useLang } from '../context/LanguageContext';
 import { tUI } from '../locales';
 
@@ -107,7 +108,9 @@ const CONFIG_MAP = {
       { key: 'proj_last_upd_date', display: 'Đóng Thầu', sortable: true, width: '140px' },
       { key: 'last_stage_reached_name', display: 'Phân Loại / Lĩnh Vực', sortable: true, width: '160px' },
     ],
-    getUrl: (id) => `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(id)}`,
+    // Chỉ dùng khi gói thầu KHÔNG có url đã crawl. Không ghép link chi tiết từ mã được
+    // (cần notifyId), nên đưa về trang tra cứu còn sống thay vì một URL chắc chắn 404.
+    getUrl: () => MUASAMCONG_SEARCH_URL,
   },
 };
 
@@ -307,7 +310,10 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
             last_stage_reached_name: p.kind === 'notice' ? 'TBMT (Mời thầu)' : 'KHLCNT (Kế hoạch)',
             sector: p.sector || 'Chưa phân loại',
             ai_summary: null,
-            rawUrl: p.url || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(p.id)}`,
+            // Chỉ giữ url thật đã crawl. dauthau.asia không kết nối được (curl trả 000)
+            // nên không dùng làm dự phòng nữa; thiếu url thì để trống, chỗ hiển thị sẽ
+            // rơi về getUrl() ở trên.
+            rawUrl: p.url || null,
           };
         });
       }

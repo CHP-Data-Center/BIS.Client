@@ -6,6 +6,7 @@ import { articlesService } from '../services/articles';
 import { useLang } from '../context/LanguageContext';
 import NewsCard from '../components/NewsCard';
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import { procurementDetailPath } from '../utils/procurementLink';
 import { tUI } from '../locales';
 
 function stripAccents(str = '') {
@@ -172,7 +173,9 @@ function getLocalBookmarks() {
         original_id: item.id,
         project_code: item.id,
         article_title: item.project_name || `Thông báo thầu #${item.id}`,
-        article_url: item.rawUrl || `https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(item.id)}`,
+        // Lưu url thật nếu có; không có thì lưu đường dẫn trang chi tiết TRONG APP để
+        // mở lại vẫn xem được, thay vì một link ngoài chắc chắn hỏng.
+        article_url: item.rawUrl || procurementDetailPath(item.id),
         article_image_url: null,
         source_name: 'Mua Sắm Công',
         source_type: 'gov',

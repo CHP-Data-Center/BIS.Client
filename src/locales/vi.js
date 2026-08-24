@@ -300,6 +300,8 @@ export default {
   'proc.noDetailSub': 'Hệ thống chưa lấy được chi tiết cho gói thầu này. Bạn có thể thử lại hoặc mở trang gốc.',
   'proc.retryDetail': 'Thử lấy lại chi tiết',
   'proc.openSource': 'Xem trên Hệ thống mạng đấu thầu quốc gia',
+  'proc.searchSource': 'Tra cứu trên Hệ thống mạng đấu thầu quốc gia',
+  'proc.copyCode': 'Chép mã',
   'proc.sourceNote': 'Dữ liệu thu thập tự động từ muasamcong.mpi.gov.vn',
   'proc.aboutTitle': 'Về Hệ thống mạng đấu thầu quốc gia',
   'proc.aboutText': 'Thông báo mời thầu và kế hoạch lựa chọn nhà thầu được BIS thu thập tự động từ cổng muasamcong.mpi.gov.vn để tra cứu tập trung.',

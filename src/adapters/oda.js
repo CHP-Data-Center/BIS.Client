@@ -3,6 +3,7 @@
 // Map ưu tiên item.lat/item.lng (backend đã có toạ độ); id là CHUỖI (popup dùng .toLowerCase()).
 
 import { worldBankProjectUrl } from '../utils/wbUrl';
+import { procurementLink } from '../utils/procurementLink';
 
 const PROC_TYPE = { notice: 'TB Mời thầu', plan: 'Kế hoạch thầu' };
 
@@ -115,7 +116,9 @@ export function adaptOdaProject(p) {
 /** Một gói mua sắm công -> item bản đồ (nguồn 'dauthau'). */
 export function adaptProcurement(p) {
   const origId = p.id;
-  const procUrl = p.url || `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(p.id)}`;
+  // Không có url đã crawl thì vào trang chi tiết trong app. Ghép URL muasamcong từ id
+  // luôn ra 404 vì link chi tiết cần notifyId (UUID) — xem utils/procurementLink.js.
+  const procUrl = procurementLink(p).href;
   const coords = (p.lat != null && p.lng != null)
     ? [p.lat, p.lng]
     : getVietnamFallbackCoords(p.id, p.procuring_entity, p.title);
@@ -170,7 +173,7 @@ export function adaptProcToCard(p) {
     p.package_count ? `${p.package_count} gói` : null,
     p.status,
   ].filter(Boolean).join(' · ');
-  const procUrl = p.url || `https://muasamcong.mpi.gov.vn/web/guest/ket-qua-tim-kiem?keyword=${encodeURIComponent(p.id)}`;
+  const procUrl = procurementLink(p).href;
 
   return {
     id: `proc-${p.id}`,

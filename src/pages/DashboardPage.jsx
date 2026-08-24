@@ -18,6 +18,7 @@ import { apiCache } from '../utils/apiCache';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLang } from '../context/LanguageContext';
+import { MUASAMCONG_SEARCH_URL } from '../utils/procurementLink';
 import { tUI } from '../locales';
 
 const PAGE_SIZE = 6;
@@ -487,7 +488,8 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
     } else if (item.source === 'adb') {
       window.open(`https://www.adb.org/projects/${rawId}/main`, '_blank');
     } else {
-      window.open(`https://dauthau.asia/tim-kiem/?q=${encodeURIComponent(rawId || item.title)}`, '_blank');
+      // dauthau.asia không kết nối được nữa; đưa về trang tra cứu của muasamcong.
+      window.open(MUASAMCONG_SEARCH_URL, '_blank');
     }
   };
 
