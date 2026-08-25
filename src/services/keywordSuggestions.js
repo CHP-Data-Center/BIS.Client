@@ -29,4 +29,25 @@ export const keywordSuggestionsService = {
     const { data } = await api.post(`/admin/keyword-suggestions/${id}/reject`);
     return data;
   },
+
+  /** Duyệt tất cả các gợi ý đang chờ duyệt. */
+  async approveAll() {
+    const { data } = await api.post('/admin/keyword-suggestions/approve-all');
+    return data; // { count, message }
+  },
+
+  /** Bỏ qua tất cả các gợi ý đang chờ duyệt. */
+  async rejectAll() {
+    const { data } = await api.post('/admin/keyword-suggestions/reject-all');
+    return data; // { count, message }
+  },
+
+  /** Lấy danh sách các bài viết / gói thầu khớp với từ khóa gợi ý. */
+  async getArticles(id, limit = 20) {
+    const { data } = await api.get(`/admin/keyword-suggestions/${id}/articles`, {
+      params: { limit },
+    });
+    return data; // KeywordSuggestionArticleItem[]
+  },
 };
+
