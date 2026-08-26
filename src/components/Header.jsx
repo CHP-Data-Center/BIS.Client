@@ -1,6 +1,6 @@
 // src/components/Header.jsx
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, Search, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck } from 'lucide-react';
+import { Menu, X, Search, LogOut, User, Settings, ChevronDown, LogIn, Zap, Clock, ShieldCheck, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
@@ -299,7 +299,7 @@ function LanguageSwitcher() {
 
 
 export default function Header({ onToggleSidebar, isSidebarOpen }) {
-  const { user, logout, isGuest, isAdmin, isPersonalUser } = useAuth();
+  const { user, logout, isGuest, isAdmin, isPersonalUser, openOnboarding, isOnboarded } = useAuth();
   const { t } = useLang();
   const nav = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -439,6 +439,11 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
                 {isPersonalUser && (
                   <div className="user-menu-item" onClick={() => { nav('/upgrade'); setUserMenuOpen(false); }} id="menu-upgrade" style={{ color: '#9333ea', fontWeight: 700 }}>
                     <Zap size={14} style={{ color: '#a855f7' }} /> {t('header.upgradeMenu')}
+                  </div>
+                )}
+                {!isOnboarded && (
+                  <div className="user-menu-item" onClick={() => { openOnboarding(); setUserMenuOpen(false); }} id="menu-onboarding" style={{ color: 'var(--brand-600, #2563eb)', fontWeight: 700 }}>
+                    <Sparkles size={14} style={{ color: '#3b82f6' }} /> {t('onboarding.reopenSetup')}
                   </div>
                 )}
                 <div className="user-menu-item" onClick={() => { nav('/settings'); setUserMenuOpen(false); }} id="menu-settings">

@@ -11,6 +11,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { syncUserTheme } from './utils/theme';
 import ThemeFxOverlay from './components/common/ThemeFxOverlay';
 import ThemePageLoader from './components/common/ThemePageLoader';
+import OnboardingModal from './components/common/OnboardingModal';
 import { tUI } from './locales';
 
 // Dynamic imports for route-level Code Splitting
@@ -40,7 +41,7 @@ function PageLoader({ message, fullScreen = true }) {
 function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, showOnboarding, closeOnboarding } = useAuth();
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -66,6 +67,8 @@ function AppLayout({ children }) {
         </Suspense>
       </main>
       <ScrollToTop />
+      {/* Popup Setup Khởi Đầu cho tài khoản mới */}
+      <OnboardingModal isOpen={showOnboarding} onClose={closeOnboarding} />
     </div>
   );
 }

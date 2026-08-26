@@ -225,6 +225,43 @@ export function AuthProvider({ children }) {
     ? { ...user, initials, name: user.display_name || user.email }
     : null;
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const isOnboarded = Boolean(
+    (userKey && localStorage.getItem(`bis_onboarded_${userKey}`) === 'true') ||
+    user?.permissions?.onboarding_completed
+  );
+
+  // Tự động kiểm tra tài khoản mới hoặc chưa setup khởi đầu
+  useEffect(() => {
+    if (!user) {
+      setShowOnboarding(false);
+      return;
+    }
+    const key = user.email || user.id;
+    const onboardedLocal = localStorage.getItem(`bis_onboarded_${key}`) === 'true';
+    const onboardedServer = !!user.permissions?.onboarding_completed;
+
+    if (!onboardedLocal && !onboardedServer) {
+      const dismissedThisSession = sessionStorage.getItem(`bis_onboard_dismissed_${key}`);
+      if (!dismissedThisSession) {
+        // Cho một khoảng trễ nhỏ (500ms) để giao diện trang chủ mount mượt mà trước khi mở modal
+        const timer = setTimeout(() => {
+          setShowOnboarding(true);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user]);
+
+  const openOnboarding = useCallback(() => {
+    setShowOnboarding(true);
+  }, []);
+
+  const closeOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -252,6 +289,11 @@ export function AuthProvider({ children }) {
         hasPermission,
         isLoggedIn,
         loading,
+        showOnboarding,
+        setShowOnboarding,
+        openOnboarding,
+        closeOnboarding,
+        isOnboarded,
       }}
     >
       {children}
