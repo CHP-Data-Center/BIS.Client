@@ -854,20 +854,20 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
     );
   }
 
-  // 5. BASIC CLEAN PRO MODERN LOADER (Default)
+  // 5. BASIC CLEAN PRO MODERN LOADER (Upgraded Premium & High-Tech)
   const basicTitle =
     lang === 'ja'
-      ? 'ページを読み込み中...'
+      ? 'データを読み込み中...'
       : lang === 'en'
-      ? 'Loading page...'
-      : 'Đang tải trang...';
+      ? 'Loading Intelligence Data...'
+      : 'Đang tải dữ liệu thông minh...';
 
   const basicSub =
     lang === 'ja'
-      ? 'BIS データを取得しています'
+      ? 'BIS リアルタイムデータを同期中'
       : lang === 'en'
-      ? 'Fetching latest BIS data'
-      : 'Đang đồng bộ dữ liệu BIS';
+      ? 'Synchronizing BIS real-time intelligence'
+      : 'Đang đồng bộ dữ liệu thông tin thời gian thực';
 
   return (
     <div
@@ -877,38 +877,103 @@ export default function ThemePageLoader({ message, minHeight = '65vh' }) {
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'column',
-        gap: 16,
         padding: '24px',
+        position: 'relative',
       }}
     >
-      <div style={{ position: 'relative', width: 48, height: 48 }}>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            border: '3px solid var(--border-subtle, rgba(59, 130, 246, 0.15))',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            border: '3px solid transparent',
-            borderTopColor: 'var(--brand-500, #3b82f6)',
-            borderRightColor: 'var(--brand-400, #60a5fa)',
-            animation: 'spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-          }}
-        />
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary, #1e293b)' }}>
-          {message || basicTitle}
+      <div
+        style={{
+          background: 'var(--bg-surface, #ffffff)',
+          border: '1px solid var(--border, #e2e8f0)',
+          boxShadow: '0 12px 36px rgba(0, 0, 0, 0.08)',
+          borderRadius: 20,
+          padding: '28px 36px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 16,
+          maxWidth: 380,
+          textAlign: 'center',
+          position: 'relative',
+        }}
+      >
+        {/* Orbital Glowing Rings */}
+        <div style={{ position: 'relative', width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              border: '2px dashed rgba(59, 130, 246, 0.25)',
+              animation: 'spin 8s linear infinite',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 4,
+              borderRadius: '50%',
+              border: '2.5px solid transparent',
+              borderTopColor: '#3b82f6',
+              borderRightColor: '#60a5fa',
+              animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+              boxShadow: '0 0 14px rgba(59, 130, 246, 0.4)',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 12,
+              borderRadius: '50%',
+              border: '2px solid transparent',
+              borderBottomColor: '#2563eb',
+              borderLeftColor: '#93c5fd',
+              animation: 'spinReverse 0.75s linear infinite',
+            }}
+          />
+          <span style={{ fontSize: 22 }}>⚡</span>
         </div>
-        <div style={{ fontSize: 11.5, color: 'var(--text-muted, #64748b)', marginTop: 2 }}>
-          {basicSub}
+
+        {/* Text */}
+        <div>
+          <div
+            style={{
+              fontSize: 14.5,
+              fontWeight: 800,
+              color: 'var(--text-primary, #0f172a)',
+              letterSpacing: -0.2,
+              marginBottom: 4,
+            }}
+          >
+            {message || basicTitle}
+          </div>
+          <div style={{ fontSize: 11.5, color: 'var(--text-muted, #64748b)', fontWeight: 500 }}>
+            {basicSub}
+          </div>
+        </div>
+
+        {/* Shimmer Progress Bar */}
+        <div
+          style={{
+            width: '100%',
+            height: 4,
+            borderRadius: 4,
+            background: 'var(--bg-surface-2, #f1f5f9)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              width: '45%',
+              background: 'linear-gradient(90deg, transparent, #3b82f6, #60a5fa, transparent)',
+              animation: 'luxuryShimmer 1.2s ease-in-out infinite',
+              boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)',
+            }}
+          />
         </div>
       </div>
     </div>

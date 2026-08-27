@@ -17,6 +17,7 @@ import { tUI } from './locales';
 // Dynamic imports for route-level Code Splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const TrendingPage = lazy(() => import('./pages/TrendingPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const ArticlePage = lazy(() => import('./pages/ArticlePage'));
 const KeywordsPage = lazy(() => import('./pages/KeywordsPage'));
@@ -167,6 +168,13 @@ export default function App() {
                 <DashboardRoute>
                   <AppLayout><DashboardPage /></AppLayout>
                 </DashboardRoute>
+              } />
+
+              {/* Protected — Trending Magazine */}
+              <Route path="/trending" element={
+                <ProtectedRoute>
+                  <AppLayout><TrendingPage /></AppLayout>
+                </ProtectedRoute>
               } />
 
               {/* Protected — World Bank */}

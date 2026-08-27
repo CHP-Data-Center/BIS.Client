@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Newspaper, Globe, Building2, ShoppingBag, FileText, ChevronDown,
+  LayoutDashboard, Flame, Newspaper, Globe, Building2, ShoppingBag, FileText, ChevronDown,
   Settings, Tag, Bookmark, Bot, ShieldCheck, Zap, FolderKanban
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ import { tUI } from '../locales';
 // Nhãn qua khóa i18n (t('nav.…')) — đổi ngôn ngữ giao diện là menu đổi theo.
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, labelKey: 'nav.dashboard', badge: null },
+  { to: '/trending',  icon: <Flame size={16} />,           labelKey: 'nav.trending',  badge: 'HOT', color: '#f97316' },
 ];
 
 
@@ -145,9 +146,27 @@ export default function Sidebar({ isOpen, onClose }) {
                 onClick={() => onClose?.()}
                 className={({ isActive }) => `sidebar-nav-item ${isActive ? 'active' : ''}`}
               >
-                {item.icon}
+                <span style={item.color ? { color: item.color, display: 'inline-flex', alignItems: 'center' } : { display: 'inline-flex', alignItems: 'center' }}>
+                  {item.icon}
+                </span>
                 {t(item.labelKey)}
-                {item.badge != null && <span className="nav-badge">{item.badge}</span>}
+                {item.badge != null && (
+                  <span
+                    className="nav-badge"
+                    style={item.badge === 'HOT' ? {
+                      marginLeft: 'auto',
+                      background: 'linear-gradient(135deg, #f97316, #ef4444)',
+                      color: 'white',
+                      fontWeight: 800,
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.35)',
+                      fontSize: 9,
+                      padding: '1px 6px',
+                      borderRadius: 8,
+                    } : {}}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
