@@ -33,6 +33,7 @@ const ProcurementDetailPage = lazy(() => import('./pages/ProcurementDetailPage')
 const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const PotentialProjectsPage = lazy(() => import('./pages/PotentialProjectsPage'));
 
 function PageLoader({ message, fullScreen = true }) {
   return <ThemePageLoader message={message} minHeight={fullScreen ? '100vh' : '65vh'} />;
@@ -257,6 +258,14 @@ export default function App() {
               <Route path="/projects" element={
                 <ProtectedRoute>
                   <AppLayout><ProjectsPage /></AppLayout>
+                </ProtectedRoute>
+              } />
+
+              {/* Dự án tiềm năng — nội dung theo gói dịch vụ do backend lọc, tài khoản
+                  gói thấp vẫn xem được phần tin báo chí nên không chặn ở tầng route. */}
+              <Route path="/potential-projects" element={
+                <ProtectedRoute>
+                  <AppLayout><PotentialProjectsPage /></AppLayout>
                 </ProtectedRoute>
               } />
 

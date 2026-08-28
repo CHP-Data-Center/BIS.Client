@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Flame, Newspaper, Globe, Building2, ShoppingBag, FileText, ChevronDown,
-  Settings, Tag, Bookmark, Bot, ShieldCheck, Zap, FolderKanban
+  Settings, Tag, Bookmark, Bot, ShieldCheck, Zap, FolderKanban, Target
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
@@ -88,6 +88,7 @@ function NavGroup({ group, id, t, onClose }) {
 const toolItems = [
   { to: '/keywords',  icon: <Tag size={16} />,          labelKey: 'nav.keywords',  badge: null },
   { to: '/projects',  icon: <FolderKanban size={16} />, labelKey: 'nav.projects',  badge: null },
+  { to: '/potential-projects', icon: <Target size={16} />, labelKey: 'nav.potential', badge: null, color: '#10b981' },
   { to: '/bookmarks', icon: <Bookmark size={16} />,     labelKey: 'nav.bookmarks', badge: null },
   { to: '/ai-chat',   icon: <Bot size={16} />,          labelKey: 'nav.ai',        badge: null, highlight: true },
 ];
