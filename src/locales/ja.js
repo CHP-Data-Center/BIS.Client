@@ -1094,6 +1094,7 @@ export default {
   'trending.procurement': '公共調達・入札',
   'trending.odaProjects': 'ODAプロジェクト（ADB＆世銀）',
   'trending.marketTicker': '市場指標＆公共投資',
+  'trending.pulse': 'マーケットパルス',
   'trending.readNow': '続きを読む',
   'trending.saveArticle': '保存',
   'trending.savedArticle': '保存済み',

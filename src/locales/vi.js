@@ -1094,6 +1094,7 @@ export default {
   'trending.procurement': 'Đấu Thầu & Mua Sắm Công',
   'trending.odaProjects': 'Dự Án ODA (ADB & World Bank)',
   'trending.marketTicker': 'Chỉ Số Thị Trường & Đầu Tư Công',
+  'trending.pulse': 'Tiêu Điểm Thị Trường',
   'trending.readNow': 'Đọc ngay',
   'trending.saveArticle': 'Lưu bài',
   'trending.savedArticle': 'Đã lưu',

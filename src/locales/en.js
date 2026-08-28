@@ -1095,6 +1095,7 @@ export default {
   'trending.procurement': 'Public Procurement & Tenders',
   'trending.odaProjects': 'ODA Projects (ADB & World Bank)',
   'trending.marketTicker': 'Market Indicators & Public Investment',
+  'trending.pulse': 'Market Pulse',
   'trending.readNow': 'Read Now',
   'trending.saveArticle': 'Bookmark',
   'trending.savedArticle': 'Saved',

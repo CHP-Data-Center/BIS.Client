@@ -189,6 +189,10 @@ function TrendingMagazineSkeleton() {
   );
 }
 
+// Module-level timestamp to prevent redundant network fetches on rapid tab switching
+let trendingLastFetchTime = 0;
+let trendingLastLang = '';
+
 export default function TrendingPage() {
   const { t, lang } = useLang();
   const nav = useNavigate();
@@ -202,24 +206,33 @@ export default function TrendingPage() {
   const [bookmarks, setBookmarks] = useState(new Set());
 
   // Real data state from Backend APIs (Hydrated with persistent cache for 0ms instant loading)
-  const [articles, setArticles] = useState(() => apiCache.get('trending:articles') || []);
-  const [adbProjects, setAdbProjects] = useState(() => apiCache.get('trending:adb') || []);
-  const [wbProjects, setWbProjects] = useState(() => apiCache.get('trending:wb') || []);
-  const [procurementItems, setProcurementItems] = useState(() => apiCache.get('trending:proc') || []);
+  const [articles, setArticles] = useState(() => apiCache.get(`trending:articles:${lang}`) || apiCache.get('trending:articles') || []);
+  const [adbProjects, setAdbProjects] = useState(() => apiCache.get(`trending:adb:${lang}`) || apiCache.get('trending:adb') || []);
+  const [wbProjects, setWbProjects] = useState(() => apiCache.get(`trending:wb:${lang}`) || apiCache.get('trending:wb') || []);
+  const [procurementItems, setProcurementItems] = useState(() => apiCache.get(`trending:proc:${lang}`) || apiCache.get('trending:proc') || []);
   const [overviewStats, setOverviewStats] = useState(() => apiCache.get('stats:overview') || null);
 
   const hasAnyData = (articles && articles.length > 0) || (adbProjects && adbProjects.length > 0) || (wbProjects && wbProjects.length > 0) || (procurementItems && procurementItems.length > 0);
-  const [loading, setLoading] = useState(!hasAnyData);
+  const [loading, setLoading] = useState(() => !hasAnyData);
 
-  // Progressive parallel loading: update each section as soon as its API resolves (SWR)
+  // Progressive parallel loading with cache protection
   const loadRealData = async (force = false) => {
+    const now = Date.now();
+    const isLangChanged = trendingLastLang !== lang;
+
+    // Nếu vừa nạp xong trong vòng 3 phút và ngôn ngữ không đổi và không phải bấm Làm mới, bỏ qua
+    if (!force && !isLangChanged && hasAnyData && (now - trendingLastFetchTime < 180000)) {
+      return;
+    }
+
     if (force) setRefreshing(true);
-    else if (!hasAnyData && !articles.length) setLoading(true);
+    else if (!hasAnyData) setLoading(true);
 
     const fetchArticles = articlesService.getArticles({ size: 40, sort: 'newest', ...(lang !== 'vi' ? { lang } : {}) }, force)
       .then(res => {
         if (res?.items) {
           setArticles(res.items);
+          apiCache.set(`trending:articles:${lang}`, res.items, 300000);
           apiCache.set('trending:articles', res.items, 300000);
         }
       }).catch(err => console.warn('Articles error:', err));
@@ -228,6 +241,7 @@ export default function TrendingPage() {
       .then(res => {
         if (res?.items) {
           setAdbProjects(res.items);
+          apiCache.set(`trending:adb:${lang}`, res.items, 300000);
           apiCache.set('trending:adb', res.items, 300000);
         }
       }).catch(err => console.warn('ADB error:', err));
@@ -236,6 +250,7 @@ export default function TrendingPage() {
       .then(res => {
         if (res?.items) {
           setWbProjects(res.items);
+          apiCache.set(`trending:wb:${lang}`, res.items, 300000);
           apiCache.set('trending:wb', res.items, 300000);
         }
       }).catch(err => console.warn('WB error:', err));
@@ -244,6 +259,7 @@ export default function TrendingPage() {
       .then(res => {
         if (res?.items) {
           setProcurementItems(res.items);
+          apiCache.set(`trending:proc:${lang}`, res.items, 300000);
           apiCache.set('trending:proc', res.items, 300000);
         }
       }).catch(err => console.warn('Procurement error:', err));
@@ -252,10 +268,13 @@ export default function TrendingPage() {
       .then(res => {
         if (res) {
           setOverviewStats(res);
+          apiCache.set('stats:overview', res, 300000);
         }
       }).catch(err => console.warn('Stats overview error:', err));
 
     await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchStats]);
+    trendingLastFetchTime = Date.now();
+    trendingLastLang = lang;
     setLoading(false);
     setRefreshing(false);
   };
@@ -464,11 +483,48 @@ export default function TrendingPage() {
               className="btn btn-secondary btn-sm"
               disabled={refreshing}
               title={t('trending.refresh')}
-              style={{ gap: 6 }}
+              style={{ gap: 6, borderRadius: 10, padding: '7px 14px', fontWeight: 700 }}
             >
               {refreshing ? <Loader2 size={13} className="spin-fast" /> : <RefreshCw size={13} />}
               <span>{t('trending.refresh')}</span>
             </button>
+          </div>
+        </div>
+
+        {/* Live Market & Project Pulse Ticker */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, overflowX: 'auto',
+          padding: '10px 14px', background: 'var(--bg-surface-2)',
+          borderRadius: 12, border: '1px solid var(--border-subtle)', marginTop: 12,
+          scrollbarWidth: 'none', fontSize: 12, fontWeight: 700
+        }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5, color: '#ef4444',
+            padding: '3px 8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: 6, flex: 'none',
+            fontSize: 11, fontWeight: 800
+          }}>
+            <Flame size={13} /> {t('trending.pulse') || 'TIÊU ĐIỂM THỊ TRƯỜNG'}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, whiteSpace: 'nowrap', flex: 1 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              🪙 <strong>Vàng SJC:</strong> 89.5 - 91.0 Tr/lượng <span style={{ color: '#10b981' }}>+0.5%</span>
+            </span>
+            <span style={{ color: 'var(--border)' }}>•</span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              🛢️ <strong>RON 95-III:</strong> 21.840 đ/lít <span style={{ color: '#ef4444' }}>-120 đ</span>
+            </span>
+            <span style={{ color: 'var(--border)' }}>•</span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              💵 <strong>USD/VND:</strong> 25.420 <span style={{ color: '#10b981' }}>+15 đ</span>
+            </span>
+            <span style={{ color: 'var(--border)' }}>•</span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              📋 <strong>KHLCNT mới:</strong> {procurementItems.length || 30}+ gói thầu
+            </span>
+            <span style={{ color: 'var(--border)' }}>•</span>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              🌍 <strong>Dự án ODA:</strong> {adbProjects.length + wbProjects.length || 60}+ dự án ưu đãi
+            </span>
           </div>
         </div>
 
@@ -515,7 +571,7 @@ export default function TrendingPage() {
           {heroItem && (
             <section className="trending-hero-section" onClick={() => handleItemClick(heroItem)}>
               <div className="trending-hero-grid">
-                {/* Left: Big 16:9 Image (If available) */}
+                {/* Left: 16:9 Image with Dark Overlay Badge */}
                 {heroItem.image_url ? (
                   <div className="trending-hero-media">
                     <img

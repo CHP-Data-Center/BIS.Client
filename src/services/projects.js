@@ -1,5 +1,5 @@
-// src/services/projects.js
 import api from './api';
+import { apiCache } from '../utils/apiCache';
 
 // Tải file: KHÔNG tự đặt Content-Type. Instance axios mặc định application/json, mà
 // multipart bắt buộc phải kèm `boundary` do trình duyệt sinh — đặt tay là hỏng request.
@@ -11,10 +11,21 @@ const UPLOAD_CONFIG = {
 };
 
 export const projectsService = {
-  /** Danh sách dự án đang theo dõi (mảng phẳng) */
-  async getProjects() {
+  /** Danh sách dự án đang theo dõi (mảng phẳng) có cache */
+  async getProjects(force = false) {
+    const cacheKey = 'user_tracked_projects';
+    if (!force) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
     const { data } = await api.get('/projects');
+    apiCache.set(cacheKey, data, 300000); // 5 phút
     return data; // TrackedProjectOut[]
+  },
+
+  /** Lấy nhanh từ cache nếu có */
+  getCachedProjects() {
+    return apiCache.get('user_tracked_projects');
   },
 
   /** Danh sách có lọc + phân trang */

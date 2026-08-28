@@ -32,7 +32,7 @@ export const articlesService = {
       if (cached) return cached;
     }
     const { data } = await api.get('/articles', { params });
-    apiCache.set(cacheKey, data, 5000); // cache 5s để chống duplicate GET call liên tiếp
+    apiCache.set(cacheKey, data, 60000); // cache 60s để chống duplicate GET call liên tiếp
     return data; // ArticlePage: { items, total, page, size }
   },
 
