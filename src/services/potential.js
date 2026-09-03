@@ -33,7 +33,7 @@ export const potentialService = {
   /**
    * Danh sách dự án tiềm năng (có cache Client để chuyển tab không bị load lại)
    */
-  async list({ sectors, kinds, minAmount, page = 1, size = 18, forceFresh = false } = {}) {
+  async list({ sectors, kinds, minAmount, page = 1, size = 8, forceFresh = false } = {}) {
     const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${page}_${size}`;
     if (!forceFresh) {
       const cached = apiCache.get(cacheKey);
@@ -51,7 +51,7 @@ export const potentialService = {
   },
 
   /** Lấy nhanh từ cache nếu có (trả về null nếu chưa có) */
-  getCachedList({ sectors, kinds, minAmount, page = 1, size = 18 } = {}) {
+  getCachedList({ sectors, kinds, minAmount, page = 1, size = 8 } = {}) {
     const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${page}_${size}`;
     return apiCache.get(cacheKey);
   },

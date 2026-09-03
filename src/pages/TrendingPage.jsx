@@ -1,16 +1,19 @@
 // src/pages/TrendingPage.jsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Flame, TrendingUp, Newspaper, Building2, Globe, ShoppingBag,
-  Clock, MessageSquare, Bookmark, BookmarkCheck,
-  ChevronRight, RefreshCw, DollarSign, ArrowUpRight,
-  Play, Camera, Loader2, Sparkles, AlertCircle, FileText, CheckCircle2
+  Clock, Bookmark, BookmarkCheck,
+  ChevronRight, RefreshCw, DollarSign, ArrowUpRight, ExternalLink,
+  Play, Camera, Loader2, Sparkles, AlertCircle, FileText, CheckCircle2,
+  HardHat, Landmark, Search, ArrowLeft, ChevronLeft, X
 } from 'lucide-react';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
 import { statsService } from '../services/stats';
+import { keywordsService } from '../services/keywords';
 import { useLang } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { apiCache } from '../utils/apiCache';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 
@@ -47,6 +50,40 @@ function filterBizArticles(articles, tabIdx) {
     2: ['doanh nghiệp', 'công ty', 'tập đoàn', 'cổ phiếu', 'kinh doanh', 'doanh thu', 'ftse', 'vietnam airlines', 'sme'],
     3: ['vĩ mô', 'chính sách', 'lạm phát', 'ngân hàng', 'gdp', 'kinh tế', 'tài chính', 'thuế', 'lãi suất'],
     4: ['hàng hóa', 'giá', 'vàng', 'dầu', 'xăng', 'thị trường', 'năng lượng', 'ron 95', 'nông sản'],
+  };
+  const keywords = kwMap[tabIdx] || [];
+  const matched = articles.filter(a => {
+    const text = `${a.title || ''} ${a.title_vi || ''} ${a.excerpt || ''} ${a.excerpt_vi || ''} ${(a.matched_keywords || []).join(' ')}`.toLowerCase();
+    return keywords.some(k => text.includes(k));
+  });
+  return matched.length > 0 ? matched : articles;
+}
+
+// ── Filter Infrastructure articles for when user doesn't have Procurement ──
+function filterInfraArticles(articles, tabIdx) {
+  if (tabIdx === 0 || !articles.length) return articles;
+  const kwMap = {
+    1: ['cao tốc', 'cầu', 'đường bộ', 'hầm', 'ninh bình', 'hải phòng', 'bắc nam', 'vành đai', 'giao thông'],
+    2: ['xây dựng', 'hạ tầng', 'thi công', 'vật liệu', 'khởi công', 'tiến độ', 'dự án', 'chủ đầu tư'],
+    3: ['đô thị', 'metro', 'xe buýt', 'sân bay', 'nội bài', 'tân sơn nhất', 'long thành', 'cảng', 'logistics'],
+    4: ['năng lượng', 'điện', 'bất động sản', 'khu công nghiệp', 'nhà xưởng', 'khu kinh tế'],
+  };
+  const keywords = kwMap[tabIdx] || [];
+  const matched = articles.filter(a => {
+    const text = `${a.title || ''} ${a.title_vi || ''} ${a.excerpt || ''} ${a.excerpt_vi || ''} ${(a.matched_keywords || []).join(' ')}`.toLowerCase();
+    return keywords.some(k => text.includes(k));
+  });
+  return matched.length > 0 ? matched : articles;
+}
+
+// ── Filter Macro & Policy articles for when user doesn't have ODA ──
+function filterMacroArticles(articles, tabIdx) {
+  if (tabIdx === 0 || !articles.length) return articles;
+  const kwMap = {
+    1: ['chính sách', 'nghị định', 'thủ tướng', 'chính phủ', 'bộ', 'luật', 'công điện', 'văn bản'],
+    2: ['ngân hàng', 'lãi suất', 'tín dụng', 'tiền tệ', 'lạm phát', 'tài chính', 'thuế', 'kho bạc'],
+    3: ['quốc tế', 'thương mại', 'xuất khẩu', 'nhập khẩu', 'fdi', 'đối tác', 'toàn cầu', 'hợp tác'],
+    4: ['đầu tư công', 'giải ngân', 'ngân sách', 'vốn đầu tư', 'kế hoạch vốn', 'phân bổ'],
   };
   const keywords = kwMap[tabIdx] || [];
   const matched = articles.filter(a => {
@@ -122,7 +159,62 @@ function filterOdaProjects(wbProjects, adbProjects, tabIdx) {
   return combined;
 }
 
-// ── Rich Shimmering Magazine Skeleton Component ──
+// ── Khối hình ảnh chuẩn hóa: có ảnh thì hiển thị ảnh, không có ảnh thì hiển thị placeholder sang trọng cùng chiều cao để không bị lệch hàng hay nhảy chữ ──
+function ArticleMediaPlaceholder({ imageUrl, alt, category, height = 130, className = 'magazine-lead-media' }) {
+  const [imgErr, setImgErr] = useState(false);
+
+  if (imageUrl && !imgErr) {
+    return (
+      <div className={className} style={{ height, position: 'relative', overflow: 'hidden', borderRadius: 9, flexShrink: 0 }}>
+        <img
+          src={imageUrl}
+          alt={alt || ''}
+          onError={() => setImgErr(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${className} article-placeholder-box`}
+      style={{
+        height,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        background: 'linear-gradient(135deg, var(--bg-surface-2), var(--bg-surface-3, rgba(241, 245, 249, 0.95)))',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 9,
+        position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+        flexShrink: 0,
+      }}
+    >
+      <div style={{
+        width: 36, height: 36, borderRadius: 10,
+        background: 'rgba(37, 99, 235, 0.08)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--brand-600)',
+      }}>
+        <Newspaper size={18} />
+      </div>
+      <span style={{
+        fontSize: 11, fontWeight: 700,
+        color: 'var(--text-muted)',
+        letterSpacing: '0.2px',
+      }}>
+        {category || 'Bản tin Báo chí & Đầu tư'}
+      </span>
+    </div>
+  );
+}
+
+// ── Skeleton Loader trang nhã đồng bộ ──
 function TrendingMagazineSkeleton() {
   return (
     <div className="trending-page-skeleton" style={{ opacity: 0.9 }}>
@@ -189,46 +281,140 @@ function TrendingMagazineSkeleton() {
   );
 }
 
+const TrendingPageSkeleton = TrendingMagazineSkeleton;
+
 // Module-level timestamp to prevent redundant network fetches on rapid tab switching
 let trendingLastFetchTime = 0;
 let trendingLastLang = '';
+let trendingLastUserKey = '';
 
 export default function TrendingPage() {
   const { t, lang } = useLang();
   const nav = useNavigate();
+  const { user, hasSourceAccess } = useAuth();
+
+  // Kiểm tra gói đã mua của người dùng
+  const canAdb = hasSourceAccess('adb');
+  const canWb = hasSourceAccess('worldbank');
+  const canProc = hasSourceAccess('gov');
+  const userKey = `${user?.id || 'guest'}_${user?.active_package || 'free'}_${canAdb}_${canWb}_${canProc}`;
 
   const [activeSourceFilter, setActiveSourceFilter] = useState('all'); // all, press, adb, worldbank, gov
   const [bizSubTab, setBizSubTab] = useState(0);
+  const [infraSubTab, setInfraSubTab] = useState(0);
+  const [macroSubTab, setMacroSubTab] = useState(0);
   const [procSubTab, setProcSubTab] = useState(0);
   const [odaSubTab, setOdaSubTab] = useState(0);
 
   const [refreshing, setRefreshing] = useState(false);
   const [bookmarks, setBookmarks] = useState(new Set());
 
+  // State tìm kiếm & phân trang cho chế độ lọc nguồn
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterPage, setFilterPage] = useState(1);
+  const pageSize = 12;
+
+  // Tự động về trang 1 và xóa tìm kiếm khi đổi tab nguồn
+  useEffect(() => {
+    setFilterPage(1);
+    setFilterSearch('');
+  }, [activeSourceFilter]);
+
   // Real data state from Backend APIs (Hydrated with persistent cache for 0ms instant loading)
   const [articles, setArticles] = useState(() => apiCache.get(`trending:articles:${lang}`) || apiCache.get('trending:articles') || []);
-  const [adbProjects, setAdbProjects] = useState(() => apiCache.get(`trending:adb:${lang}`) || apiCache.get('trending:adb') || []);
-  const [wbProjects, setWbProjects] = useState(() => apiCache.get(`trending:wb:${lang}`) || apiCache.get('trending:wb') || []);
-  const [procurementItems, setProcurementItems] = useState(() => apiCache.get(`trending:proc:${lang}`) || apiCache.get('trending:proc') || []);
+  const [adbProjects, setAdbProjects] = useState(() => canAdb ? (apiCache.get(`trending:adb:${lang}`) || apiCache.get('trending:adb') || []) : []);
+  const [wbProjects, setWbProjects] = useState(() => canWb ? (apiCache.get(`trending:wb:${lang}`) || apiCache.get('trending:wb') || []) : []);
+  const [procurementItems, setProcurementItems] = useState(() => canProc ? (apiCache.get(`trending:proc:${lang}`) || apiCache.get('trending:proc') || []) : []);
   const [overviewStats, setOverviewStats] = useState(() => apiCache.get('stats:overview') || null);
 
-  const hasAnyData = (articles && articles.length > 0) || (adbProjects && adbProjects.length > 0) || (wbProjects && wbProjects.length > 0) || (procurementItems && procurementItems.length > 0);
+  // State từ khóa đã lưu của người dùng
+  const [userKeywords, setUserKeywords] = useState(() => apiCache.get(`keywords:all:${lang}`) || []);
+  const [keywordArticles, setKeywordArticles] = useState(() => apiCache.get(`trending:keywords_articles:${lang}`) || []);
+  const [selectedKeywordTag, setSelectedKeywordTag] = useState('all');
+
+  // Nút ON/OFF góc phải: Xu hướng theo từ khóa đã lưu (Lưu localStorage để F5 vẫn giữ nguyên trạng thái)
+  const [onlyMyKeywords, setOnlyMyKeywords] = useState(() => {
+    try {
+      return localStorage.getItem('trending_only_my_keywords') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const hasAnyData = (articles && articles.length > 0) || (canAdb && adbProjects.length > 0) || (canWb && wbProjects.length > 0) || (canProc && procurementItems.length > 0);
   const [loading, setLoading] = useState(() => !hasAnyData);
 
-  // Progressive parallel loading with cache protection
+  // Helper tìm từ khóa khớp với bài viết/dự án để đảm bảo thẻ từ khóa luôn hiển thị
+  const getMatchedKeywordsForItem = useCallback((item) => {
+    if (!item) return [];
+    if (item.matched_keywords && item.matched_keywords.length > 0) {
+      return item.matched_keywords;
+    }
+    if (userKeywords.length > 0) {
+      const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${item.ai_summary || ''}`.toLowerCase();
+      const matched = userKeywords
+        .filter(k => {
+          const t = (k.term || k.display_term || '').toLowerCase().trim();
+          return t && text.includes(t);
+        })
+        .map(k => k.display_term || k.term);
+      if (matched.length > 0) return matched;
+    }
+    return [];
+  }, [userKeywords]);
+
+  // Xử lý bật/tắt nút: lưu trạng thái và tải lại toàn bộ xu hướng theo từ khóa
+  const handleToggleOnlyMyKeywords = () => {
+    const nextVal = !onlyMyKeywords;
+    setOnlyMyKeywords(nextVal);
+    try {
+      localStorage.setItem('trending_only_my_keywords', String(nextVal));
+    } catch (e) {
+      console.warn('Cannot save to localStorage:', e);
+    }
+    // Khi bật/tắt, kích hoạt loading nhẹ và tải lại dữ liệu mới nhất
+    setLoading(true);
+    loadRealData(true);
+  };
+
+  // Tự động chuyển về 'all' nếu filter đang ở nguồn chưa mua gói
+  useEffect(() => {
+    if (activeSourceFilter === 'adb' && !canAdb) setActiveSourceFilter('all');
+    if (activeSourceFilter === 'worldbank' && !canWb) setActiveSourceFilter('all');
+    if (activeSourceFilter === 'gov' && !canProc) setActiveSourceFilter('all');
+  }, [activeSourceFilter, canAdb, canWb, canProc]);
+
+  // Tự động tải lại dữ liệu khi đổi tài khoản (từ free sang VIP hoặc ngược lại)
+  useEffect(() => {
+    if (trendingLastUserKey && trendingLastUserKey !== userKey) {
+      trendingLastFetchTime = 0;
+      loadRealData(true);
+    }
+  }, [userKey]);
+
+  // Progressive parallel loading with cache protection (CHỈ gọi nguồn đã mua gói)
   const loadRealData = async (force = false) => {
     const now = Date.now();
     const isLangChanged = trendingLastLang !== lang;
+    const isUserChanged = trendingLastUserKey !== userKey;
 
-    // Nếu vừa nạp xong trong vòng 3 phút và ngôn ngữ không đổi và không phải bấm Làm mới, bỏ qua
-    if (!force && !isLangChanged && hasAnyData && (now - trendingLastFetchTime < 180000)) {
+    if (!force && !isLangChanged && !isUserChanged && hasAnyData && (now - trendingLastFetchTime < 180000)) {
       return;
     }
+
+    trendingLastUserKey = userKey;
+    trendingLastLang = lang;
+    trendingLastFetchTime = now;
 
     if (force) setRefreshing(true);
     else if (!hasAnyData) setLoading(true);
 
-    const fetchArticles = articlesService.getArticles({ size: 40, sort: 'newest', ...(lang !== 'vi' ? { lang } : {}) }, force)
+    const fetchArticles = articlesService.getArticles({
+      size: 60,
+      sort: 'newest',
+      only_my_keywords: false,
+      ...(lang !== 'vi' ? { lang } : {})
+    }, force)
       .then(res => {
         if (res?.items) {
           setArticles(res.items);
@@ -237,32 +423,38 @@ export default function TrendingPage() {
         }
       }).catch(err => console.warn('Articles error:', err));
 
-    const fetchAdb = odaService.getProjects({ source: 'adb', size: 30, ...(lang !== 'vi' ? { lang } : {}) }, force)
-      .then(res => {
-        if (res?.items) {
-          setAdbProjects(res.items);
-          apiCache.set(`trending:adb:${lang}`, res.items, 300000);
-          apiCache.set('trending:adb', res.items, 300000);
-        }
-      }).catch(err => console.warn('ADB error:', err));
+    const fetchAdb = canAdb
+      ? odaService.getProjects({ source: 'adb', size: 30, ...(lang !== 'vi' ? { lang } : {}) }, force)
+          .then(res => {
+            if (res?.items) {
+              setAdbProjects(res.items);
+              apiCache.set(`trending:adb:${lang}`, res.items, 300000);
+              apiCache.set('trending:adb', res.items, 300000);
+            }
+          }).catch(err => console.warn('ADB error:', err))
+      : Promise.resolve().then(() => setAdbProjects([]));
 
-    const fetchWb = odaService.getProjects({ source: 'worldbank', size: 30, ...(lang !== 'vi' ? { lang } : {}) }, force)
-      .then(res => {
-        if (res?.items) {
-          setWbProjects(res.items);
-          apiCache.set(`trending:wb:${lang}`, res.items, 300000);
-          apiCache.set('trending:wb', res.items, 300000);
-        }
-      }).catch(err => console.warn('WB error:', err));
+    const fetchWb = canWb
+      ? odaService.getProjects({ source: 'worldbank', size: 30, ...(lang !== 'vi' ? { lang } : {}) }, force)
+          .then(res => {
+            if (res?.items) {
+              setWbProjects(res.items);
+              apiCache.set(`trending:wb:${lang}`, res.items, 300000);
+              apiCache.set('trending:wb', res.items, 300000);
+            }
+          }).catch(err => console.warn('WB error:', err))
+      : Promise.resolve().then(() => setWbProjects([]));
 
-    const fetchProc = odaService.getProcurement({ size: 30, ...(lang !== 'vi' ? { lang } : {}) }, force)
-      .then(res => {
-        if (res?.items) {
-          setProcurementItems(res.items);
-          apiCache.set(`trending:proc:${lang}`, res.items, 300000);
-          apiCache.set('trending:proc', res.items, 300000);
-        }
-      }).catch(err => console.warn('Procurement error:', err));
+    const fetchProc = canProc
+      ? odaService.getProcurement({ size: 30, ...(lang !== 'vi' ? { lang } : {}) }, force)
+          .then(res => {
+            if (res?.items) {
+              setProcurementItems(res.items);
+              apiCache.set(`trending:proc:${lang}`, res.items, 300000);
+              apiCache.set('trending:proc', res.items, 300000);
+            }
+          }).catch(err => console.warn('Procurement error:', err))
+      : Promise.resolve().then(() => setProcurementItems([]));
 
     const fetchStats = statsService.getOverview(force)
       .then(res => {
@@ -272,7 +464,28 @@ export default function TrendingPage() {
         }
       }).catch(err => console.warn('Stats overview error:', err));
 
-    await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchStats]);
+    const fetchKeywords = keywordsService.getKeywords(force)
+      .then(kws => {
+        if (Array.isArray(kws)) {
+          setUserKeywords(kws);
+          apiCache.set(`keywords:all:${lang}`, kws, 60000);
+        }
+      }).catch(err => console.warn('Keywords error:', err));
+
+    const fetchKeywordArticles = articlesService.getArticles({
+      size: 60,
+      sort: 'newest',
+      only_my_keywords: true,
+      ...(lang !== 'vi' ? { lang } : {})
+    }, force)
+      .then(res => {
+        if (res?.items) {
+          setKeywordArticles(res.items);
+          apiCache.set(`trending:keywords_articles:${lang}`, res.items, 300000);
+        }
+      }).catch(err => console.warn('Keyword articles error:', err));
+
+    await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchStats, fetchKeywords, fetchKeywordArticles]);
     trendingLastFetchTime = Date.now();
     trendingLastLang = lang;
     setLoading(false);
@@ -281,7 +494,7 @@ export default function TrendingPage() {
 
   useEffect(() => {
     loadRealData();
-  }, [lang]);
+  }, [lang, canAdb, canWb, canProc]);
 
   const handleRefresh = () => {
     loadRealData(true);
@@ -341,14 +554,64 @@ export default function TrendingPage() {
     nav('/news/all');
   };
 
-  // Combined pool of all items based on active source filter
-  const filteredArticles = useMemo(() => {
-    if (activeSourceFilter === 'press') return articles;
-    if (activeSourceFilter === 'adb') return adbProjects.map(adaptOdaToCard);
-    if (activeSourceFilter === 'worldbank') return wbProjects.map(adaptOdaToCard);
-    if (activeSourceFilter === 'gov') return procurementItems.map(adaptProcToCard);
+  // Adapter chuẩn hóa ODA & Procurement để giữ nguyên đầy đủ thuộc tính dữ liệu
+  const adaptOda = (p) => ({
+    ...p,
+    id: `${p.source_org || p.source || 'oda'}-${p.id}`,
+    original_id: p.external_id || p.id,
+    source: p.source_org || p.source || 'oda',
+    source_name: (p.source_org === 'adb' || p.source === 'adb') ? 'ADB' : 'World Bank',
+    titleVi: p.title_vi || p.title,
+    date: p.approval_date || p.date,
+    published_at: p.approval_date || p.date,
+  });
+
+  const adaptProc = (p) => ({
+    ...p,
+    id: `proc-${p.id}`,
+    original_id: p.id,
+    source: 'gov',
+    source_name: 'Đấu Thầu Công',
+    titleVi: p.title,
+    date: p.publish_date || p.date,
+    published_at: p.publish_date || p.date,
+  });
+
+  // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
+  // Dữ liệu bài viết hiển thị: nếu bật ON "Theo từ khóa đã lưu", dùng bài viết khớp từ khóa cá nhân
+  const displayArticles = useMemo(() => {
+    if (onlyMyKeywords && keywordArticles.length > 0) {
+      return keywordArticles;
+    }
     return articles;
-  }, [activeSourceFilter, articles, adbProjects, wbProjects, procurementItems]);
+  }, [onlyMyKeywords, keywordArticles, articles]);
+
+  // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
+  const filteredArticles = useMemo(() => {
+    if (activeSourceFilter === 'press') return displayArticles;
+    if (activeSourceFilter === 'adb') return adbProjects.map(adaptOda);
+    if (activeSourceFilter === 'worldbank') return wbProjects.map(adaptOda);
+    if (activeSourceFilter === 'gov') return procurementItems.map(adaptProc);
+
+    // activeSourceFilter === 'all': Gộp tất cả các nguồn mà người dùng có quyền và có dữ liệu
+    const pool = [...displayArticles];
+    if (canAdb && adbProjects.length > 0) {
+      pool.push(...adbProjects.map(adaptOda));
+    }
+    if (canWb && wbProjects.length > 0) {
+      pool.push(...wbProjects.map(adaptOda));
+    }
+    if (canProc && procurementItems.length > 0) {
+      pool.push(...procurementItems.map(adaptProc));
+    }
+
+    // Sắp xếp theo ngày phát hành mới nhất
+    return pool.sort((a, b) => {
+      const timeA = new Date(a.published_at || a.date || a.publish_date || a.approval_date || 0).getTime();
+      const timeB = new Date(b.published_at || b.date || b.publish_date || b.approval_date || 0).getTime();
+      return timeB - timeA;
+    });
+  }, [activeSourceFilter, displayArticles, adbProjects, wbProjects, procurementItems, canAdb, canWb, canProc]);
 
   // Section 1: Lead Hero Item (Top Trending #1)
   const heroItem = useMemo(() => {
@@ -359,43 +622,103 @@ export default function TrendingPage() {
     return null;
   }, [filteredArticles]);
 
-  // Section 2: Sub-Spotlight 3 Columns
-  const subCard1 = useMemo(() => {
-    const list = articles.filter(a => a.id !== heroItem?.id);
-    return list[0] || null;
-  }, [articles, heroItem]);
+  // Danh sách các mục còn lại cho chế độ xem lọc nguồn (sau bài heroItem)
+  const filteredRemainingItems = useMemo(() => {
+    let list = filteredArticles.slice(1);
+    if (filterSearch.trim()) {
+      const q = filterSearch.toLowerCase().trim();
+      list = list.filter(item => {
+        const title = (item.titleVi || item.title || '').toLowerCase();
+        const excerpt = (item.excerptVi || item.excerpt || item.ai_summary || '').toLowerCase();
+        const extra = (item.country || item.procuring_entity || item.sector || item.category || '').toLowerCase();
+        return title.includes(q) || excerpt.includes(q) || extra.includes(q);
+      });
+    }
+    return list;
+  }, [filteredArticles, filterSearch]);
 
-  const subCard2 = useMemo(() => {
-    return procurementItems[0] || null;
+  const totalFilteredPages = Math.max(1, Math.ceil(filteredRemainingItems.length / pageSize));
+  const currentPageItems = useMemo(() => {
+    const start = (filterPage - 1) * pageSize;
+    return filteredRemainingItems.slice(start, start + pageSize);
+  }, [filteredRemainingItems, filterPage, pageSize]);
+
+  // Section 2: Sub-Spotlight 3 Thẻ Chuẩn Báo Chí (Đồng bộ 100% cho mọi người dùng)
+  const spotlightCards = useMemo(() => {
+    const cards = [];
+    if (displayArticles[1]) cards.push(displayArticles[1]);
+    if (displayArticles[2]) cards.push(displayArticles[2]);
+    if (displayArticles[3]) cards.push(displayArticles[3]);
+    // Đảm bảo đủ 3 thẻ
+    while (cards.length < 3 && displayArticles.length > cards.length) {
+      cards.push(displayArticles[cards.length]);
+    }
+    return cards;
+  }, [displayArticles]);
+
+  // Section 3: Left Stream 1 & 2 (Đồng bộ cố định, không bị xáo trộn khi mua gói)
+  const leftStreamPart1 = useMemo(() => {
+    return displayArticles.slice(4, 10);
+  }, [displayArticles]);
+
+  const leftStreamPart2 = useMemo(() => {
+    return displayArticles.slice(10, 16);
+  }, [displayArticles]);
+
+  // Top read articles ranking 1-5 (Đồng bộ cố định)
+  const topReadArticles = useMemo(() => {
+    return displayArticles.slice(16, 21);
+  }, [displayArticles]);
+
+  // Procurement In-Feed Spotlight (Tenders for Left Column - Hiển thị thêm nếu đã mua gói)
+  const procInFeed = useMemo(() => {
+    return procurementItems.slice(0, 3);
   }, [procurementItems]);
 
-  const subCard3 = useMemo(() => {
-    return wbProjects[0] || adbProjects[0] || null;
+  // ODA In-Feed Spotlight (World Bank & ADB for Left Column - Hiển thị thêm nếu đã mua gói)
+  const odaInFeed = useMemo(() => {
+    return [...wbProjects, ...adbProjects].slice(0, 3);
   }, [wbProjects, adbProjects]);
 
-  // Section 3: Left Stream (Expanded to 10-12 real articles to balance column heights)
-  const leftStreamItems = useMemo(() => {
-    const usedIds = new Set([heroItem?.id, subCard1?.id].filter(Boolean));
-    const stream = articles.filter(a => !usedIds.has(a.id));
-    return stream.slice(0, 10);
-  }, [articles, heroItem, subCard1]);
+  // Section: "Khoa Học & Hạ Tầng Công Trình" 3-Part Feature Hub (Image 3 - Đồng bộ cố định)
+  const featureSection = useMemo(() => {
+    return {
+      lead: displayArticles[21] || displayArticles[0] || null,
+      middle: displayArticles.slice(22, 24),
+      right: displayArticles.slice(24, 28),
+    };
+  }, [displayArticles]);
+
+  // Section: "Năng Lượng Net-Zero" & "Bất Động Sản KCN" (Image 4 & 5 - Đồng bộ cố định)
+  const energySection = useMemo(() => {
+    return {
+      lead: displayArticles[28] || displayArticles[1] || null,
+      bullets: displayArticles.slice(29, 33),
+    };
+  }, [displayArticles]);
+
+  const realEstateSection = useMemo(() => {
+    return {
+      lead: displayArticles[33] || displayArticles[2] || null,
+      bullets: displayArticles.slice(34, 38),
+    };
+  }, [displayArticles]);
 
   // Section 3: Right Column - Business Section (Dynamically filtered by bizSubTab)
   const businessFiltered = useMemo(() => {
-    const usedIds = new Set([heroItem?.id, subCard1?.id].filter(Boolean));
-    const pool = articles.filter(a => !usedIds.has(a.id));
-    return filterBizArticles(pool, bizSubTab);
-  }, [articles, heroItem, subCard1, bizSubTab]);
+    const pool = displayArticles.slice(38, 50);
+    return filterBizArticles(pool.length > 0 ? pool : displayArticles, bizSubTab);
+  }, [displayArticles, bizSubTab]);
 
   const businessSection = useMemo(() => {
     return {
-      lead: businessFiltered[0] || articles[0] || null,
-      sub: businessFiltered[1] || articles[1] || null,
-      bullets: businessFiltered.slice(2, 6).length > 0 ? businessFiltered.slice(2, 6) : articles.slice(0, 4),
+      lead: businessFiltered[0] || displayArticles[0] || null,
+      sub: businessFiltered[1] || displayArticles[1] || null,
+      bullets: businessFiltered.slice(2, 6).length > 0 ? businessFiltered.slice(2, 6) : displayArticles.slice(0, 4),
     };
-  }, [businessFiltered, articles]);
+  }, [businessFiltered, displayArticles]);
 
-  // Section 3: Right Column - Procurement Section (Dynamically filtered by procSubTab)
+  // Section 3: Right Column - Procurement Section (Nếu đã mua gói)
   const procurementFiltered = useMemo(() => {
     return filterProcItems(procurementItems, procSubTab);
   }, [procurementItems, procSubTab]);
@@ -408,7 +731,7 @@ export default function TrendingPage() {
     };
   }, [procurementFiltered, procurementItems]);
 
-  // Section 3: Right Column - ODA Section (Dynamically filtered by odaSubTab)
+  // Section 3: Right Column - ODA Section (Nếu đã mua gói)
   const odaFiltered = useMemo(() => {
     return filterOdaProjects(wbProjects, adbProjects, odaSubTab);
   }, [wbProjects, adbProjects, odaSubTab]);
@@ -421,6 +744,34 @@ export default function TrendingPage() {
     };
   }, [odaFiltered]);
 
+  // Section 3: Right Column - Infrastructure News (Đồng bộ cố định)
+  const infraFiltered = useMemo(() => {
+    const pool = articles.slice(45, 55);
+    return filterInfraArticles(pool.length > 0 ? pool : articles, infraSubTab);
+  }, [articles, infraSubTab]);
+
+  const infraSection = useMemo(() => {
+    return {
+      lead: infraFiltered[0] || articles[0] || null,
+      sub: infraFiltered[1] || articles[1] || null,
+      bullets: infraFiltered.slice(2, 6).length > 0 ? infraFiltered.slice(2, 6) : articles.slice(0, 4),
+    };
+  }, [infraFiltered, articles]);
+
+  // Section 3: Right Column - Macro & Policy News (Đồng bộ cố định)
+  const macroFiltered = useMemo(() => {
+    const pool = articles.slice(50, 60);
+    return filterMacroArticles(pool.length > 0 ? pool : articles, macroSubTab);
+  }, [articles, macroSubTab]);
+
+  const macroSection = useMemo(() => {
+    return {
+      lead: macroFiltered[0] || articles[0] || null,
+      sub: macroFiltered[1] || articles[1] || null,
+      bullets: macroFiltered.slice(2, 6).length > 0 ? macroFiltered.slice(2, 6) : articles.slice(0, 4),
+    };
+  }, [macroFiltered, articles]);
+
   // Subtabs definitions
   const bizTabs = [
     t('trending.tabAll') || 'Tất cả',
@@ -428,6 +779,22 @@ export default function TrendingPage() {
     t('trending.tabEnterprise') || 'Doanh nghiệp',
     t('trending.tabMacro') || 'Vĩ mô',
     t('trending.tabCommodities') || 'Hàng hóa',
+  ];
+
+  const infraTabs = [
+    'Tất cả',
+    'Cao tốc & Cầu',
+    'Xây dựng & Hạ tầng',
+    'Giao thông & Cảng',
+    'Năng lượng & KCN',
+  ];
+
+  const macroTabs = [
+    'Tất cả',
+    'Chính sách vĩ mô',
+    'Tài chính & Ngân hàng',
+    'Thương mại quốc tế',
+    'Đầu tư công',
   ];
 
   const procTabs = [
@@ -469,7 +836,11 @@ export default function TrendingPage() {
             </div>
             <div>
               <h1 className="trending-masthead-title">{t('trending.title')}</h1>
-              <p className="trending-masthead-sub">{t('trending.subtitle')}</p>
+              <p className="trending-masthead-sub">
+                {canAdb || canWb || canProc
+                  ? t('trending.subtitle')
+                  : 'Cập nhật trực tiếp các bài viết, tin tức kinh tế và thông tin thị trường nổi bật nhất từ Báo chí'}
+              </p>
             </div>
           </div>
 
@@ -491,83 +862,152 @@ export default function TrendingPage() {
           </div>
         </div>
 
-        {/* Live Market & Project Pulse Ticker */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12, overflowX: 'auto',
-          padding: '10px 14px', background: 'var(--bg-surface-2)',
-          borderRadius: 12, border: '1px solid var(--border-subtle)', marginTop: 12,
-          scrollbarWidth: 'none', fontSize: 12, fontWeight: 700
-        }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5, color: '#ef4444',
-            padding: '3px 8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: 6, flex: 'none',
-            fontSize: 11, fontWeight: 800
-          }}>
-            <Flame size={13} /> {t('trending.pulse') || 'TIÊU ĐIỂM THỊ TRƯỜNG'}
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, whiteSpace: 'nowrap', flex: 1 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              🪙 <strong>Vàng SJC:</strong> 89.5 - 91.0 Tr/lượng <span style={{ color: '#10b981' }}>+0.5%</span>
-            </span>
-            <span style={{ color: 'var(--border)' }}>•</span>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              🛢️ <strong>RON 95-III:</strong> 21.840 đ/lít <span style={{ color: '#ef4444' }}>-120 đ</span>
-            </span>
-            <span style={{ color: 'var(--border)' }}>•</span>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              💵 <strong>USD/VND:</strong> 25.420 <span style={{ color: '#10b981' }}>+15 đ</span>
-            </span>
-            <span style={{ color: 'var(--border)' }}>•</span>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              📋 <strong>KHLCNT mới:</strong> {procurementItems.length || 30}+ gói thầu
-            </span>
-            <span style={{ color: 'var(--border)' }}>•</span>
-            <span style={{ color: 'var(--text-secondary)' }}>
-              🌍 <strong>Dự án ODA:</strong> {adbProjects.length + wbProjects.length || 60}+ dự án ưu đãi
-            </span>
-          </div>
-        </div>
 
-        {/* Source Filter Nav Pills */}
-        <div className="trending-source-nav">
-          <button
-            className={`trending-nav-tab ${activeSourceFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveSourceFilter('all')}
+
+        {/* Source Filter Nav Pills & Nút ON/OFF góc phải */}
+        <div className="trending-source-nav" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 12, paddingRight: 4
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              className={`trending-nav-tab ${activeSourceFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setActiveSourceFilter('all')}
+            >
+              🔥 {t('trending.allSources')}
+            </button>
+            <button
+              className={`trending-nav-tab ${activeSourceFilter === 'press' ? 'active' : ''}`}
+              onClick={() => setActiveSourceFilter('press')}
+            >
+              📰 {t('trending.pressOnly')} ({articles.length})
+            </button>
+            {canAdb && (
+              <button
+                className={`trending-nav-tab ${activeSourceFilter === 'adb' ? 'active' : ''}`}
+                onClick={() => setActiveSourceFilter('adb')}
+              >
+                🏦 {t('trending.adbOnly')} ({adbProjects.length})
+              </button>
+            )}
+            {canWb && (
+              <button
+                className={`trending-nav-tab ${activeSourceFilter === 'worldbank' ? 'active' : ''}`}
+                onClick={() => setActiveSourceFilter('worldbank')}
+              >
+                🌍 {t('trending.wbOnly')} ({wbProjects.length})
+              </button>
+            )}
+            {canProc && (
+              <button
+                className={`trending-nav-tab ${activeSourceFilter === 'gov' ? 'active' : ''}`}
+                onClick={() => setActiveSourceFilter('gov')}
+              >
+                📋 {t('trending.procOnly')} ({procurementItems.length})
+              </button>
+            )}
+          </div>
+
+          {/* NÚT ON/OFF GÓC PHẢI: LỌC DỰA THEO TỪ KHÓA ĐÃ LƯU */}
+          <div
+            onClick={handleToggleOnlyMyKeywords}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '6px 14px', borderRadius: 24,
+              background: onlyMyKeywords ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-surface-2)',
+              border: onlyMyKeywords ? '1px solid #f59e0b' : '1px solid var(--border)',
+              cursor: 'pointer', transition: 'all 0.25s ease', userSelect: 'none',
+              boxShadow: onlyMyKeywords ? '0 2px 10px rgba(245, 158, 11, 0.2)' : 'none'
+            }}
+            title="Bật/tắt chế độ hiển thị tin xu hướng theo các từ khóa bạn đã lưu"
           >
-            🔥 {t('trending.allSources')}
-          </button>
-          <button
-            className={`trending-nav-tab ${activeSourceFilter === 'press' ? 'active' : ''}`}
-            onClick={() => setActiveSourceFilter('press')}
-          >
-            📰 {t('trending.pressOnly')} ({articles.length})
-          </button>
-          <button
-            className={`trending-nav-tab ${activeSourceFilter === 'adb' ? 'active' : ''}`}
-            onClick={() => setActiveSourceFilter('adb')}
-          >
-            🏦 {t('trending.adbOnly')} ({adbProjects.length})
-          </button>
-          <button
-            className={`trending-nav-tab ${activeSourceFilter === 'worldbank' ? 'active' : ''}`}
-            onClick={() => setActiveSourceFilter('worldbank')}
-          >
-            🌍 {t('trending.wbOnly')} ({wbProjects.length})
-          </button>
-          <button
-            className={`trending-nav-tab ${activeSourceFilter === 'gov' ? 'active' : ''}`}
-            onClick={() => setActiveSourceFilter('gov')}
-          >
-            📋 {t('trending.procOnly')} ({procurementItems.length})
-          </button>
+            <span style={{
+              fontSize: 12.5, fontWeight: 750,
+              color: onlyMyKeywords ? '#d97706' : 'var(--text-secondary)',
+              display: 'inline-flex', alignItems: 'center', gap: 6
+            }}>
+              <span>🎯</span>
+              <span>Dựa theo từ khóa</span>
+              {userKeywords.length > 0 && (
+                <span style={{
+                  fontSize: 11, fontWeight: 800, padding: '1px 7px', borderRadius: 10,
+                  background: onlyMyKeywords ? '#f59e0b' : 'var(--border)',
+                  color: onlyMyKeywords ? '#fff' : 'var(--text-muted)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {userKeywords.length}
+                </span>
+              )}
+            </span>
+
+            {/* iOS style toggle switch pill */}
+            <div style={{
+              width: 36, height: 20, borderRadius: 12,
+              background: onlyMyKeywords ? '#f59e0b' : 'var(--border)',
+              position: 'relative', transition: 'background 0.25s ease',
+              display: 'flex', alignItems: 'center', padding: 2
+            }}>
+              <div style={{
+                width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                transform: onlyMyKeywords ? 'translateX(16px)' : 'translateX(0px)',
+                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.25)'
+              }} />
+            </div>
+          </div>
         </div>
       </div>
 
       {loading ? (
         <TrendingMagazineSkeleton />
-      ) : (
+      ) : activeSourceFilter === 'all' ? (
         <>
-          {/* ── SECTION 1: HERO SPOTLIGHT (Tin Đang Trending Số 1 - Layout VnExpress) ── */}
+          {/* Banner thông báo khi bật nút ON/OFF Dựa theo từ khóa */}
+          {onlyMyKeywords && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+              padding: '10px 18px', background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: 12, marginBottom: 20
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Flame size={15} /> Đang lọc Tạp chí Xu Hướng theo từ khóa của bạn
+              </span>
+              {userKeywords.length > 0 ? (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {userKeywords.slice(0, 8).map(k => (
+                    <span
+                      key={k.id || k.term}
+                      style={{
+                        fontSize: 11.5, fontWeight: 700, padding: '2px 9px', borderRadius: 12,
+                        background: 'rgba(245, 158, 11, 0.18)', color: '#b45309'
+                      }}
+                    >
+                      #{k.display_term || k.term}
+                    </span>
+                  ))}
+                  {userKeywords.length > 8 && (
+                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>+{userKeywords.length - 8}</span>
+                  )}
+                </div>
+              ) : (
+                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                  (Bạn chưa lưu từ khóa nào trong danh mục theo dõi)
+                </span>
+              )}
+              <button
+                onClick={() => nav('/keywords')}
+                style={{
+                  marginLeft: 'auto', background: 'none', border: 'none',
+                  color: 'var(--brand-600)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 4
+                }}
+              >
+                Quản lý từ khóa <ArrowUpRight size={13} />
+              </button>
+            </div>
+          )}
+
+          {/* ── SECTION 1: HERO SPOTLIGHT (Tin Đang Trending Số 1 - Hoàn toàn không có comment ảo) ── */}
           {heroItem && (
             <section className="trending-hero-section" onClick={() => handleItemClick(heroItem)}>
               <div className="trending-hero-grid">
@@ -587,14 +1027,20 @@ export default function TrendingPage() {
                   </div>
                 ) : (
                   <div className="trending-hero-media" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Newspaper size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                    {heroItem.source === 'gov' ? (
+                      <ShoppingBag size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                    ) : (heroItem.source === 'adb' || heroItem.source === 'worldbank') ? (
+                      <Globe size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                    ) : (
+                      <Newspaper size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                    )}
                   </div>
                 )}
 
                 {/* Right: Editorial Headline & Meta */}
                 <div className="trending-hero-content">
                   <div className="trending-hero-meta-top">
-                    <span className="trending-tag-pill">{heroItem.source_name || (heroItem.source === 'adb' ? 'ADB' : heroItem.source === 'worldbank' ? 'World Bank' : 'Báo chí')}</span>
+                    <span className="trending-tag-pill">{heroItem.source_name || (heroItem.source === 'adb' ? 'ADB' : heroItem.source === 'worldbank' ? 'World Bank' : heroItem.source === 'gov' ? 'Đấu Thầu' : 'Báo chí')}</span>
                     {heroItem.category && <span className="trending-category-tag">{heroItem.category}</span>}
                     <span className="trending-time-tag">
                       <Clock size={12} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
@@ -612,12 +1058,14 @@ export default function TrendingPage() {
 
                   <div className="trending-hero-footer">
                     <div className="trending-meta-stats">
-                      <span className="trending-stat-item">
-                        <MessageSquare size={14} /> {heroItem.matched_keywords?.length ? heroItem.matched_keywords.length * 8 + 12 : 24} {t('trending.comments')}
-                      </span>
-                      {heroItem.matched_keywords?.[0] && (
-                        <span className="trending-stat-item">
-                          <Flame size={14} style={{ color: '#f97316' }} /> #{heroItem.matched_keywords[0]}
+                      {getMatchedKeywordsForItem(heroItem).slice(0, 3).map((kw, i) => (
+                        <span key={i} className="trending-stat-item" style={{ color: '#f59e0b', fontWeight: 750 }}>
+                          <Flame size={14} style={{ color: '#f97316' }} /> #{kw}
+                        </span>
+                      ))}
+                      {getMatchedKeywordsForItem(heroItem).length === 0 && (
+                        <span className="trending-stat-item" style={{ color: 'var(--text-muted)' }}>
+                          <Clock size={13} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
                         </span>
                       )}
                     </div>
@@ -640,106 +1088,136 @@ export default function TrendingPage() {
             </section>
           )}
 
-          {/* ── SECTION 2: SUB-HERO 3-COLUMN SPOTLIGHT STRIP ── */}
+          {/* ── SECTION 2: SUB-HERO 3-COLUMN SPOTLIGHT STRIP (LUÔN ĐẦY ĐỦ 3 CỘT KHÔNG BỊ TRỐNG) ── */}
           <section className="trending-subhero-strip">
-            {/* Cột 1: Real Press News Spotlight */}
-            {subCard1 && (
-              <div
-                className="trending-sub-card standard-card"
-                onClick={() => handleItemClick(subCard1)}
-              >
-                <div className="sub-card-header">
-                  <h3 className="sub-card-title">
-                    {subCard1.titleVi || subCard1.title}
-                  </h3>
-                  <span className="trending-comments-chip">💬 {subCard1.matched_keywords?.length ? subCard1.matched_keywords.length * 5 + 7 : 18}</span>
-                </div>
+            {spotlightCards.map((card, idx) => {
+              if (!card) return null;
 
-                {subCard1.image_url ? (
-                  <div className="sub-card-media">
-                    <img src={subCard1.image_url} alt={subCard1.title} className="sub-card-img" />
+              // Card kiểu Đấu thầu
+              const isProc = card.source === 'gov' || card.source === 'dauthau' || card.kind || card.procuring_entity;
+              if (isProc) {
+                return (
+                  <div
+                    key={card.id || `proc-${idx}`}
+                    className="trending-sub-card standard-card"
+                    style={{ borderTop: '3px solid #8b5cf6', background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(139, 92, 246, 0.03) 100%)' }}
+                    onClick={() => handleItemClick(card)}
+                  >
+                    <div className="sub-card-header">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#8b5cf6', color: 'white' }}>
+                          {card.kind === 'plan' ? 'KHLCNT' : 'TBMT'}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>● {card.status || 'Đang mở'}</span>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                        e-GP
+                      </span>
+                    </div>
+
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, margin: '10px 0' }}>
+                      <h3 className="sub-card-title" style={{ fontSize: 14.5, fontWeight: 800, lineHeight: 1.4, color: 'var(--text-primary)' }}>
+                        {card.title}
+                      </h3>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '6px 10px', borderRadius: 6 }}>
+                        🏛️ <strong>Bên mời thầu:</strong> {card.procuring_entity || 'Mua sắm công'}
+                      </div>
+                    </div>
+
+                    <div className="sub-card-footer">
+                      <span className="sub-card-source" style={{ color: '#8b5cf6', fontWeight: 800 }}>Đấu Thầu Công</span>
+                      <span className="sub-card-time">{formatRelativeTime(card.publish_date || card.published_at || card.date, lang)}</span>
+                    </div>
                   </div>
-                ) : (
-                  <p className="sub-card-excerpt-text" style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, margin: '8px 0' }}>
-                    {subCard1.excerptVi || subCard1.excerpt || subCard1.title}
-                  </p>
-                )}
+                );
+              }
 
-                <div className="sub-card-footer">
-                  <span className="sub-card-source">{subCard1.source_name || 'Báo Chí'}</span>
-                  <span className="sub-card-time">{formatRelativeTime(subCard1.published_at || subCard1.date, lang)}</span>
-                </div>
-              </div>
-            )}
+              // Card kiểu ODA
+              const isOda = card.source === 'adb' || card.source === 'worldbank' || card.source_org === 'adb' || card.source_org === 'worldbank';
+              if (isOda) {
+                return (
+                  <div
+                    key={card.id || `oda-${idx}`}
+                    className="trending-sub-card perspective-card"
+                    onClick={() => handleItemClick(card)}
+                  >
+                    <div className="perspective-header">
+                      <span className="perspective-badge">{t('trending.perspective')}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: '#059669', background: 'rgba(5, 150, 105, 0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                        🌍 {card.source_org === 'adb' || card.source === 'adb' ? 'ADB' : 'World Bank'}
+                      </span>
+                    </div>
 
-            {/* Cột 2: Real Procurement Item (Clean Data Card - No Stock Photo Needed) */}
-            {subCard2 && (
-              <div
-                className="trending-sub-card standard-card"
-                style={{ borderTop: '3px solid #8b5cf6', background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(139, 92, 246, 0.03) 100%)' }}
-                onClick={() => handleItemClick(subCard2)}
-              >
-                <div className="sub-card-header">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#8b5cf6', color: 'white' }}>
-                      {subCard2.kind === 'plan' ? 'KHLCNT' : 'TBMT'}
-                    </span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>● {subCard2.status || 'Đang mở'}</span>
+                    <h3 className="perspective-title">{card.titleVi || card.title}</h3>
+
+                    <p className="perspective-quote">
+                      "{card.ai_summary || card.excerpt || (card.country ? `Dự án trọng điểm tại ${card.country} với tổng ngân sách ${card.amount || 'ưu đãi'}.` : card.title)}"
+                    </p>
+
+                    <div className="perspective-author-footer">
+                      <img
+                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+                        alt="Author Avatar"
+                        className="perspective-avatar"
+                      />
+                      <div className="perspective-author-info">
+                        <span className="perspective-author-name">{t('trending.perspectiveAuthor')}</span>
+                        <span className="perspective-author-role">{t('trending.perspectiveRole')}</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="trending-comments-chip" style={{ color: '#8b5cf6' }}>e-GP</span>
-                </div>
+                );
+              }
 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, margin: '10px 0' }}>
-                  <h3 className="sub-card-title" style={{ fontSize: 14.5, fontWeight: 800, lineHeight: 1.4, color: 'var(--text-primary)' }}>
-                    {subCard2.title}
-                  </h3>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '6px 10px', borderRadius: 6 }}>
-                    🏛️ <strong>Bên mời thầu:</strong> {subCard2.procuring_entity || 'Mua sắm công'}
+              // Card kiểu Báo chí (Press)
+              return (
+                <div
+                  key={card.id || `press-${idx}`}
+                  className="trending-sub-card standard-card"
+                  onClick={() => handleItemClick(card)}
+                >
+                  <div className="sub-card-header">
+                    <h3 className="sub-card-title">
+                      {card.titleVi || card.title}
+                    </h3>
+                    {card.category && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-600)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 6 }}>
+                        {card.category}
+                      </span>
+                    )}
                   </div>
-                </div>
 
-                <div className="sub-card-footer">
-                  <span className="sub-card-source" style={{ color: '#8b5cf6', fontWeight: 800 }}>Đấu Thầu Công</span>
-                  <span className="sub-card-time">{formatRelativeTime(subCard2.publish_date, lang)}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Cột 3: "Góc Nhìn Chuyên Gia" (Real ODA Analysis Project - Clean Editorial Quote) */}
-            {subCard3 && (
-              <div
-                className="trending-sub-card perspective-card"
-                onClick={() => handleItemClick(subCard3)}
-              >
-                <div className="perspective-header">
-                  <span className="perspective-badge">{t('trending.perspective')}</span>
-                  <span className="trending-comments-chip">🌍 {subCard3.source_org === 'adb' || subCard3.source === 'adb' ? 'ADB' : 'World Bank'}</span>
-                </div>
-
-                <h3 className="perspective-title">{subCard3.titleVi || subCard3.title}</h3>
-
-                <p className="perspective-quote">
-                  "{subCard3.ai_summary || subCard3.excerpt || (subCard3.country ? `Dự án trọng điểm tại ${subCard3.country} với tổng ngân sách ${subCard3.amount || 'ưu đãi'}.` : subCard3.title)}"
-                </p>
-
-                <div className="perspective-author-footer">
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
-                    alt="Author Avatar"
-                    className="perspective-avatar"
+                  <ArticleMediaPlaceholder
+                    imageUrl={card.image_url}
+                    alt={card.titleVi || card.title}
+                    category={card.category || 'Tiêu điểm'}
+                    height={120}
+                    className="sub-card-media"
                   />
-                  <div className="perspective-author-info">
-                    <span className="perspective-author-name">{t('trending.perspectiveAuthor')}</span>
-                    <span className="perspective-author-role">{t('trending.perspectiveRole')}</span>
+                  <p className="sub-card-excerpt-text" style={{
+                    fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.4,
+                    margin: '6px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                  }}>
+                    {card.excerptVi || card.excerpt || card.title}
+                  </p>
+
+                  <div className="sub-card-footer">
+                    <span className="sub-card-source">{card.source_name || 'Báo Chí'}</span>
+                    {getMatchedKeywordsForItem(card).length > 0 && (
+                      <span style={{ fontSize: 11, fontWeight: 750, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '1px 6px', borderRadius: 4 }}>
+                        #{getMatchedKeywordsForItem(card)[0]}
+                      </span>
+                    )}
+                    <span className="sub-card-time">{formatRelativeTime(card.published_at || card.date, lang)}</span>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })}
           </section>
 
-          {/* ── SECTION 3: DUAL-COLUMN NEWSPAPER HUB (Bố cục 2 Cột Báo Điện Tử) ── */}
+          {/* ── SECTION 3: DUAL-COLUMN NEWSPAPER HUB (Bố cục 2 Cột Báo Điện Tử Cân Bằng) ── */}
           <div className="trending-dual-layout">
-            {/* ── CỘT TRÁI (~42%): DÒNG CHẢY TIN NỔI BẬT (Trending News Stream) ── */}
+            {/* ── CỘT TRÁI (~42%): DÒNG CHẢY TIN NỔI BẬT + GÓI THẦU + DỰ ÁN ODA (Lấp đầy không bị trống) ── */}
             <div className="trending-left-column">
               <div className="column-section-title">
                 <span className="section-title-line" />
@@ -749,82 +1227,262 @@ export default function TrendingPage() {
                 </h3>
               </div>
 
+              {/* Luồng 1: 6 Bài viết Thời sự */}
               <div className="trending-stream-list">
-                {leftStreamItems.slice(0, 3).map((item, idx) => (
+                {leftStreamPart1.map((item, idx) => (
                   <article
                     key={item.id}
                     className="trending-stream-item"
                     onClick={() => handleItemClick(item)}
+                    style={{ paddingBottom: 10, gap: 12 }}
                   >
                     {item.image_url ? (
-                      <div className="stream-thumb-wrap">
+                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0 }}>
                         <img src={item.image_url} alt={item.title} className="stream-thumb" />
-                        {idx % 2 === 0 && <span className="media-type-badge video"><Play size={10} fill="white" /></span>}
-                        {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={10} /></span>}
+                        {idx % 2 === 0 && <span className="media-type-badge video"><Play size={9} fill="white" /></span>}
+                        {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={9} /></span>}
                       </div>
                     ) : (
-                      <div className="stream-thumb-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
-                        <Newspaper size={24} style={{ color: 'var(--text-muted)' }} />
+                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
+                        <Newspaper size={20} style={{ color: 'var(--text-muted)' }} />
                       </div>
                     )}
-                    <div className="stream-content">
-                      <h4 className="stream-title">{item.titleVi || item.title}</h4>
-                      <p className="stream-excerpt">{item.excerptVi || item.excerpt || (item.titleVi || item.title)}</p>
-                      <div className="stream-meta">
-                        <span className="stream-time">{formatRelativeTime(item.published_at || item.date, lang)}</span>
-                        <span className="stream-comments">💬 {item.matched_keywords?.length ? item.matched_keywords.length * 4 + 6 : 14}</span>
+                    <div className="stream-content" style={{ gap: 2 }}>
+                      <h4 className="stream-title" style={{ fontSize: 13, lineHeight: 1.35 }}>{item.titleVi || item.title}</h4>
+                      <p className="stream-excerpt" style={{ fontSize: 11.5, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-muted)' }}>
+                        {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
+                      </p>
+                      <div className="stream-meta" style={{ marginTop: 2 }}>
+                        <span className="stream-time" style={{ fontSize: 11 }}>{formatRelativeTime(item.published_at || item.date, lang)}</span>
+                        {getMatchedKeywordsForItem(item).length > 0 && (
+                          <span style={{ fontSize: 10, fontWeight: 750, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '1px 5px', borderRadius: 4 }}>
+                            #{getMatchedKeywordsForItem(item)[0]}
+                          </span>
+                        )}
+                        {item.category && (
+                          <span style={{ fontSize: 10.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '1px 5px', borderRadius: 4 }}>
+                            {item.category}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </article>
                 ))}
 
-                {/* Banner Tiêu Điểm / Kỷ Niệm / Thông Điệp ODA Đấu Thầu */}
-                <div
-                  className="trending-announcement-banner"
-                  onClick={() => nav('/projects')}
-                >
-                  <div className="announcement-banner-badge">★ TIÊU ĐIỂM QUỐC GIA ★</div>
-                  <div className="announcement-banner-text">
-                    {t('trending.bannerTitle')}
+                {/* Khối Tiêu Điểm: Đấu Thầu & Gói Thầu Mới (Theo gói sở hữu) */}
+                {canProc && procInFeed.length > 0 ? (
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.08))',
+                    border: '1px solid rgba(139, 92, 246, 0.25)',
+                    borderRadius: 12, padding: 12, margin: '6px 0'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(139, 92, 246, 0.15)' }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <ShoppingBag size={14} /> Gói Thầu & KHLCNT Tiêu Điểm
+                      </span>
+                      <button onClick={() => nav('/potential-projects')} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+                        Xem tất cả <ChevronRight size={12} />
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {procInFeed.map((p, pIdx) => (
+                        <div
+                          key={p.id || `proc-infeed-${pIdx}`}
+                          onClick={() => handleItemClick(p)}
+                          style={{
+                            background: 'var(--bg-surface)', padding: '8px 10px', borderRadius: 8,
+                            border: '1px solid var(--border-subtle)', cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#7c3aed', background: 'rgba(139, 92, 246, 0.1)', padding: '1px 5px', borderRadius: 4 }}>
+                              {p.kind === 'plan' ? 'KHLCNT' : 'GÓI THẦU'}
+                            </span>
+                            {p.amount && (
+                              <span style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
+                                💰 {p.amount}
+                              </span>
+                            )}
+                          </div>
+                          <h5 style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: '0 0 3px 0', color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {p.title}
+                          </h5>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)' }}>
+                            <span>{p.investor ? p.investor.slice(0, 30) + '…' : 'Bên mời thầu'}</span>
+                            <span>{p.date ? formatRelativeTime(p.date, lang) : 'Mới'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className="announcement-banner-cta">
-                    {t('trending.bannerCta')}
-                  </span>
-                </div>
+                ) : (
+                  /* Banner Tiêu Điểm Báo Chí & Đầu Tư */
+                  <div
+                    className="trending-announcement-banner"
+                    onClick={() => nav('/projects')}
+                  >
+                    <div className="announcement-banner-badge">★ TIÊU ĐIỂM QUỐC GIA ★</div>
+                    <div className="announcement-banner-text">
+                      {t('trending.bannerTitle')}
+                    </div>
+                    <span className="announcement-banner-cta">
+                      {t('trending.bannerCta')}
+                    </span>
+                  </div>
+                )}
 
-                {leftStreamItems.slice(3).map((item, idx) => (
+                {/* Luồng 2: 6 Bài viết Kinh tế tiếp theo */}
+                {leftStreamPart2.map((item, idx) => (
                   <article
                     key={item.id}
                     className="trending-stream-item"
                     onClick={() => handleItemClick(item)}
+                    style={{ paddingBottom: 10, gap: 12 }}
                   >
                     {item.image_url ? (
-                      <div className="stream-thumb-wrap">
+                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0 }}>
                         <img src={item.image_url} alt={item.title} className="stream-thumb" />
-                        {idx % 2 === 0 && <span className="media-type-badge video"><Play size={10} fill="white" /></span>}
-                        {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={10} /></span>}
+                        {idx % 2 === 0 && <span className="media-type-badge video"><Play size={9} fill="white" /></span>}
+                        {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={9} /></span>}
                       </div>
                     ) : (
-                      <div className="stream-thumb-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
-                        <Newspaper size={24} style={{ color: 'var(--text-muted)' }} />
+                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
+                        <Newspaper size={20} style={{ color: 'var(--text-muted)' }} />
                       </div>
                     )}
-                    <div className="stream-content">
-                      <h4 className="stream-title">{item.titleVi || item.title}</h4>
-                      <p className="stream-excerpt">{item.excerptVi || item.excerpt || (item.titleVi || item.title)}</p>
-                      <div className="stream-meta">
-                        <span className="stream-time">{formatRelativeTime(item.published_at || item.date, lang)}</span>
-                        <span className="stream-comments">💬 {item.matched_keywords?.length ? item.matched_keywords.length * 3 + 8 : 11}</span>
+                    <div className="stream-content" style={{ gap: 2 }}>
+                      <h4 className="stream-title" style={{ fontSize: 13, lineHeight: 1.35 }}>{item.titleVi || item.title}</h4>
+                      <p className="stream-excerpt" style={{ fontSize: 11.5, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-muted)' }}>
+                        {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
+                      </p>
+                      <div className="stream-meta" style={{ marginTop: 2 }}>
+                        <span className="stream-time" style={{ fontSize: 11 }}>{formatRelativeTime(item.published_at || item.date, lang)}</span>
+                        {getMatchedKeywordsForItem(item).length > 0 && (
+                          <span style={{ fontSize: 10, fontWeight: 750, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '1px 5px', borderRadius: 4 }}>
+                            #{getMatchedKeywordsForItem(item)[0]}
+                          </span>
+                        )}
+                        {item.category && (
+                          <span style={{ fontSize: 10.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '1px 5px', borderRadius: 4 }}>
+                            {item.category}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </article>
                 ))}
+
+                {/* Khối Tiêu Điểm: Dự Án ODA (World Bank / ADB) */}
+                {(canAdb || canWb) && odaInFeed.length > 0 && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.05), rgba(16, 185, 129, 0.08))',
+                    border: '1px solid rgba(5, 150, 105, 0.25)',
+                    borderRadius: 12, padding: 12, margin: '6px 0'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(5, 150, 105, 0.15)' }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Globe size={14} /> Dự Án ODA (World Bank & ADB)
+                      </span>
+                      <button onClick={() => nav('/potential-projects')} style={{ background: 'none', border: 'none', color: '#059669', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+                        Xem tất cả <ChevronRight size={12} />
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {odaInFeed.map((oda, oIdx) => (
+                        <div
+                          key={oda.id || `oda-infeed-${oIdx}`}
+                          onClick={() => handleItemClick(oda)}
+                          style={{
+                            background: 'var(--bg-surface)', padding: '8px 10px', borderRadius: 8,
+                            border: '1px solid var(--border-subtle)', cursor: 'pointer'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                            <span style={{
+                              fontSize: 9.5, fontWeight: 800,
+                              color: oda.source === 'worldbank' || oda.source_org === 'worldbank' ? '#0284c7' : '#059669',
+                              background: oda.source === 'worldbank' || oda.source_org === 'worldbank' ? 'rgba(2, 132, 199, 0.1)' : 'rgba(5, 150, 105, 0.1)',
+                              padding: '1px 5px', borderRadius: 4
+                            }}>
+                              {oda.source === 'worldbank' || oda.source_org === 'worldbank' ? '🌍 WORLD BANK' : '🏦 ADB'}
+                            </span>
+                            {oda.amount && (
+                              <span style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
+                                💵 {oda.amount}
+                              </span>
+                            )}
+                          </div>
+                          <h5 style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: '0 0 3px 0', color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {oda.titleVi || oda.title}
+                          </h5>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)' }}>
+                            <span>{oda.sector || oda.status || 'Đang triển khai'}</span>
+                            <span>{oda.date ? formatRelativeTime(oda.date, lang) : 'Cập nhật'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Khối Tin Nóng Đọc Nhiều Nhất (Ranking 1 - 8 như Image 2) */}
+                {topReadArticles.length > 0 && (
+                  <div style={{ marginTop: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10, paddingBottom: 6, borderBottom: '2px solid var(--border)' }}>
+                      <Flame size={14} style={{ color: '#ef4444' }} />
+                      <span style={{ fontSize: 13, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.4, color: 'var(--text-primary)' }}>
+                        Tin Đang Đọc Nhiều Nhất
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {topReadArticles.map((item, idx) => (
+                        <div
+                          key={item.id || `top-read-${idx}`}
+                          onClick={() => handleItemClick(item)}
+                          style={{
+                            display: 'grid', gridTemplateColumns: '20px 52px 1fr', gap: 10,
+                            alignItems: 'center', paddingBottom: 7, borderBottom: '1px solid var(--border-subtle)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <span style={{
+                            fontSize: 14, fontWeight: 900, lineHeight: 1,
+                            color: idx < 3 ? '#ef4444' : idx < 6 ? '#f97316' : 'var(--text-muted)',
+                            textAlign: 'center'
+                          }}>
+                            {idx + 1}
+                          </span>
+                          <div style={{ width: 52, height: 38, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{
+                                width: '100%', height: '100%',
+                                background: idx % 2 === 0 ? 'linear-gradient(135deg, #1e3a5f, #3b82f6)' : 'linear-gradient(135deg, #064e3b, #10b981)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                              }}>
+                                <Newspaper size={13} style={{ color: 'rgba(255,255,255,0.7)' }} />
+                              </div>
+                            )}
+                          </div>
+                          <p style={{
+                            fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: 0,
+                            color: 'var(--text-primary)',
+                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                          }}>
+                            {item.titleVi || item.title}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* ── CỘT PHẢI (~58%): CÁC CHUYÊN MỤC THEO NGUỒN & BẢNG CHỈ SỐ ── */}
+            {/* ── CỘT PHẢI (~58%): CÁC CHUYÊN MỤC THEO NGUỒN & BẢNG CHỈ SỐ (Lấp đầy không để trống) ── */}
             <div className="trending-right-column">
-              {/* ── CHUYÊN MỤC 1: KINH DOANH & THỊ TRƯỜNG (Real Articles with Real Images on BOTH cards) ── */}
+              {/* ── CHUYÊN MỤC 1: KINH DOANH & THỊ TRƯỜNG (Real Articles - Không comment ảo) ── */}
               {businessSection.lead && (
                 <div className="magazine-category-block">
                   <div className="magazine-category-header">
@@ -848,33 +1506,37 @@ export default function TrendingPage() {
                     <div className="magazine-lead-row">
                       {/* Lead Story (Left) */}
                       <div className="magazine-lead-card" onClick={() => handleItemClick(businessSection.lead)}>
-                        {businessSection.lead.image_url && (
-                          <div className="magazine-lead-media">
-                            <img src={businessSection.lead.image_url} alt="Biz Lead" />
-                          </div>
-                        )}
+                        <ArticleMediaPlaceholder
+                          imageUrl={businessSection.lead.image_url}
+                          alt={businessSection.lead.titleVi || businessSection.lead.title}
+                          category="Kinh Doanh"
+                          height={130}
+                        />
                         <div className="magazine-lead-info">
                           <h4 className="magazine-lead-title">{businessSection.lead.titleVi || businessSection.lead.title}</h4>
                           <p className="magazine-lead-excerpt">{businessSection.lead.excerptVi || businessSection.lead.excerpt || (businessSection.lead.titleVi || businessSection.lead.title)}</p>
                           <span className="magazine-item-time">
-                            💬 {businessSection.lead.matched_keywords?.length ? businessSection.lead.matched_keywords.length * 6 + 10 : 25} • {formatRelativeTime(businessSection.lead.published_at, lang)}
+                            <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                            {formatRelativeTime(businessSection.lead.published_at, lang)}
                           </span>
                         </div>
                       </div>
 
-                      {/* Secondary Story (Right - Now ALSO displays image if available!) */}
+                      {/* Secondary Story (Right) */}
                       {businessSection.sub && (
                         <div className="magazine-lead-card" onClick={() => handleItemClick(businessSection.sub)}>
-                          {businessSection.sub.image_url && (
-                            <div className="magazine-lead-media">
-                              <img src={businessSection.sub.image_url} alt="Biz Sub" />
-                            </div>
-                          )}
+                          <ArticleMediaPlaceholder
+                            imageUrl={businessSection.sub.image_url}
+                            alt={businessSection.sub.titleVi || businessSection.sub.title}
+                            category="Thị Trường"
+                            height={130}
+                          />
                           <div className="magazine-lead-info">
                             <h4 className="magazine-lead-title">{businessSection.sub.titleVi || businessSection.sub.title}</h4>
                             <p className="magazine-lead-excerpt">{businessSection.sub.excerptVi || businessSection.sub.excerpt || (businessSection.sub.titleVi || businessSection.sub.title)}</p>
                             <span className="magazine-item-time">
-                              💬 {businessSection.sub.matched_keywords?.length ? businessSection.sub.matched_keywords.length * 4 + 7 : 19} • {formatRelativeTime(businessSection.sub.published_at, lang)}
+                              <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                              {formatRelativeTime(businessSection.sub.published_at, lang)}
                             </span>
                           </div>
                         </div>
@@ -887,7 +1549,9 @@ export default function TrendingPage() {
                         <li key={b.id || idx} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
                           <span className="bullet-dot">•</span>
                           <span className="bullet-text">{b.titleVi || b.title}</span>
-                          <span className="bullet-comments">💬 {b.matched_keywords?.length ? b.matched_keywords.length * 3 + 5 : 12}</span>
+                          <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                            {formatRelativeTime(b.published_at || b.date, lang)}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -895,68 +1559,10 @@ export default function TrendingPage() {
                 </div>
               )}
 
-              {/* ── BẢNG CHỈ SỐ THỊ TRƯỜNG & ĐẦU TƯ CÔNG (Data Ticker Box) ── */}
-              <div className="trending-market-ticker-box">
-                <div className="market-ticker-header">
-                  <span className="market-ticker-title">
-                    <DollarSign size={14} style={{ color: '#10b981' }} /> {t('trending.marketTicker')}
-                  </span>
-                  <span className="market-ticker-live-tag">Trực tiếp {overviewStats ? `${overviewStats.total_articles} tin` : 'Live'}</span>
-                </div>
 
-                <div className="market-ticker-grid">
-                  <div className="market-ticker-cell">
-                    <div className="ticker-label">{t('trending.oilRon95')}</div>
-                    <div className="ticker-val-row">
-                      <span className="ticker-val">22.660</span>
-                      <span className="ticker-change up">+550</span>
-                      <span className="ticker-unit">VND/lít</span>
-                    </div>
-                  </div>
 
-                  <div className="market-ticker-cell">
-                    <div className="ticker-label">{t('trending.goldWorld')}</div>
-                    <div className="ticker-val-row">
-                      <span className="ticker-sublabel">Mua:</span> <span className="ticker-val">4.631</span>
-                      <span className="ticker-sublabel">Bán:</span> <span className="ticker-val">4.633</span>
-                      <span className="ticker-unit">USD/oz</span>
-                    </div>
-                  </div>
-
-                  <div className="market-ticker-cell">
-                    <div className="ticker-label">{t('trending.goldSjc')}</div>
-                    <div className="ticker-val-row">
-                      <span className="ticker-sublabel">Mua:</span> <span className="ticker-val">88,5</span>
-                      <span className="ticker-sublabel">Bán:</span> <span className="ticker-val">90,5</span>
-                      <span className="ticker-unit">tr.đ/lượng</span>
-                    </div>
-                  </div>
-
-                  <div className="market-ticker-cell">
-                    <div className="ticker-label">{t('trending.interestOda')}</div>
-                    <div className="ticker-val-row">
-                      <span className="ticker-val interest">2.15%</span>
-                      <span className="ticker-unit">/ năm (WB/ADB)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Initiative Partner Badges */}
-                <div className="market-partner-strip">
-                  <div className="partner-chip">
-                    <span className="partner-icon-circle blue">50</span>
-                    <span><strong>{t('trending.empowerPartner')}</strong></span>
-                  </div>
-                  <div className="partner-divider" />
-                  <div className="partner-chip">
-                    <span className="partner-icon-leaf">🌱</span>
-                    <span><strong>{t('trending.netZeroPartner')}</strong></span>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── CHUYÊN MỤC 2: ĐẤU THẦU & MUA SẮM CÔNG (Clean Professional Data Cards - No Stock Photos) ── */}
-              {procurementSection.lead && (
+              {/* ── CHUYÊN MỤC 2: ĐẤU THẦU CÔNG (HOẶC HẠ TẦNG XÂY DỰNG NẾU CHƯA MUA GÓI) ── */}
+              {canProc && procurementSection.lead ? (
                 <div className="magazine-category-block">
                   <div className="magazine-category-header">
                     <h3 className="magazine-category-main-title procurement-theme">
@@ -980,44 +1586,85 @@ export default function TrendingPage() {
                       {/* Lead Procurement Item */}
                       <div
                         className="magazine-lead-card"
-                        style={{ padding: '14px', background: 'var(--bg-surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}
+                        style={{ padding: 0, overflow: 'hidden', background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
                         onClick={() => handleItemClick(procurementSection.lead)}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#8b5cf6', color: 'white' }}>
-                            {procurementSection.lead.kind === 'plan' ? 'KHLCNT' : 'TBMT'}
-                          </span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>● {procurementSection.lead.status || 'Đang mở'}</span>
+                        {/* Visual Header Banner */}
+                        <div style={{
+                          height: 95,
+                          background: 'linear-gradient(135deg, #3b0764 0%, #6b21a8 60%, #9333ea 100%)',
+                          padding: '10px 12px',
+                          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                          color: '#fff', position: 'relative'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.5, padding: '2px 7px', borderRadius: 5, background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                              {procurementSection.lead.kind === 'plan' ? '📋 KHLCNT' : '🛍️ GÓI THẦU (TBMT)'}
+                            </span>
+                            <span style={{ fontSize: 10.5, fontWeight: 800, background: 'rgba(16,185,129,0.3)', border: '1px solid rgba(16,185,129,0.6)', padding: '2px 7px', borderRadius: 10, color: '#34d399' }}>
+                              ● {procurementSection.lead.status || 'Đang mở'}
+                            </span>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 16, fontWeight: 900, textShadow: '0 2px 4px rgba(0,0,0,0.4)', color: '#fef08a' }}>
+                              {procurementSection.lead.amount ? `💰 ${procurementSection.lead.amount}` : '🏛️ e-GP Quốc gia'}
+                            </div>
+                            <div style={{ fontSize: 10, opacity: 0.9, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {procurementSection.lead.procuring_entity || 'Hệ thống Đấu thầu Quốc gia e-GP'}
+                            </div>
+                          </div>
                         </div>
-                        <h4 className="magazine-lead-title" style={{ fontSize: 13.5 }}>{procurementSection.lead.title}</h4>
-                        <p className="magazine-lead-excerpt" style={{ color: 'var(--text-muted)' }}>
-                          🏛️ {procurementSection.lead.procuring_entity || 'Hệ thống Đấu thầu Quốc gia e-GP'}
-                        </p>
-                        <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6 }}>
-                          📋 {formatRelativeTime(procurementSection.lead.publish_date, lang)}
-                        </span>
+
+                        <div className="magazine-lead-info" style={{ padding: '10px 12px' }}>
+                          <h4 className="magazine-lead-title" style={{ fontSize: 13, lineHeight: 1.35, WebkitLineClamp: 2 }}>
+                            {procurementSection.lead.title}
+                          </h4>
+                          <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                            📋 Đăng tải: {formatRelativeTime(procurementSection.lead.publish_date, lang)}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Secondary Procurement Item */}
                       {procurementSection.sub && (
                         <div
                           className="magazine-lead-card"
-                          style={{ padding: '14px', background: 'var(--bg-surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}
+                          style={{ padding: 0, overflow: 'hidden', background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
                           onClick={() => handleItemClick(procurementSection.sub)}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#8b5cf6', color: 'white' }}>
-                              {procurementSection.sub.kind === 'plan' ? 'KHLCNT' : 'TBMT'}
-                            </span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>● {procurementSection.sub.status || 'Đang mở'}</span>
+                          <div style={{
+                            height: 95,
+                            background: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 60%, #6366f1 100%)',
+                            padding: '10px 12px',
+                            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                            color: '#fff', position: 'relative'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.5, padding: '2px 7px', borderRadius: 5, background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                {procurementSection.sub.kind === 'plan' ? '📋 KHLCNT' : '🛍️ GÓI THẦU (TBMT)'}
+                              </span>
+                              <span style={{ fontSize: 10.5, fontWeight: 800, background: 'rgba(16,185,129,0.3)', border: '1px solid rgba(16,185,129,0.6)', padding: '2px 7px', borderRadius: 10, color: '#34d399' }}>
+                                ● {procurementSection.sub.status || 'Đang mở'}
+                              </span>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 16, fontWeight: 900, textShadow: '0 2px 4px rgba(0,0,0,0.4)', color: '#fef08a' }}>
+                                {procurementSection.sub.amount ? `💰 ${procurementSection.sub.amount}` : '🏛️ e-GP'}
+                              </div>
+                              <div style={{ fontSize: 10, opacity: 0.9, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {procurementSection.sub.procuring_entity || 'e-GP'}
+                              </div>
+                            </div>
                           </div>
-                          <h4 className="magazine-lead-title" style={{ fontSize: 13.5 }}>{procurementSection.sub.title}</h4>
-                          <p className="magazine-lead-excerpt" style={{ color: 'var(--text-muted)' }}>
-                            🏛️ {procurementSection.sub.procuring_entity || 'e-GP'}
-                          </p>
-                          <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6 }}>
-                            📋 {formatRelativeTime(procurementSection.sub.publish_date, lang)}
-                          </span>
+
+                          <div className="magazine-lead-info" style={{ padding: '10px 12px' }}>
+                            <h4 className="magazine-lead-title" style={{ fontSize: 13, lineHeight: 1.35, WebkitLineClamp: 2 }}>
+                              {procurementSection.sub.title}
+                            </h4>
+                            <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                              📋 Đăng tải: {formatRelativeTime(procurementSection.sub.publish_date, lang)}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1036,10 +1683,82 @@ export default function TrendingPage() {
                     </ul>
                   </div>
                 </div>
-              )}
+              ) : infraSection.lead ? (
+                /* Thay thế bằng chuyên mục Hạ tầng & Xây dựng từ Báo chí nếu chưa mua gói Đấu thầu */
+                <div className="magazine-category-block">
+                  <div className="magazine-category-header">
+                    <h3 className="magazine-category-main-title" style={{ color: '#8b5cf6', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <HardHat size={18} /> Hạ Tầng & Xây Dựng
+                    </h3>
+                    <div className="magazine-subtabs">
+                      {infraTabs.map((tab, i) => (
+                        <button
+                          key={tab}
+                          className={`magazine-subtab-btn ${infraSubTab === i ? 'active' : ''}`}
+                          onClick={() => setInfraSubTab(i)}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* ── CHUYÊN MỤC 3: DỰ ÁN ODA (Clean Professional ODA Project Cards - No Stock Photos) ── */}
-              {odaSection.lead && (
+                  <div className="magazine-category-body">
+                    <div className="magazine-lead-row">
+                      <div className="magazine-lead-card" onClick={() => handleItemClick(infraSection.lead)}>
+                        <ArticleMediaPlaceholder
+                          imageUrl={infraSection.lead.image_url}
+                          alt={infraSection.lead.titleVi || infraSection.lead.title}
+                          category="Hạ Tầng"
+                          height={130}
+                        />
+                        <div className="magazine-lead-info">
+                          <h4 className="magazine-lead-title">{infraSection.lead.titleVi || infraSection.lead.title}</h4>
+                          <p className="magazine-lead-excerpt">{infraSection.lead.excerptVi || infraSection.lead.excerpt || (infraSection.lead.titleVi || infraSection.lead.title)}</p>
+                          <span className="magazine-item-time">
+                            <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                            {formatRelativeTime(infraSection.lead.published_at, lang)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {infraSection.sub && (
+                        <div className="magazine-lead-card" onClick={() => handleItemClick(infraSection.sub)}>
+                          <ArticleMediaPlaceholder
+                            imageUrl={infraSection.sub.image_url}
+                            alt={infraSection.sub.titleVi || infraSection.sub.title}
+                            category="Xây Dựng"
+                            height={130}
+                          />
+                          <div className="magazine-lead-info">
+                            <h4 className="magazine-lead-title">{infraSection.sub.titleVi || infraSection.sub.title}</h4>
+                            <p className="magazine-lead-excerpt">{infraSection.sub.excerptVi || infraSection.sub.excerpt || (infraSection.sub.titleVi || infraSection.sub.title)}</p>
+                            <span className="magazine-item-time">
+                              <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                              {formatRelativeTime(infraSection.sub.published_at, lang)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <ul className="magazine-bullet-list">
+                      {infraSection.bullets.map((b, idx) => (
+                        <li key={b.id || idx} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
+                          <span className="bullet-dot" style={{ color: '#8b5cf6' }}>•</span>
+                          <span className="bullet-text">{b.titleVi || b.title}</span>
+                          <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                            {formatRelativeTime(b.published_at || b.date, lang)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* ── CHUYÊN MỤC 3: DỰ ÁN ODA (HOẶC CHÍNH SÁCH VĨ MÔ NẾU CHƯA MUA GÓI) ── */}
+              {(canAdb || canWb) && odaSection.lead ? (
                 <div className="magazine-category-block">
                   <div className="magazine-category-header">
                     <h3 className="magazine-category-main-title oda-theme">
@@ -1063,48 +1782,95 @@ export default function TrendingPage() {
                       {/* Lead ODA Project Card */}
                       <div
                         className="magazine-lead-card"
-                        style={{ padding: '14px', background: 'var(--bg-surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}
+                        style={{ padding: 0, overflow: 'hidden', background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
                         onClick={() => handleItemClick(odaSection.lead)}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#059669', color: 'white' }}>
-                            💰 {odaSection.lead.amount || 'Vốn ODA'}
-                          </span>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-600)' }}>
-                            🌍 {odaSection.lead.country || 'Việt Nam'}
+                        {/* Visual Header Banner */}
+                        <div style={{
+                          height: 95,
+                          background: (odaSection.lead.source_org === 'adb' || odaSection.lead.source === 'adb')
+                            ? 'linear-gradient(135deg, #064e3b 0%, #047857 60%, #10b981 100%)'
+                            : 'linear-gradient(135deg, #082f49 0%, #0369a1 60%, #0ea5e9 100%)',
+                          padding: '10px 12px',
+                          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                          color: '#fff', position: 'relative'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.5, padding: '2px 7px', borderRadius: 5, background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                              {(odaSection.lead.source_org === 'adb' || odaSection.lead.source === 'adb') ? '🏦 ADB (CHÂU Á)' : '🌍 WORLD BANK'}
+                            </span>
+                            <span style={{ fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12 }}>
+                              📍 {odaSection.lead.country || 'Quốc tế'}
+                            </span>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 16, fontWeight: 900, textShadow: '0 2px 4px rgba(0,0,0,0.4)', color: '#fef08a' }}>
+                              💵 {odaSection.lead.amount || 'Khoản vay ưu đãi'}
+                            </div>
+                            <div style={{ fontSize: 10, opacity: 0.9, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {odaSection.lead.sector || 'Hạ tầng phát triển'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="magazine-lead-info" style={{ padding: '10px 12px' }}>
+                          <h4 className="magazine-lead-title" style={{ fontSize: 13, lineHeight: 1.35, WebkitLineClamp: 2 }}>
+                            {odaSection.lead.titleVi || odaSection.lead.title}
+                          </h4>
+                          <p className="magazine-lead-excerpt" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>
+                            {odaSection.lead.ai_summary || odaSection.lead.excerpt || (odaSection.lead.sector ? `Lĩnh vực: ${odaSection.lead.sector}` : (odaSection.lead.titleVi || odaSection.lead.title))}
+                          </p>
+                          <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                            🏦 {(odaSection.lead.source_org === 'adb' || odaSection.lead.source === 'adb') ? 'ADB' : 'World Bank'} • {formatRelativeTime(odaSection.lead.approval_date, lang)}
                           </span>
                         </div>
-                        <h4 className="magazine-lead-title" style={{ fontSize: 13.5 }}>{odaSection.lead.titleVi || odaSection.lead.title}</h4>
-                        <p className="magazine-lead-excerpt" style={{ color: 'var(--text-secondary)' }}>
-                          {odaSection.lead.ai_summary || odaSection.lead.excerpt || (odaSection.lead.sector ? `Lĩnh vực: ${odaSection.lead.sector}` : odaSection.lead.title)}
-                        </p>
-                        <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6 }}>
-                          🏦 {odaSection.lead.source_org === 'adb' || odaSection.lead.source === 'adb' ? 'ADB Châu Á' : 'World Bank'} • {formatRelativeTime(odaSection.lead.approval_date, lang)}
-                        </span>
                       </div>
 
                       {/* Secondary ODA Project Card */}
                       {odaSection.sub && (
                         <div
                           className="magazine-lead-card"
-                          style={{ padding: '14px', background: 'var(--bg-surface-2)', borderRadius: 10, border: '1px solid var(--border-subtle)' }}
+                          style={{ padding: 0, overflow: 'hidden', background: 'var(--bg-surface)', borderRadius: 10, border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
                           onClick={() => handleItemClick(odaSection.sub)}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: '#059669', color: 'white' }}>
-                              💰 {odaSection.sub.amount || 'Vốn ODA'}
-                            </span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-600)' }}>
-                              🌍 {odaSection.sub.country || 'Việt Nam'}
+                          <div style={{
+                            height: 95,
+                            background: (odaSection.sub.source_org === 'adb' || odaSection.sub.source === 'adb')
+                              ? 'linear-gradient(135deg, #064e3b 0%, #047857 60%, #10b981 100%)'
+                              : 'linear-gradient(135deg, #082f49 0%, #0369a1 60%, #0ea5e9 100%)',
+                            padding: '10px 12px',
+                            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                            color: '#fff', position: 'relative'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.5, padding: '2px 7px', borderRadius: 5, background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                {(odaSection.sub.source_org === 'adb' || odaSection.sub.source === 'adb') ? '🏦 ADB (CHÂU Á)' : '🌍 WORLD BANK'}
+                              </span>
+                              <span style={{ fontSize: 10.5, fontWeight: 800, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12 }}>
+                                📍 {odaSection.sub.country || 'Quốc tế'}
+                              </span>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 16, fontWeight: 900, textShadow: '0 2px 4px rgba(0,0,0,0.4)', color: '#fef08a' }}>
+                                💵 {odaSection.sub.amount || 'Khoản vay ưu đãi'}
+                              </div>
+                              <div style={{ fontSize: 10, opacity: 0.9, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {odaSection.sub.sector || 'Hạ tầng phát triển'}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="magazine-lead-info" style={{ padding: '10px 12px' }}>
+                            <h4 className="magazine-lead-title" style={{ fontSize: 13, lineHeight: 1.35, WebkitLineClamp: 2 }}>
+                              {odaSection.sub.titleVi || odaSection.sub.title}
+                            </h4>
+                            <p className="magazine-lead-excerpt" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>
+                              {odaSection.sub.ai_summary || odaSection.sub.excerpt || (odaSection.sub.sector ? `Lĩnh vực: ${odaSection.sub.sector}` : (odaSection.sub.titleVi || odaSection.sub.title))}
+                            </p>
+                            <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                              🏦 {(odaSection.sub.source_org === 'adb' || odaSection.sub.source === 'adb') ? 'ADB' : 'World Bank'} • {formatRelativeTime(odaSection.sub.approval_date, lang)}
                             </span>
                           </div>
-                          <h4 className="magazine-lead-title" style={{ fontSize: 13.5 }}>{odaSection.sub.titleVi || odaSection.sub.title}</h4>
-                          <p className="magazine-lead-excerpt" style={{ color: 'var(--text-secondary)' }}>
-                            {odaSection.sub.ai_summary || odaSection.sub.excerpt || (odaSection.sub.sector ? `Lĩnh vực: ${odaSection.sub.sector}` : odaSection.sub.title)}
-                          </p>
-                          <span className="magazine-item-time" style={{ marginTop: 'auto', paddingTop: 6 }}>
-                            🏦 {odaSection.sub.source_org === 'adb' || odaSection.sub.source === 'adb' ? 'ADB Châu Á' : 'World Bank'} • {formatRelativeTime(odaSection.sub.approval_date, lang)}
-                          </span>
                         </div>
                       )}
                     </div>
@@ -1115,7 +1881,155 @@ export default function TrendingPage() {
                         <li key={b.id || idx} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
                           <span className="bullet-dot" style={{ color: '#059669' }}>•</span>
                           <span className="bullet-text">{b.titleVi || b.title}</span>
-                          <span className="bullet-comments">🌍 {b.country || (b.source_org === 'adb' || b.source === 'adb' ? 'ADB' : 'World Bank')}</span>
+                          <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                            🌍 {b.country || (b.source_org === 'adb' || b.source === 'adb' ? 'ADB' : 'World Bank')}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : macroSection.lead ? (
+                /* Thay thế bằng chuyên mục Chính sách & Vĩ mô từ Báo chí nếu chưa mua gói ODA */
+                <div className="magazine-category-block">
+                  <div className="magazine-category-header">
+                    <h3 className="magazine-category-main-title" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Landmark size={18} /> Chính Sách & Kinh Tế Vĩ Mô
+                    </h3>
+                    <div className="magazine-subtabs">
+                      {macroTabs.map((tab, i) => (
+                        <button
+                          key={tab}
+                          className={`magazine-subtab-btn ${macroSubTab === i ? 'active' : ''}`}
+                          onClick={() => setMacroSubTab(i)}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="magazine-category-body">
+                    <div className="magazine-lead-row">
+                      <div className="magazine-lead-card" onClick={() => handleItemClick(macroSection.lead)}>
+                        <ArticleMediaPlaceholder
+                          imageUrl={macroSection.lead.image_url}
+                          alt={macroSection.lead.titleVi || macroSection.lead.title}
+                          category="Chính Sách"
+                          height={130}
+                        />
+                        <div className="magazine-lead-info">
+                          <h4 className="magazine-lead-title">{macroSection.lead.titleVi || macroSection.lead.title}</h4>
+                          <p className="magazine-lead-excerpt">{macroSection.lead.excerptVi || macroSection.lead.excerpt || (macroSection.lead.titleVi || macroSection.lead.title)}</p>
+                          <span className="magazine-item-time">
+                            <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                            {formatRelativeTime(macroSection.lead.published_at, lang)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {macroSection.sub && (
+                        <div className="magazine-lead-card" onClick={() => handleItemClick(macroSection.sub)}>
+                          <ArticleMediaPlaceholder
+                            imageUrl={macroSection.sub.image_url}
+                            alt={macroSection.sub.titleVi || macroSection.sub.title}
+                            category="Kinh Tế Vĩ Mô"
+                            height={130}
+                          />
+                          <div className="magazine-lead-info">
+                            <h4 className="magazine-lead-title">{macroSection.sub.titleVi || macroSection.sub.title}</h4>
+                            <p className="magazine-lead-excerpt">{macroSection.sub.excerptVi || macroSection.sub.excerpt || (macroSection.sub.titleVi || macroSection.sub.title)}</p>
+                            <span className="magazine-item-time">
+                              <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                              {formatRelativeTime(macroSection.sub.published_at, lang)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <ul className="magazine-bullet-list">
+                      {macroSection.bullets.map((b, idx) => (
+                        <li key={b.id || idx} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
+                          <span className="bullet-dot" style={{ color: '#059669' }}>•</span>
+                          <span className="bullet-text">{b.titleVi || b.title}</span>
+                          <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                            {formatRelativeTime(b.published_at || b.date, lang)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* ── CHUYÊN MỤC 4: HẠ TẦNG & QUY HOẠCH ĐÔ THỊ (Lấp đầy chiều cao cân bằng tuyệt đối khi user có full gói) ── */}
+              {canProc && (canAdb || canWb) && infraSection.lead && (
+                <div className="magazine-category-block">
+                  <div className="magazine-category-header">
+                    <h3 className="magazine-category-main-title" style={{ color: '#0284c7', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <HardHat size={18} /> Hạ Tầng & Quy Hoạch Công Trình
+                    </h3>
+                    <div className="magazine-subtabs">
+                      {infraTabs.map((tab, i) => (
+                        <button
+                          key={tab}
+                          className={`magazine-subtab-btn ${infraSubTab === i ? 'active' : ''}`}
+                          onClick={() => setInfraSubTab(i)}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="magazine-category-body">
+                    <div className="magazine-lead-row">
+                      <div className="magazine-lead-card" onClick={() => handleItemClick(infraSection.lead)}>
+                        <ArticleMediaPlaceholder
+                          imageUrl={infraSection.lead.image_url}
+                          alt={infraSection.lead.titleVi || infraSection.lead.title}
+                          category="Hạ Tầng"
+                          height={130}
+                        />
+                        <div className="magazine-lead-info">
+                          <h4 className="magazine-lead-title">{infraSection.lead.titleVi || infraSection.lead.title}</h4>
+                          <p className="magazine-lead-excerpt">{infraSection.lead.excerptVi || infraSection.lead.excerpt || (infraSection.lead.titleVi || infraSection.lead.title)}</p>
+                          <span className="magazine-item-time">
+                            <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                            {formatRelativeTime(infraSection.lead.published_at, lang)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {infraSection.sub && (
+                        <div className="magazine-lead-card" onClick={() => handleItemClick(infraSection.sub)}>
+                          <ArticleMediaPlaceholder
+                            imageUrl={infraSection.sub.image_url}
+                            alt={infraSection.sub.titleVi || infraSection.sub.title}
+                            category="Quy Hoạch"
+                            height={130}
+                          />
+                          <div className="magazine-lead-info">
+                            <h4 className="magazine-lead-title">{infraSection.sub.titleVi || infraSection.sub.title}</h4>
+                            <p className="magazine-lead-excerpt">{infraSection.sub.excerptVi || infraSection.sub.excerpt || (infraSection.sub.titleVi || infraSection.sub.title)}</p>
+                            <span className="magazine-item-time">
+                              <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                              {formatRelativeTime(infraSection.sub.published_at, lang)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <ul className="magazine-bullet-list">
+                      {infraSection.bullets.map((b, idx) => (
+                        <li key={b.id || idx} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
+                          <span className="bullet-dot" style={{ color: '#0284c7' }}>•</span>
+                          <span className="bullet-text">{b.titleVi || b.title}</span>
+                          <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                            {formatRelativeTime(b.published_at || b.date, lang)}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -1124,7 +2038,819 @@ export default function TrendingPage() {
               )}
             </div>
           </div>
+
+          {/* ── SECTION 4: FEATURE HUB TRÀN RỘNG (Bố Cục 3 Phần - Phong Cách Image 3) ── */}
+          {featureSection.lead && (
+            <section className="magazine-feature-hub">
+              <div className="column-section-title" style={{ marginBottom: 16 }}>
+                <span className="section-title-line" />
+                <h3 className="section-title-text">
+                  <HardHat size={17} style={{ color: '#0284c7' }} />
+                  Hạ Tầng Giao Thông & Công Trình Trọng Điểm
+                </h3>
+              </div>
+
+              <div className="feature-hub-grid">
+                {/* Phần 1 (46%): Thẻ Tin Lớn Nhất (Lead Feature) */}
+                <div
+                  className="feature-lead-card"
+                  onClick={() => handleItemClick(featureSection.lead)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <ArticleMediaPlaceholder
+                    imageUrl={featureSection.lead.image_url}
+                    alt={featureSection.lead.titleVi || featureSection.lead.title}
+                    category="Hạ Tầng Quốc Gia"
+                    height={230}
+                  />
+                  <h3 style={{
+                    fontSize: 17, fontWeight: 800, lineHeight: 1.4, margin: '12px 0 6px 0',
+                    color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                  }}>
+                    {featureSection.lead.titleVi || featureSection.lead.title}
+                  </h3>
+                  <p style={{
+                    fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 0 8px 0',
+                    display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                  }}>
+                    {featureSection.lead.excerptVi || featureSection.lead.excerpt || (featureSection.lead.titleVi || featureSection.lead.title)}
+                  </p>
+                  <span style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {formatRelativeTime(featureSection.lead.published_at, lang)} · {featureSection.lead.source_name || 'Báo Giao Thông'}
+                  </span>
+                </div>
+
+                {/* Phần 2 (26%): 2 Bài Xếp Tầng Ở Giữa */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {featureSection.middle.map((midItem, mIdx) => (
+                    <div
+                      key={midItem.id || `mid-${mIdx}`}
+                      onClick={() => handleItemClick(midItem)}
+                      style={{ cursor: 'pointer', paddingBottom: 12, borderBottom: mIdx === 0 ? '1px solid var(--border-subtle)' : 'none' }}
+                    >
+                      <ArticleMediaPlaceholder
+                        imageUrl={midItem.image_url}
+                        alt={midItem.titleVi || midItem.title}
+                        category="Dự Án"
+                        height={115}
+                      />
+                      <h4 style={{
+                        fontSize: 13.5, fontWeight: 700, lineHeight: 1.38, margin: '8px 0 4px 0',
+                        color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                      }}>
+                        {midItem.titleVi || midItem.title}
+                      </h4>
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {formatRelativeTime(midItem.published_at, lang)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Phần 3 (28%): 4 Tin Vắn Danh Sách Bên Phải (Ảnh nhỏ + Tiêu đề) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {featureSection.right.map((rItem, rIdx) => (
+                    <div
+                      key={rItem.id || `right-${rIdx}`}
+                      onClick={() => handleItemClick(rItem)}
+                      style={{
+                        display: 'grid', gridTemplateColumns: '64px 1fr', gap: 10,
+                        alignItems: 'center', cursor: 'pointer', paddingBottom: 10,
+                        borderBottom: '1px solid var(--border-subtle)'
+                      }}
+                    >
+                      <div style={{ width: 64, height: 46, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
+                        {rItem.image_url ? (
+                          <img src={rItem.image_url} alt={rItem.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Newspaper size={14} style={{ color: 'var(--text-muted)' }} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h5 style={{
+                          fontSize: 12, fontWeight: 700, lineHeight: 1.35, margin: '0 0 2px 0',
+                          color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                        }}>
+                          {rItem.titleVi || rItem.title}
+                        </h5>
+                        <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                          {formatRelativeTime(rItem.published_at, lang)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── SECTION 5: 2 CHUYÊN MỤC SONG SONG ĐÁY TRANG (Phong Cách Image 4 & 5) ── */}
+          <section className="magazine-bottom-duo">
+            {/* Cột 1: Năng Lượng & Môi Trường (Net-Zero) */}
+            {energySection.lead && (
+              <div className="magazine-category-block" style={{ margin: 0 }}>
+                <div className="magazine-category-header">
+                  <h3 className="magazine-category-main-title" style={{ color: '#059669' }}>
+                    🌱 Năng Lượng & Chuyển Dịch Xanh (Net-Zero)
+                  </h3>
+                </div>
+                <div className="magazine-category-body">
+                  <div
+                    className="magazine-lead-card"
+                    onClick={() => handleItemClick(energySection.lead)}
+                    style={{ cursor: 'pointer', marginBottom: 12 }}
+                  >
+                    <ArticleMediaPlaceholder
+                      imageUrl={energySection.lead.image_url}
+                      alt={energySection.lead.titleVi || energySection.lead.title}
+                      category="Năng Lượng Tái Tạo"
+                      height={140}
+                    />
+                    <div className="magazine-lead-info" style={{ marginTop: 8 }}>
+                      <h4 className="magazine-lead-title">{energySection.lead.titleVi || energySection.lead.title}</h4>
+                      <p className="magazine-lead-excerpt">{energySection.lead.excerptVi || energySection.lead.excerpt || (energySection.lead.titleVi || energySection.lead.title)}</p>
+                      <span className="magazine-item-time">
+                        <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                        {formatRelativeTime(energySection.lead.published_at, lang)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ul className="magazine-bullet-list">
+                    {energySection.bullets.map((b, idx) => (
+                      <li key={b.id || `energy-b-${idx}`} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
+                        <span className="bullet-dot" style={{ color: '#059669' }}>•</span>
+                        <span className="bullet-text">{b.titleVi || b.title}</span>
+                        <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                          {formatRelativeTime(b.published_at, lang)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Cột 2: Bất Động Sản Công Nghiệp & Khu Kinh Tế */}
+            {realEstateSection.lead && (
+              <div className="magazine-category-block" style={{ margin: 0 }}>
+                <div className="magazine-category-header">
+                  <h3 className="magazine-category-main-title" style={{ color: '#2563eb' }}>
+                    🏢 Bất Động Sản Công Nghiệp & FDI
+                  </h3>
+                </div>
+                <div className="magazine-category-body">
+                  <div
+                    className="magazine-lead-card"
+                    onClick={() => handleItemClick(realEstateSection.lead)}
+                    style={{ cursor: 'pointer', marginBottom: 12 }}
+                  >
+                    <ArticleMediaPlaceholder
+                      imageUrl={realEstateSection.lead.image_url}
+                      alt={realEstateSection.lead.titleVi || realEstateSection.lead.title}
+                      category="Khu Công Nghiệp & FDI"
+                      height={140}
+                    />
+                    <div className="magazine-lead-info" style={{ marginTop: 8 }}>
+                      <h4 className="magazine-lead-title">{realEstateSection.lead.titleVi || realEstateSection.lead.title}</h4>
+                      <p className="magazine-lead-excerpt">{realEstateSection.lead.excerptVi || realEstateSection.lead.excerpt || (realEstateSection.lead.titleVi || realEstateSection.lead.title)}</p>
+                      <span className="magazine-item-time">
+                        <Clock size={12} style={{ display: 'inline', marginRight: 4 }} />
+                        {formatRelativeTime(realEstateSection.lead.published_at, lang)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ul className="magazine-bullet-list">
+                    {realEstateSection.bullets.map((b, idx) => (
+                      <li key={b.id || `re-b-${idx}`} className="magazine-bullet-item" onClick={() => handleItemClick(b)}>
+                        <span className="bullet-dot" style={{ color: '#2563eb' }}>•</span>
+                        <span className="bullet-text">{b.titleVi || b.title}</span>
+                        <span className="bullet-comments" style={{ color: 'var(--text-muted)' }}>
+                          {formatRelativeTime(b.published_at, lang)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </section>
         </>
+      ) : (
+        /* ── CHẾ ĐỘ XEM LỌC RIÊNG CHO TỪNG NGUỒN (ADB, World Bank, Đấu thầu, Báo chí) ── */
+        <div className="trending-filtered-source-view" style={{ marginTop: 20 }}>
+          {/* 1. TOP HEADER & SEARCH BAR */}
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between',
+            gap: 16, padding: '16px 20px', background: 'var(--bg-surface)',
+            borderRadius: 16, border: '1px solid var(--border)', marginBottom: 24,
+            boxShadow: '0 4px 16px -2px rgba(0,0,0,0.04)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setActiveSourceFilter('all')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+                  padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  color: 'var(--text-primary)', cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span>Tạp chí Xu Hướng</span>
+              </button>
+              <div style={{ height: 20, width: 1, background: 'var(--border)' }} />
+              <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {activeSourceFilter === 'keywords' && <><span>🎯</span> Bản Tin Theo Từ Khóa Đã Lưu ({userKeywords.length} từ khóa)</>}
+                {activeSourceFilter === 'adb' && <><span>🏦</span> Dự Án ODA Ngân Hàng Phát Triển Châu Á (ADB)</>}
+                {activeSourceFilter === 'worldbank' && <><span>🌍</span> Dự Án ODA Ngân Hàng Thế Giới (World Bank)</>}
+                {activeSourceFilter === 'gov' && <><span>📋</span> Gói Thầu & KHLCNT Đấu Thầu Quốc Gia (e-GP)</>}
+                {activeSourceFilter === 'press' && <><span>📰</span> Toàn Bộ Bản Tin Báo Chí & Phân Tích Thị Trường</>}
+                <span style={{
+                  fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
+                  background: 'var(--brand-50)', color: 'var(--brand-600)', border: '1px solid var(--brand-200)'
+                }}>
+                  {filteredRemainingItems.length + (heroItem ? 1 : 0)} mục
+                </span>
+              </h3>
+            </div>
+
+            {/* Search Input Box */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+              borderRadius: 10, padding: '7px 14px', minWidth: 280
+            }}>
+              <Search size={15} style={{ color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                value={filterSearch}
+                onChange={(e) => {
+                  setFilterSearch(e.target.value);
+                  setFilterPage(1);
+                }}
+                placeholder={
+                  activeSourceFilter === 'keywords' ? 'Tìm trong bản tin theo từ khóa...' :
+                  activeSourceFilter === 'gov' ? 'Tìm gói thầu, bên mời thầu...' :
+                  activeSourceFilter === 'adb' || activeSourceFilter === 'worldbank' ? 'Tìm dự án ODA, quốc gia, lĩnh vực...' :
+                  'Tìm bài báo theo tiêu đề, chủ đề...'
+                }
+                style={{
+                  border: 'none', background: 'transparent', outline: 'none',
+                  fontSize: 13, color: 'var(--text-primary)', width: '100%'
+                }}
+              />
+              {filterSearch && (
+                <button
+                  onClick={() => setFilterSearch('')}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Dải Tag Từ Khóa Đã Lưu khi người dùng chọn lọc theo từ khóa */}
+          {activeSourceFilter === 'keywords' && userKeywords.length > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+              padding: '12px 18px', background: 'var(--bg-surface)', borderRadius: 14,
+              border: '1px solid var(--border-subtle)', marginBottom: 20,
+              boxShadow: '0 2px 10px -2px rgba(0,0,0,0.03)'
+            }}>
+              <span style={{ fontSize: 12.5, fontWeight: 750, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <Flame size={14} style={{ color: '#f59e0b' }} /> Từ khóa theo dõi:
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedKeywordTag('all');
+                  setFilterPage(1);
+                }}
+                style={{
+                  fontSize: 12, fontWeight: 750, padding: '4px 12px', borderRadius: 20,
+                  background: selectedKeywordTag === 'all' ? '#f59e0b' : 'var(--bg-surface-2)',
+                  color: selectedKeywordTag === 'all' ? '#fff' : 'var(--text-primary)',
+                  border: selectedKeywordTag === 'all' ? 'none' : '1px solid var(--border)',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+              >
+                Tất cả ({userKeywords.length})
+              </button>
+              {userKeywords.map(k => {
+                const term = k.term || k.display_term;
+                const isSelected = selectedKeywordTag === term;
+                return (
+                  <button
+                    key={k.id || term}
+                    onClick={() => {
+                      setSelectedKeywordTag(isSelected ? 'all' : term);
+                      setFilterPage(1);
+                    }}
+                    style={{
+                      fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
+                      background: isSelected ? '#f59e0b' : 'var(--bg-surface-2)',
+                      color: isSelected ? '#fff' : 'var(--text-secondary)',
+                      border: isSelected ? '1px solid #f59e0b' : '1px solid var(--border)',
+                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <span>#{k.display_term || term}</span>
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => nav('/keywords')}
+                style={{
+                  fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
+                  background: 'none', color: 'var(--brand-600)', border: '1px dashed var(--brand-400)',
+                  cursor: 'pointer', marginLeft: 'auto'
+                }}
+              >
+                + Quản lý từ khóa
+              </button>
+            </div>
+          )}
+
+          {/* Trạng thái chưa lưu từ khóa */}
+          {activeSourceFilter === 'keywords' && userKeywords.length === 0 && (
+            <div style={{
+              padding: '44px 24px', textAlign: 'center', background: 'var(--bg-surface)',
+              borderRadius: 18, border: '1px dashed var(--border)', marginBottom: 28,
+              boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)'
+            }}>
+              <Sparkles size={44} style={{ color: '#f59e0b', margin: '0 auto 14px' }} />
+              <h3 style={{ fontSize: 17, fontWeight: 800, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>
+                Bạn chưa lưu từ khóa theo dõi nào
+              </h3>
+              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', maxWidth: 480, margin: '0 auto 20px', lineHeight: 1.5 }}>
+                Hãy thêm các từ khóa về công trình, dự án ODA hoặc lĩnh vực bạn quan tâm (ví dụ: cao tốc, đường sắt, điện gió, World Bank...) để hệ thống tự động lọc bản tin riêng cho bạn.
+              </p>
+              <button
+                onClick={() => nav('/keywords')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '10px 22px', borderRadius: 10,
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff',
+                  border: 'none', fontWeight: 750, fontSize: 13.5, cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)'
+                }}
+              >
+                <span>+ Thêm từ khóa theo dõi ngay</span>
+                <ArrowUpRight size={15} />
+              </button>
+            </div>
+          )}
+
+          {/* 2. HERO SHOWCASE CARD (Dự án / Tin tiêu điểm số 1) */}
+          {heroItem && !filterSearch && filterPage === 1 && (
+            <div
+              className="trending-hero-section"
+              onClick={() => handleItemClick(heroItem)}
+              style={{
+                borderRadius: 18, border: '1px solid var(--border)', overflow: 'hidden',
+                background: 'var(--bg-surface)', boxShadow: '0 8px 30px -4px rgba(0,0,0,0.08)',
+                marginBottom: 32, cursor: 'pointer'
+              }}
+            >
+              <div className="trending-hero-grid">
+                {heroItem.image_url ? (
+                  <div className="trending-hero-media" style={{ minHeight: 300 }}>
+                    <img
+                      src={heroItem.image_url}
+                      alt={heroItem.title}
+                      className="trending-hero-img"
+                      loading="eager"
+                    />
+                    <div className="trending-hero-badge-overlay">
+                      <span className="trending-pulse-badge" style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)', color: '#fff' }}>
+                        🔥 TIÊU ĐIỂM {heroItem.source_name ? heroItem.source_name.toUpperCase() : 'NGUỒN'}
+                      </span>
+                      <span className="trending-view-count">👁️ 1.8k lượt đọc</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="trending-hero-media" style={{
+                    minHeight: 300,
+                    background: heroItem.source === 'gov'
+                      ? 'linear-gradient(135deg, #1e0a3c 0%, #4c1d95 50%, #7e22ce 100%)'
+                      : (heroItem.source === 'adb' || heroItem.source_org === 'adb')
+                      ? 'linear-gradient(135deg, #022c22 0%, #065f46 50%, #059669 100%)'
+                      : 'linear-gradient(135deg, #082f49 0%, #0369a1 50%, #0ea5e9 100%)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    padding: 30, color: '#fff', textAlign: 'center', position: 'relative'
+                  }}>
+                    <div style={{
+                      position: 'absolute', top: 16, left: 16,
+                      fontSize: 11, fontWeight: 900, letterSpacing: '0.5px',
+                      padding: '4px 10px', borderRadius: 8, background: 'rgba(0,0,0,0.4)',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      🔥 TIÊU ĐIỂM {heroItem.source_name ? heroItem.source_name.toUpperCase() : 'QUỐC TẾ'}
+                    </div>
+                    <div style={{ fontSize: 52, marginBottom: 14, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}>
+                      {heroItem.source === 'gov' ? '📋' : (heroItem.source === 'adb' || heroItem.source_org === 'adb') ? '🏦' : '🌍'}
+                    </div>
+                    <div style={{ fontSize: 24, fontWeight: 900, color: '#fef08a', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                      {heroItem.amount ? `💰 ${heroItem.amount}` : heroItem.source_name}
+                    </div>
+                    {heroItem.country && (
+                      <div style={{ fontSize: 13.5, fontWeight: 700, opacity: 0.95, marginTop: 8, background: 'rgba(255,255,255,0.15)', padding: '4px 14px', borderRadius: 20 }}>
+                        📍 {heroItem.country}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="trending-hero-content" style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column' }}>
+                  <div className="trending-hero-meta-top" style={{ marginBottom: 12 }}>
+                    <span className="trending-tag-pill" style={{ background: 'var(--brand-50)', color: 'var(--brand-600)', border: '1px solid var(--brand-200)' }}>
+                      {heroItem.source_name || 'Nguồn dữ liệu'}
+                    </span>
+                    {heroItem.country && (
+                      <span className="trending-category-tag" style={{ background: 'var(--bg-surface-2)', color: 'var(--text-secondary)' }}>
+                        📍 {heroItem.country}
+                      </span>
+                    )}
+                    {heroItem.category && (
+                      <span className="trending-category-tag">
+                        {heroItem.category}
+                      </span>
+                    )}
+                    <span className="trending-time-tag">
+                      <Clock size={12} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
+                    </span>
+                  </div>
+
+                  <h2 className="trending-hero-title" style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.35, marginBottom: 12, color: 'var(--text-primary)' }}>
+                    {heroItem.titleVi || heroItem.title}
+                  </h2>
+
+                  <p className="trending-hero-excerpt" style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6, flex: 1, margin: 0 }}>
+                    {heroItem.excerptVi || heroItem.excerpt || heroItem.ai_summary || (heroItem.titleVi || heroItem.title)}
+                  </p>
+
+                  <div className="trending-hero-footer" style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {heroItem.procuring_entity && (
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '4px 10px', borderRadius: 6 }}>
+                          🏛️ {heroItem.procuring_entity}
+                        </span>
+                      )}
+                      {heroItem.sector && (
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '4px 10px', borderRadius: 6 }}>
+                          🏷️ {heroItem.sector}
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      className="article-detail-btn"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '9px 18px', borderRadius: 10,
+                        background: 'linear-gradient(135deg, var(--brand-600), var(--brand-700))', color: '#fff',
+                        fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleItemClick(heroItem);
+                      }}
+                    >
+                      <span>Xem chi tiết nội dung</span>
+                      <ExternalLink size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 3. CARD GRID (Danh sách thẻ cao cấp) */}
+          {filteredRemainingItems.length === 0 ? (
+            <div style={{
+              padding: '56px 24px', textAlign: 'center', background: 'var(--bg-surface)',
+              borderRadius: 16, border: '1px dashed var(--border)', color: 'var(--text-muted)'
+            }}>
+              <AlertCircle size={40} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+              <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Không tìm thấy kết quả phù hợp với "{filterSearch}"</p>
+              <button
+                onClick={() => setFilterSearch('')}
+                style={{
+                  marginTop: 14, padding: '8px 18px', borderRadius: 8,
+                  background: 'var(--brand-600)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700
+                }}
+              >
+                Xóa bộ lọc tìm kiếm
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                gap: 22,
+                marginBottom: 36
+              }}>
+                {currentPageItems.map((item, idx) => {
+                  // 1. Dạng Gói thầu công (e-GP)
+                  if (item.source === 'gov' || item.kind) {
+                    return (
+                      <div
+                        key={item.id || idx}
+                        className="trending-luxury-card"
+                        style={{
+                          borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                          overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer',
+                          boxShadow: '0 4px 16px -2px rgba(0,0,0,0.05)', transition: 'all 0.25s ease'
+                        }}
+                        onClick={() => handleItemClick(item)}
+                      >
+                        <div style={{
+                          height: 100,
+                          background: 'linear-gradient(135deg, #2e1065 0%, #581c87 50%, #7e22ce 100%)',
+                          padding: '12px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                          color: '#fff', position: 'relative'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{
+                              fontSize: 10.5, fontWeight: 900, letterSpacing: '0.4px',
+                              padding: '3px 8px', borderRadius: 6,
+                              background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)'
+                            }}>
+                              {item.kind === 'plan' ? '📋 KHLCNT' : '🛍️ GÓI THẦU (TBMT)'}
+                            </span>
+                            <span style={{
+                              fontSize: 11, fontWeight: 800, color: '#34d399',
+                              background: 'rgba(16,185,129,0.25)', padding: '2px 8px', borderRadius: 12
+                            }}>
+                              ● {item.status || 'Đang mở'}
+                            </span>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 17.5, fontWeight: 900, color: '#fef08a', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                              {item.amount ? `💰 ${item.amount}` : '🏛️ Đấu thầu qua mạng e-GP'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                          <h4 style={{
+                            fontSize: 14.5, fontWeight: 800, lineHeight: 1.45, margin: '0 0 10px 0',
+                            color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                          }}>
+                            {item.title}
+                          </h4>
+                          <div style={{
+                            fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)',
+                            padding: '7px 10px', borderRadius: 8, marginBottom: 12, lineHeight: 1.4,
+                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                          }}>
+                            🏛️ <strong>Bên mời thầu:</strong> {item.procuring_entity || item.investor || 'Cổng thông tin đấu thầu'}
+                          </div>
+                          <div style={{
+                            marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border-subtle)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            fontSize: 11.5, color: 'var(--text-muted)'
+                          }}>
+                            <span>📅 {formatRelativeTime(item.publish_date || item.date, lang)}</span>
+                            <span style={{ color: '#8b5cf6', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              Chi tiết hồ sơ →
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // 2. Dạng Dự án ODA (World Bank hoặc ADB)
+                  if (item.source === 'adb' || item.source === 'worldbank' || item.source_org) {
+                    const isAdb = item.source === 'adb' || item.source_org === 'adb';
+                    return (
+                      <div
+                        key={item.id || idx}
+                        className="trending-luxury-card"
+                        style={{
+                          borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                          overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer',
+                          boxShadow: '0 4px 16px -2px rgba(0,0,0,0.05)', transition: 'all 0.25s ease'
+                        }}
+                        onClick={() => handleItemClick(item)}
+                      >
+                        <div style={{
+                          height: 100,
+                          background: isAdb
+                            ? 'linear-gradient(135deg, #022c22 0%, #065f46 50%, #059669 100%)'
+                            : 'linear-gradient(135deg, #082f49 0%, #075985 50%, #0284c7 100%)',
+                          padding: '12px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                          color: '#fff', position: 'relative'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{
+                              fontSize: 10.5, fontWeight: 900, letterSpacing: '0.4px',
+                              padding: '3px 8px', borderRadius: 6,
+                              background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)'
+                            }}>
+                              {isAdb ? '🏦 ADB (CHÂU Á)' : '🌍 WORLD BANK'}
+                            </span>
+                            <span style={{
+                              fontSize: 11, fontWeight: 800, color: '#fff',
+                              background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12
+                            }}>
+                              📍 {item.country || 'Quốc tế'}
+                            </span>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 17.5, fontWeight: 900, color: '#fef08a', textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                              💵 {item.amount || 'Khoản vay ODA'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                          <h4 style={{
+                            fontSize: 14.5, fontWeight: 800, lineHeight: 1.45, margin: '0 0 8px 0',
+                            color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                          }}>
+                            {item.titleVi || item.title}
+                          </h4>
+                          <p style={{
+                            fontSize: 12.5, color: 'var(--text-secondary)', margin: '0 0 12px 0', lineHeight: 1.5,
+                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                          }}>
+                            {item.ai_summary || item.excerpt || (item.sector ? `Lĩnh vực: ${item.sector}` : (item.titleVi || item.title))}
+                          </p>
+                          <div style={{
+                            marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border-subtle)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            fontSize: 11.5, color: 'var(--text-muted)'
+                          }}>
+                            <span>📅 {formatRelativeTime(item.approval_date || item.date, lang)}</span>
+                            <span style={{ color: isAdb ? '#059669' : '#0284c7', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              Xem hồ sơ dự án →
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // 3. Dạng Báo chí (Press)
+                  return (
+                    <div
+                      key={item.id || idx}
+                      className="trending-luxury-card"
+                      style={{
+                        borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                        overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer',
+                        boxShadow: '0 4px 16px -2px rgba(0,0,0,0.05)', transition: 'all 0.25s ease'
+                      }}
+                      onClick={() => handleItemClick(item)}
+                    >
+                      <div style={{ position: 'relative', height: 185, overflow: 'hidden', background: 'var(--bg-surface-2)' }}>
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.titleVi || item.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div style={{
+                          display: item.image_url ? 'none' : 'flex',
+                          width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center',
+                          background: 'linear-gradient(135deg, var(--bg-surface-2) 0%, var(--border-subtle) 100%)'
+                        }}>
+                          <Newspaper size={36} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                        </div>
+
+                        {/* Floating Category Tag */}
+                        <span style={{
+                          position: 'absolute', top: 12, left: 12,
+                          fontSize: 10.5, fontWeight: 800, letterSpacing: '0.3px',
+                          padding: '4px 10px', borderRadius: 6,
+                          background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)',
+                          color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)'
+                        }}>
+                          {item.category || 'Thời Sự & Đầu Tư'}
+                        </span>
+
+                        {/* Floating Source Pill */}
+                        <span style={{
+                          position: 'absolute', bottom: 10, right: 12,
+                          fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4,
+                          background: 'rgba(255, 255, 255, 0.92)', color: '#0f172a',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}>
+                          {item.source_name || 'Báo chí'}
+                        </span>
+                      </div>
+
+                      <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <h4 style={{
+                          fontSize: 15, fontWeight: 800, lineHeight: 1.45, margin: '0 0 8px 0',
+                          color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                        }}>
+                          {item.titleVi || item.title}
+                        </h4>
+                        <p style={{
+                          fontSize: 12.5, color: 'var(--text-secondary)', margin: '0 0 12px 0', lineHeight: 1.5,
+                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                        }}>
+                          {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
+                        </p>
+                        <div style={{
+                          marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border-subtle)',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          fontSize: 11.5, color: 'var(--text-muted)'
+                        }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <Clock size={12} /> {formatRelativeTime(item.published_at || item.date, lang)}
+                          </span>
+                          <span style={{ color: 'var(--brand-600)', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            Đọc bài viết →
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 4. PAGINATION CONTROLS */}
+              {totalFilteredPages > 1 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  gap: 8, margin: '24px 0 40px 0'
+                }}>
+                  <button
+                    disabled={filterPage === 1}
+                    onClick={() => {
+                      setFilterPage(p => Math.max(1, p - 1));
+                      window.scrollTo({ top: 380, behavior: 'smooth' });
+                    }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '8px 14px', borderRadius: 10,
+                      background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                      color: filterPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                      cursor: filterPage === 1 ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13
+                    }}
+                  >
+                    <ChevronLeft size={16} /> Trước
+                  </button>
+
+                  {Array.from({ length: totalFilteredPages }, (_, i) => i + 1).map(pageNum => (
+                    <button
+                      key={pageNum}
+                      onClick={() => {
+                        setFilterPage(pageNum);
+                        window.scrollTo({ top: 380, behavior: 'smooth' });
+                      }}
+                      style={{
+                        width: 38, height: 38, borderRadius: 10,
+                        background: filterPage === pageNum ? 'var(--brand-600)' : 'var(--bg-surface)',
+                        color: filterPage === pageNum ? '#fff' : 'var(--text-primary)',
+                        border: filterPage === pageNum ? 'none' : '1px solid var(--border)',
+                        fontWeight: 750, fontSize: 13.5, cursor: 'pointer',
+                        boxShadow: filterPage === pageNum ? '0 4px 10px rgba(37,99,235,0.3)' : 'none'
+                      }}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+
+                  <button
+                    disabled={filterPage === totalFilteredPages}
+                    onClick={() => {
+                      setFilterPage(p => Math.min(totalFilteredPages, p + 1));
+                      window.scrollTo({ top: 380, behavior: 'smooth' });
+                    }}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '8px 14px', borderRadius: 10,
+                      background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                      color: filterPage === totalFilteredPages ? 'var(--text-muted)' : 'var(--text-primary)',
+                      cursor: filterPage === totalFilteredPages ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 13
+                    }}
+                  >
+                    Sau <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );

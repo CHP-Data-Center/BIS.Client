@@ -66,7 +66,7 @@ export default function ProjectsPage() {
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const data = await projectsService.getProjects();
+      const data = await projectsService.getProjects(true);
       const list = data || [];
       setProjects(list);
       if (list.length > 0 && !selectedProjectId) {
@@ -139,7 +139,7 @@ export default function ProjectsPage() {
       setSector(''); setProvince(''); setStatus('watching');
       setShowCreateModal(false);
       showAlert('success', `Đã tạo dự án theo dõi "${created.name}"!`);
-      const updatedList = await projectsService.getProjects();
+      const updatedList = await projectsService.getProjects(true);
       setProjects(updatedList || []);
       setSelectedProjectId(created.id);
       loadSummary();
@@ -152,7 +152,7 @@ export default function ProjectsPage() {
 
   // Sau khi nhập từ Excel / Profile: nạp lại cả danh sách lẫn nhịp tin.
   const handleImported = async () => {
-    const updated = await projectsService.getProjects().catch(() => null);
+    const updated = await projectsService.getProjects(true).catch(() => null);
     if (updated) {
       setProjects(updated);
       if (!selectedProjectId && updated.length > 0) setSelectedProjectId(updated[0].id);

@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/auth';
 import { syncUserTheme } from '../utils/theme';
+import { apiCache } from '../utils/apiCache';
 
 const AuthContext = createContext(null);
 
@@ -28,7 +29,9 @@ export function AuthProvider({ children }) {
         localStorage.removeItem('bis_token');
         localStorage.removeItem('bis_user');
         setToken(null);
+        setUser(null);
         syncUserTheme(null);
+        apiCache.clear();
       })
       .finally(() => setLoading(false));
   }, []); // chỉ chạy khi mount
@@ -39,6 +42,8 @@ export function AuthProvider({ children }) {
       const res = await authService.login(email, password, rememberMe);
       localStorage.setItem('bis_token', res.access_token);
       setToken(res.access_token);
+
+      apiCache.clear();
 
       // Lấy thông tin user sau khi đăng nhập
       const me = await authService.getMe(res.access_token);
@@ -89,6 +94,8 @@ export function AuthProvider({ children }) {
       localStorage.setItem('bis_token', res.access_token);
       setToken(res.access_token);
 
+      apiCache.clear();
+
       const me = await authService.getMe(res.access_token);
       setUser(me);
       syncUserTheme(me);
@@ -131,6 +138,7 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
     syncUserTheme(null);
+    apiCache.clear();
   }, []);
 
   const userKey = user?.email || user?.id;

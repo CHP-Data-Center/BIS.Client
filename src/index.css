@@ -8112,8 +8112,54 @@ html, body {
   color: #fde68a;
 }
 
+/* --- Magazine Feature Hub (Image 3: 3-Part Layout) --- */
+.magazine-feature-hub {
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 2px solid var(--border);
+}
 
+.feature-hub-grid {
+  display: grid;
+  grid-template-columns: 46% 26% 28%;
+  gap: 20px;
+  align-items: start;
+}
 
+@media (max-width: 1024px) {
+  .feature-hub-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
+/* --- 2 Bottom Equal Categories (Image 4 & 5) --- */
+.magazine-bottom-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 2px solid var(--border);
+}
 
+@media (max-width: 900px) {
+  .magazine-bottom-duo {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Trending Luxury Filtered Card --- */
+.trending-luxury-card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease !important;
+}
+
+.trending-luxury-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--brand-500) !important;
+  border-color: var(--brand-500) !important;
+}
+
+.trending-luxury-card:hover img {
+  transform: scale(1.05) !important;
+}
 

@@ -6,14 +6,15 @@ import {
   Target, Settings2, Loader2, ExternalLink, Plus, Check, X,
   Building2, Calendar, Coins, MapPin, Filter, RefreshCw, AlertCircle,
   ShoppingBag, Globe, Newspaper, Search, ArrowRight, BookmarkCheck,
-  CheckCircle2, Sparkles, SlidersHorizontal, Trash2
+  CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { potentialService, itemKey } from '../services/potential';
 import { projectsService } from '../services/projects';
 import { useLang } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
-const PAGE_SIZE = 18;
+const PAGE_SIZE = 8;
 
 // Màu & icon theo loại nguồn
 const KIND_CONFIG = {
@@ -155,8 +156,56 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
   const { t } = useLang();
   const navigate = useNavigate();
   const [isHoveredTrack, setIsHoveredTrack] = useState(false);
-  const kindCfg = KIND_CONFIG[item.kind] || KIND_CONFIG.article;
-  const KindIcon = kindCfg.icon;
+
+  // Badge nguồn chuẩn xác cho từng loại (World Bank, ADB, Đấu thầu công, Báo chí)
+  const getBadgeConfig = () => {
+    if (item.kind === 'procurement') {
+      return {
+        bg: 'rgba(59, 130, 246, 0.1)',
+        fg: '#2563eb',
+        border: 'rgba(59, 130, 246, 0.25)',
+        icon: ShoppingBag,
+        label: t('potential.kindProcurement') || 'Đấu thầu công',
+      };
+    }
+    if (item.source_name === 'World Bank' || item.source_org === 'worldbank' || item.kind === 'worldbank') {
+      return {
+        bg: 'rgba(16, 185, 129, 0.1)',
+        fg: '#059669',
+        border: 'rgba(16, 185, 129, 0.25)',
+        icon: Globe,
+        label: 'World Bank',
+      };
+    }
+    if (item.source_name === 'ADB' || item.source_org === 'adb' || item.kind === 'adb') {
+      return {
+        bg: 'rgba(245, 158, 11, 0.1)',
+        fg: '#d97706',
+        border: 'rgba(245, 158, 11, 0.25)',
+        icon: Building2,
+        label: 'Dự án ADB',
+      };
+    }
+    if (item.kind === 'oda') {
+      return {
+        bg: 'rgba(16, 185, 129, 0.1)',
+        fg: '#059669',
+        border: 'rgba(16, 185, 129, 0.25)',
+        icon: Globe,
+        label: 'Dự án ODA',
+      };
+    }
+    return {
+      bg: 'rgba(245, 158, 11, 0.1)',
+      fg: '#d97706',
+      border: 'rgba(245, 158, 11, 0.25)',
+      icon: Newspaper,
+      label: t('potential.kindArticle') || 'Tin báo chí',
+    };
+  };
+
+  const badgeCfg = getBadgeConfig();
+  const BadgeIcon = badgeCfg.icon;
 
   const openInApp =
     item.kind === 'procurement' ? `/procurement/${encodeURIComponent(item.ref)}` : null;
@@ -179,11 +228,11 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
           fontSize: 11.5, fontWeight: 800, padding: '4px 10px', borderRadius: 999,
-          background: kindCfg.bg, color: kindCfg.fg, border: `1px solid ${kindCfg.border}`,
+          background: badgeCfg.bg, color: badgeCfg.fg, border: `1px solid ${badgeCfg.border}`,
           flex: 'none',
         }}>
-          <KindIcon size={13} />
-          {t(kindCfg.labelKey)}
+          <BadgeIcon size={13} />
+          {badgeCfg.label}
         </span>
 
         {item.stage && (
@@ -290,10 +339,15 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
         </div>
       )}
 
-      {/* Footer buttons */}
+      {/* Footer buttons - Căn thẳng hàng 1 dòng duy nhất, tên nguồn dài tự động có dấu ... */}
       <div style={{
-        display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 12,
-        borderTop: '1px solid var(--border-subtle)', marginTop: 'auto',
+        display: 'grid',
+        gridTemplateColumns: (openInApp || item.url) ? 'minmax(0, auto) minmax(0, 1fr)' : 'auto',
+        alignItems: 'center',
+        gap: 8,
+        paddingTop: 12,
+        borderTop: '1px solid var(--border-subtle)',
+        marginTop: 'auto',
       }}>
         {tracked ? (
           <button
@@ -304,12 +358,14 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             disabled={tracking}
             title="Bấm để hủy theo dõi dự án này"
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '8px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
               border: `1px solid ${isHoveredTrack ? '#fca5a5' : 'rgba(16, 185, 129, 0.4)'}`,
               background: isHoveredTrack ? '#fef2f2' : 'rgba(16, 185, 129, 0.1)',
               color: isHoveredTrack ? '#dc2626' : '#059669',
               cursor: tracking ? 'default' : 'pointer',
+              whiteSpace: 'nowrap',
+              flex: 'none',
               transition: 'all .2s ease',
             }}
           >
@@ -320,7 +376,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             ) : (
               <BookmarkCheck size={14} />
             )}
-            {isHoveredTrack ? 'Hủy theo dõi' : t('potential.tracked')}
+            <span>{isHoveredTrack ? 'Hủy theo dõi' : t('potential.tracked')}</span>
           </button>
         ) : (
           <button
@@ -328,19 +384,21 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             onClick={() => onToggleTrack(item, false)}
             disabled={tracking}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 15px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '8px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
               border: 'none',
               background: 'linear-gradient(135deg, var(--brand-500), var(--brand-600))',
               color: '#fff',
               cursor: tracking ? 'default' : 'pointer',
               opacity: tracking ? 0.7 : 1,
               boxShadow: '0 3px 10px rgba(37, 99, 235, 0.25)',
+              whiteSpace: 'nowrap',
+              flex: 'none',
               transition: 'all .2s ease',
             }}
           >
             {tracking ? <Loader2 size={14} className="spin" /> : <Plus size={14} />}
-            {t('potential.track')}
+            <span>{t('potential.track')}</span>
           </button>
         )}
 
@@ -348,30 +406,52 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
           <button
             type="button"
             onClick={() => navigate(openInApp)}
+            title={t('potential.viewSource')}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 13px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+              padding: '8px 10px', borderRadius: 10, fontSize: 12, fontWeight: 700,
               border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
               color: 'var(--text-secondary)', cursor: 'pointer',
               transition: 'all .15s ease',
+              minWidth: 0,
+              overflow: 'hidden',
             }}
           >
-            <ExternalLink size={14} /> {t('potential.viewSource')}
+            <ExternalLink size={13} style={{ flex: 'none' }} />
+            <span style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              display: 'block',
+            }}>
+              {t('potential.viewSource')}
+            </span>
           </button>
         ) : item.url ? (
           <a
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
+            title={item.source_name || t('potential.viewSource')}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 13px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+              padding: '8px 10px', borderRadius: 10, fontSize: 12, fontWeight: 700,
               border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
               color: 'var(--text-secondary)', textDecoration: 'none',
               transition: 'all .15s ease',
+              minWidth: 0,
+              overflow: 'hidden',
             }}
           >
-            <ExternalLink size={14} /> {item.source_name || t('potential.viewSource')}
+            <ExternalLink size={13} style={{ flex: 'none' }} />
+            <span style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              display: 'block',
+            }}>
+              {item.source_name || t('potential.viewSource')}
+            </span>
           </a>
         ) : null}
       </div>
@@ -539,6 +619,12 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
 export default function PotentialProjectsPage() {
   const { t } = useLang();
   const navigate = useNavigate();
+  const { hasSourceAccess } = useAuth();
+
+  const canProc = hasSourceAccess('gov');
+  const canAdb = hasSourceAccess('adb');
+  const canWb = hasSourceAccess('worldbank');
+  const canOda = canAdb || canWb;
 
   // Khởi tạo ngay từ cache để khi chuyển tab khác rồi quay lại không bị chớp hay load lại
   const initialCachedWatched = potentialService.getCachedWatchedSectors();
@@ -550,6 +636,26 @@ export default function PotentialProjectsPage() {
   const [kind, setKind] = useState('');
   const [minAmount, setMinAmount] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Tự động hoàn lại bộ lọc về '' nếu loại nguồn được chọn không thuộc gói đã mua
+  useEffect(() => {
+    if (kind === 'procurement' && !canProc) {
+      setKind('');
+      setPage(1);
+    }
+    if (kind === 'adb' && !canAdb) {
+      setKind('');
+      setPage(1);
+    }
+    if (kind === 'worldbank' && !canWb) {
+      setKind('');
+      setPage(1);
+    }
+    if (kind === 'oda' && !canOda) {
+      setKind('');
+      setPage(1);
+    }
+  }, [kind, canProc, canAdb, canWb, canOda]);
 
   const [data, setData] = useState(() => initialCachedList || { items: [], total: 0, sectors_applied: [] });
   const [page, setPage] = useState(1);
@@ -570,9 +676,9 @@ export default function PotentialProjectsPage() {
   };
 
   // Tải danh sách dự án user đang theo dõi
-  const loadUserProjects = useCallback(async () => {
+  const loadUserProjects = useCallback(async (forceFresh = false) => {
     try {
-      const list = await projectsService.getProjects();
+      const list = await projectsService.getProjects(forceFresh);
       setUserProjects(list || []);
     } catch {
       // Bỏ qua lỗi phụ nếu chưa đăng nhập / lỗi mạng tạm thời
@@ -580,7 +686,7 @@ export default function PotentialProjectsPage() {
   }, []);
 
   useEffect(() => {
-    loadUserProjects();
+    loadUserProjects(true);
   }, [loadUserProjects]);
 
   // Danh mục lĩnh vực + lựa chọn của người dùng
@@ -616,8 +722,12 @@ export default function PotentialProjectsPage() {
       return;
     }
 
-    // Luôn bật Skeleton loading để người dùng thấy phản hồi lọc tức thì
-    setInitialLoading(true);
+    // Nếu chưa có dữ liệu nào mới bật initialLoading (tránh giật màn hình khi lọc / chuyển trang)
+    if (!data.items?.length) {
+      setInitialLoading(true);
+    } else {
+      setIsPageFetching(true);
+    }
     setErr(null);
 
     try {
@@ -647,6 +757,7 @@ export default function PotentialProjectsPage() {
     return userProjects.map((p) => ({
       id: p.id,
       name: p.name,
+      note: p.note || '',
       normName: normalizeText(p.name),
       normKw: normalizeText(p.keyword_filter),
     }));
@@ -656,9 +767,13 @@ export default function PotentialProjectsPage() {
   const findMatchingProject = useCallback((item) => {
     const key = itemKey(item);
     const itemNorm = normalizeText(item.title);
-    if (!itemNorm) return null;
+    if (!itemNorm && !key) return null;
 
     return normalizedUserProjects.find((p) => {
+      // 1. So khớp chính xác qua mã ref đã lưu trong note
+      if (key && p.note && p.note.includes(`[ref:${key}]`)) return true;
+      // 2. So khớp theo tên / từ khóa dự án
+      if (!itemNorm) return false;
       if (p.normName === itemNorm || p.normKw === itemNorm) return true;
       if (p.normName.length >= 10 && itemNorm.includes(p.normName)) return true;
       if (itemNorm.length >= 10 && p.normName.includes(itemNorm)) return true;
@@ -737,6 +852,7 @@ export default function PotentialProjectsPage() {
           investor: item.investor || undefined,
           sector: item.sectors?.[0] || undefined,
           province: item.province || undefined,
+          note: `[ref:${key}]`,
         });
         setTrackedKeys((cur) => new Set(cur).add(key));
         setUserProjects((cur) => [created, ...cur]);
@@ -744,7 +860,7 @@ export default function PotentialProjectsPage() {
       } catch (e) {
         if (e.response?.status === 409) {
           setTrackedKeys((cur) => new Set(cur).add(key));
-          loadUserProjects();
+          await loadUserProjects(true);
           toast('success', 'Dự án này đã có trong danh sách theo dõi của bạn.');
         } else {
           toast('error', e.response?.data?.detail || 'Không thêm được vào danh sách theo dõi.');
@@ -755,11 +871,13 @@ export default function PotentialProjectsPage() {
     }
   };
 
-  // Lọc trực tiếp theo ô tìm kiếm trên trang
+  // Lọc trực tiếp theo ô tìm kiếm trên trang (dữ liệu nguồn đã được server phân loại theo kinds)
   const displayItems = useMemo(() => {
-    if (!searchQuery.trim()) return data.items;
+    let items = data.items || [];
+
+    if (!searchQuery.trim()) return items;
     const qNorm = normalizeText(searchQuery);
-    return data.items.filter((item) => {
+    return items.filter((item) => {
       const titleNorm = normalizeText(item.title);
       const invNorm = normalizeText(item.investor);
       const provNorm = normalizeText(item.province);
@@ -769,6 +887,26 @@ export default function PotentialProjectsPage() {
 
   const applied = data.sectors_applied || [];
   const totalPages = Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE));
+
+  // Tạo danh sách trang hiển thị dạng số đẹp mắt
+  const pageNumbers = useMemo(() => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+      if (page < totalPages - 2) pages.push('...');
+      if (!pages.includes(totalPages)) pages.push(totalPages);
+    }
+    return pages;
+  }, [page, totalPages]);
   const lockedToArticles =
     !initialLoading && !err && data.items.length > 0 && data.items.every((i) => i.kind === 'article');
 
@@ -960,83 +1098,100 @@ export default function PotentialProjectsPage() {
             <div style={{
               display: 'inline-flex', background: 'var(--bg-surface-2)',
               padding: 3, borderRadius: 12, border: '1px solid var(--border)',
+              flexWrap: 'wrap', gap: 2,
             }}>
               {[
-                { id: '', label: t('potential.kindAll'), icon: SlidersHorizontal },
-                { id: 'procurement', label: t('potential.kindProcurement'), icon: ShoppingBag },
-                { id: 'oda', label: t('potential.kindOda'), icon: Globe },
-                { id: 'article', label: t('potential.kindArticle'), icon: Newspaper },
+                { id: '', label: t('potential.kindAll'), icon: SlidersHorizontal, allowed: true },
+                { id: 'procurement', label: t('potential.kindProcurement'), icon: ShoppingBag, allowed: canProc, pkgName: 'Đấu Thầu Công' },
+                { id: 'adb', label: 'Dự án ADB', icon: Building2, allowed: canAdb, pkgName: 'Dự Án ADB' },
+                { id: 'worldbank', label: 'World Bank', icon: Globe, allowed: canWb, pkgName: 'World Bank' },
+                { id: 'article', label: t('potential.kindArticle'), icon: Newspaper, allowed: true },
               ].map((k) => {
                 const active = kind === k.id;
                 const Icon = k.icon;
+                const isAllowed = k.allowed;
                 return (
                   <button
                     key={k.id}
                     type="button"
-                    onClick={() => { setKind(k.id); setPage(1); }}
+                    onClick={() => {
+                      if (!isAllowed) {
+                        toast('error', `Bạn cần nâng cấp gói ${k.pkgName} để sử dụng bộ lọc này.`);
+                        return;
+                      }
+                      setKind(k.id);
+                      setPage(1);
+                    }}
+                    title={!isAllowed ? `Yêu cầu gói ${k.pkgName} để lọc nguồn này` : ''}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 5,
                       padding: '6px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700,
-                      border: 'none', cursor: 'pointer', transition: 'all .15s ease',
+                      border: 'none',
+                      cursor: isAllowed ? 'pointer' : 'not-allowed',
+                      opacity: isAllowed ? 1 : 0.5,
+                      transition: 'all .15s ease',
                       background: active ? 'var(--bg-surface)' : 'transparent',
-                      color: active ? 'var(--brand-600)' : 'var(--text-secondary)',
+                      color: active ? 'var(--brand-600)' : isAllowed ? 'var(--text-secondary)' : 'var(--text-muted)',
                       boxShadow: active ? 'var(--shadow-sm)' : 'none',
                     }}
                   >
                     <Icon size={13} />
                     {k.label}
+                    {!isAllowed && <Lock size={11} style={{ marginLeft: 2, opacity: 0.8 }} />}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Lọc giá tối thiểu & Presets */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
-              {t('potential.minAmount')}:
-            </span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {AMOUNT_PRESETS.map((p) => (
+          {/* Lọc giá tối thiểu & Presets (Chỉ hiện khi có quyền xem Đấu thầu công) */}
+          {canProc && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
+                {t('potential.minAmount')}:
+              </span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {AMOUNT_PRESETS.map((p) => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => { setMinAmount(String(p.value)); setPage(1); }}
+                    style={{
+                      padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                      border: '1px solid var(--border)',
+                      background: String(minAmount) === String(p.value) ? 'var(--brand-50)' : 'var(--bg-surface-2)',
+                      color: String(minAmount) === String(p.value) ? 'var(--brand-700)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number" min="0" step="1000000000" value={minAmount}
+                onChange={(e) => { setMinAmount(e.target.value); setPage(1); }}
+                placeholder="0 VND"
+                style={{
+                  padding: '6px 10px', borderRadius: 10, fontSize: 12.5, width: 130,
+                  border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
+                  color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums',
+                }}
+              />
+              {minAmount && (
                 <button
-                  key={p.value}
                   type="button"
-                  onClick={() => { setMinAmount(String(p.value)); setPage(1); }}
+                  onClick={() => { setMinAmount(''); setPage(1); }}
                   style={{
-                    padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                    border: '1px solid var(--border)',
-                    background: String(minAmount) === String(p.value) ? 'var(--brand-50)' : 'var(--bg-surface-2)',
-                    color: String(minAmount) === String(p.value) ? 'var(--brand-700)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
+                    border: 'none', background: 'none', color: 'var(--text-muted)',
+                    cursor: 'pointer', fontSize: 12, fontWeight: 700,
                   }}
                 >
-                  {p.label}
+                  Xóa
                 </button>
-              ))}
+              )}
             </div>
-            <input
-              type="number" min="0" step="1000000000" value={minAmount}
-              onChange={(e) => { setMinAmount(e.target.value); setPage(1); }}
-              placeholder="0 VND"
-              style={{
-                padding: '6px 10px', borderRadius: 10, fontSize: 12.5, width: 130,
-                border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
-                color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums',
-              }}
-            />
-            {minAmount && (
-              <button
-                type="button"
-                onClick={() => { setMinAmount(''); setPage(1); }}
-                style={{
-                  border: 'none', background: 'none', color: 'var(--text-muted)',
-                  cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                }}
-              >
-                Xóa
-              </button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
@@ -1152,40 +1307,79 @@ export default function PotentialProjectsPage() {
           {totalPages > 1 && (
             <div style={{
               display: 'flex', justifyContent: 'center', alignItems: 'center',
-              gap: 12, marginTop: 32,
+              gap: 6, marginTop: 32, flexWrap: 'wrap',
             }}>
               <button
                 type="button" disabled={page <= 1}
-                onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                onClick={() => {
+                  setPage((p) => Math.max(1, p - 1));
+                  window.scrollTo({ top: 350, behavior: 'smooth' });
+                }}
                 style={{
-                  padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  minWidth: 38, height: 38, padding: '0 12px', borderRadius: 10,
+                  fontSize: 13, fontWeight: 700,
                   border: '1px solid var(--border)', background: 'var(--bg-surface)',
                   color: 'var(--text-secondary)',
-                  cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.45 : 1,
-                  boxShadow: 'var(--shadow-sm)',
+                  cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.35 : 1,
+                  boxShadow: 'var(--shadow-sm)', transition: 'all .15s ease',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 }}
+                title="Trang trước"
               >
-                ← Trước
+                ←
               </button>
-              <span style={{
-                fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums',
-                background: 'var(--bg-surface-2)', padding: '6px 14px', borderRadius: 10,
-              }}>
-                {page} / {totalPages}
-              </span>
+
+              {pageNumbers.map((pNum, idx) => {
+                if (pNum === '...') {
+                  return (
+                    <span key={`dots-${idx}`} style={{ padding: '0 6px', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>
+                      …
+                    </span>
+                  );
+                }
+                const isActive = pNum === page;
+                return (
+                  <button
+                    key={pNum}
+                    type="button"
+                    onClick={() => {
+                      setPage(pNum);
+                      window.scrollTo({ top: 350, behavior: 'smooth' });
+                    }}
+                    style={{
+                      minWidth: 38, height: 38, padding: '0 8px', borderRadius: 10,
+                      fontSize: 13, fontWeight: 800,
+                      border: isActive ? 'none' : '1px solid var(--border)',
+                      background: isActive ? 'linear-gradient(135deg, var(--brand-500), var(--brand-600))' : 'var(--bg-surface)',
+                      color: isActive ? '#fff' : 'var(--text-primary)',
+                      cursor: 'pointer',
+                      boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'var(--shadow-sm)',
+                      transition: 'all .15s ease',
+                    }}
+                  >
+                    {pNum}
+                  </button>
+                );
+              })}
+
               <button
                 type="button" disabled={page >= totalPages}
-                onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                onClick={() => {
+                  setPage((p) => Math.min(totalPages, p + 1));
+                  window.scrollTo({ top: 350, behavior: 'smooth' });
+                }}
                 style={{
-                  padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                  minWidth: 38, height: 38, padding: '0 12px', borderRadius: 10,
+                  fontSize: 13, fontWeight: 700,
                   border: '1px solid var(--border)', background: 'var(--bg-surface)',
                   color: 'var(--text-secondary)',
-                  cursor: page >= totalPages ? 'default' : 'pointer',
-                  opacity: page >= totalPages ? 0.45 : 1,
-                  boxShadow: 'var(--shadow-sm)',
+                  cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.35 : 1,
+                  boxShadow: 'var(--shadow-sm)', transition: 'all .15s ease',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 }}
+                title="Trang sau"
               >
-                Sau →
+                →
               </button>
             </div>
           )}
