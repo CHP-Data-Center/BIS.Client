@@ -54,6 +54,10 @@ export default function ProjectsPage() {
   const [status, setStatus] = useState('watching');
   const [createLoading, setCreateLoading] = useState(false);
 
+  // Gợi ý từ khóa: form tạo (suggesting) và dự án đã có (regenId = id đang xử lý)
+  const [suggesting, setSuggesting] = useState(false);
+  const [regenId, setRegenId] = useState(null);
+
   // Confirm delete
   const [deletingProject, setDeletingProject] = useState(null);
   const [msg, setMsg] = useState(null);
@@ -139,6 +143,7 @@ export default function ProjectsPage() {
       setSector(''); setProvince(''); setStatus('watching');
       setShowCreateModal(false);
       showAlert('success', `Đã tạo dự án theo dõi "${created.name}"!`);
+      // force=true: getProjects() có cache localStorage 5 phút, không ép thì dự án vừa tạo chưa hiện.
       const updatedList = await projectsService.getProjects(true);
       setProjects(updatedList || []);
       setSelectedProjectId(created.id);
@@ -152,12 +157,64 @@ export default function ProjectsPage() {
 
   // Sau khi nhập từ Excel / Profile: nạp lại cả danh sách lẫn nhịp tin.
   const handleImported = async () => {
+    // force=true: bỏ qua cache localStorage 5 phút của getProjects(), không thì dự án vừa nhập chưa hiện.
     const updated = await projectsService.getProjects(true).catch(() => null);
     if (updated) {
       setProjects(updated);
       if (!selectedProjectId && updated.length > 0) setSelectedProjectId(updated[0].id);
     }
     loadSummary();
+  };
+
+  const nhanNguon = (source) =>
+    t(source === 'ai' ? 'projects.keywordsAi' : 'projects.keywordsRules');
+
+  // Gợi ý từ khóa cho form tạo — điền vào ô, người dùng vẫn sửa được trước khi lưu.
+  const suggestKeywords = async () => {
+    if (!name.trim()) return;
+    setSuggesting(true);
+    try {
+      const res = await projectsService.extractKeywords(name.trim());
+      if (!res.keyword_filter) {
+        showAlert('error', 'Không rút được từ khóa từ tên này — hãy nhập tay.');
+        return;
+      }
+      setKeywordFilter(res.keyword_filter);
+      showAlert('success', t('projects.keywordsFilled', {
+        count: res.keywords.length, source: nhanNguon(res.source),
+      }));
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Không gợi ý được từ khóa.');
+    } finally {
+      setSuggesting(false);
+    }
+  };
+
+  // Gợi ý lại cho dự án ĐÃ CÓ — sửa những dự án từng bị nhét nguyên tiêu đề làm từ khóa.
+  const regenKeywords = async (p) => {
+    setRegenId(p.id);
+    try {
+      const res = await projectsService.extractKeywords(p.name);
+      if (!res.keyword_filter) {
+        showAlert('error', 'Không rút được từ khóa từ tên này.');
+        return;
+      }
+      const updated = await projectsService.updateProject(p.id, { keyword_filter: res.keyword_filter });
+      setProjects((cur) => cur.map((x) => (x.id === updated.id ? updated : x)));
+      showAlert('success', t('projects.keywordsFilled', {
+        count: res.keywords.length, source: nhanNguon(res.source),
+      }));
+      // Từ khóa đổi thì dòng thời gian đổi theo.
+      setTimelineLoading(true);
+      const tl = await projectsService.getTimeline(p.id, 100).catch(() => null);
+      if (tl) setTimelineData(tl);
+      loadSummary();
+    } catch (e) {
+      showAlert('error', e.response?.data?.detail || 'Không gợi ý lại được từ khóa.');
+    } finally {
+      setRegenId(null);
+      setTimelineLoading(false);
+    }
   };
 
   const handleDeleteProject = async () => {
@@ -491,6 +548,24 @@ export default function ProjectsPage() {
                           #{kw.trim()}
                         </span>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => regenKeywords(selectedProject)}
+                        disabled={regenId === selectedProject.id}
+                        title={t('projects.keywordsHint')}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                          border: '1px dashed var(--border)', background: 'transparent',
+                          color: 'var(--text-secondary)', cursor: 'pointer',
+                          opacity: regenId === selectedProject.id ? 0.6 : 1,
+                        }}
+                      >
+                        {regenId === selectedProject.id
+                          ? <Loader2 size={11} className="spin" />
+                          : <Sparkles size={11} />}
+                        {t('projects.regenKeywords')}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -664,13 +739,36 @@ export default function ProjectsPage() {
 
               <div>
                 <label className="form-label">{t('projects.keywordsLabel')}</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder={tUI('ui.vi-du-cao-toc-bot-metro')}
-                  value={keywordFilter}
-                  onChange={(e) => setKeywordFilter(e.target.value)}
-                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={tUI('ui.vi-du-cao-toc-bot-metro')}
+                    value={keywordFilter}
+                    onChange={(e) => setKeywordFilter(e.target.value)}
+                    style={{ flex: 1, minWidth: 0 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={suggestKeywords}
+                    disabled={suggesting || !name.trim()}
+                    title={t('projects.keywordsHint')}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6, flex: 'none',
+                      padding: '0 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
+                      border: '1px solid var(--brand-400)', background: 'var(--brand-50)',
+                      color: 'var(--brand-700)',
+                      cursor: suggesting || !name.trim() ? 'default' : 'pointer',
+                      opacity: suggesting || !name.trim() ? 0.55 : 1,
+                    }}
+                  >
+                    {suggesting ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />}
+                    {t('projects.suggestKeywords')}
+                  </button>
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 5, lineHeight: 1.5 }}>
+                  {t('projects.keywordsHint')}
+                </div>
               </div>
 
               <div>

@@ -1173,6 +1173,12 @@ export default {
   'projects.selectAll': 'Select all',
   'projects.deselectAll': 'Clear selection',
   'projects.fileTooBig': 'File too large — 5 MB limit.',
+  'projects.suggestKeywords': 'Suggest keywords',
+  'projects.regenKeywords': 'Regenerate keywords',
+  'projects.keywordsHint': 'Leave blank → a few short keywords are extracted from the project name.',
+  'projects.keywordsFilled': 'Filled {count} keywords ({source}).',
+  'projects.keywordsAi': 'AI-picked',
+  'projects.keywordsRules': 'rule-based',
   'projects.noFilePicked': 'No file chosen yet.',
 
   // ── Potential projects ──

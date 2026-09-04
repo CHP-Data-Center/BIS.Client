@@ -127,4 +127,13 @@ export const projectsService = {
     const { data } = await api.post('/projects/extractions', form, UPLOAD_CONFIG);
     return data; // { filename, char_count, candidates[], note }
   },
+
+  /**
+   * Rút vài từ khóa ngắn từ tên dự án (AI chọn nếu có, luật nếu không — server quyết).
+   * Trả { keywords[], keyword_filter, source: 'ai'|'rules' }.
+   */
+  async extractKeywords(title) {
+    const { data } = await api.post('/projects/extract-keywords', { title });
+    return data;
+  },
 };

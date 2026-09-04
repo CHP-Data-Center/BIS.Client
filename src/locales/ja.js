@@ -1173,6 +1173,12 @@ export default {
   'projects.selectAll': 'すべて選択',
   'projects.deselectAll': '選択を解除',
   'projects.fileTooBig': 'ファイルが大きすぎます — 上限 5 MB。',
+  'projects.suggestKeywords': 'キーワードを提案',
+  'projects.regenKeywords': 'キーワードを再提案',
+  'projects.keywordsHint': '空欄の場合、プロジェクト名から短いキーワードを自動抽出します。',
+  'projects.keywordsFilled': '{count} 件のキーワードを入力しました（{source}）。',
+  'projects.keywordsAi': 'AI選定',
+  'projects.keywordsRules': 'ルール抽出',
   'projects.noFilePicked': 'ファイルが未選択です。',
 
   // ── 有望プロジェクト ──

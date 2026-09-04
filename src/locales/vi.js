@@ -1172,6 +1172,12 @@ export default {
   'projects.selectAll': 'Chọn tất cả',
   'projects.deselectAll': 'Bỏ chọn tất cả',
   'projects.fileTooBig': 'File quá lớn — giới hạn 5 MB.',
+  'projects.suggestKeywords': 'Gợi ý từ khóa',
+  'projects.regenKeywords': 'Gợi ý lại từ khóa',
+  'projects.keywordsHint': 'Bỏ trống → hệ thống tự rút vài từ khóa ngắn từ tên dự án.',
+  'projects.keywordsFilled': 'Đã điền {count} từ khóa ({source}).',
+  'projects.keywordsAi': 'AI chọn',
+  'projects.keywordsRules': 'theo luật',
   'projects.noFilePicked': 'Chưa chọn file nào.',
 
   // ── Dự án tiềm năng ──

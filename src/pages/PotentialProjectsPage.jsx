@@ -720,7 +720,9 @@ export default function PotentialProjectsPage() {
       try {
         const created = await projectsService.createProject({
           name: item.title.slice(0, 255),
-          keyword_filter: item.title.slice(0, 512),
+          // KHÔNG gửi keyword_filter: backend tự rút vài từ khóa ngắn từ tên (AI nếu có,
+          // luật nếu không). Gửi nguyên tiêu đề như trước thì trang dự án tách theo dấu
+          // phẩy thành các thẻ dài dòng vô nghĩa.
           investor: item.investor || undefined,
           sector: item.sectors?.[0] || undefined,
           province: item.province || undefined,
