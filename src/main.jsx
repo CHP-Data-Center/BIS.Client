@@ -6,6 +6,9 @@ import App from './App.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import { initConsoleEasterEgg } from './utils/easterEgg.js';
+
+initConsoleEasterEgg();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
