@@ -1638,10 +1638,11 @@ export default function TrendingPage() {
                           key={item.id || `top-read-${idx}`}
                           onClick={() => handleItemClick(item)}
                           style={{
-                            display: 'grid', gridTemplateColumns: '20px 52px 1fr', gap: 10,
+                            display: 'grid', gridTemplateColumns: '20px 52px minmax(0, 1fr)', gap: 10,
                             alignItems: 'center', paddingBottom: 7, borderBottom: '1px solid var(--border-subtle)',
-                            cursor: 'pointer'
+                            cursor: 'pointer', minWidth: 0
                           }}
+
                         >
                           <span style={{
                             fontSize: 14, fontWeight: 900, lineHeight: 1,
@@ -2312,9 +2313,9 @@ export default function TrendingPage() {
                       key={rItem.id || `right-${rIdx}`}
                       onClick={() => handleItemClick(rItem)}
                       style={{
-                        display: 'grid', gridTemplateColumns: '64px 1fr', gap: 10,
+                        display: 'grid', gridTemplateColumns: '64px minmax(0, 1fr)', gap: 10,
                         alignItems: 'center', cursor: 'pointer', paddingBottom: 10,
-                        borderBottom: '1px solid var(--border-subtle)'
+                        borderBottom: '1px solid var(--border-subtle)', minWidth: 0
                       }}
                     >
                       <div style={{ width: 64, height: 46, borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
@@ -2326,7 +2327,7 @@ export default function TrendingPage() {
                           </div>
                         )}
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0, overflow: 'hidden' }}>
                         <h5 style={{
                           fontSize: 12, fontWeight: 700, lineHeight: 1.35, margin: '0 0 2px 0',
                           color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
@@ -2338,6 +2339,7 @@ export default function TrendingPage() {
                         </span>
                       </div>
                     </div>
+
                   ))}
                 </div>
               </div>
