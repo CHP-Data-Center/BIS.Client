@@ -8296,3 +8296,1674 @@ html, body {
   background: rgba(245, 158, 11, 0.18);
 }
 
+/* ==========================================================================
+   POTENTIAL PROJECTS BASE STYLES & MULTI-THEME COMPATIBILITY
+   ========================================================================== */
+
+/* --- Hero Banner --- */
+.potential-hero-banner {
+  background: linear-gradient(135deg, #091e2f 0%, #064e3b 50%, #0b1f33 100%);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  color: #fff;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 40px rgba(6, 78, 59, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.potential-hero-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.potential-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 1;
+  min-width: 0;
+}
+
+.potential-hero-icon-box {
+  width: 62px;
+  height: 62px;
+  border-radius: 20px;
+  flex: none;
+  background: linear-gradient(135deg, #10b981, #0284c7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+  color: #fff;
+}
+
+.potential-hero-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.potential-hero-title {
+  font-size: 23px;
+  font-weight: 900;
+  margin: 0;
+  color: inherit;
+  letter-spacing: -0.02em;
+}
+
+.potential-hero-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.potential-hero-subtitle {
+  font-size: 13.5px;
+  color: #cbd5e1;
+  margin: 6px 0 0;
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+.potential-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+  flex-wrap: wrap;
+}
+
+.potential-banner-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.potential-banner-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.potential-banner-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #10b981, #0d9488);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13.5px;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+  transition: all 0.2s ease;
+}
+
+.potential-banner-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.55);
+}
+
+/* --- Filter Card --- */
+.potential-filter-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+}
+
+.potential-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.potential-filter-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.potential-filter-icon {
+  color: var(--brand-500);
+}
+
+.potential-filter-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.potential-filter-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-surface-2);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.potential-reset-sectors-btn {
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-600);
+}
+
+.potential-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 7px 12px;
+  min-width: 260px;
+  max-width: 360px;
+  flex: 1;
+}
+
+.potential-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.potential-search-clear {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.potential-sector-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.potential-sector-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+}
+
+.potential-sector-chip:hover {
+  border-color: var(--brand-400);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  transform: translateY(-1px);
+}
+
+.potential-sector-chip.active {
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transform: scale(1.02);
+}
+
+.potential-sector-count {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.potential-sector-chip.active .potential-sector-count {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  border: none;
+}
+
+.potential-filter-subrow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.potential-subrow-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.potential-kind-group,
+.potential-amount-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.potential-amount-group {
+  margin-left: auto;
+}
+
+.potential-kind-pills {
+  display: inline-flex;
+  background: var(--bg-surface-2);
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.potential-kind-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.potential-kind-tab:hover:not(.disabled) {
+  color: var(--brand-600);
+}
+
+.potential-kind-tab.active {
+  background: var(--bg-surface);
+  color: var(--brand-600);
+  box-shadow: var(--shadow-sm);
+}
+
+.potential-kind-tab.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  color: var(--text-muted);
+}
+
+.potential-preset-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.potential-preset-chip {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.potential-preset-chip.active {
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border-color: var(--brand-400);
+}
+
+.potential-amount-input {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  width: 130px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.potential-amount-clear {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* --- Project Cards --- */
+.potential-project-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: all 0.25s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.potential-project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border-color: var(--brand-400);
+}
+
+.potential-project-card.is-tracked {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.09);
+}
+
+.potential-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.potential-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  flex: none;
+}
+
+.potential-stage-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  flex: none;
+}
+
+.potential-tracked-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.potential-date-tag {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  flex: none;
+}
+
+.potential-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.5;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.potential-data-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.potential-meta-row {
+  display: flex;
+  gap: 8px;
+  color: var(--text-secondary);
+  align-items: center;
+}
+
+.potential-meta-icon {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.potential-meta-icon.text-success { color: #10b981; }
+.potential-meta-icon.text-brand   { color: var(--brand-500); }
+.potential-meta-icon.text-danger  { color: #ef4444; }
+.potential-meta-row.text-danger   { color: #ef4444; }
+
+.potential-amount-highlight {
+  color: #059669;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.08);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.potential-sector-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.potential-tag-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.potential-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: auto;
+}
+
+.potential-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.potential-action-btn.track {
+  border: none;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+}
+
+.potential-action-btn.tracked {
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.potential-action-btn.tracked.danger-hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.potential-action-btn.view-source {
+  padding: 8px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  text-decoration: none;
+  overflow: hidden;
+}
+
+.potential-action-btn.view-source span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* --- Pagination --- */
+.potential-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.potential-page-arrow-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.potential-page-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.potential-page-dots {
+  padding: 0 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.potential-page-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.potential-page-btn.active {
+  border: none;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* --- Sector Config Modal --- */
+.potential-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.potential-modal-content {
+  background: var(--bg-surface);
+  border-radius: 22px;
+  padding: 28px 30px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.potential-modal-close-btn {
+  margin-left: auto;
+  border: none;
+  background: var(--bg-surface-2);
+  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+
+.potential-modal-link-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--brand-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.potential-modal-link-btn.text-muted {
+  color: var(--text-muted);
+}
+
+.potential-modal-sectors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.potential-modal-sector-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--bg-surface-2);
+  border: 1.5px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.potential-modal-sector-item.active {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: var(--brand-400);
+}
+
+.potential-modal-sector-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.potential-modal-sector-item.active .potential-modal-sector-name {
+  color: var(--brand-700);
+}
+
+.potential-modal-sector-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.potential-modal-save-btn {
+  padding: 13px 22px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-500), var(--brand-600));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   THEME 1: BLOOMBERG LUXURY (GOLD & OBSIDIAN)
+   ========================================================================== */
+[data-ui-theme="luxury"] .trending-masthead,
+[data-ui-theme="luxury"] .trending-hero-section,
+[data-ui-theme="luxury"] .trending-sub-card,
+[data-ui-theme="luxury"] .magazine-feature-hub,
+[data-ui-theme="luxury"] .feature-lead-card,
+[data-ui-theme="luxury"] .magazine-category-block,
+[data-ui-theme="luxury"] .trending-market-ticker-box,
+[data-ui-theme="luxury"] .potential-hero-banner,
+[data-ui-theme="luxury"] .potential-filter-card,
+[data-ui-theme="luxury"] .potential-project-card,
+[data-ui-theme="luxury"] .potential-modal-content {
+  background: linear-gradient(135deg, rgba(25, 25, 32, 0.96) 0%, rgba(14, 14, 17, 0.98) 50%, rgba(30, 26, 15, 0.95) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  color: #f5f5f7 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(212, 175, 55, 0.12) !important;
+}
+
+[data-ui-theme="luxury"] .potential-hero-banner {
+  background: linear-gradient(135deg, #18150d 0%, #2a2210 50%, #121008 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.2) !important;
+}
+
+[data-ui-theme="luxury"] .potential-hero-icon-box {
+  background: linear-gradient(135deg, #d4af37 0%, #fff2b2 40%, #aa7c11 100%) !important;
+  color: #08080a !important;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.5) !important;
+}
+
+[data-ui-theme="luxury"] .potential-hero-glow {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.35) 0%, transparent 70%) !important;
+}
+
+[data-ui-theme="luxury"] .potential-hero-badge {
+  background: rgba(212, 175, 55, 0.2) !important;
+  color: #fef1c9 !important;
+  border-color: rgba(212, 175, 55, 0.4) !important;
+}
+
+[data-ui-theme="luxury"] .potential-banner-btn-primary,
+[data-ui-theme="luxury"] .potential-action-btn.track,
+[data-ui-theme="luxury"] .potential-modal-save-btn,
+[data-ui-theme="luxury"] .potential-sector-chip.active,
+[data-ui-theme="luxury"] .potential-page-btn.active,
+[data-ui-theme="luxury"] .potential-kind-tab.active,
+[data-ui-theme="luxury"] .trending-nav-tab.active,
+[data-ui-theme="luxury"] .trending-read-btn,
+[data-ui-theme="luxury"] .magazine-subtab-btn.active {
+  background: linear-gradient(135deg, #d4af37 0%, #fef1c9 40%, #aa7c11 100%) !important;
+  color: #08080a !important;
+  font-weight: 900 !important;
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4) !important;
+}
+
+[data-ui-theme="luxury"] .potential-banner-btn-secondary,
+[data-ui-theme="luxury"] .potential-page-arrow-btn,
+[data-ui-theme="luxury"] .potential-page-btn {
+  background: rgba(30, 26, 15, 0.6) !important;
+  border: 1px solid rgba(212, 175, 55, 0.35) !important;
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .potential-action-btn.view-source,
+[data-ui-theme="luxury"] .trending-icon-btn,
+[data-ui-theme="luxury"] .trending-date-badge {
+  background: #1a1a20 !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .potential-kind-pills {
+  background: #18150d !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] .potential-kind-tab:not(.active),
+[data-ui-theme="luxury"] .magazine-subtab-btn:not(.active) {
+  color: #d1d5db !important;
+}
+
+[data-ui-theme="luxury"] .potential-kind-tab:hover:not(.active),
+[data-ui-theme="luxury"] .magazine-subtab-btn:hover:not(.active) {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .potential-search-box,
+[data-ui-theme="luxury"] .potential-amount-input {
+  background: #12100b !important;
+  border-color: rgba(212, 175, 55, 0.4) !important;
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .market-ticker-cell {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(212, 175, 55, 0.22) !important;
+}
+
+[data-ui-theme="luxury"] .ticker-val {
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .ticker-label {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .perspective-card {
+  background: linear-gradient(135deg, rgba(25, 25, 32, 0.95), rgba(30, 26, 15, 0.95)) !important;
+  border-left: 3.5px solid #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .perspective-badge {
+  color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .potential-modal-sector-item {
+  background: #1a1a22 !important;
+  border-color: rgba(212, 175, 55, 0.2) !important;
+}
+
+[data-ui-theme="luxury"] .potential-modal-sector-item.active {
+  background: rgba(212, 175, 55, 0.15) !important;
+  border-color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .potential-modal-sector-item.active .potential-modal-sector-name {
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .trending-announcement-banner {
+  background: linear-gradient(135deg, rgba(30, 26, 15, 0.9) 0%, rgba(45, 38, 20, 0.85) 100%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+}
+
+[data-ui-theme="luxury"] .announcement-banner-badge {
+  background: #d4af37 !important;
+  color: #08080a !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="luxury"] .announcement-banner-text {
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .announcement-banner-cta {
+  background: rgba(212, 175, 55, 0.2) !important;
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .potential-preset-chip.active {
+  background: rgba(212, 175, 55, 0.2) !important;
+  color: #fef1c9 !important;
+  border-color: #d4af37 !important;
+}
+
+[data-ui-theme="luxury"] .potential-amount-highlight {
+  background: rgba(212, 175, 55, 0.15) !important;
+  color: #fef1c9 !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] .article-placeholder-box {
+  background: linear-gradient(135deg, #18150d, #252014) !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+[data-ui-theme="luxury"] .trending-masthead::before {
+  background: linear-gradient(90deg, #aa7c11, #d4af37, #fff2b2, #d4af37, #aa7c11) !important;
+}
+
+[data-ui-theme="luxury"] .magazine-category-header {
+  border-bottom-color: rgba(212, 175, 55, 0.45) !important;
+}
+
+[data-ui-theme="luxury"] .trending-masthead-title,
+[data-ui-theme="luxury"] .trending-hero-title,
+[data-ui-theme="luxury"] .potential-hero-title,
+[data-ui-theme="luxury"] .sub-card-title,
+[data-ui-theme="luxury"] .stream-title,
+[data-ui-theme="luxury"] .magazine-category-main-title,
+[data-ui-theme="luxury"] .magazine-lead-title,
+[data-ui-theme="luxury"] .market-ticker-title,
+[data-ui-theme="luxury"] .perspective-title,
+[data-ui-theme="luxury"] .section-title-text,
+[data-ui-theme="luxury"] .potential-card-title,
+[data-ui-theme="luxury"] .potential-modal-sector-name {
+  color: #fef1c9 !important;
+}
+
+[data-ui-theme="luxury"] .trending-hero-excerpt,
+[data-ui-theme="luxury"] .stream-excerpt,
+[data-ui-theme="luxury"] .magazine-lead-excerpt,
+[data-ui-theme="luxury"] .perspective-quote,
+[data-ui-theme="luxury"] .potential-hero-subtitle,
+[data-ui-theme="luxury"] .potential-meta-row {
+  color: #d1d5db !important;
+}
+
+[data-ui-theme="luxury"] .trending-hero-section:hover,
+[data-ui-theme="luxury"] .trending-sub-card:hover,
+[data-ui-theme="luxury"] .potential-project-card:hover {
+  border-color: #d4af37 !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.35) !important;
+}
+
+[data-ui-theme="luxury"] .trending-hero-section:hover .trending-hero-title,
+[data-ui-theme="luxury"] .trending-sub-card:hover .sub-card-title,
+[data-ui-theme="luxury"] .magazine-lead-card:hover .magazine-lead-title,
+[data-ui-theme="luxury"] .trending-stream-item:hover .stream-title,
+[data-ui-theme="luxury"] .magazine-bullet-item:hover {
+  color: #d4af37 !important;
+}
+
+/* ==========================================================================
+   THEME 2: ROYAL SAPPHIRE (DIAMOND BLUE & NAVY)
+   ========================================================================== */
+[data-ui-theme="sapphire"] .trending-masthead,
+[data-ui-theme="sapphire"] .trending-hero-section,
+[data-ui-theme="sapphire"] .trending-sub-card,
+[data-ui-theme="sapphire"] .magazine-feature-hub,
+[data-ui-theme="sapphire"] .feature-lead-card,
+[data-ui-theme="sapphire"] .magazine-category-block,
+[data-ui-theme="sapphire"] .trending-market-ticker-box,
+[data-ui-theme="sapphire"] .potential-hero-banner,
+[data-ui-theme="sapphire"] .potential-filter-card,
+[data-ui-theme="sapphire"] .potential-project-card,
+[data-ui-theme="sapphire"] .potential-modal-content {
+  background: linear-gradient(145deg, rgba(13, 22, 48, 0.96) 0%, rgba(8, 14, 31, 0.98) 50%, rgba(18, 38, 77, 0.92) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.22) !important;
+  color: #f0f9ff !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.12) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-hero-banner {
+  background: linear-gradient(135deg, #061028 0%, #0d2256 50%, #071333 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.25) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-hero-icon-box {
+  background: linear-gradient(135deg, #1d4ed8 0%, #38bdf8 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.45) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-hero-glow {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-hero-badge {
+  background: rgba(56, 189, 248, 0.18) !important;
+  color: #7dd3fc !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-banner-btn-primary,
+[data-ui-theme="sapphire"] .potential-action-btn.track,
+[data-ui-theme="sapphire"] .potential-modal-save-btn,
+[data-ui-theme="sapphire"] .potential-sector-chip.active,
+[data-ui-theme="sapphire"] .potential-page-btn.active,
+[data-ui-theme="sapphire"] .potential-kind-tab.active,
+[data-ui-theme="sapphire"] .trending-nav-tab.active,
+[data-ui-theme="sapphire"] .trending-read-btn,
+[data-ui-theme="sapphire"] .magazine-subtab-btn.active {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-banner-btn-secondary,
+[data-ui-theme="sapphire"] .potential-page-arrow-btn,
+[data-ui-theme="sapphire"] .potential-page-btn {
+  background: rgba(13, 22, 48, 0.7) !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .potential-action-btn.view-source,
+[data-ui-theme="sapphire"] .trending-icon-btn,
+[data-ui-theme="sapphire"] .trending-date-badge {
+  background: #101c3d !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+  color: #7dd3fc !important;
+}
+
+[data-ui-theme="sapphire"] .potential-kind-pills {
+  background: #071333 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-kind-tab:not(.active),
+[data-ui-theme="sapphire"] .magazine-subtab-btn:not(.active) {
+  color: #bae6fd !important;
+}
+
+[data-ui-theme="sapphire"] .potential-kind-tab:hover:not(.active),
+[data-ui-theme="sapphire"] .magazine-subtab-btn:hover:not(.active) {
+  color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .potential-search-box,
+[data-ui-theme="sapphire"] .potential-amount-input {
+  background: #071026 !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .market-ticker-cell {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(56, 189, 248, 0.22) !important;
+}
+
+[data-ui-theme="sapphire"] .ticker-val {
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .ticker-label {
+  color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .perspective-card {
+  background: linear-gradient(135deg, rgba(13, 22, 48, 0.95), rgba(18, 38, 77, 0.92)) !important;
+  border-left: 3.5px solid #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .perspective-badge {
+  color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .potential-modal-sector-item {
+  background: #0c1836 !important;
+  border-color: rgba(56, 189, 248, 0.2) !important;
+}
+
+[data-ui-theme="sapphire"] .potential-modal-sector-item.active {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .potential-modal-sector-item.active .potential-modal-sector-name {
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .trending-announcement-banner {
+  background: linear-gradient(135deg, rgba(13, 22, 48, 0.9) 0%, rgba(18, 38, 77, 0.85) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+}
+
+[data-ui-theme="sapphire"] .announcement-banner-badge {
+  background: #38bdf8 !important;
+  color: #080e1e !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="sapphire"] .announcement-banner-text {
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .announcement-banner-cta {
+  background: rgba(56, 189, 248, 0.2) !important;
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .potential-preset-chip.active {
+  background: rgba(56, 189, 248, 0.2) !important;
+  color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+}
+
+[data-ui-theme="sapphire"] .potential-amount-highlight {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-ui-theme="sapphire"] .article-placeholder-box {
+  background: linear-gradient(135deg, #091533, #0d2256) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-ui-theme="sapphire"] .trending-masthead::before {
+  background: linear-gradient(90deg, #1d4ed8, #38bdf8, #60a5fa, #0284c7) !important;
+}
+
+[data-ui-theme="sapphire"] .magazine-category-header {
+  border-bottom-color: rgba(56, 189, 248, 0.45) !important;
+}
+
+[data-ui-theme="sapphire"] .trending-masthead-title,
+[data-ui-theme="sapphire"] .trending-hero-title,
+[data-ui-theme="sapphire"] .potential-hero-title,
+[data-ui-theme="sapphire"] .sub-card-title,
+[data-ui-theme="sapphire"] .stream-title,
+[data-ui-theme="sapphire"] .magazine-category-main-title,
+[data-ui-theme="sapphire"] .magazine-lead-title,
+[data-ui-theme="sapphire"] .market-ticker-title,
+[data-ui-theme="sapphire"] .perspective-title,
+[data-ui-theme="sapphire"] .section-title-text,
+[data-ui-theme="sapphire"] .potential-card-title,
+[data-ui-theme="sapphire"] .potential-modal-sector-name {
+  color: #f0f9ff !important;
+}
+
+[data-ui-theme="sapphire"] .trending-hero-excerpt,
+[data-ui-theme="sapphire"] .stream-excerpt,
+[data-ui-theme="sapphire"] .magazine-lead-excerpt,
+[data-ui-theme="sapphire"] .perspective-quote,
+[data-ui-theme="sapphire"] .potential-hero-subtitle,
+[data-ui-theme="sapphire"] .potential-meta-row {
+  color: #bae6fd !important;
+}
+
+[data-ui-theme="sapphire"] .trending-hero-section:hover,
+[data-ui-theme="sapphire"] .trending-sub-card:hover,
+[data-ui-theme="sapphire"] .potential-project-card:hover {
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-ui-theme="sapphire"] .trending-hero-section:hover .trending-hero-title,
+[data-ui-theme="sapphire"] .trending-sub-card:hover .sub-card-title,
+[data-ui-theme="sapphire"] .magazine-lead-card:hover .magazine-lead-title,
+[data-ui-theme="sapphire"] .trending-stream-item:hover .stream-title,
+[data-ui-theme="sapphire"] .magazine-bullet-item:hover {
+  color: #38bdf8 !important;
+}
+
+/* ==========================================================================
+   THEME 3: WINDOWS 98 RETRO PC (CLASSIC)
+   ========================================================================== */
+[data-ui-theme="classic"] .trending-masthead,
+[data-ui-theme="classic"] .trending-hero-section,
+[data-ui-theme="classic"] .trending-sub-card,
+[data-ui-theme="classic"] .magazine-feature-hub,
+[data-ui-theme="classic"] .feature-lead-card,
+[data-ui-theme="classic"] .magazine-category-block,
+[data-ui-theme="classic"] .trending-market-ticker-box,
+[data-ui-theme="classic"] .potential-hero-banner,
+[data-ui-theme="classic"] .potential-filter-card,
+[data-ui-theme="classic"] .potential-project-card,
+[data-ui-theme="classic"] .potential-modal-content {
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: none !important;
+}
+
+[data-ui-theme="classic"] .potential-hero-banner {
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .potential-hero-glow {
+  display: none !important;
+}
+
+[data-ui-theme="classic"] .potential-hero-icon-box {
+  background: #000080 !important;
+  color: #ffffff !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+[data-ui-theme="classic"] .potential-hero-title,
+[data-ui-theme="classic"] .potential-hero-subtitle,
+[data-ui-theme="classic"] .trending-masthead-title,
+[data-ui-theme="classic"] .trending-hero-title,
+[data-ui-theme="classic"] .sub-card-title,
+[data-ui-theme="classic"] .stream-title,
+[data-ui-theme="classic"] .magazine-category-main-title,
+[data-ui-theme="classic"] .magazine-lead-title,
+[data-ui-theme="classic"] .market-ticker-title,
+[data-ui-theme="classic"] .perspective-title,
+[data-ui-theme="classic"] .section-title-text,
+[data-ui-theme="classic"] .potential-card-title,
+[data-ui-theme="classic"] .potential-modal-sector-name,
+[data-ui-theme="classic"] .ticker-val {
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .trending-hero-excerpt,
+[data-ui-theme="classic"] .stream-excerpt,
+[data-ui-theme="classic"] .magazine-lead-excerpt,
+[data-ui-theme="classic"] .perspective-quote,
+[data-ui-theme="classic"] .stream-meta,
+[data-ui-theme="classic"] .sub-card-footer,
+[data-ui-theme="classic"] .potential-meta-row,
+[data-ui-theme="classic"] .ticker-label {
+  color: #333333 !important;
+}
+
+[data-ui-theme="classic"] .potential-hero-badge {
+  background: #000080 !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .potential-banner-btn-primary,
+[data-ui-theme="classic"] .potential-banner-btn-secondary,
+[data-ui-theme="classic"] .potential-action-btn,
+[data-ui-theme="classic"] .potential-modal-save-btn,
+[data-ui-theme="classic"] .potential-page-arrow-btn,
+[data-ui-theme="classic"] .potential-page-btn,
+[data-ui-theme="classic"] .potential-sector-chip,
+[data-ui-theme="classic"] .potential-preset-chip,
+[data-ui-theme="classic"] .potential-kind-tab,
+[data-ui-theme="classic"] .trending-nav-tab,
+[data-ui-theme="classic"] .trending-read-btn,
+[data-ui-theme="classic"] .trending-icon-btn,
+[data-ui-theme="classic"] .magazine-subtab-btn {
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  background: #c0c0c0 !important;
+  color: #000000 !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+}
+
+[data-ui-theme="classic"] .potential-banner-btn-primary,
+[data-ui-theme="classic"] .trending-read-btn {
+  background: #000080 !important;
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .potential-banner-btn-primary:active,
+[data-ui-theme="classic"] .potential-banner-btn-secondary:active,
+[data-ui-theme="classic"] .potential-action-btn:active,
+[data-ui-theme="classic"] .potential-sector-chip.active,
+[data-ui-theme="classic"] .potential-page-btn.active,
+[data-ui-theme="classic"] .potential-preset-chip.active,
+[data-ui-theme="classic"] .potential-kind-tab.active,
+[data-ui-theme="classic"] .trending-nav-tab.active,
+[data-ui-theme="classic"] .magazine-subtab-btn.active {
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  background: #000080 !important;
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .potential-sector-chip.active .potential-sector-count {
+  background: #ffffff !important;
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .trending-masthead::before {
+  display: none !important;
+}
+
+[data-ui-theme="classic"] .potential-amount-highlight {
+  background: #ffffff !important;
+  color: #000080 !important;
+  border: 1px solid #808080 !important;
+}
+
+[data-ui-theme="classic"] .potential-search-box,
+[data-ui-theme="classic"] .potential-amount-input,
+[data-ui-theme="classic"] .market-ticker-cell {
+  border: 2px solid !important;
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .potential-modal-sector-item {
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  background: #c0c0c0 !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .potential-modal-sector-item.active {
+  background: #000080 !important;
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .potential-modal-sector-item.active .potential-modal-sector-name,
+[data-ui-theme="classic"] .potential-modal-sector-item.active .potential-modal-sector-count {
+  color: #ffffff !important;
+}
+
+[data-ui-theme="classic"] .perspective-card {
+  background: #c0c0c0 !important;
+  border-left: 4px solid #000080 !important;
+}
+
+[data-ui-theme="classic"] .perspective-badge {
+  color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .trending-announcement-banner {
+  background: #ffffcc !important;
+  border: 2px solid !important;
+  border-top-color: #ffffff !important;
+  border-left-color: #ffffff !important;
+  border-right-color: #404040 !important;
+  border-bottom-color: #404040 !important;
+  outline: 1px solid #000000 !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .announcement-banner-badge {
+  background: #000080 !important;
+  color: #ffffff !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .announcement-banner-text {
+  color: #000000 !important;
+}
+
+[data-ui-theme="classic"] .announcement-banner-cta {
+  background: #ffffff !important;
+  color: #000080 !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .article-placeholder-box {
+  background: #d4d0c8 !important;
+  border: 2px solid !important;
+  border-top-color: #404040 !important;
+  border-left-color: #404040 !important;
+  border-right-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+  border-radius: 0px !important;
+}
+
+[data-ui-theme="classic"] .magazine-category-header {
+  border-bottom-color: #000080 !important;
+}
+
+[data-ui-theme="classic"] .trending-hero-section:hover .trending-hero-title,
+[data-ui-theme="classic"] .trending-sub-card:hover .sub-card-title,
+[data-ui-theme="classic"] .magazine-lead-card:hover .magazine-lead-title,
+[data-ui-theme="classic"] .trending-stream-item:hover .stream-title,
+[data-ui-theme="classic"] .magazine-bullet-item:hover {
+  color: #000080 !important;
+}
+
+/* ==========================================================================
+   THEME 4: MAKOTO SHINKAI SAKURA (ANIME)
+   ========================================================================== */
+[data-ui-theme="anime"] .trending-masthead,
+[data-ui-theme="anime"] .trending-hero-section,
+[data-ui-theme="anime"] .trending-sub-card,
+[data-ui-theme="anime"] .magazine-feature-hub,
+[data-ui-theme="anime"] .feature-lead-card,
+[data-ui-theme="anime"] .magazine-category-block,
+[data-ui-theme="anime"] .trending-market-ticker-box,
+[data-ui-theme="anime"] .potential-hero-banner,
+[data-ui-theme="anime"] .potential-filter-card,
+[data-ui-theme="anime"] .potential-project-card,
+[data-ui-theme="anime"] .potential-modal-content {
+  border: 1.5px solid rgba(244, 114, 182, 0.4) !important;
+  background: linear-gradient(135deg, rgba(28, 23, 46, 0.92) 0%, rgba(42, 32, 68, 0.88) 100%) !important;
+  backdrop-filter: blur(20px) !important;
+  color: #fff5f8 !important;
+  border-radius: 22px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 114, 182, 0.2) !important;
+}
+
+[data-ui-theme="anime"] .potential-hero-banner {
+  background: linear-gradient(135deg, #251640 0%, #3e1e62 50%, #180f2d 100%) !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.5) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 35px rgba(244, 114, 182, 0.3) !important;
+}
+
+[data-ui-theme="anime"] .potential-hero-icon-box {
+  background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 24px rgba(244, 114, 182, 0.5) !important;
+}
+
+[data-ui-theme="anime"] .potential-hero-glow {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.4) 0%, transparent 70%) !important;
+}
+
+[data-ui-theme="anime"] .potential-hero-badge {
+  background: rgba(244, 114, 182, 0.2) !important;
+  color: #fbcfe8 !important;
+  border-color: rgba(244, 114, 182, 0.45) !important;
+}
+
+[data-ui-theme="anime"] .potential-banner-btn-primary,
+[data-ui-theme="anime"] .potential-action-btn.track,
+[data-ui-theme="anime"] .potential-modal-save-btn,
+[data-ui-theme="anime"] .potential-sector-chip.active,
+[data-ui-theme="anime"] .potential-page-btn.active,
+[data-ui-theme="anime"] .potential-kind-tab.active,
+[data-ui-theme="anime"] .trending-nav-tab.active,
+[data-ui-theme="anime"] .trending-read-btn,
+[data-ui-theme="anime"] .magazine-subtab-btn.active {
+  background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  border: none !important;
+  box-shadow: 0 4px 18px rgba(244, 114, 182, 0.45) !important;
+}
+
+[data-ui-theme="anime"] .potential-banner-btn-secondary,
+[data-ui-theme="anime"] .potential-page-arrow-btn,
+[data-ui-theme="anime"] .potential-page-btn {
+  background: rgba(42, 32, 68, 0.6) !important;
+  border: 1px solid rgba(244, 114, 182, 0.4) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .potential-action-btn.view-source,
+[data-ui-theme="anime"] .trending-icon-btn,
+[data-ui-theme="anime"] .trending-date-badge {
+  background: #211d36 !important;
+  border-color: rgba(244, 114, 182, 0.3) !important;
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .potential-kind-pills {
+  background: #1c152d !important;
+  border-color: rgba(244, 114, 182, 0.35) !important;
+}
+
+[data-ui-theme="anime"] .potential-kind-tab:not(.active),
+[data-ui-theme="anime"] .magazine-subtab-btn:not(.active) {
+  color: #fbcfe8 !important;
+}
+
+[data-ui-theme="anime"] .potential-kind-tab:hover:not(.active),
+[data-ui-theme="anime"] .magazine-subtab-btn:hover:not(.active) {
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .potential-search-box,
+[data-ui-theme="anime"] .potential-amount-input {
+  background: #1a142c !important;
+  border-color: rgba(244, 114, 182, 0.4) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .market-ticker-cell {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(244, 114, 182, 0.25) !important;
+}
+
+[data-ui-theme="anime"] .ticker-val {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .ticker-label {
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .perspective-card {
+  background: linear-gradient(135deg, rgba(28, 23, 46, 0.92), rgba(42, 32, 68, 0.88)) !important;
+  border-left: 3.5px solid #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .perspective-badge {
+  color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .potential-modal-sector-item {
+  background: #231b3b !important;
+  border-color: rgba(244, 114, 182, 0.25) !important;
+}
+
+[data-ui-theme="anime"] .potential-modal-sector-item.active {
+  background: rgba(244, 114, 182, 0.2) !important;
+  border-color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .potential-modal-sector-item.active .potential-modal-sector-name {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .trending-announcement-banner {
+  background: linear-gradient(135deg, rgba(42, 32, 68, 0.8) 0%, rgba(76, 29, 149, 0.4) 100%) !important;
+  border: 1.5px solid rgba(244, 114, 182, 0.45) !important;
+}
+
+[data-ui-theme="anime"] .announcement-banner-badge {
+  background: #f472b6 !important;
+  color: #1e102d !important;
+  font-weight: 800 !important;
+}
+
+[data-ui-theme="anime"] .announcement-banner-text {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .announcement-banner-cta {
+  background: rgba(244, 114, 182, 0.25) !important;
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .potential-preset-chip.active {
+  background: rgba(244, 114, 182, 0.25) !important;
+  color: #f472b6 !important;
+  border-color: #f472b6 !important;
+}
+
+[data-ui-theme="anime"] .potential-amount-highlight {
+  background: rgba(244, 114, 182, 0.15) !important;
+  color: #f472b6 !important;
+  border: 1px solid rgba(244, 114, 182, 0.3) !important;
+}
+
+[data-ui-theme="anime"] .article-placeholder-box {
+  background: linear-gradient(135deg, #251640, #3e1e62) !important;
+  border-color: rgba(244, 114, 182, 0.35) !important;
+}
+
+[data-ui-theme="anime"] .trending-masthead::before {
+  background: linear-gradient(90deg, #f472b6, #c084fc, #ec4899, #f472b6) !important;
+}
+
+[data-ui-theme="anime"] .magazine-category-header {
+  border-bottom-color: rgba(244, 114, 182, 0.45) !important;
+}
+
+[data-ui-theme="anime"] .trending-masthead-title,
+[data-ui-theme="anime"] .trending-hero-title,
+[data-ui-theme="anime"] .potential-hero-title,
+[data-ui-theme="anime"] .sub-card-title,
+[data-ui-theme="anime"] .stream-title,
+[data-ui-theme="anime"] .magazine-category-main-title,
+[data-ui-theme="anime"] .magazine-lead-title,
+[data-ui-theme="anime"] .market-ticker-title,
+[data-ui-theme="anime"] .perspective-title,
+[data-ui-theme="anime"] .section-title-text,
+[data-ui-theme="anime"] .potential-card-title,
+[data-ui-theme="anime"] .potential-modal-sector-name {
+  color: #fff5f8 !important;
+}
+
+[data-ui-theme="anime"] .trending-hero-excerpt,
+[data-ui-theme="anime"] .stream-excerpt,
+[data-ui-theme="anime"] .magazine-lead-excerpt,
+[data-ui-theme="anime"] .perspective-quote,
+[data-ui-theme="anime"] .potential-hero-subtitle,
+[data-ui-theme="anime"] .potential-meta-row {
+  color: #fbcfe8 !important;
+}
+
+[data-ui-theme="anime"] .trending-hero-section:hover,
+[data-ui-theme="anime"] .trending-sub-card:hover,
+[data-ui-theme="anime"] .potential-project-card:hover {
+  border-color: #f472b6 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(244, 114, 182, 0.5) !important;
+}
+
+[data-ui-theme="anime"] .trending-hero-section:hover .trending-hero-title,
+[data-ui-theme="anime"] .trending-sub-card:hover .sub-card-title,
+[data-ui-theme="anime"] .magazine-lead-card:hover .magazine-lead-title,
+[data-ui-theme="anime"] .trending-stream-item:hover .stream-title,
+[data-ui-theme="anime"] .magazine-bullet-item:hover {
+  color: #f472b6 !important;
+}
+
+

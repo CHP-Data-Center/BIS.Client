@@ -75,25 +75,10 @@ function SectorChip({ sector, active, onToggle }) {
       type="button"
       onClick={() => onToggle(sector.slug)}
       aria-pressed={active}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 7,
-        padding: '7px 14px', borderRadius: 999, cursor: 'pointer',
-        fontSize: 12.5, fontWeight: 700, transition: 'all .2s cubic-bezier(0.4, 0, 0.2, 1)',
-        background: active ? 'linear-gradient(135deg, var(--brand-500), var(--brand-600))' : 'var(--bg-surface-2)',
-        color: active ? '#fff' : 'var(--text-secondary)',
-        border: `1.5px solid ${active ? 'transparent' : 'var(--border)'}`,
-        boxShadow: active ? '0 4px 12px rgba(37, 99, 235, 0.25)' : 'none',
-        transform: active ? 'scale(1.02)' : 'scale(1)',
-      }}
+      className={`potential-sector-chip ${active ? 'active' : ''}`}
     >
-      {sector.name}
-      <span style={{
-        fontSize: 11, fontWeight: 800, padding: '1px 7px', borderRadius: 999,
-        background: active ? 'rgba(255,255,255,.24)' : 'var(--bg-surface)',
-        color: active ? '#fff' : 'var(--text-muted)',
-        border: active ? 'none' : '1px solid var(--border-subtle)',
-        fontVariantNumeric: 'tabular-nums',
-      }}>
+      <span>{sector.name}</span>
+      <span className="potential-sector-count">
         {sector.total}
       </span>
     </button>
@@ -103,16 +88,7 @@ function SectorChip({ sector, active, onToggle }) {
 /** Skeleton Card hiển thị trạng thái đang tải mượt mà */
 function PotentialSkeletonCard() {
   return (
-    <div style={{
-      background: 'var(--bg-surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 18,
-      padding: 20,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
-      boxShadow: 'var(--shadow-sm)',
-    }}>
+    <div className="potential-project-card card skeleton-card">
       {/* Badges row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div className="skeleton" style={{ width: 88, height: 24, borderRadius: 999 }} />
@@ -161,44 +137,44 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
   const getBadgeConfig = () => {
     if (item.kind === 'procurement') {
       return {
-        bg: 'rgba(59, 130, 246, 0.1)',
+        bg: 'rgba(59, 130, 246, 0.12)',
         fg: '#2563eb',
-        border: 'rgba(59, 130, 246, 0.25)',
+        border: 'rgba(59, 130, 246, 0.28)',
         icon: ShoppingBag,
         label: t('potential.kindProcurement') || 'Đấu thầu công',
       };
     }
     if (item.source_name === 'World Bank' || item.source_org === 'worldbank' || item.kind === 'worldbank') {
       return {
-        bg: 'rgba(16, 185, 129, 0.1)',
+        bg: 'rgba(16, 185, 129, 0.12)',
         fg: '#059669',
-        border: 'rgba(16, 185, 129, 0.25)',
+        border: 'rgba(16, 185, 129, 0.28)',
         icon: Globe,
         label: 'World Bank',
       };
     }
     if (item.source_name === 'ADB' || item.source_org === 'adb' || item.kind === 'adb') {
       return {
-        bg: 'rgba(245, 158, 11, 0.1)',
+        bg: 'rgba(245, 158, 11, 0.12)',
         fg: '#d97706',
-        border: 'rgba(245, 158, 11, 0.25)',
+        border: 'rgba(245, 158, 11, 0.28)',
         icon: Building2,
         label: 'Dự án ADB',
       };
     }
     if (item.kind === 'oda') {
       return {
-        bg: 'rgba(16, 185, 129, 0.1)',
+        bg: 'rgba(16, 185, 129, 0.12)',
         fg: '#059669',
-        border: 'rgba(16, 185, 129, 0.25)',
+        border: 'rgba(16, 185, 129, 0.28)',
         icon: Globe,
         label: 'Dự án ODA',
       };
     }
     return {
-      bg: 'rgba(245, 158, 11, 0.1)',
+      bg: 'rgba(245, 158, 11, 0.12)',
       fg: '#d97706',
-      border: 'rgba(245, 158, 11, 0.25)',
+      border: 'rgba(245, 158, 11, 0.28)',
       icon: Newspaper,
       label: t('potential.kindArticle') || 'Tin báo chí',
     };
@@ -211,114 +187,82 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
     item.kind === 'procurement' ? `/procurement/${encodeURIComponent(item.ref)}` : null;
 
   return (
-    <div style={{
-      background: 'var(--bg-surface)',
-      border: `1px solid ${tracked ? 'rgba(16, 185, 129, 0.4)' : 'var(--border)'}`,
-      borderRadius: 18,
-      padding: 20,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
-      position: 'relative',
-      transition: 'all .25s ease',
-      boxShadow: tracked ? '0 4px 18px rgba(16, 185, 129, 0.09)' : 'var(--shadow-sm)',
-    }}>
+    <div className={`potential-project-card card ${tracked ? 'is-tracked' : ''}`}>
       {/* Header tags */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5,
-          fontSize: 11.5, fontWeight: 800, padding: '4px 10px', borderRadius: 999,
-          background: badgeCfg.bg, color: badgeCfg.fg, border: `1px solid ${badgeCfg.border}`,
-          flex: 'none',
-        }}>
+      <div className="potential-card-header">
+        <span
+          className="potential-badge-tag"
+          style={{ background: badgeCfg.bg, color: badgeCfg.fg, borderColor: badgeCfg.border }}
+        >
           <BadgeIcon size={13} />
           {badgeCfg.label}
         </span>
 
         {item.stage && (
-          <span style={{
-            fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
-            background: 'var(--bg-surface-2)', color: 'var(--text-muted)',
-            border: '1px solid var(--border)', flex: 'none',
-          }}>
+          <span className="potential-stage-tag">
             {item.stage}
           </span>
         )}
 
         {tracked && (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            fontSize: 11, fontWeight: 800, padding: '3px 8px', borderRadius: 6,
-            background: 'rgba(16, 185, 129, 0.12)', color: '#059669',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-          }}>
+          <span className="potential-tracked-tag">
             <CheckCircle2 size={12} /> {t('potential.tracked')}
           </span>
         )}
 
         {item.published_at && (
-          <span style={{ marginLeft: 'auto', fontSize: 11.5, color: 'var(--text-muted)', flex: 'none' }}>
+          <span className="potential-date-tag">
             {fmtDate(item.published_at)}
           </span>
         )}
       </div>
 
       {/* Title */}
-      <h3 style={{
-        margin: 0, fontSize: 15, fontWeight: 800, lineHeight: 1.5,
-        color: 'var(--text-primary)',
-        display: '-webkit-box',
-        WebkitLineClamp: 3,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden',
-      }}>
+      <h3 className="potential-card-title" title={item.title}>
         {item.title}
       </h3>
 
       {/* Chi tiết dữ liệu */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13 }}>
+      <div className="potential-data-rows">
         {item.investor && (
-          <div style={{ display: 'flex', gap: 8, color: 'var(--text-secondary)', alignItems: 'flex-start' }}>
-            <Building2 size={15} style={{ flex: 'none', marginTop: 2, color: 'var(--text-muted)' }} />
+          <div className="potential-meta-row">
+            <Building2 size={15} className="potential-meta-icon" />
             <span>
-              <strong style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{t('potential.investor')}:</strong>{' '}
+              <strong>{t('potential.investor')}:</strong>{' '}
               {item.investor}
             </span>
           </div>
         )}
         {item.amount && (
-          <div style={{ display: 'flex', gap: 8, color: 'var(--text-secondary)', alignItems: 'center' }}>
-            <Coins size={15} style={{ flex: 'none', color: '#10b981' }} />
+          <div className="potential-meta-row">
+            <Coins size={15} className="potential-meta-icon text-success" />
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-              <strong style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{t('potential.value')}:</strong>{' '}
-              <span style={{
-                color: '#059669', fontWeight: 800, background: 'rgba(16, 185, 129, 0.08)',
-                padding: '2px 7px', borderRadius: 6,
-              }}>
+              <strong>{t('potential.value')}:</strong>{' '}
+              <span className="potential-amount-highlight">
                 {item.amount}
               </span>
             </span>
           </div>
         )}
         {item.province && (
-          <div style={{ display: 'flex', gap: 8, color: 'var(--text-secondary)', alignItems: 'center' }}>
-            <MapPin size={15} style={{ flex: 'none', color: 'var(--text-muted)' }} />
+          <div className="potential-meta-row">
+            <MapPin size={15} className="potential-meta-icon" />
             <span>{item.province}</span>
           </div>
         )}
         {item.expected_date && (
-          <div style={{ display: 'flex', gap: 8, color: 'var(--text-secondary)', alignItems: 'center' }}>
-            <Calendar size={15} style={{ flex: 'none', color: 'var(--brand-500)' }} />
+          <div className="potential-meta-row">
+            <Calendar size={15} className="potential-meta-icon text-brand" />
             <span>
-              <strong style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{t('potential.expectedDate')}:</strong> {item.expected_date}
+              <strong>{t('potential.expectedDate')}:</strong> {item.expected_date}
             </span>
           </div>
         )}
         {item.close_date && (
-          <div style={{ display: 'flex', gap: 8, color: 'var(--text-secondary)', alignItems: 'center' }}>
-            <Calendar size={15} style={{ flex: 'none', color: '#ef4444' }} />
+          <div className="potential-meta-row text-danger">
+            <Calendar size={15} className="potential-meta-icon text-danger" />
             <span>
-              <strong style={{ fontWeight: 700, color: '#ef4444' }}>{t('potential.closeDate')}:</strong> {item.close_date}
+              <strong>{t('potential.closeDate')}:</strong> {item.close_date}
             </span>
           </div>
         )}
@@ -326,13 +270,9 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
 
       {/* Sector pills */}
       {item.sector_names?.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+        <div className="potential-sector-tags">
           {item.sector_names.map((s) => (
-            <span key={s} style={{
-              fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 6,
-              background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
-              border: '1px solid var(--border-subtle)',
-            }}>
+            <span key={s} className="potential-tag-pill">
               {s}
             </span>
           ))}
@@ -340,15 +280,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
       )}
 
       {/* Footer buttons - Căn thẳng hàng 1 dòng duy nhất, tên nguồn dài tự động có dấu ... */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: (openInApp || item.url) ? 'minmax(0, auto) minmax(0, 1fr)' : 'auto',
-        alignItems: 'center',
-        gap: 8,
-        paddingTop: 12,
-        borderTop: '1px solid var(--border-subtle)',
-        marginTop: 'auto',
-      }}>
+      <div className="potential-card-actions">
         {tracked ? (
           <button
             type="button"
@@ -357,17 +289,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             onMouseLeave={() => setIsHoveredTrack(false)}
             disabled={tracking}
             title="Bấm để hủy theo dõi dự án này"
-            style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '8px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
-              border: `1px solid ${isHoveredTrack ? '#fca5a5' : 'rgba(16, 185, 129, 0.4)'}`,
-              background: isHoveredTrack ? '#fef2f2' : 'rgba(16, 185, 129, 0.1)',
-              color: isHoveredTrack ? '#dc2626' : '#059669',
-              cursor: tracking ? 'default' : 'pointer',
-              whiteSpace: 'nowrap',
-              flex: 'none',
-              transition: 'all .2s ease',
-            }}
+            className={`potential-action-btn tracked ${isHoveredTrack ? 'danger-hover' : ''}`}
           >
             {tracking ? (
               <Loader2 size={14} className="spin" />
@@ -383,19 +305,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             type="button"
             onClick={() => onToggleTrack(item, false)}
             disabled={tracking}
-            style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              padding: '8px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 700,
-              border: 'none',
-              background: 'linear-gradient(135deg, var(--brand-500), var(--brand-600))',
-              color: '#fff',
-              cursor: tracking ? 'default' : 'pointer',
-              opacity: tracking ? 0.7 : 1,
-              boxShadow: '0 3px 10px rgba(37, 99, 235, 0.25)',
-              whiteSpace: 'nowrap',
-              flex: 'none',
-              transition: 'all .2s ease',
-            }}
+            className="potential-action-btn track"
           >
             {tracking ? <Loader2 size={14} className="spin" /> : <Plus size={14} />}
             <span>{t('potential.track')}</span>
@@ -407,23 +317,10 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             type="button"
             onClick={() => navigate(openInApp)}
             title={t('potential.viewSource')}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 10px', borderRadius: 10, fontSize: 12, fontWeight: 700,
-              border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
-              color: 'var(--text-secondary)', cursor: 'pointer',
-              transition: 'all .15s ease',
-              minWidth: 0,
-              overflow: 'hidden',
-            }}
+            className="potential-action-btn view-source"
           >
             <ExternalLink size={13} style={{ flex: 'none' }} />
-            <span style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              display: 'block',
-            }}>
+            <span>
               {t('potential.viewSource')}
             </span>
           </button>
@@ -433,23 +330,10 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             target="_blank"
             rel="noopener noreferrer"
             title={item.source_name || t('potential.viewSource')}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 10px', borderRadius: 10, fontSize: 12, fontWeight: 700,
-              border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
-              color: 'var(--text-secondary)', textDecoration: 'none',
-              transition: 'all .15s ease',
-              minWidth: 0,
-              overflow: 'hidden',
-            }}
+            className="potential-action-btn view-source"
           >
             <ExternalLink size={13} style={{ flex: 'none' }} />
-            <span style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              display: 'block',
-            }}>
+            <span>
               {item.source_name || t('potential.viewSource')}
             </span>
           </a>
@@ -475,43 +359,12 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
   const deselectAll = () => setPicked([]);
 
   const modalContent = (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 99999,
-        background: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(6px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        boxSizing: 'border-box',
-      }}
-    >
+    <div className="potential-modal-backdrop" onClick={onClose}>
       <div
+        className="potential-modal-content card"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={t('potential.configTitle')}
-        style={{
-          background: 'var(--bg-surface)',
-          borderRadius: 22,
-          padding: '28px 30px',
-          width: '100%',
-          maxWidth: 540,
-          maxHeight: '85vh',
-          overflowY: 'auto',
-          border: '1px solid var(--border)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 18,
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
-          animation: 'fadeIn .2s ease-out',
-        }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <div>
@@ -524,12 +377,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
           </div>
           <button
             type="button" onClick={onClose} aria-label="Đóng"
-            style={{
-              marginLeft: 'auto', border: 'none', background: 'var(--bg-surface-2)',
-              borderRadius: 10, width: 34, height: 34, cursor: 'pointer', flex: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)',
-              transition: 'all .15s ease',
-            }}
+            className="potential-modal-close-btn"
           >
             <X size={18} />
           </button>
@@ -539,10 +387,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
           <button
             type="button"
             onClick={selectAll}
-            style={{
-              fontSize: 12.5, fontWeight: 700, color: 'var(--brand-600)', background: 'none',
-              border: 'none', cursor: 'pointer', padding: '3px 8px', borderRadius: 6,
-            }}
+            className="potential-modal-link-btn"
           >
             {t('projects.selectAll') || 'Chọn tất cả'}
           </button>
@@ -550,43 +395,28 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
           <button
             type="button"
             onClick={deselectAll}
-            style={{
-              fontSize: 12.5, fontWeight: 700, color: 'var(--text-muted)', background: 'none',
-              border: 'none', cursor: 'pointer', padding: '3px 8px', borderRadius: 6,
-            }}
+            className="potential-modal-link-btn text-muted"
           >
             {t('projects.deselectAll') || 'Bỏ chọn tất cả'}
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 340, overflowY: 'auto', paddingRight: 4 }}>
+        <div className="potential-modal-sectors-list">
           {sectors.map((s) => {
             const on = picked.includes(s.slug);
             return (
               <label
                 key={s.slug}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
-                  padding: '12px 16px', borderRadius: 14,
-                  background: on ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-surface-2)',
-                  border: `1.5px solid ${on ? 'var(--brand-400)' : 'transparent'}`,
-                  transition: 'all .15s ease',
-                }}
+                className={`potential-modal-sector-item ${on ? 'active' : ''}`}
               >
                 <input
                   type="checkbox" checked={on} onChange={() => toggle(s.slug)}
                   style={{ width: 18, height: 18, accentColor: 'var(--brand-500)', cursor: 'pointer' }}
                 />
-                <span style={{
-                  fontSize: 14, fontWeight: 700,
-                  color: on ? 'var(--brand-700)' : 'var(--text-primary)',
-                }}>
+                <span className="potential-modal-sector-name">
                   {s.name}
                 </span>
-                <span style={{
-                  marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}>
+                <span className="potential-modal-sector-count">
                   {t('potential.sectorCount', { count: s.total })}
                 </span>
               </label>
@@ -596,15 +426,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
 
         <button
           type="button" onClick={() => onSave(picked)} disabled={saving}
-          style={{
-            padding: '13px 22px', borderRadius: 14, border: 'none',
-            background: 'linear-gradient(135deg, var(--brand-500), var(--brand-600))',
-            color: '#fff', fontSize: 14, fontWeight: 800,
-            cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            boxShadow: '0 6px 18px rgba(37, 99, 235, 0.3)',
-            marginTop: 6,
-          }}
+          className="potential-modal-save-btn"
         >
           {saving && <Loader2 size={16} className="spin" />}
           {t('potential.save')}
@@ -976,106 +798,64 @@ export default function PotentialProjectsPage() {
         </div>
       )}
 
-      {/* Hero Banner với thiết kế sang trọng & nút điều hướng rõ ràng */}
-      <div style={{
-        background: 'linear-gradient(135deg, #091e2f 0%, #064e3b 50%, #0b1f33 100%)',
-        borderRadius: 24, padding: '30px 34px', color: '#fff', marginBottom: 24,
-        border: '1px solid rgba(255,255,255,.12)', boxShadow: '0 16px 40px rgba(6, 78, 59, 0.2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 24, position: 'relative', overflow: 'hidden',
-      }}>
+      {/* Hero Banner với thiết kế chuẩn Theme & nút điều hướng rõ ràng */}
+      <div className="potential-hero-banner card">
         {/* Ánh sáng điểm nhấn */}
-        <div style={{
-          position: 'absolute', top: -60, right: -60, width: 220, height: 220,
-          background: 'radial-gradient(circle, rgba(16,185,129,0.35) 0%, transparent 70%)',
-          borderRadius: '50%', pointerEvents: 'none',
-        }} />
+        <div className="potential-hero-glow" />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, zIndex: 1 }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 20, flex: 'none',
-            background: 'linear-gradient(135deg, #10b981, #0284c7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.45)',
-          }}>
-            <Target size={32} color="#fff" />
+        <div className="potential-hero-content">
+          <div className="potential-hero-icon-box">
+            <Target size={32} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: 23, fontWeight: 900, margin: 0, color: '#fff', letterSpacing: '-0.02em' }}>
+            <div className="potential-hero-heading-row">
+              <h1 className="potential-hero-title">
                 {t('potential.title')}
               </h1>
-              <span style={{
-                fontSize: 11.5, fontWeight: 800, padding: '3px 10px', borderRadius: 999,
-                background: 'rgba(255,255,255,0.15)', color: '#6ee7b7',
-                border: '1px solid rgba(255,255,255,0.2)',
-              }}>
+              <span className="potential-hero-badge">
                 <Sparkles size={12} style={{ display: 'inline', marginRight: 4 }} />
                 Realtime Intelligence
               </span>
             </div>
-            <p style={{ fontSize: 13.5, color: '#cbd5e1', margin: '6px 0 0', maxWidth: '64ch', lineHeight: 1.5 }}>
+            <p className="potential-hero-subtitle">
               {t('potential.subtitle')}
             </p>
           </div>
         </div>
 
         {/* Cụm nút hành động trên Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, zIndex: 1, flexWrap: 'wrap' }}>
+        <div className="potential-hero-actions">
           <button
             type="button"
             onClick={() => navigate('/projects')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px',
-              borderRadius: 14, border: '1px solid rgba(255,255,255,0.25)', cursor: 'pointer',
-              background: 'rgba(255,255,255,0.12)', color: '#fff', fontWeight: 800, fontSize: 13,
-              backdropFilter: 'blur(10px)', transition: 'all .2s ease',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-            }}
+            className="potential-banner-btn-secondary"
           >
             <BookmarkCheck size={16} />
-            Dự án theo dõi ({userProjects.length})
+            <span>Dự án theo dõi ({userProjects.length})</span>
             <ArrowRight size={14} style={{ opacity: 0.8 }} />
           </button>
 
           <button
             type="button"
             onClick={() => setShowConfig(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '11px 22px',
-              borderRadius: 14, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #10b981, #0d9488)',
-              color: '#fff', fontWeight: 800, fontSize: 13.5,
-              boxShadow: '0 6px 20px rgba(16, 185, 129, 0.45)',
-              transition: 'all .2s ease',
-            }}
+            className="potential-banner-btn-primary"
           >
-            <Settings2 size={17} /> {t('potential.configSectors')}
+            <Settings2 size={17} />
+            <span>{t('potential.configSectors')}</span>
           </button>
         </div>
       </div>
 
       {/* Bộ lọc & Tìm kiếm */}
-      <div style={{
-        background: 'var(--bg-surface)', border: '1px solid var(--border)',
-        borderRadius: 20, padding: 20, marginBottom: 24,
-        display: 'flex', flexDirection: 'column', gap: 16,
-        boxShadow: 'var(--shadow-sm)',
-      }}>
+      <div className="potential-filter-card card">
         {/* Hàng 1: Tiêu đề bộ lọc + Tìm kiếm nhanh */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 12,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Filter size={16} style={{ color: 'var(--brand-500)' }} />
-            <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
+        <div className="potential-filter-header">
+          <div className="potential-filter-title-group">
+            <Filter size={16} className="potential-filter-icon" />
+            <span className="potential-filter-title">
               {t('projects.sector')}
             </span>
-            <span style={{
-              fontSize: 12, color: 'var(--text-muted)', background: 'var(--bg-surface-2)',
-              padding: '2px 8px', borderRadius: 999,
-            }}>
+            <span className="potential-filter-count">
               {applied.length > 0
                 ? `${t('potential.filteringBy')}: ${applied.length}`
                 : t('potential.noFilter')}
@@ -1084,11 +864,7 @@ export default function PotentialProjectsPage() {
               <button
                 type="button"
                 onClick={() => { setFilterSectors([]); setPage(1); }}
-                style={{
-                  marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 4,
-                  border: 'none', background: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 700, color: 'var(--brand-600)',
-                }}
+                className="potential-reset-sectors-btn"
               >
                 <RefreshCw size={12} /> {t('potential.allSectors')}
               </button>
@@ -1096,27 +872,20 @@ export default function PotentialProjectsPage() {
           </div>
 
           {/* Ô tìm kiếm nhanh */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: '7px 12px', minWidth: 280,
-          }}>
-            <Search size={15} style={{ color: 'var(--text-muted)', flex: 'none' }} />
+          <div className="potential-search-box">
+            <Search size={15} className="potential-search-icon" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm nhanh tiêu đề, chủ đầu tư..."
-              style={{
-                border: 'none', background: 'transparent', outline: 'none',
-                fontSize: 12.5, color: 'var(--text-primary)', width: '100%',
-              }}
+              className="potential-search-input"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
+                className="potential-search-clear"
               >
                 <X size={14} />
               </button>
@@ -1125,7 +894,7 @@ export default function PotentialProjectsPage() {
         </div>
 
         {/* Danh sách Sector Chips */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div className="potential-sector-chips-grid">
           {sectors.map((s) => (
             <SectorChip
               key={s.slug}
@@ -1137,20 +906,13 @@ export default function PotentialProjectsPage() {
         </div>
 
         {/* Hàng 3: Loại nguồn + Giá trị tối thiểu + Preset buttons */}
-        <div style={{
-          display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center',
-          paddingTop: 12, borderTop: '1px solid var(--border-subtle)',
-        }}>
+        <div className="potential-filter-subrow">
           {/* Nút lọc nguồn */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
+          <div className="potential-kind-group">
+            <span className="potential-subrow-label">
               Nguồn dữ liệu:
             </span>
-            <div style={{
-              display: 'inline-flex', background: 'var(--bg-surface-2)',
-              padding: 3, borderRadius: 12, border: '1px solid var(--border)',
-              flexWrap: 'wrap', gap: 2,
-            }}>
+            <div className="potential-kind-pills">
               {[
                 { id: '', label: t('potential.kindAll'), icon: SlidersHorizontal, allowed: true },
                 { id: 'procurement', label: t('potential.kindProcurement'), icon: ShoppingBag, allowed: canProc, pkgName: 'Đấu Thầu Công' },
@@ -1174,20 +936,10 @@ export default function PotentialProjectsPage() {
                       setPage(1);
                     }}
                     title={!isAllowed ? `Yêu cầu gói ${k.pkgName} để lọc nguồn này` : ''}
-                    style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 5,
-                      padding: '6px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700,
-                      border: 'none',
-                      cursor: isAllowed ? 'pointer' : 'not-allowed',
-                      opacity: isAllowed ? 1 : 0.5,
-                      transition: 'all .15s ease',
-                      background: active ? 'var(--bg-surface)' : 'transparent',
-                      color: active ? 'var(--brand-600)' : isAllowed ? 'var(--text-secondary)' : 'var(--text-muted)',
-                      boxShadow: active ? 'var(--shadow-sm)' : 'none',
-                    }}
+                    className={`potential-kind-tab ${active ? 'active' : ''} ${!isAllowed ? 'disabled' : ''}`}
                   >
                     <Icon size={13} />
-                    {k.label}
+                    <span>{k.label}</span>
                     {!isAllowed && <Lock size={11} style={{ marginLeft: 2, opacity: 0.8 }} />}
                   </button>
                 );
@@ -1197,23 +949,17 @@ export default function PotentialProjectsPage() {
 
           {/* Lọc giá tối thiểu & Presets (Chỉ hiện khi có quyền xem Đấu thầu công) */}
           {canProc && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
+            <div className="potential-amount-group">
+              <span className="potential-subrow-label">
                 {t('potential.minAmount')}:
               </span>
-              <div style={{ display: 'flex', gap: 4 }}>
+              <div className="potential-preset-buttons">
                 {AMOUNT_PRESETS.map((p) => (
                   <button
                     key={p.value}
                     type="button"
                     onClick={() => { setMinAmount(String(p.value)); setPage(1); }}
-                    style={{
-                      padding: '4px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700,
-                      border: '1px solid var(--border)',
-                      background: String(minAmount) === String(p.value) ? 'var(--brand-50)' : 'var(--bg-surface-2)',
-                      color: String(minAmount) === String(p.value) ? 'var(--brand-700)' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                    }}
+                    className={`potential-preset-chip ${String(minAmount) === String(p.value) ? 'active' : ''}`}
                   >
                     {p.label}
                   </button>
@@ -1223,20 +969,13 @@ export default function PotentialProjectsPage() {
                 type="number" min="0" step="1000000000" value={minAmount}
                 onChange={(e) => { setMinAmount(e.target.value); setPage(1); }}
                 placeholder="0 VND"
-                style={{
-                  padding: '6px 10px', borderRadius: 10, fontSize: 12.5, width: 130,
-                  border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
-                  color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums',
-                }}
+                className="potential-amount-input"
               />
               {minAmount && (
                 <button
                   type="button"
                   onClick={() => { setMinAmount(''); setPage(1); }}
-                  style={{
-                    border: 'none', background: 'none', color: 'var(--text-muted)',
-                    cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                  }}
+                  className="potential-amount-clear"
                 >
                   Xóa
                 </button>
@@ -1363,25 +1102,14 @@ export default function PotentialProjectsPage() {
           </div>
 
           {totalPages > 1 && (
-            <div style={{
-              display: 'flex', justifyContent: 'center', alignItems: 'center',
-              gap: 6, marginTop: 32, flexWrap: 'wrap',
-            }}>
+            <div className="potential-pagination">
               <button
                 type="button" disabled={page <= 1}
                 onClick={() => {
                   setPage((p) => Math.max(1, p - 1));
                   window.scrollTo({ top: 350, behavior: 'smooth' });
                 }}
-                style={{
-                  minWidth: 38, height: 38, padding: '0 12px', borderRadius: 10,
-                  fontSize: 13, fontWeight: 700,
-                  border: '1px solid var(--border)', background: 'var(--bg-surface)',
-                  color: 'var(--text-secondary)',
-                  cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.35 : 1,
-                  boxShadow: 'var(--shadow-sm)', transition: 'all .15s ease',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                }}
+                className="potential-page-arrow-btn"
                 title="Trang trước"
               >
                 ←
@@ -1390,7 +1118,7 @@ export default function PotentialProjectsPage() {
               {pageNumbers.map((pNum, idx) => {
                 if (pNum === '...') {
                   return (
-                    <span key={`dots-${idx}`} style={{ padding: '0 6px', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>
+                    <span key={`dots-${idx}`} className="potential-page-dots">
                       …
                     </span>
                   );
@@ -1404,16 +1132,7 @@ export default function PotentialProjectsPage() {
                       setPage(pNum);
                       window.scrollTo({ top: 350, behavior: 'smooth' });
                     }}
-                    style={{
-                      minWidth: 38, height: 38, padding: '0 8px', borderRadius: 10,
-                      fontSize: 13, fontWeight: 800,
-                      border: isActive ? 'none' : '1px solid var(--border)',
-                      background: isActive ? 'linear-gradient(135deg, var(--brand-500), var(--brand-600))' : 'var(--bg-surface)',
-                      color: isActive ? '#fff' : 'var(--text-primary)',
-                      cursor: 'pointer',
-                      boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'var(--shadow-sm)',
-                      transition: 'all .15s ease',
-                    }}
+                    className={`potential-page-btn ${isActive ? 'active' : ''}`}
                   >
                     {pNum}
                   </button>
@@ -1426,15 +1145,7 @@ export default function PotentialProjectsPage() {
                   setPage((p) => Math.min(totalPages, p + 1));
                   window.scrollTo({ top: 350, behavior: 'smooth' });
                 }}
-                style={{
-                  minWidth: 38, height: 38, padding: '0 12px', borderRadius: 10,
-                  fontSize: 13, fontWeight: 700,
-                  border: '1px solid var(--border)', background: 'var(--bg-surface)',
-                  color: 'var(--text-secondary)',
-                  cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.35 : 1,
-                  boxShadow: 'var(--shadow-sm)', transition: 'all .15s ease',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                }}
+                className="potential-page-arrow-btn"
                 title="Trang sau"
               >
                 →

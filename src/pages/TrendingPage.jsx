@@ -968,7 +968,7 @@ export default function TrendingPage() {
   return (
     <div className="trending-page-wrapper">
       {/* ── Top Newspaper Header Bar ── */}
-      <div className="trending-masthead">
+      <div className="trending-masthead card">
         <div className="trending-masthead-top">
           <div className="trending-masthead-title-group">
             <div className="trending-live-pill">
@@ -1119,7 +1119,7 @@ export default function TrendingPage() {
 
             return (
               <section
-                className="trending-hero-section"
+                className="trending-hero-section card"
                 onClick={() => handleItemClick(heroItem)}
               >
                 <div className="trending-hero-grid">
@@ -1238,7 +1238,7 @@ export default function TrendingPage() {
                 return (
                   <div
                     key={card.id || `proc-${idx}`}
-                    className={`trending-sub-card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
+                    className={`trending-sub-card card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
                     style={{ borderTop: isUserMatch ? '3px solid #f59e0b' : '3px solid #8b5cf6', background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(139, 92, 246, 0.03) 100%)' }}
                     onClick={() => handleItemClick(card)}
                   >
@@ -1285,7 +1285,7 @@ export default function TrendingPage() {
                 return (
                   <div
                     key={card.id || `oda-${idx}`}
-                    className={`trending-sub-card perspective-card ${isUserMatch ? 'article-user-matched' : ''}`}
+                    className={`trending-sub-card card perspective-card ${isUserMatch ? 'article-user-matched' : ''}`}
                     onClick={() => handleItemClick(card)}
                   >
                     <div className="perspective-header">
@@ -1328,7 +1328,7 @@ export default function TrendingPage() {
               return (
                 <div
                   key={card.id || `press-${idx}`}
-                  className={`trending-sub-card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
+                  className={`trending-sub-card card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
                   onClick={() => handleItemClick(card)}
                 >
                   <div className="sub-card-header">
@@ -2240,7 +2240,7 @@ export default function TrendingPage() {
 
           {/* ── SECTION 4: FEATURE HUB TRÀN RỘNG (Bố Cục 3 Phần - Phong Cách Image 3) ── */}
           {featureSection.lead && (
-            <section className="magazine-feature-hub">
+            <section className="magazine-feature-hub card">
               <div className="column-section-title" style={{ marginBottom: 16 }}>
                 <span className="section-title-line" />
                 <h3 className="section-title-text">
@@ -2252,7 +2252,7 @@ export default function TrendingPage() {
               <div className="feature-hub-grid">
                 {/* Phần 1 (46%): Thẻ Tin Lớn Nhất (Lead Feature) */}
                 <div
-                  className="feature-lead-card"
+                  className="feature-lead-card card"
                   onClick={() => handleItemClick(featureSection.lead)}
                   style={{ cursor: 'pointer' }}
                 >
@@ -2350,7 +2350,7 @@ export default function TrendingPage() {
           <section className="magazine-bottom-duo">
             {/* Cột 1: Năng Lượng & Môi Trường (Net-Zero) */}
             {energySection.lead && (
-              <div className="magazine-category-block" style={{ margin: 0 }}>
+              <div className="magazine-category-block card" style={{ margin: 0 }}>
                 <div className="magazine-category-header">
                   <h3 className="magazine-category-main-title" style={{ color: '#059669' }}>
                     🌱 Năng Lượng & Chuyển Dịch Xanh (Net-Zero)
@@ -2358,7 +2358,7 @@ export default function TrendingPage() {
                 </div>
                 <div className="magazine-category-body">
                   <div
-                    className="magazine-lead-card"
+                    className="magazine-lead-card card"
                     onClick={() => handleItemClick(energySection.lead)}
                     style={{ cursor: 'pointer', marginBottom: 12 }}
                   >
@@ -2395,7 +2395,7 @@ export default function TrendingPage() {
 
             {/* Cột 2: Bất Động Sản Công Nghiệp & Khu Kinh Tế */}
             {realEstateSection.lead && (
-              <div className="magazine-category-block" style={{ margin: 0 }}>
+              <div className="magazine-category-block card" style={{ margin: 0 }}>
                 <div className="magazine-category-header">
                   <h3 className="magazine-category-main-title" style={{ color: '#2563eb' }}>
                     🏢 Bất Động Sản Công Nghiệp & FDI
@@ -2403,7 +2403,7 @@ export default function TrendingPage() {
                 </div>
                 <div className="magazine-category-body">
                   <div
-                    className="magazine-lead-card"
+                    className="magazine-lead-card card"
                     onClick={() => handleItemClick(realEstateSection.lead)}
                     style={{ cursor: 'pointer', marginBottom: 12 }}
                   >
