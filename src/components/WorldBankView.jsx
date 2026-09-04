@@ -1000,18 +1000,32 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
                     type="date"
+                    min="2000-01-01"
+                    max="2099-12-31"
                     className="form-input"
-                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1 }}
+                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1, ...(approvalDateFrom && approvalDateTo && approvalDateFrom > approvalDateTo ? { borderColor: '#ef4444' } : {}) }}
                     value={approvalDateFrom}
-                    onChange={(e) => setApprovalDateFrom(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const y = val.split('-')[0];
+                      if (y && y.length > 4) return;
+                      setApprovalDateFrom(val);
+                    }}
                   />
                   <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>-</span>
                   <input
                     type="date"
+                    min="2000-01-01"
+                    max="2099-12-31"
                     className="form-input"
-                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1 }}
+                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1, ...(approvalDateFrom && approvalDateTo && approvalDateFrom > approvalDateTo ? { borderColor: '#ef4444' } : {}) }}
                     value={approvalDateTo}
-                    onChange={(e) => setApprovalDateTo(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const y = val.split('-')[0];
+                      if (y && y.length > 4) return;
+                      setApprovalDateTo(val);
+                    }}
                   />
                 </div>
               </div>
@@ -1021,18 +1035,32 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
                     type="date"
+                    min="2000-01-01"
+                    max="2099-12-31"
                     className="form-input"
-                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1 }}
+                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1, ...(updatedDateFrom && updatedDateTo && updatedDateFrom > updatedDateTo ? { borderColor: '#ef4444' } : {}) }}
                     value={updatedDateFrom}
-                    onChange={(e) => setUpdatedDateFrom(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const y = val.split('-')[0];
+                      if (y && y.length > 4) return;
+                      setUpdatedDateFrom(val);
+                    }}
                   />
                   <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>-</span>
                   <input
                     type="date"
+                    min="2000-01-01"
+                    max="2099-12-31"
                     className="form-input"
-                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1 }}
+                    style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1, ...(updatedDateFrom && updatedDateTo && updatedDateFrom > updatedDateTo ? { borderColor: '#ef4444' } : {}) }}
                     value={updatedDateTo}
-                    onChange={(e) => setUpdatedDateTo(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const y = val.split('-')[0];
+                      if (y && y.length > 4) return;
+                      setUpdatedDateTo(val);
+                    }}
                   />
                 </div>
               </div>

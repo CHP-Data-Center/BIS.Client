@@ -121,8 +121,8 @@ export default function NewsPage() {
   const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
   const [search, setSearch]           = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy]           = useState('newest');
-  const [dateFrom, setDateFrom]       = useState('');
-  const [dateTo, setDateTo]           = useState('');
+  const [dateFrom, setDateFrom]       = useState(searchParams.get('from') || '');
+  const [dateTo, setDateTo]           = useState(searchParams.get('to') || '');
   const [onlyMyKw, setOnlyMyKw]       = useState(false);
   // Ngôn ngữ TOÀN CỤC (header 🌐): đổi là menu + nhãn + nội dung tin đổi theo.
   const { lang, setLang, t } = useLang();
@@ -130,10 +130,32 @@ export default function NewsPage() {
 
   const srcConfig = SOURCE_MAP[source] || SOURCE_MAP.all;
 
-  const fetchArticles = useCallback(async (p = 1, overrideSearch = null) => {
+  const filtersRef = useRef({ page: 1, search: '', sortBy: 'newest', dateFrom: '', dateTo: '', onlyMyKw: false, lang: 'vi' });
+  useEffect(() => {
+    filtersRef.current = { page, search, sortBy, dateFrom, dateTo, onlyMyKw, lang };
+  });
+
+  const updateQueryParams = useCallback((newQ, newFrom, newTo) => {
+    const p = new URLSearchParams();
+    if (newQ) p.set('q', newQ);
+    if (newFrom) p.set('from', newFrom);
+    if (newTo) p.set('to', newTo);
+    const qs = p.toString();
+    nav(`/news/${source}${qs ? `?${qs}` : ''}`, { replace: true });
+  }, [nav, source]);
+
+  const fetchArticles = useCallback(async (p = 1, overrideSearch = null, force = false, overrideDates = null) => {
     setLoading(true);
     try {
       const q = (overrideSearch !== null ? overrideSearch : search).trim();
+      const from = overrideDates ? overrideDates.from : dateFrom;
+      const to = overrideDates ? overrideDates.to : dateTo;
+
+      if (from && to && from > to) {
+        setLoading(false);
+        return;
+      }
+
       let items = [];
       let tot = 0;
 
@@ -142,6 +164,8 @@ export default function NewsPage() {
         const res = await odaService.getProjects({
           source: srcConfig.odaSource, page: p, size: PAGE_SIZE,
           ...(srcConfig.kind ? { kind: srcConfig.kind } : {}), ...(q ? { q } : {}),
+          ...(from ? { date_from: from } : {}),
+          ...(to ? { date_to: to } : {}),
         });
         items = (res.items || []).map(adaptOdaToCard);
         tot = res.total || 0;
@@ -149,6 +173,8 @@ export default function NewsPage() {
         // Mua sắm công / đấu thầu (bảng procurement_items).
         const res = await odaService.getProcurement({
           page: p, size: PAGE_SIZE, ...(srcConfig.kind ? { kind: srcConfig.kind } : {}), ...(q ? { q } : {}),
+          ...(from ? { date_from: from } : {}),
+          ...(to ? { date_to: to } : {}),
         });
         items = (res.items || []).map(adaptProcToCard);
         tot = res.total || 0;
@@ -157,9 +183,10 @@ export default function NewsPage() {
         const params = { page: p, size: PAGE_SIZE, sort: sortBy, only_my_keywords: onlyMyKw };
         if (q)              params.q           = q;
         if (srcConfig.type) params.source_type = srcConfig.type;
-        if (dateFrom)       params.date_from   = dateFrom;
+        if (from)           params.date_from   = from;
+        if (to)             params.date_to     = to;
         if (lang !== 'vi')  params.lang        = lang; // bài có bản dịch hiện EN/JA
-        const res = await articlesService.getArticles(params);
+        const res = await articlesService.getArticles(params, force);
         items = res.items || [];
         tot = res.total || 0;
       }
@@ -199,45 +226,91 @@ export default function NewsPage() {
     }
   }, []);
 
-  const queryQ = searchParams.get('q') || '';
-
-  // Synchronize search inputs when URL search params change
+  // Synchronize search inputs and date filters when URL search params change
   useEffect(() => {
-    setSearchInput(queryQ);
-    setSearch(queryQ);
+    const q = searchParams.get('q') || '';
+    const from = searchParams.get('from') || '';
+    const to = searchParams.get('to') || '';
+    setSearchInput(q);
+    setSearch(q);
+    setDateFrom(from);
+    setDateTo(to);
     setOnlyBookmarked(false);
     setPage(1);
-  }, [source, queryQ]);
+  }, [source, searchParams]);
 
   // Main data fetch effect: triggers when source, search, page, sort, or date filters change
   useEffect(() => {
+    if (dateFrom && dateTo && dateFrom > dateTo) return;
     fetchArticles(page);
-  }, [source, search, page, sortBy, dateFrom, dateTo, onlyMyKw, lang]);
+  }, [source, search, page, sortBy, dateFrom, dateTo, onlyMyKw, lang, fetchArticles]);
 
   // Bookmarks & background update event listener
   useEffect(() => {
     fetchBookmarks();
 
     const onDataUpdated = () => {
-      fetchArticles(page, null, true);
+      const f = filtersRef.current;
+      fetchArticles(f.page, f.search, true, { from: f.dateFrom, to: f.dateTo });
       fetchBookmarks(true);
     };
     window.addEventListener('bis:data_updated', onDataUpdated);
     return () => window.removeEventListener('bis:data_updated', onDataUpdated);
-  }, [fetchBookmarks]);
-
+  }, [fetchBookmarks, fetchArticles]);
 
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     const q = searchInput.trim();
     setSearch(q);
     setPage(1);
-    fetchArticles(1, q);
-    if (q) {
-      nav(`/news/${source}?q=${encodeURIComponent(q)}`);
-    } else {
-      nav(`/news/${source}`);
+    updateQueryParams(q, dateFrom, dateTo);
+    fetchArticles(1, q, true, { from: dateFrom, to: dateTo });
+  };
+
+  const handleApplyDateRange = (fVal = dateFrom, tVal = dateTo) => {
+    if (fVal && tVal && fVal > tVal) return;
+    setDateFrom(fVal);
+    setDateTo(tVal);
+    setPage(1);
+    updateQueryParams(search, fVal, tVal);
+    fetchArticles(1, search, true, { from: fVal, to: tVal });
+  };
+
+  const getActivePreset = () => {
+    if (!dateFrom && !dateTo) return null;
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    if (dateFrom === todayStr && dateTo === todayStr) return 'today';
+    const d7 = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+    if (dateFrom === d7 && dateTo === todayStr) return '7d';
+    const d30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    if (dateFrom === d30 && dateTo === todayStr) return '30d';
+    const mStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    if (dateFrom === mStart && dateTo === todayStr) return 'month';
+    return null;
+  };
+  const activePreset = getActivePreset();
+
+  const handlePresetDate = (type) => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    let f = '';
+    let t = todayStr;
+    if (type === 'today') {
+      f = todayStr;
+    } else if (type === '7d') {
+      f = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+    } else if (type === '30d') {
+      f = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+    } else if (type === 'month') {
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      f = `${y}-${m}-01`;
+    } else if (type === 'all') {
+      f = '';
+      t = '';
     }
+    handleApplyDateRange(f, t);
   };
 
   const handleReset = () => {
@@ -249,8 +322,8 @@ export default function NewsPage() {
     setOnlyMyKw(false);
     setOnlyBookmarked(false);
     setPage(1);
-    fetchArticles(1, '');
-    nav(`/news/${source}`);
+    updateQueryParams('', '', '');
+    fetchArticles(1, '', true, { from: '', to: '' });
   };
 
   const handlePageChange = (p) => {
@@ -443,24 +516,93 @@ export default function NewsPage() {
         {/* Khoảng thời gian */}
         <div style={{ paddingTop: 8, borderTop: '1px dashed var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>{t('news.dateRange')}:</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                {t('news.dateRange')}:
+              </span>
+              {(dateFrom || dateTo) && (
+                <button
+                  type="button"
+                  onClick={() => handlePresetDate('all')}
+                  style={{ background: 'none', border: 'none', fontSize: 10, color: '#ef4444', cursor: 'pointer', padding: 0, fontWeight: 600 }}
+                >
+                  Xóa lọc
+                </button>
+              )}
+            </div>
+
+            {/* Phím tắt chọn nhanh */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginBottom: 8 }}>
+              {[
+                { label: 'Hôm nay', type: 'today' },
+                { label: '7 ngày qua', type: '7d' },
+                { label: '30 ngày qua', type: '30d' },
+                { label: 'Tháng này', type: 'month' },
+              ].map((p) => {
+                const isActive = activePreset === p.type;
+                return (
+                  <button
+                    key={p.type}
+                    type="button"
+                    onClick={() => handlePresetDate(p.type)}
+                    style={{
+                      padding: '5px 6px',
+                      fontSize: 11,
+                      borderRadius: 6,
+                      border: isActive ? '1px solid var(--brand-500)' : '1px solid var(--border-subtle)',
+                      background: isActive ? 'var(--brand-50, #eff6ff)' : 'var(--bg-surface-2)',
+                      color: isActive ? 'var(--brand-600, #2563eb)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.15s ease',
+                      fontWeight: isActive ? 700 : 500,
+                      boxShadow: isActive ? '0 1px 3px rgba(37, 99, 235, 0.15)' : 'none',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 2 ô nhập ngày tùy chỉnh (tự động áp dụng ngay khi chọn) */}
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input
                 type="date"
+                min="2000-01-01"
+                max="2099-12-31"
                 className="form-input"
-                style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1 }}
+                style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1, ...(dateFrom && dateTo && dateFrom > dateTo ? { borderColor: '#ef4444' } : {}) }}
                 value={dateFrom}
-                onChange={e => { setDateFrom(e.target.value); setPage(1); }}
+                onChange={e => {
+                  const val = e.target.value;
+                  const y = val.split('-')[0];
+                  if (y && y.length > 4) return;
+                  handleApplyDateRange(val, dateTo);
+                }}
               />
               <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>-</span>
               <input
                 type="date"
+                min="2000-01-01"
+                max="2099-12-31"
                 className="form-input"
-                style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1 }}
+                style={{ fontSize: 11, padding: '3px 6px', minHeight: 32, flex: 1, ...(dateFrom && dateTo && dateFrom > dateTo ? { borderColor: '#ef4444' } : {}) }}
                 value={dateTo}
-                onChange={e => { setDateTo(e.target.value); setPage(1); }}
+                onChange={e => {
+                  const val = e.target.value;
+                  const y = val.split('-')[0];
+                  if (y && y.length > 4) return;
+                  handleApplyDateRange(dateFrom, val);
+                }}
               />
             </div>
+
+            {dateFrom && dateTo && dateFrom > dateTo && (
+              <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 600, display: 'block', marginTop: 4 }}>
+                ⚠️ Ngày bắt đầu không được sau ngày kết thúc
+              </span>
+            )}
           </div>
         </div>
 
@@ -496,7 +638,7 @@ export default function NewsPage() {
                 padding: '2px 8px', background: 'var(--bg-surface-2)',
                 borderRadius: 'var(--radius-full)', border: '1px solid var(--border)',
               }}>
-                {displayedArticles.length} {t('news.articlesCount')}
+                {isPageLoading ? '...' : effectiveTotal} {t('news.articlesCount')}
               </span>
             </div>
 

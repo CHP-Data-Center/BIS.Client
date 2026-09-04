@@ -495,6 +495,7 @@ export default function PotentialProjectsPage() {
   // Chống Race Condition khi bấm filter liên tục và Debounce
   const reqIdRef = useRef(0);
   const debounceTimerRef = useRef(null);
+  const trackingKeysRef = useRef(new Set());
 
   const toast = (type, text) => {
     setMsg({ type, text });
@@ -687,6 +688,8 @@ export default function PotentialProjectsPage() {
   // Thêm hoặc Hủy theo dõi dự án (Toggle Follow)
   const handleToggleTrack = async (item, currentlyTracked) => {
     const key = itemKey(item);
+    if (!key || trackingKeysRef.current.has(key)) return;
+    trackingKeysRef.current.add(key);
     setTrackingKey(key);
 
     if (currentlyTracked) {
@@ -740,6 +743,7 @@ export default function PotentialProjectsPage() {
           toast('error', e.response?.data?.detail || 'Không thêm được vào danh sách theo dõi.');
         }
       } finally {
+        trackingKeysRef.current.delete(key);
         setTrackingKey(null);
       }
     }

@@ -726,8 +726,8 @@ function ProjectDistributionMap() {
     (async () => {
       try {
         const [oda, proc] = await Promise.all([
-          odaService.getProjects(),
-          odaService.getProcurement(),
+          odaService.getProjects({ size: 1000 }),
+          odaService.getProcurement({ size: 1000 }),
         ]);
         const items = buildMapItems(oda?.items || [], proc?.items || []);
         if (alive && items.length > 0) {
@@ -903,9 +903,9 @@ function ProjectDistributionMap() {
             attributionControl={false}
           >
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com">CARTO</a>'
-              maxZoom={18}
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              maxZoom={19}
             />
             <MapFlyTo
               items={filteredItems}
@@ -1110,7 +1110,14 @@ export default function DashboardPage() {
   const gridRef = useRef(null);
 
   // API data - lấy từ cache để F5 giữ nguyên dữ liệu tức thì
-  const [overview, setOverview]   = useState(() => apiCache.get('stats:overview'));
+  const [overview, setOverview]   = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('bis_user') || '{}');
+      return apiCache.get(`stats:overview:${u?.id || 'anon'}`) || apiCache.get('stats:overview');
+    } catch {
+      return apiCache.get('stats:overview');
+    }
+  });
   const [trending, setTrending]   = useState(() => apiCache.get('stats:trending:15') || []);
   const [articles, setArticles]   = useState([]);
   const [totalArticles, setTotal] = useState(0);

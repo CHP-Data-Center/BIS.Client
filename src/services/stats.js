@@ -2,10 +2,20 @@
 import api from './api';
 import { apiCache } from '../utils/apiCache';
 
+function getUserStatsKey(base) {
+  try {
+    const raw = localStorage.getItem('bis_user');
+    const u = raw ? JSON.parse(raw) : null;
+    return `${base}:${u?.id || 'anon'}`;
+  } catch {
+    return base;
+  }
+}
+
 export const statsService = {
-  /** Tổng quan dashboard */
+  /** Tổng quan dashboard (scoped theo user để không nhảy số giữa các tài khoản) */
   async getOverview(force = false) {
-    const cacheKey = 'stats:overview';
+    const cacheKey = getUserStatsKey('stats:overview');
     if (!force) {
       const cached = apiCache.get(cacheKey);
       if (cached) return cached;
@@ -17,7 +27,7 @@ export const statsService = {
 
   /** Từ khóa nổi bật theo số bài khớp */
   async getTrending(limit = 10, force = false) {
-    const cacheKey = `stats:trending:${limit}`;
+    const cacheKey = getUserStatsKey(`stats:trending:${limit}`);
     if (!force) {
       const cached = apiCache.get(cacheKey);
       if (cached) return cached;
@@ -26,6 +36,4 @@ export const statsService = {
     apiCache.set(cacheKey, data, 30000); // cache 30s
     return data; // TrendingTerm[]
   },
-
 };
-
