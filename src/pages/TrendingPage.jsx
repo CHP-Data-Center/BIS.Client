@@ -6,7 +6,8 @@ import {
   Clock, Bookmark, BookmarkCheck,
   ChevronRight, RefreshCw, DollarSign, ArrowUpRight, ExternalLink,
   Play, Camera, Loader2, Sparkles, AlertCircle, FileText, CheckCircle2,
-  HardHat, Landmark, Search, ArrowLeft, ChevronLeft, X
+  HardHat, Landmark, Search, ArrowLeft, ChevronLeft, X,
+  Zap, Crown, Trophy, Award, Star
 } from 'lucide-react';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
@@ -283,6 +284,129 @@ function TrendingMagazineSkeleton() {
 
 const TrendingPageSkeleton = TrendingMagazineSkeleton;
 
+// ── Trending Marquee Strip (Tương tự Dashboard, có highlight từ khóa đã lưu của người dùng) ──
+function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeTag, onClearTag }) {
+  const { t } = useLang();
+
+  const displayKeywords = (keywords && keywords.length > 0) ? keywords : [
+    { term: 'đấu thầu', count: 490 },
+    { term: 'cầu', count: 348 },
+    { term: 'giao thông', count: 272 },
+    { term: 'cao tốc', count: 187 },
+    { term: 'đường sắt', count: 116 },
+    { term: 'Lưới điện', count: 10 },
+    { term: 'Chuyển đổi số', count: 12 },
+    { term: 'dự án', count: 678 },
+    { term: 'ODA', count: 654 },
+    { term: 'năng lượng', count: 95 },
+  ];
+
+  const userKeywordTerms = useMemo(() => {
+    return new Set(userKeywords.map(k => (k.term || k.display_term || '').toLowerCase().trim()).filter(Boolean));
+  }, [userKeywords]);
+
+  const isUserKeyword = useCallback((term) => {
+    if (!term || userKeywordTerms.size === 0) return false;
+    const lower = term.toLowerCase().trim();
+    if (userKeywordTerms.has(lower)) return true;
+    for (const uk of userKeywordTerms) {
+      if (lower.includes(uk) || uk.includes(lower)) return true;
+    }
+    return false;
+  }, [userKeywordTerms]);
+
+  const userMatchedCount = useMemo(() => {
+    return displayKeywords.filter(k => isUserKeyword(k.term)).length;
+  }, [displayKeywords, isUserKeyword]);
+
+  const repeatCount = Math.max(2, Math.ceil(18 / displayKeywords.length));
+  const baseList = Array(repeatCount).fill(displayKeywords).flat();
+  const items = [...baseList, ...baseList];
+
+  return (
+    <div className="trending-strip" style={{ marginTop: 14, marginBottom: 20 }}>
+      <div className="trending-strip-header">
+        <div className="trending-strip-title">
+          <Zap size={15} style={{ color: '#f59e0b', animation: 'pulse 1.8s ease-in-out infinite' }} />
+          <span>{t('dashboard.trendingTitle')}</span>
+        </div>
+        <span className="hot-badge">{t('badge.live')}</span>
+
+        {displayKeywords.slice(0, 1).map((kw, i) => (
+          <span
+            key={i}
+            className="top-kw-pill"
+            style={{ cursor: 'pointer' }}
+            onClick={() => onSelectKeyword(kw.term)}
+            title={`Top #1 thị trường: ${kw.term}`}
+          >
+            <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.4))' }} />
+            <span>{kw.term}</span>
+            <span className="top-kw-count">{kw.count}</span>
+          </span>
+        ))}
+
+        {userMatchedCount > 0 && (
+          <span className="user-matched-summary-pill" title="Các từ khóa bạn đã lưu đang nằm trong top xu hướng thị trường">
+            <Star size={13} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+            <span>{userMatchedCount} từ khóa của bạn đang nổi bật</span>
+          </span>
+        )}
+
+        <span className="trending-hint">
+          {activeTag ? (
+            <button
+              onClick={onClearTag}
+              style={{
+                background: '#ef4444', color: '#fff', border: 'none',
+                padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700,
+                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
+              }}
+            >
+              <span>Đang lọc: #{activeTag}</span>
+              <X size={12} />
+            </button>
+          ) : (
+            '↔ Di chuột để dừng · Click từ khóa để lọc bài'
+          )}
+        </span>
+      </div>
+
+      <div className="trending-marquee-wrapper">
+        <div className="trending-marquee-track">
+          {items.map((kw, i) => {
+            const originalRank = (i % displayKeywords.length) + 1;
+            const isTop3 = originalRank <= 3;
+            const isMyKw = isUserKeyword(kw.term);
+            const isActive = activeTag && activeTag.toLowerCase() === kw.term.toLowerCase();
+
+            return (
+              <span
+                key={i}
+                className={`trending-keyword-chip ${originalRank === 1 ? 'rank-1' : originalRank === 2 ? 'rank-2' : originalRank === 3 ? 'rank-3' : ''} ${isMyKw ? 'user-matched-chip' : ''}`}
+                style={isActive ? { borderColor: '#2563eb', background: 'var(--brand-50)', color: 'var(--brand-700)', fontWeight: 800 } : {}}
+                onClick={() => onSelectKeyword(kw.term)}
+                title={isMyKw ? `★ Từ khóa bạn theo dõi: "${kw.term}" (${kw.count})` : `Hạng #${originalRank}: ${kw.term} (${kw.count})`}
+              >
+                {isMyKw ? (
+                  <Star size={12} style={{ color: '#d97706', fill: '#f59e0b', flexShrink: 0 }} />
+                ) : isTop3 ? (
+                  originalRank === 1 ? <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', flexShrink: 0 }} /> :
+                  originalRank === 2 ? <Trophy size={13} style={{ color: '#64748b', fill: '#94a3b8', flexShrink: 0 }} /> :
+                  <Award size={13} style={{ color: '#ea580c', fill: '#f97316', flexShrink: 0 }} />
+                ) : null}
+
+                <span className="chip-term-text">{kw.term}</span>
+                <span className="chip-count-tag">{kw.count}</span>
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Module-level timestamp to prevent redundant network fetches on rapid tab switching
 let trendingLastFetchTime = 0;
 let trendingLastLang = '';
@@ -325,57 +449,79 @@ export default function TrendingPage() {
   const [adbProjects, setAdbProjects] = useState(() => canAdb ? (apiCache.get(`trending:adb:${lang}`) || apiCache.get('trending:adb') || []) : []);
   const [wbProjects, setWbProjects] = useState(() => canWb ? (apiCache.get(`trending:wb:${lang}`) || apiCache.get('trending:wb') || []) : []);
   const [procurementItems, setProcurementItems] = useState(() => canProc ? (apiCache.get(`trending:proc:${lang}`) || apiCache.get('trending:proc') || []) : []);
-  const [overviewStats, setOverviewStats] = useState(() => apiCache.get('stats:overview') || null);
 
-  // State từ khóa đã lưu của người dùng
+  // State từ khóa đã lưu của người dùng & từ khóa xu hướng thị trường
   const [userKeywords, setUserKeywords] = useState(() => apiCache.get(`keywords:all:${lang}`) || []);
-  const [keywordArticles, setKeywordArticles] = useState(() => apiCache.get(`trending:keywords_articles:${lang}`) || []);
-  const [selectedKeywordTag, setSelectedKeywordTag] = useState('all');
-
-  // Nút ON/OFF góc phải: Xu hướng theo từ khóa đã lưu (Lưu localStorage để F5 vẫn giữ nguyên trạng thái)
-  const [onlyMyKeywords, setOnlyMyKeywords] = useState(() => {
-    try {
-      return localStorage.getItem('trending_only_my_keywords') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [trendingKeywords, setTrendingKeywords] = useState(() => apiCache.get('trending:keywords_strip') || []);
+  const [activeTrendingTag, setActiveTrendingTag] = useState(null);
 
   const hasAnyData = (articles && articles.length > 0) || (canAdb && adbProjects.length > 0) || (canWb && wbProjects.length > 0) || (canProc && procurementItems.length > 0);
   const [loading, setLoading] = useState(() => !hasAnyData);
 
-  // Helper tìm từ khóa khớp với bài viết/dự án để đảm bảo thẻ từ khóa luôn hiển thị
-  const getMatchedKeywordsForItem = useCallback((item) => {
-    if (!item) return [];
-    if (item.matched_keywords && item.matched_keywords.length > 0) {
-      return item.matched_keywords;
-    }
-    if (userKeywords.length > 0) {
-      const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${item.ai_summary || ''}`.toLowerCase();
-      const matched = userKeywords
-        .filter(k => {
-          const t = (k.term || k.display_term || '').toLowerCase().trim();
-          return t && text.includes(t);
-        })
-        .map(k => k.display_term || k.term);
-      if (matched.length > 0) return matched;
-    }
-    return [];
+  // Set các term của userKeywords (lowercase, trimmed)
+  const userKeywordTerms = useMemo(() => {
+    return new Set(userKeywords.map(k => (k.term || k.display_term || '').toLowerCase().trim()).filter(Boolean));
   }, [userKeywords]);
 
-  // Xử lý bật/tắt nút: lưu trạng thái và tải lại toàn bộ xu hướng theo từ khóa
-  const handleToggleOnlyMyKeywords = () => {
-    const nextVal = !onlyMyKeywords;
-    setOnlyMyKeywords(nextVal);
-    try {
-      localStorage.setItem('trending_only_my_keywords', String(nextVal));
-    } catch (e) {
-      console.warn('Cannot save to localStorage:', e);
+  // Set các term của trendingKeywords (lowercase, trimmed)
+  const trendingKeywordTerms = useMemo(() => {
+    return new Set(trendingKeywords.map(k => (k.term || '').toLowerCase().trim()).filter(Boolean));
+  }, [trendingKeywords]);
+
+  // Kiểm tra xem 1 từ khóa có thuộc danh sách theo dõi của người dùng không
+  const isUserKeyword = useCallback((term) => {
+    if (!term || userKeywordTerms.size === 0) return false;
+    const lower = term.toLowerCase().trim();
+    if (userKeywordTerms.has(lower)) return true;
+    for (const uk of userKeywordTerms) {
+      if (lower.includes(uk) || uk.includes(lower)) return true;
     }
-    // Khi bật/tắt, kích hoạt loading nhẹ và tải lại dữ liệu mới nhất
-    setLoading(true);
-    loadRealData(true);
-  };
+    return false;
+  }, [userKeywordTerms]);
+
+  // Lấy chi tiết các từ khóa khớp cho 1 item (bài báo, dự án ODA, gói thầu)
+  const getMatchedUserKeywords = useCallback((item) => {
+    if (!item) return [];
+    const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${item.ai_summary || ''} ${(item.matched_keywords || []).join(' ')} ${item.sector || ''} ${item.procuring_entity || ''} ${item.country || ''}`.toLowerCase();
+    
+    const matched = [];
+    const seen = new Set();
+
+    // 1. Đối soát với các từ khóa người dùng đã lưu
+    if (userKeywords.length > 0) {
+      userKeywords.forEach(k => {
+        const term = (k.term || k.display_term || '').toLowerCase().trim();
+        if (term && text.includes(term) && !seen.has(term)) {
+          seen.add(term);
+          const isTrending = trendingKeywordTerms.has(term) || Array.from(trendingKeywordTerms).some(tk => term.includes(tk) || tk.includes(term));
+          matched.push({
+            term: k.display_term || k.term,
+            isTrending,
+            isUserKeyword: true
+          });
+        }
+      });
+    }
+
+    // 2. Đối soát với matched_keywords có sẵn của item
+    if (item.matched_keywords && Array.isArray(item.matched_keywords)) {
+      item.matched_keywords.forEach(mk => {
+        const lower = mk.toLowerCase().trim();
+        if (lower && !seen.has(lower)) {
+          seen.add(lower);
+          const isUser = isUserKeyword(lower);
+          const isTrending = trendingKeywordTerms.has(lower) || Array.from(trendingKeywordTerms).some(tk => lower.includes(tk) || tk.includes(lower));
+          matched.push({
+            term: mk,
+            isTrending,
+            isUserKeyword: isUser
+          });
+        }
+      });
+    }
+
+    return matched;
+  }, [userKeywords, userKeywordTerms, trendingKeywordTerms, isUserKeyword]);
 
   // Tự động chuyển về 'all' nếu filter đang ở nguồn chưa mua gói
   useEffect(() => {
@@ -420,6 +566,8 @@ export default function TrendingPage() {
           setArticles(res.items);
           apiCache.set(`trending:articles:${lang}`, res.items, 300000);
           apiCache.set('trending:articles', res.items, 300000);
+          // Mở khóa giao diện ngay khi bài viết chính đã tải về (không chờ API phụ)
+          setLoading(false);
         }
       }).catch(err => console.warn('Articles error:', err));
 
@@ -456,14 +604,6 @@ export default function TrendingPage() {
           }).catch(err => console.warn('Procurement error:', err))
       : Promise.resolve().then(() => setProcurementItems([]));
 
-    const fetchStats = statsService.getOverview(force)
-      .then(res => {
-        if (res) {
-          setOverviewStats(res);
-          apiCache.set('stats:overview', res, 300000);
-        }
-      }).catch(err => console.warn('Stats overview error:', err));
-
     const fetchKeywords = keywordsService.getKeywords(force)
       .then(kws => {
         if (Array.isArray(kws)) {
@@ -472,20 +612,15 @@ export default function TrendingPage() {
         }
       }).catch(err => console.warn('Keywords error:', err));
 
-    const fetchKeywordArticles = articlesService.getArticles({
-      size: 60,
-      sort: 'newest',
-      only_my_keywords: true,
-      ...(lang !== 'vi' ? { lang } : {})
-    }, force)
+    const fetchTrendingKws = statsService.getTrending(25, force)
       .then(res => {
-        if (res?.items) {
-          setKeywordArticles(res.items);
-          apiCache.set(`trending:keywords_articles:${lang}`, res.items, 300000);
+        if (Array.isArray(res) && res.length > 0) {
+          setTrendingKeywords(res);
+          apiCache.set('trending:keywords_strip', res, 300000);
         }
-      }).catch(err => console.warn('Keyword articles error:', err));
+      }).catch(err => console.warn('Trending keywords error:', err));
 
-    await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchStats, fetchKeywords, fetchKeywordArticles]);
+    await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchKeywords, fetchTrendingKws]);
     trendingLastFetchTime = Date.now();
     trendingLastLang = lang;
     setLoading(false);
@@ -578,13 +713,19 @@ export default function TrendingPage() {
   });
 
   // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
-  // Dữ liệu bài viết hiển thị: nếu bật ON "Theo từ khóa đã lưu", dùng bài viết khớp từ khóa cá nhân
+  // Dữ liệu bài viết hiển thị: lọc theo activeTrendingTag nếu người dùng click vào từ khóa trên dải marquee
   const displayArticles = useMemo(() => {
-    if (onlyMyKeywords && keywordArticles.length > 0) {
-      return keywordArticles;
+    let list = articles;
+    if (activeTrendingTag) {
+      const q = activeTrendingTag.toLowerCase().trim();
+      const filtered = list.filter(item => {
+        const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${(item.matched_keywords || []).join(' ')}`.toLowerCase();
+        return text.includes(q);
+      });
+      if (filtered.length > 0) return filtered;
     }
-    return articles;
-  }, [onlyMyKeywords, keywordArticles, articles]);
+    return list;
+  }, [articles, activeTrendingTag]);
 
   // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
   const filteredArticles = useMemo(() => {
@@ -864,234 +1005,232 @@ export default function TrendingPage() {
 
 
 
-        {/* Source Filter Nav Pills & Nút ON/OFF góc phải */}
-        <div className="trending-source-nav" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 12, paddingRight: 4
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              className={`trending-nav-tab ${activeSourceFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveSourceFilter('all')}
-            >
-              🔥 {t('trending.allSources')}
-            </button>
-            <button
-              className={`trending-nav-tab ${activeSourceFilter === 'press' ? 'active' : ''}`}
-              onClick={() => setActiveSourceFilter('press')}
-            >
-              📰 {t('trending.pressOnly')} ({articles.length})
-            </button>
-            {canAdb && (
-              <button
-                className={`trending-nav-tab ${activeSourceFilter === 'adb' ? 'active' : ''}`}
-                onClick={() => setActiveSourceFilter('adb')}
-              >
-                🏦 {t('trending.adbOnly')} ({adbProjects.length})
-              </button>
-            )}
-            {canWb && (
-              <button
-                className={`trending-nav-tab ${activeSourceFilter === 'worldbank' ? 'active' : ''}`}
-                onClick={() => setActiveSourceFilter('worldbank')}
-              >
-                🌍 {t('trending.wbOnly')} ({wbProjects.length})
-              </button>
-            )}
-            {canProc && (
-              <button
-                className={`trending-nav-tab ${activeSourceFilter === 'gov' ? 'active' : ''}`}
-                onClick={() => setActiveSourceFilter('gov')}
-              >
-                📋 {t('trending.procOnly')} ({procurementItems.length})
-              </button>
-            )}
-          </div>
-
-          {/* NÚT ON/OFF GÓC PHẢI: LỌC DỰA THEO TỪ KHÓA ĐÃ LƯU */}
-          <div
-            onClick={handleToggleOnlyMyKeywords}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-              padding: '6px 14px', borderRadius: 24,
-              background: onlyMyKeywords ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-surface-2)',
-              border: onlyMyKeywords ? '1px solid #f59e0b' : '1px solid var(--border)',
-              cursor: 'pointer', transition: 'all 0.25s ease', userSelect: 'none',
-              boxShadow: onlyMyKeywords ? '0 2px 10px rgba(245, 158, 11, 0.2)' : 'none'
+        {/* Source Filter Nav Pills */}
+        <div className="trending-source-nav">
+          <button
+            className={`trending-nav-tab ${activeSourceFilter === 'all' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveSourceFilter('all');
+              setActiveTrendingTag(null);
             }}
-            title="Bật/tắt chế độ hiển thị tin xu hướng theo các từ khóa bạn đã lưu"
           >
-            <span style={{
-              fontSize: 12.5, fontWeight: 750,
-              color: onlyMyKeywords ? '#d97706' : 'var(--text-secondary)',
-              display: 'inline-flex', alignItems: 'center', gap: 6
-            }}>
-              <span>🎯</span>
-              <span>Dựa theo từ khóa</span>
-              {userKeywords.length > 0 && (
-                <span style={{
-                  fontSize: 11, fontWeight: 800, padding: '1px 7px', borderRadius: 10,
-                  background: onlyMyKeywords ? '#f59e0b' : 'var(--border)',
-                  color: onlyMyKeywords ? '#fff' : 'var(--text-muted)',
-                  transition: 'all 0.2s ease'
-                }}>
-                  {userKeywords.length}
-                </span>
-              )}
-            </span>
-
-            {/* iOS style toggle switch pill */}
-            <div style={{
-              width: 36, height: 20, borderRadius: 12,
-              background: onlyMyKeywords ? '#f59e0b' : 'var(--border)',
-              position: 'relative', transition: 'background 0.25s ease',
-              display: 'flex', alignItems: 'center', padding: 2
-            }}>
-              <div style={{
-                width: 16, height: 16, borderRadius: '50%', background: '#fff',
-                transform: onlyMyKeywords ? 'translateX(16px)' : 'translateX(0px)',
-                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.25)'
-              }} />
-            </div>
-          </div>
+            🔥 {t('trending.allSources')}
+          </button>
+          <button
+            className={`trending-nav-tab ${activeSourceFilter === 'press' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveSourceFilter('press');
+              setActiveTrendingTag(null);
+            }}
+          >
+            📰 {t('trending.pressOnly')} ({articles.length})
+          </button>
+          {canAdb && (
+            <button
+              className={`trending-nav-tab ${activeSourceFilter === 'adb' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveSourceFilter('adb');
+                setActiveTrendingTag(null);
+              }}
+            >
+              🏦 {t('trending.adbOnly')} ({adbProjects.length})
+            </button>
+          )}
+          {canWb && (
+            <button
+              className={`trending-nav-tab ${activeSourceFilter === 'worldbank' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveSourceFilter('worldbank');
+                setActiveTrendingTag(null);
+              }}
+            >
+              🌍 {t('trending.wbOnly')} ({wbProjects.length})
+            </button>
+          )}
+          {canProc && (
+            <button
+              className={`trending-nav-tab ${activeSourceFilter === 'gov' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveSourceFilter('gov');
+                setActiveTrendingTag(null);
+              }}
+            >
+              📋 {t('trending.procOnly')} ({procurementItems.length})
+            </button>
+          )}
         </div>
       </div>
+
+      {/* ── DẢI TỪ KHÓA ĐANG NỔI BẬT (GIỐNG DASHBOARD + HIGHLIGHT TỪ KHÓA CỦA USER) ── */}
+      <TrendingMarqueeStrip
+        keywords={trendingKeywords}
+        userKeywords={userKeywords}
+        activeTag={activeTrendingTag}
+        onSelectKeyword={(term) => {
+          if (activeTrendingTag === term) {
+            setActiveTrendingTag(null);
+          } else {
+            setActiveTrendingTag(term);
+          }
+        }}
+        onClearTag={() => setActiveTrendingTag(null)}
+      />
+
+      {/* Banner thông báo lọc theo từ khóa nổi bật khi click chip */}
+      {activeTrendingTag && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10,
+          padding: '10px 18px', background: 'rgba(59, 130, 246, 0.08)',
+          border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: 12, marginBottom: 20
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 750, color: 'var(--brand-700)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <Zap size={15} style={{ color: '#f59e0b' }} />
+            <span>Đang lọc bài viết theo từ khóa nổi bật: <strong>#{activeTrendingTag}</strong></span>
+            {isUserKeyword(activeTrendingTag) && (
+              <span className="user-matched-tag-chip" style={{ fontSize: 11, padding: '2px 8px' }}>
+                ⭐ Trùng với danh mục bạn theo dõi!
+              </span>
+            )}
+          </span>
+          <button
+            onClick={() => setActiveTrendingTag(null)}
+            style={{
+              background: 'var(--bg-surface)', border: '1px solid var(--border)',
+              padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+              color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5
+            }}
+          >
+            <X size={13} />
+            <span>Bỏ lọc</span>
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <TrendingMagazineSkeleton />
       ) : activeSourceFilter === 'all' ? (
         <>
-          {/* Banner thông báo khi bật nút ON/OFF Dựa theo từ khóa */}
-          {onlyMyKeywords && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-              padding: '10px 18px', background: 'rgba(245, 158, 11, 0.08)',
-              border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: 12, marginBottom: 20
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                <Flame size={15} /> Đang lọc Tạp chí Xu Hướng theo từ khóa của bạn
-              </span>
-              {userKeywords.length > 0 ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  {userKeywords.slice(0, 8).map(k => (
-                    <span
-                      key={k.id || k.term}
-                      style={{
-                        fontSize: 11.5, fontWeight: 700, padding: '2px 9px', borderRadius: 12,
-                        background: 'rgba(245, 158, 11, 0.18)', color: '#b45309'
-                      }}
-                    >
-                      #{k.display_term || k.term}
-                    </span>
-                  ))}
-                  {userKeywords.length > 8 && (
-                    <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>+{userKeywords.length - 8}</span>
-                  )}
-                </div>
-              ) : (
-                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
-                  (Bạn chưa lưu từ khóa nào trong danh mục theo dõi)
-                </span>
-              )}
-              <button
-                onClick={() => nav('/keywords')}
-                style={{
-                  marginLeft: 'auto', background: 'none', border: 'none',
-                  color: 'var(--brand-600)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 4
-                }}
-              >
-                Quản lý từ khóa <ArrowUpRight size={13} />
-              </button>
-            </div>
-          )}
 
           {/* ── SECTION 1: HERO SPOTLIGHT (Tin Đang Trending Số 1 - Hoàn toàn không có comment ảo) ── */}
-          {heroItem && (
-            <section className="trending-hero-section" onClick={() => handleItemClick(heroItem)}>
-              <div className="trending-hero-grid">
-                {/* Left: 16:9 Image with Dark Overlay Badge */}
-                {heroItem.image_url ? (
-                  <div className="trending-hero-media">
-                    <img
-                      src={heroItem.image_url}
-                      alt={heroItem.title}
-                      className="trending-hero-img"
-                      loading="eager"
-                    />
-                    <div className="trending-hero-badge-overlay">
-                      <span className="trending-pulse-badge">🔥 TOP TRENDING #1</span>
-                      <span className="trending-view-count">👁️ {heroItem.match_count ? `${heroItem.match_count * 120 + 350}` : '1.4k'} {t('trending.views')}</span>
+          {heroItem && (() => {
+            const userMatches = getMatchedUserKeywords(heroItem);
+            const isUserMatch = userMatches.length > 0;
+            const isTrendingMatch = userMatches.some(m => m.isTrending);
+
+            return (
+              <section
+                className="trending-hero-section"
+                onClick={() => handleItemClick(heroItem)}
+              >
+                <div className="trending-hero-grid">
+                  {/* Left: 16:9 Image with Dark Overlay Badge */}
+                  {heroItem.image_url ? (
+                    <div className="trending-hero-media">
+                      <img
+                        src={heroItem.image_url}
+                        alt={heroItem.title}
+                        className="trending-hero-img"
+                        loading="eager"
+                      />
+                      <div className="trending-hero-badge-overlay">
+                        <span className="trending-pulse-badge">🔥 TOP TRENDING #1</span>
+                        {isUserMatch && (
+                          <span style={{
+                            background: 'rgba(15, 23, 42, 0.78)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(245, 158, 11, 0.5)',
+                            color: '#fef08a',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '3px 9px',
+                            borderRadius: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}>
+                            <Star size={11} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                            #{userMatches[0].term}
+                          </span>
+                        )}
+                        <span className="trending-view-count">👁️ {heroItem.match_count ? `${heroItem.match_count * 120 + 350}` : '1.4k'} {t('trending.views')}</span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="trending-hero-media" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {heroItem.source === 'gov' ? (
-                      <ShoppingBag size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
-                    ) : (heroItem.source === 'adb' || heroItem.source === 'worldbank') ? (
-                      <Globe size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
-                    ) : (
-                      <Newspaper size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
-                    )}
-                  </div>
-                )}
-
-                {/* Right: Editorial Headline & Meta */}
-                <div className="trending-hero-content">
-                  <div className="trending-hero-meta-top">
-                    <span className="trending-tag-pill">{heroItem.source_name || (heroItem.source === 'adb' ? 'ADB' : heroItem.source === 'worldbank' ? 'World Bank' : heroItem.source === 'gov' ? 'Đấu Thầu' : 'Báo chí')}</span>
-                    {heroItem.category && <span className="trending-category-tag">{heroItem.category}</span>}
-                    <span className="trending-time-tag">
-                      <Clock size={12} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
-                    </span>
-                  </div>
-
-                  <h2 className="trending-hero-title">
-                    {heroItem.titleVi || heroItem.title}
-                  </h2>
-
-                  <p className="trending-hero-excerpt">
-                    <strong className="trending-location-prefix">{heroItem.country || 'HÀ NỘI'} – </strong>
-                    {heroItem.excerptVi || heroItem.excerpt || heroItem.ai_summary || (heroItem.titleVi || heroItem.title)}
-                  </p>
-
-                  <div className="trending-hero-footer">
-                    <div className="trending-meta-stats">
-                      {getMatchedKeywordsForItem(heroItem).slice(0, 3).map((kw, i) => (
-                        <span key={i} className="trending-stat-item" style={{ color: '#f59e0b', fontWeight: 750 }}>
-                          <Flame size={14} style={{ color: '#f97316' }} /> #{kw}
-                        </span>
-                      ))}
-                      {getMatchedKeywordsForItem(heroItem).length === 0 && (
-                        <span className="trending-stat-item" style={{ color: 'var(--text-muted)' }}>
-                          <Clock size={13} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
-                        </span>
+                  ) : (
+                    <div className="trending-hero-media" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {heroItem.source === 'gov' ? (
+                        <ShoppingBag size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                      ) : (heroItem.source === 'adb' || heroItem.source === 'worldbank') ? (
+                        <Globe size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                      ) : (
+                        <Newspaper size={64} style={{ color: 'rgba(255,255,255,0.2)' }} />
                       )}
                     </div>
+                  )}
 
-                    <div className="trending-hero-actions">
-                      <button
-                        className="trending-icon-btn"
-                        onClick={(e) => toggleBookmark(heroItem, e)}
-                        title={bookmarks.has(heroItem.id) ? t('trending.savedArticle') : t('trending.saveArticle')}
-                      >
-                        {bookmarks.has(heroItem.id) ? <BookmarkCheck size={18} style={{ color: 'var(--brand-600)' }} /> : <Bookmark size={18} />}
-                      </button>
-                      <span className="trending-read-btn">
-                        {t('trending.readNow')} <ArrowUpRight size={15} />
+                  {/* Right: Editorial Headline & Meta */}
+                  <div className="trending-hero-content">
+                    <div className="trending-hero-meta-top">
+                      <span className="trending-tag-pill">{heroItem.source_name || (heroItem.source === 'adb' ? 'ADB' : heroItem.source === 'worldbank' ? 'World Bank' : heroItem.source === 'gov' ? 'Đấu Thầu' : 'Báo chí')}</span>
+                      {heroItem.category && <span className="trending-category-tag">{heroItem.category}</span>}
+                      <span className="trending-time-tag">
+                        <Clock size={12} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
                       </span>
+                    </div>
+
+                    <h2 className="trending-hero-title">
+                      {heroItem.titleVi || heroItem.title}
+                    </h2>
+
+                    <p className="trending-hero-excerpt">
+                      <strong className="trending-location-prefix">{heroItem.country || 'HÀ NỘI'} – </strong>
+                      {heroItem.excerptVi || heroItem.excerpt || heroItem.ai_summary || (heroItem.titleVi || heroItem.title)}
+                    </p>
+
+                    <div className="trending-hero-footer">
+                      <div className="trending-meta-stats">
+                        {userMatches.length > 0 ? (
+                          userMatches.slice(0, 3).map((m, i) => (
+                            <span
+                              key={i}
+                              className="card-user-kw-badge"
+                              style={{ fontSize: 11, padding: '2px 8px' }}
+                            >
+                              <Star size={10} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                              #{m.term}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="trending-stat-item" style={{ color: 'var(--text-muted)' }}>
+                            <Clock size={13} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="trending-hero-actions">
+                        <button
+                          className="trending-icon-btn"
+                          onClick={(e) => toggleBookmark(heroItem, e)}
+                          title={bookmarks.has(heroItem.id) ? t('trending.savedArticle') : t('trending.saveArticle')}
+                        >
+                          {bookmarks.has(heroItem.id) ? <BookmarkCheck size={18} style={{ color: 'var(--brand-600)' }} /> : <Bookmark size={18} />}
+                        </button>
+                        <span className="trending-read-btn">
+                          {t('trending.readNow')} <ArrowUpRight size={15} />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </section>
-          )}
+              </section>
+            );
+          })()}
 
           {/* ── SECTION 2: SUB-HERO 3-COLUMN SPOTLIGHT STRIP (LUÔN ĐẦY ĐỦ 3 CỘT KHÔNG BỊ TRỐNG) ── */}
           <section className="trending-subhero-strip">
             {spotlightCards.map((card, idx) => {
               if (!card) return null;
+              const userMatches = getMatchedUserKeywords(card);
+              const isUserMatch = userMatches.length > 0;
 
               // Card kiểu Đấu thầu
               const isProc = card.source === 'gov' || card.source === 'dauthau' || card.kind || card.procuring_entity;
@@ -1099,8 +1238,8 @@ export default function TrendingPage() {
                 return (
                   <div
                     key={card.id || `proc-${idx}`}
-                    className="trending-sub-card standard-card"
-                    style={{ borderTop: '3px solid #8b5cf6', background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(139, 92, 246, 0.03) 100%)' }}
+                    className={`trending-sub-card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
+                    style={{ borderTop: isUserMatch ? '3px solid #f59e0b' : '3px solid #8b5cf6', background: 'linear-gradient(180deg, var(--bg-surface) 0%, rgba(139, 92, 246, 0.03) 100%)' }}
                     onClick={() => handleItemClick(card)}
                   >
                     <div className="sub-card-header">
@@ -1110,9 +1249,17 @@ export default function TrendingPage() {
                         </span>
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>● {card.status || 'Đang mở'}</span>
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 8px', borderRadius: 6 }}>
-                        e-GP
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {isUserMatch && (
+                          <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '2px 6px' }}>
+                            <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                            #{userMatches[0].term}
+                          </span>
+                        )}
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                          e-GP
+                        </span>
+                      </div>
                     </div>
 
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, margin: '10px 0' }}>
@@ -1138,14 +1285,22 @@ export default function TrendingPage() {
                 return (
                   <div
                     key={card.id || `oda-${idx}`}
-                    className="trending-sub-card perspective-card"
+                    className={`trending-sub-card perspective-card ${isUserMatch ? 'article-user-matched' : ''}`}
                     onClick={() => handleItemClick(card)}
                   >
                     <div className="perspective-header">
                       <span className="perspective-badge">{t('trending.perspective')}</span>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: '#059669', background: 'rgba(5, 150, 105, 0.1)', padding: '2px 8px', borderRadius: 6 }}>
-                        🌍 {card.source_org === 'adb' || card.source === 'adb' ? 'ADB' : 'World Bank'}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {isUserMatch && (
+                          <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '2px 6px' }}>
+                            <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                            #{userMatches[0].term}
+                          </span>
+                        )}
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#059669', background: 'rgba(5, 150, 105, 0.1)', padding: '2px 8px', borderRadius: 6 }}>
+                          🌍 {card.source_org === 'adb' || card.source === 'adb' ? 'ADB' : 'World Bank'}
+                        </span>
+                      </div>
                     </div>
 
                     <h3 className="perspective-title">{card.titleVi || card.title}</h3>
@@ -1173,18 +1328,26 @@ export default function TrendingPage() {
               return (
                 <div
                   key={card.id || `press-${idx}`}
-                  className="trending-sub-card standard-card"
+                  className={`trending-sub-card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
                   onClick={() => handleItemClick(card)}
                 >
                   <div className="sub-card-header">
                     <h3 className="sub-card-title">
                       {card.titleVi || card.title}
                     </h3>
-                    {card.category && (
-                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-600)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 6 }}>
-                        {card.category}
-                      </span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                      {isUserMatch && (
+                        <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '2px 6px' }}>
+                          <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                          #{userMatches[0].term}
+                        </span>
+                      )}
+                      {card.category && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand-600)', background: 'var(--bg-surface-2)', padding: '2px 8px', borderRadius: 6 }}>
+                          {card.category}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <ArticleMediaPlaceholder
@@ -1203,11 +1366,6 @@ export default function TrendingPage() {
 
                   <div className="sub-card-footer">
                     <span className="sub-card-source">{card.source_name || 'Báo Chí'}</span>
-                    {getMatchedKeywordsForItem(card).length > 0 && (
-                      <span style={{ fontSize: 11, fontWeight: 750, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '1px 6px', borderRadius: 4 }}>
-                        #{getMatchedKeywordsForItem(card)[0]}
-                      </span>
-                    )}
                     <span className="sub-card-time">{formatRelativeTime(card.published_at || card.date, lang)}</span>
                   </div>
                 </div>
@@ -1229,54 +1387,59 @@ export default function TrendingPage() {
 
               {/* Luồng 1: 6 Bài viết Thời sự */}
               <div className="trending-stream-list">
-                {leftStreamPart1.map((item, idx) => (
-                  <article
-                    key={item.id}
-                    className="trending-stream-item"
-                    onClick={() => handleItemClick(item)}
-                    style={{ paddingBottom: 10, gap: 12 }}
-                  >
-                    {item.image_url ? (
-                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0 }}>
-                        <img src={item.image_url} alt={item.title} className="stream-thumb" />
-                        {idx % 2 === 0 && <span className="media-type-badge video"><Play size={9} fill="white" /></span>}
-                        {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={9} /></span>}
-                      </div>
-                    ) : (
-                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
-                        <Newspaper size={20} style={{ color: 'var(--text-muted)' }} />
-                      </div>
-                    )}
-                    <div className="stream-content" style={{ gap: 2 }}>
-                      <h4 className="stream-title" style={{ fontSize: 13, lineHeight: 1.35 }}>{item.titleVi || item.title}</h4>
-                      <p className="stream-excerpt" style={{ fontSize: 11.5, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-muted)' }}>
-                        {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
-                      </p>
-                      <div className="stream-meta" style={{ marginTop: 2 }}>
-                        <span className="stream-time" style={{ fontSize: 11 }}>{formatRelativeTime(item.published_at || item.date, lang)}</span>
-                        {getMatchedKeywordsForItem(item).length > 0 && (
-                          <span style={{ fontSize: 10, fontWeight: 750, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '1px 5px', borderRadius: 4 }}>
-                            #{getMatchedKeywordsForItem(item)[0]}
-                          </span>
+                  {leftStreamPart1.map((item, idx) => {
+                    const userMatches = getMatchedUserKeywords(item);
+
+                    return (
+                      <article
+                        key={item.id}
+                        className="trending-stream-item"
+                        onClick={() => handleItemClick(item)}
+                        style={{ paddingBottom: 10, gap: 12 }}
+                      >
+                        {item.image_url ? (
+                          <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0 }}>
+                            <img src={item.image_url} alt={item.title} className="stream-thumb" />
+                            {idx % 2 === 0 && <span className="media-type-badge video"><Play size={9} fill="white" /></span>}
+                            {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={9} /></span>}
+                          </div>
+                        ) : (
+                          <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
+                            <Newspaper size={20} style={{ color: 'var(--text-muted)' }} />
+                          </div>
                         )}
-                        {item.category && (
-                          <span style={{ fontSize: 10.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '1px 5px', borderRadius: 4 }}>
-                            {item.category}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                        <div className="stream-content" style={{ gap: 2 }}>
+                          <h4 className="stream-title" style={{ fontSize: 13, lineHeight: 1.35 }}>{item.titleVi || item.title}</h4>
+                          <p className="stream-excerpt" style={{ fontSize: 11.5, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-muted)' }}>
+                            {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
+                          </p>
+                          <div className="stream-meta" style={{ marginTop: 2 }}>
+                            <span className="stream-time" style={{ fontSize: 11 }}>{formatRelativeTime(item.published_at || item.date, lang)}</span>
+                            {userMatches.length > 0 && (
+                              <span className="card-user-kw-badge" style={{ fontSize: 10, padding: '1px 6px' }}>
+                                <Star size={9.5} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                                #{userMatches[0].term}
+                              </span>
+                            )}
+                            {item.category && (
+                              <span style={{ fontSize: 10.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '1px 5px', borderRadius: 4 }}>
+                                {item.category}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
 
                 {/* Khối Tiêu Điểm: Đấu Thầu & Gói Thầu Mới (Theo gói sở hữu) */}
                 {canProc && procInFeed.length > 0 ? (
                   <div style={{
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.08))',
-                    border: '1px solid rgba(139, 92, 246, 0.25)',
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.04), rgba(59, 130, 246, 0.06))',
+                    border: '1px solid rgba(139, 92, 246, 0.2)',
                     borderRadius: 12, padding: 12, margin: '6px 0'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(139, 92, 246, 0.15)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(139, 92, 246, 0.12)' }}>
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <ShoppingBag size={14} /> Gói Thầu & KHLCNT Tiêu Điểm
                       </span>
@@ -1285,34 +1448,49 @@ export default function TrendingPage() {
                       </button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {procInFeed.map((p, pIdx) => (
-                        <div
-                          key={p.id || `proc-infeed-${pIdx}`}
-                          onClick={() => handleItemClick(p)}
-                          style={{
-                            background: 'var(--bg-surface)', padding: '8px 10px', borderRadius: 8,
-                            border: '1px solid var(--border-subtle)', cursor: 'pointer'
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#7c3aed', background: 'rgba(139, 92, 246, 0.1)', padding: '1px 5px', borderRadius: 4 }}>
-                              {p.kind === 'plan' ? 'KHLCNT' : 'GÓI THẦU'}
-                            </span>
-                            {p.amount && (
-                              <span style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
-                                💰 {p.amount}
-                              </span>
-                            )}
+                      {procInFeed.map((p, pIdx) => {
+                        const userMatches = getMatchedUserKeywords(p);
+                        const isUserMatch = userMatches.length > 0;
+
+                        return (
+                          <div
+                            key={p.id || `proc-infeed-${pIdx}`}
+                            onClick={() => handleItemClick(p)}
+                            style={{
+                              background: 'var(--bg-surface)',
+                              padding: '8px 10px', borderRadius: 8,
+                              border: isUserMatch ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid var(--border-subtle)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#7c3aed', background: 'rgba(139, 92, 246, 0.1)', padding: '1px 5px', borderRadius: 4 }}>
+                                  {p.kind === 'plan' ? 'KHLCNT' : 'GÓI THẦU'}
+                                </span>
+                                {isUserMatch && (
+                                  <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '1px 5px' }}>
+                                    <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                                    #{userMatches[0].term}
+                                  </span>
+                                )}
+                              </div>
+                              {p.amount && (
+                                <span style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
+                                  💰 {p.amount}
+                                </span>
+                              )}
+                            </div>
+                            <h5 style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: '0 0 3px 0', color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {p.title}
+                            </h5>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)' }}>
+                              <span>{p.investor ? p.investor.slice(0, 30) + '…' : 'Bên mời thầu'}</span>
+                              <span>{p.date ? formatRelativeTime(p.date, lang) : 'Mới'}</span>
+                            </div>
                           </div>
-                          <h5 style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: '0 0 3px 0', color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {p.title}
-                          </h5>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)' }}>
-                            <span>{p.investor ? p.investor.slice(0, 30) + '…' : 'Bên mời thầu'}</span>
-                            <span>{p.date ? formatRelativeTime(p.date, lang) : 'Mới'}</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (
@@ -1332,54 +1510,59 @@ export default function TrendingPage() {
                 )}
 
                 {/* Luồng 2: 6 Bài viết Kinh tế tiếp theo */}
-                {leftStreamPart2.map((item, idx) => (
-                  <article
-                    key={item.id}
-                    className="trending-stream-item"
-                    onClick={() => handleItemClick(item)}
-                    style={{ paddingBottom: 10, gap: 12 }}
-                  >
-                    {item.image_url ? (
-                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0 }}>
-                        <img src={item.image_url} alt={item.title} className="stream-thumb" />
-                        {idx % 2 === 0 && <span className="media-type-badge video"><Play size={9} fill="white" /></span>}
-                        {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={9} /></span>}
+                {leftStreamPart2.map((item, idx) => {
+                  const userMatches = getMatchedUserKeywords(item);
+
+                  return (
+                    <article
+                      key={item.id}
+                      className="trending-stream-item"
+                      onClick={() => handleItemClick(item)}
+                      style={{ paddingBottom: 10, gap: 12 }}
+                    >
+                      {item.image_url ? (
+                        <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0 }}>
+                          <img src={item.image_url} alt={item.title} className="stream-thumb" />
+                          {idx % 2 === 0 && <span className="media-type-badge video"><Play size={9} fill="white" /></span>}
+                          {idx % 2 === 1 && <span className="media-type-badge photo"><Camera size={9} /></span>}
+                        </div>
+                      ) : (
+                        <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
+                          <Newspaper size={20} style={{ color: 'var(--text-muted)' }} />
+                        </div>
+                      )}
+                      <div className="stream-content" style={{ gap: 2 }}>
+                        <h4 className="stream-title" style={{ fontSize: 13, lineHeight: 1.35 }}>{item.titleVi || item.title}</h4>
+                        <p className="stream-excerpt" style={{ fontSize: 11.5, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-muted)' }}>
+                          {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
+                        </p>
+                        <div className="stream-meta" style={{ marginTop: 2 }}>
+                          <span className="stream-time" style={{ fontSize: 11 }}>{formatRelativeTime(item.published_at || item.date, lang)}</span>
+                          {userMatches.length > 0 && (
+                            <span className="card-user-kw-badge" style={{ fontSize: 10, padding: '1px 6px' }}>
+                              <Star size={9.5} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                              #{userMatches[0].term}
+                            </span>
+                          )}
+                          {item.category && (
+                            <span style={{ fontSize: 10.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '1px 5px', borderRadius: 4 }}>
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="stream-thumb-wrap" style={{ width: 88, height: 60, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)' }}>
-                        <Newspaper size={20} style={{ color: 'var(--text-muted)' }} />
-                      </div>
-                    )}
-                    <div className="stream-content" style={{ gap: 2 }}>
-                      <h4 className="stream-title" style={{ fontSize: 13, lineHeight: 1.35 }}>{item.titleVi || item.title}</h4>
-                      <p className="stream-excerpt" style={{ fontSize: 11.5, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--text-muted)' }}>
-                        {item.excerptVi || item.excerpt || (item.titleVi || item.title)}
-                      </p>
-                      <div className="stream-meta" style={{ marginTop: 2 }}>
-                        <span className="stream-time" style={{ fontSize: 11 }}>{formatRelativeTime(item.published_at || item.date, lang)}</span>
-                        {getMatchedKeywordsForItem(item).length > 0 && (
-                          <span style={{ fontSize: 10, fontWeight: 750, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '1px 5px', borderRadius: 4 }}>
-                            #{getMatchedKeywordsForItem(item)[0]}
-                          </span>
-                        )}
-                        {item.category && (
-                          <span style={{ fontSize: 10.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '1px 5px', borderRadius: 4 }}>
-                            {item.category}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
 
                 {/* Khối Tiêu Điểm: Dự Án ODA (World Bank / ADB) */}
                 {(canAdb || canWb) && odaInFeed.length > 0 && (
                   <div style={{
-                    background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.05), rgba(16, 185, 129, 0.08))',
-                    border: '1px solid rgba(5, 150, 105, 0.25)',
+                    background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.04), rgba(16, 185, 129, 0.06))',
+                    border: '1px solid rgba(5, 150, 105, 0.2)',
                     borderRadius: 12, padding: 12, margin: '6px 0'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(5, 150, 105, 0.15)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(5, 150, 105, 0.12)' }}>
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <Globe size={14} /> Dự Án ODA (World Bank & ADB)
                       </span>
@@ -1388,39 +1571,54 @@ export default function TrendingPage() {
                       </button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {odaInFeed.map((oda, oIdx) => (
-                        <div
-                          key={oda.id || `oda-infeed-${oIdx}`}
-                          onClick={() => handleItemClick(oda)}
-                          style={{
-                            background: 'var(--bg-surface)', padding: '8px 10px', borderRadius: 8,
-                            border: '1px solid var(--border-subtle)', cursor: 'pointer'
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                            <span style={{
-                              fontSize: 9.5, fontWeight: 800,
-                              color: oda.source === 'worldbank' || oda.source_org === 'worldbank' ? '#0284c7' : '#059669',
-                              background: oda.source === 'worldbank' || oda.source_org === 'worldbank' ? 'rgba(2, 132, 199, 0.1)' : 'rgba(5, 150, 105, 0.1)',
-                              padding: '1px 5px', borderRadius: 4
-                            }}>
-                              {oda.source === 'worldbank' || oda.source_org === 'worldbank' ? '🌍 WORLD BANK' : '🏦 ADB'}
-                            </span>
-                            {oda.amount && (
-                              <span style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
-                                💵 {oda.amount}
-                              </span>
-                            )}
+                      {odaInFeed.map((oda, oIdx) => {
+                        const userMatches = getMatchedUserKeywords(oda);
+                        const isUserMatch = userMatches.length > 0;
+
+                        return (
+                          <div
+                            key={oda.id || `oda-infeed-${oIdx}`}
+                            onClick={() => handleItemClick(oda)}
+                            style={{
+                              background: 'var(--bg-surface)',
+                              padding: '8px 10px', borderRadius: 8,
+                              border: isUserMatch ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid var(--border-subtle)',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{
+                                  fontSize: 9.5, fontWeight: 800,
+                                  color: oda.source === 'worldbank' || oda.source_org === 'worldbank' ? '#0284c7' : '#059669',
+                                  background: oda.source === 'worldbank' || oda.source_org === 'worldbank' ? 'rgba(2, 132, 199, 0.1)' : 'rgba(5, 150, 105, 0.1)',
+                                  padding: '1px 5px', borderRadius: 4
+                                }}>
+                                  {oda.source === 'worldbank' || oda.source_org === 'worldbank' ? '🌍 WORLD BANK' : '🏦 ADB'}
+                                </span>
+                                {isUserMatch && (
+                                  <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '1px 5px' }}>
+                                    <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                                    #{userMatches[0].term}
+                                  </span>
+                                )}
+                              </div>
+                              {oda.amount && (
+                                <span style={{ fontSize: 11, fontWeight: 800, color: '#059669' }}>
+                                  💵 {oda.amount}
+                                </span>
+                              )}
+                            </div>
+                            <h5 style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: '0 0 3px 0', color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {oda.titleVi || oda.title}
+                            </h5>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)' }}>
+                              <span>{oda.sector || oda.status || 'Đang triển khai'}</span>
+                              <span>{oda.date ? formatRelativeTime(oda.date, lang) : 'Cập nhật'}</span>
+                            </div>
                           </div>
-                          <h5 style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.35, margin: '0 0 3px 0', color: 'var(--text-primary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {oda.titleVi || oda.title}
-                          </h5>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)' }}>
-                            <span>{oda.sector || oda.status || 'Đang triển khai'}</span>
-                            <span>{oda.date ? formatRelativeTime(oda.date, lang) : 'Cập nhật'}</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -2407,129 +2605,153 @@ export default function TrendingPage() {
           )}
 
           {/* 2. HERO SHOWCASE CARD (Dự án / Tin tiêu điểm số 1) */}
-          {heroItem && !filterSearch && filterPage === 1 && (
-            <div
-              className="trending-hero-section"
-              onClick={() => handleItemClick(heroItem)}
-              style={{
-                borderRadius: 18, border: '1px solid var(--border)', overflow: 'hidden',
-                background: 'var(--bg-surface)', boxShadow: '0 8px 30px -4px rgba(0,0,0,0.08)',
-                marginBottom: 32, cursor: 'pointer'
-              }}
-            >
-              <div className="trending-hero-grid">
-                {heroItem.image_url ? (
-                  <div className="trending-hero-media" style={{ minHeight: 300 }}>
-                    <img
-                      src={heroItem.image_url}
-                      alt={heroItem.title}
-                      className="trending-hero-img"
-                      loading="eager"
-                    />
-                    <div className="trending-hero-badge-overlay">
-                      <span className="trending-pulse-badge" style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)', color: '#fff' }}>
-                        🔥 TIÊU ĐIỂM {heroItem.source_name ? heroItem.source_name.toUpperCase() : 'NGUỒN'}
-                      </span>
-                      <span className="trending-view-count">👁️ 1.8k lượt đọc</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="trending-hero-media" style={{
-                    minHeight: 300,
-                    background: heroItem.source === 'gov'
-                      ? 'linear-gradient(135deg, #1e0a3c 0%, #4c1d95 50%, #7e22ce 100%)'
-                      : (heroItem.source === 'adb' || heroItem.source_org === 'adb')
-                      ? 'linear-gradient(135deg, #022c22 0%, #065f46 50%, #059669 100%)'
-                      : 'linear-gradient(135deg, #082f49 0%, #0369a1 50%, #0ea5e9 100%)',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    padding: 30, color: '#fff', textAlign: 'center', position: 'relative'
-                  }}>
-                    <div style={{
-                      position: 'absolute', top: 16, left: 16,
-                      fontSize: 11, fontWeight: 900, letterSpacing: '0.5px',
-                      padding: '4px 10px', borderRadius: 8, background: 'rgba(0,0,0,0.4)',
-                      border: '1px solid rgba(255,255,255,0.2)'
-                    }}>
-                      🔥 TIÊU ĐIỂM {heroItem.source_name ? heroItem.source_name.toUpperCase() : 'QUỐC TẾ'}
-                    </div>
-                    <div style={{ fontSize: 52, marginBottom: 14, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}>
-                      {heroItem.source === 'gov' ? '📋' : (heroItem.source === 'adb' || heroItem.source_org === 'adb') ? '🏦' : '🌍'}
-                    </div>
-                    <div style={{ fontSize: 24, fontWeight: 900, color: '#fef08a', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
-                      {heroItem.amount ? `💰 ${heroItem.amount}` : heroItem.source_name}
-                    </div>
-                    {heroItem.country && (
-                      <div style={{ fontSize: 13.5, fontWeight: 700, opacity: 0.95, marginTop: 8, background: 'rgba(255,255,255,0.15)', padding: '4px 14px', borderRadius: 20 }}>
-                        📍 {heroItem.country}
+          {heroItem && !filterSearch && filterPage === 1 && (() => {
+            const userMatches = getMatchedUserKeywords(heroItem);
+            const isUserMatch = userMatches.length > 0;
+            const isTrendingMatch = userMatches.some(m => m.isTrending);
+
+            return (
+              <div
+                className={`trending-hero-section ${isTrendingMatch ? 'article-user-and-trending-matched' : isUserMatch ? 'article-user-matched' : ''}`}
+                onClick={() => handleItemClick(heroItem)}
+                style={{
+                  borderRadius: 18, border: '1px solid var(--border)', overflow: 'hidden',
+                  background: 'var(--bg-surface)', boxShadow: '0 8px 30px -4px rgba(0,0,0,0.08)',
+                  marginBottom: 32, cursor: 'pointer'
+                }}
+              >
+                <div className="trending-hero-grid">
+                  {heroItem.image_url ? (
+                    <div className="trending-hero-media" style={{ minHeight: 300 }}>
+                      <img
+                        src={heroItem.image_url}
+                        alt={heroItem.title}
+                        className="trending-hero-img"
+                        loading="eager"
+                      />
+                      <div className="trending-hero-badge-overlay">
+                        <span className="trending-pulse-badge" style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)', color: '#fff' }}>
+                          🔥 TIÊU ĐIỂM {heroItem.source_name ? heroItem.source_name.toUpperCase() : 'NGUỒN'}
+                        </span>
+                        {isTrendingMatch ? (
+                          <span className="card-user-kw-badge trending-double">
+                            🔥⭐ KHỚP XU HƯỚNG: #{userMatches.map(m => m.term).join(', #')}
+                          </span>
+                        ) : isUserMatch ? (
+                          <span className="card-user-kw-badge">
+                            🎯 TRÙNG TỪ KHÓA: #{userMatches.map(m => m.term).join(', #')}
+                          </span>
+                        ) : null}
+                        <span className="trending-view-count">👁️ 1.8k lượt đọc</span>
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  ) : (
+                    <div className="trending-hero-media" style={{
+                      minHeight: 300,
+                      background: heroItem.source === 'gov'
+                        ? 'linear-gradient(135deg, #1e0a3c 0%, #4c1d95 50%, #7e22ce 100%)'
+                        : (heroItem.source === 'adb' || heroItem.source_org === 'adb')
+                        ? 'linear-gradient(135deg, #022c22 0%, #065f46 50%, #059669 100%)'
+                        : 'linear-gradient(135deg, #082f49 0%, #0369a1 50%, #0ea5e9 100%)',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      padding: 30, color: '#fff', textAlign: 'center', position: 'relative'
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: 16, left: 16,
+                        fontSize: 11, fontWeight: 900, letterSpacing: '0.5px',
+                        padding: '4px 10px', borderRadius: 8, background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.2)'
+                      }}>
+                        🔥 TIÊU ĐIỂM {heroItem.source_name ? heroItem.source_name.toUpperCase() : 'QUỐC TẾ'}
+                      </div>
+                      <div style={{ fontSize: 52, marginBottom: 14, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}>
+                        {heroItem.source === 'gov' ? '📋' : (heroItem.source === 'adb' || heroItem.source_org === 'adb') ? '🏦' : '🌍'}
+                      </div>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: '#fef08a', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                        {heroItem.amount ? `💰 ${heroItem.amount}` : heroItem.source_name}
+                      </div>
+                    </div>
+                  )}
 
-                <div className="trending-hero-content" style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column' }}>
-                  <div className="trending-hero-meta-top" style={{ marginBottom: 12 }}>
-                    <span className="trending-tag-pill" style={{ background: 'var(--brand-50)', color: 'var(--brand-600)', border: '1px solid var(--brand-200)' }}>
-                      {heroItem.source_name || 'Nguồn dữ liệu'}
-                    </span>
-                    {heroItem.country && (
-                      <span className="trending-category-tag" style={{ background: 'var(--bg-surface-2)', color: 'var(--text-secondary)' }}>
-                        📍 {heroItem.country}
+                  <div className="trending-hero-content" style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column' }}>
+                    <div className="trending-hero-meta-top" style={{ marginBottom: 12 }}>
+                      <span className="trending-tag-pill" style={{ background: 'var(--brand-50)', color: 'var(--brand-600)', border: '1px solid var(--brand-200)' }}>
+                        {heroItem.source_name || 'Nguồn dữ liệu'}
                       </span>
-                    )}
-                    {heroItem.category && (
-                      <span className="trending-category-tag">
-                        {heroItem.category}
-                      </span>
-                    )}
-                    <span className="trending-time-tag">
-                      <Clock size={12} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
-                    </span>
-                  </div>
-
-                  <h2 className="trending-hero-title" style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.35, marginBottom: 12, color: 'var(--text-primary)' }}>
-                    {heroItem.titleVi || heroItem.title}
-                  </h2>
-
-                  <p className="trending-hero-excerpt" style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6, flex: 1, margin: 0 }}>
-                    {heroItem.excerptVi || heroItem.excerpt || heroItem.ai_summary || (heroItem.titleVi || heroItem.title)}
-                  </p>
-
-                  <div className="trending-hero-footer" style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      {heroItem.procuring_entity && (
-                        <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '4px 10px', borderRadius: 6 }}>
-                          🏛️ {heroItem.procuring_entity}
+                      {heroItem.country && (
+                        <span className="trending-category-tag" style={{ background: 'var(--bg-surface-2)', color: 'var(--text-secondary)' }}>
+                          📍 {heroItem.country}
                         </span>
                       )}
-                      {heroItem.sector && (
-                        <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '4px 10px', borderRadius: 6 }}>
-                          🏷️ {heroItem.sector}
+                      {heroItem.category && (
+                        <span className="trending-category-tag">
+                          {heroItem.category}
                         </span>
                       )}
+                      {isTrendingMatch ? (
+                        <span className="card-user-kw-badge trending-double" style={{ fontSize: 10 }}>
+                          🔥⭐ Xu hướng bạn theo dõi
+                        </span>
+                      ) : isUserMatch ? (
+                        <span className="card-user-kw-badge" style={{ fontSize: 10 }}>
+                          🎯 Trùng từ khóa của bạn
+                        </span>
+                      ) : null}
+                      <span className="trending-time-tag">
+                        <Clock size={12} /> {formatRelativeTime(heroItem.published_at || heroItem.date, lang)}
+                      </span>
                     </div>
 
-                    <button
-                      className="article-detail-btn"
-                      style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 8,
-                        padding: '9px 18px', borderRadius: 10,
-                        background: 'linear-gradient(135deg, var(--brand-600), var(--brand-700))', color: '#fff',
-                        fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer',
-                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleItemClick(heroItem);
-                      }}
-                    >
-                      <span>Xem chi tiết nội dung</span>
-                      <ExternalLink size={14} />
-                    </button>
+                    <h2 className="trending-hero-title" style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.35, marginBottom: 12, color: 'var(--text-primary)' }}>
+                      {heroItem.titleVi || heroItem.title}
+                    </h2>
+
+                    <p className="trending-hero-excerpt" style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6, flex: 1, margin: 0 }}>
+                      {heroItem.excerptVi || heroItem.excerpt || heroItem.ai_summary || (heroItem.titleVi || heroItem.title)}
+                    </p>
+
+                    <div className="trending-hero-footer" style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        {heroItem.procuring_entity && (
+                          <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '4px 10px', borderRadius: 6 }}>
+                            🏛️ {heroItem.procuring_entity}
+                          </span>
+                        )}
+                        {heroItem.sector && (
+                          <span style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '4px 10px', borderRadius: 6 }}>
+                            🏷️ {heroItem.sector}
+                          </span>
+                        )}
+                        {userMatches.length > 0 && (
+                          <span style={{ fontSize: 11.5, fontWeight: 800, color: '#d97706', background: 'rgba(245, 158, 11, 0.12)', padding: '4px 8px', borderRadius: 6 }}>
+                            #{userMatches[0].term}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        className="article-detail-btn"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 8,
+                          padding: '9px 18px', borderRadius: 10,
+                          background: 'linear-gradient(135deg, var(--brand-600), var(--brand-700))', color: '#fff',
+                          fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer',
+                          boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleItemClick(heroItem);
+                        }}
+                      >
+                        <span>Xem chi tiết nội dung</span>
+                        <ExternalLink size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 3. CARD GRID (Danh sách thẻ cao cấp) */}
           {filteredRemainingItems.length === 0 ? (
@@ -2558,14 +2780,19 @@ export default function TrendingPage() {
                 marginBottom: 36
               }}>
                 {currentPageItems.map((item, idx) => {
+                  const userMatches = getMatchedUserKeywords(item);
+                  const isUserMatch = userMatches.length > 0;
+                  const isTrendingMatch = userMatches.some(m => m.isTrending);
+
                   // 1. Dạng Gói thầu công (e-GP)
                   if (item.source === 'gov' || item.kind) {
                     return (
                       <div
                         key={item.id || idx}
-                        className="trending-luxury-card"
+                        className={`trending-luxury-card ${isUserMatch ? 'article-user-matched' : ''}`}
                         style={{
-                          borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                          borderRadius: 16, border: isUserMatch ? '1.5px solid rgba(245, 158, 11, 0.45)' : '1px solid var(--border)',
+                          background: 'var(--bg-surface)',
                           overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer',
                           boxShadow: '0 4px 16px -2px rgba(0,0,0,0.05)', transition: 'all 0.25s ease'
                         }}
@@ -2578,13 +2805,21 @@ export default function TrendingPage() {
                           color: '#fff', position: 'relative'
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{
-                              fontSize: 10.5, fontWeight: 900, letterSpacing: '0.4px',
-                              padding: '3px 8px', borderRadius: 6,
-                              background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)'
-                            }}>
-                              {item.kind === 'plan' ? '📋 KHLCNT' : '🛍️ GÓI THẦU (TBMT)'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{
+                                fontSize: 10.5, fontWeight: 900, letterSpacing: '0.4px',
+                                padding: '3px 8px', borderRadius: 6,
+                                background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)'
+                              }}>
+                                {item.kind === 'plan' ? '📋 KHLCNT' : '🛍️ GÓI THẦU (TBMT)'}
+                              </span>
+                              {isUserMatch && (
+                                <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '2px 6px' }}>
+                                  <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                                  #{userMatches[0].term}
+                                </span>
+                              )}
+                            </div>
                             <span style={{
                               fontSize: 11, fontWeight: 800, color: '#34d399',
                               background: 'rgba(16,185,129,0.25)', padding: '2px 8px', borderRadius: 12
@@ -2634,9 +2869,10 @@ export default function TrendingPage() {
                     return (
                       <div
                         key={item.id || idx}
-                        className="trending-luxury-card"
+                        className={`trending-luxury-card ${isUserMatch ? 'article-user-matched' : ''}`}
                         style={{
-                          borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                          borderRadius: 16, border: isUserMatch ? '1.5px solid rgba(245, 158, 11, 0.45)' : '1px solid var(--border)',
+                          background: 'var(--bg-surface)',
                           overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer',
                           boxShadow: '0 4px 16px -2px rgba(0,0,0,0.05)', transition: 'all 0.25s ease'
                         }}
@@ -2651,13 +2887,21 @@ export default function TrendingPage() {
                           color: '#fff', position: 'relative'
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{
-                              fontSize: 10.5, fontWeight: 900, letterSpacing: '0.4px',
-                              padding: '3px 8px', borderRadius: 6,
-                              background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)'
-                            }}>
-                              {isAdb ? '🏦 ADB (CHÂU Á)' : '🌍 WORLD BANK'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{
+                                fontSize: 10.5, fontWeight: 900, letterSpacing: '0.4px',
+                                padding: '3px 8px', borderRadius: 6,
+                                background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.2)'
+                              }}>
+                                {isAdb ? '🏦 ADB (CHÂU Á)' : '🌍 WORLD BANK'}
+                              </span>
+                              {isUserMatch && (
+                                <span className="card-user-kw-badge" style={{ fontSize: 9.5, padding: '2px 6px' }}>
+                                  <Star size={9} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                                  #{userMatches[0].term}
+                                </span>
+                              )}
+                            </div>
                             <span style={{
                               fontSize: 11, fontWeight: 800, color: '#fff',
                               background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12
@@ -2704,9 +2948,10 @@ export default function TrendingPage() {
                   return (
                     <div
                       key={item.id || idx}
-                      className="trending-luxury-card"
+                      className={`trending-luxury-card ${isUserMatch ? 'article-user-matched' : ''}`}
                       style={{
-                        borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-surface)',
+                        borderRadius: 16, border: isUserMatch ? '1.5px solid rgba(245, 158, 11, 0.45)' : '1px solid var(--border)',
+                        background: 'var(--bg-surface)',
                         overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer',
                         boxShadow: '0 4px 16px -2px rgba(0,0,0,0.05)', transition: 'all 0.25s ease'
                       }}
@@ -2744,6 +2989,16 @@ export default function TrendingPage() {
                         }}>
                           {item.category || 'Thời Sự & Đầu Tư'}
                         </span>
+
+                        {isUserMatch && (
+                          <span className="card-user-kw-badge" style={{
+                            position: 'absolute', top: 12, right: 12,
+                            fontSize: 10, padding: '3px 8px', zIndex: 2
+                          }}>
+                            <Star size={10} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
+                            #{userMatches[0].term}
+                          </span>
+                        )}
 
                         {/* Floating Source Pill */}
                         <span style={{

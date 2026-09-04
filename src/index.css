@@ -8163,3 +8163,113 @@ html, body {
   transform: scale(1.05) !important;
 }
 
+/* --- Trending Page: Refined Luxury Match Styling (Clean, Gentle, Aesthetic) --- */
+
+/* Chip trong dải Marquee khi trùng từ khóa theo dõi của user */
+.user-matched-chip {
+  background: var(--bg-surface) !important;
+  border: 1.5px solid #f59e0b !important;
+  color: #b45309 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12) !important;
+  position: relative;
+}
+
+[data-theme="dark"] .user-matched-chip {
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+}
+
+.user-matched-chip:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+}
+
+/* Thẻ bài viết / Dự án / Đấu thầu: Tinh tế, KHÔNG bọc viền cam dày quanh bài */
+.article-user-matched {
+  position: relative;
+  transition: all 0.2s ease !important;
+}
+
+.article-user-and-trending-matched {
+  position: relative;
+  transition: all 0.2s ease !important;
+}
+
+/* Thẻ card lớn (Spotlight / Grid) chỉ cần viền hover nhẹ và điểm nhấn sang trọng */
+.trending-sub-card.article-user-matched,
+.trending-luxury-card.article-user-matched {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 4px 16px -2px rgba(245, 158, 11, 0.08) !important;
+}
+
+.trending-sub-card.article-user-and-trending-matched,
+.trending-luxury-card.article-user-and-trending-matched {
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  box-shadow: 0 6px 20px -2px rgba(245, 158, 11, 0.12) !important;
+}
+
+.trending-sub-card.article-user-matched:hover,
+.trending-luxury-card.article-user-matched:hover,
+.trending-sub-card.article-user-and-trending-matched:hover,
+.trending-luxury-card.article-user-and-trending-matched:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 10px 24px -2px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Tag / Badge từ khóa khớp: Nhẹ nhàng, dễ nhìn, tone màu pastel hổ phách thanh nhã */
+.card-user-kw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.09);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .card-user-kw-badge {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.card-user-kw-badge.trending-double {
+  background: rgba(249, 115, 22, 0.11);
+  color: #c2410c;
+  border-color: rgba(249, 115, 22, 0.32);
+}
+
+[data-theme="dark"] .card-user-kw-badge.trending-double {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.45);
+}
+
+/* Pill tổng kết từ khóa bạn theo dõi trên header Marquee */
+.user-matched-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.09);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  margin-left: 6px;
+}
+
+[data-theme="dark"] .user-matched-summary-pill {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.18);
+}
+

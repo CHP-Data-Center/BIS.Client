@@ -670,6 +670,10 @@ export default function PotentialProjectsPage() {
   const [userProjects, setUserProjects] = useState(() => projectsService.getCachedProjects() || []);
   const [msg, setMsg] = useState(null);
 
+  // Chống Race Condition khi bấm filter liên tục và Debounce
+  const reqIdRef = useRef(0);
+  const debounceTimerRef = useRef(null);
+
   const toast = (type, text) => {
     setMsg({ type, text });
     setTimeout(() => setMsg(null), 4000);
@@ -706,6 +710,8 @@ export default function PotentialProjectsPage() {
   }, []);
 
   const load = useCallback(async (forceFresh = false) => {
+    const currentReqId = ++reqIdRef.current;
+
     // Kiểm tra cache trước
     const cached = potentialService.getCachedList({
       sectors: filterSectors,
@@ -739,18 +745,62 @@ export default function PotentialProjectsPage() {
         size: PAGE_SIZE,
         forceFresh,
       });
+
+      // RACE CONDITION GUARD: Chỉ nhận kết quả nếu request này là request mới nhất!
+      // Bỏ qua hoàn toàn các request cũ để không bị giật / nhảy dữ liệu liên tục sau khi bấm nhanh.
+      if (currentReqId !== reqIdRef.current) {
+        return;
+      }
+
       setData(res);
     } catch (e) {
+      if (currentReqId !== reqIdRef.current) return;
       setErr(e.response?.data?.detail || 'Không tải được danh sách dự án tiềm năng.');
     } finally {
-      setInitialLoading(false);
-      setIsPageFetching(false);
+      if (currentReqId === reqIdRef.current) {
+        setInitialLoading(false);
+        setIsPageFetching(false);
+      }
     }
-  }, [filterSectors, kind, minAmount, page]);
+  }, [filterSectors, kind, minAmount, page, data.items?.length]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    // 1. Nếu có sẵn trong cache -> cập nhật ngay tức thì 0ms, không cần debounce
+    const cached = potentialService.getCachedList({
+      sectors: filterSectors,
+      kinds: kind ? [kind] : undefined,
+      minAmount: minAmount ? Number(minAmount) : undefined,
+      page,
+      size: PAGE_SIZE,
+    });
+    if (cached) {
+      setData(cached);
+      setInitialLoading(false);
+      setIsPageFetching(false);
+      return;
+    }
+
+    // 2. Nếu chưa có cache -> bật ngay trạng thái loading mờ để phản hồi lập tức cho người dùng
+    if (data.items?.length) {
+      setIsPageFetching(true);
+    }
+
+    // 3. Debounce nhẹ 150ms để gộp các lượt click liên tiếp thành 1 request duy nhất
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      load();
+    }, 150);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [load, filterSectors, kind, minAmount, page]);
+
 
   // Danh sách các dự án chuẩn hóa từ DB của user để tra cứu tức thời
   const normalizedUserProjects = useMemo(() => {
@@ -908,6 +958,7 @@ export default function PotentialProjectsPage() {
     return pages;
   }, [page, totalPages]);
   const lockedToArticles =
+    !canProc && !canOda && !kind &&
     !initialLoading && !err && data.items.length > 0 && data.items.every((i) => i.kind === 'article');
 
   return (
@@ -1250,11 +1301,16 @@ export default function PotentialProjectsPage() {
         <div style={{ position: 'relative' }}>
           {isPageFetching && (
             <div style={{
-              position: 'absolute', top: -8, right: 0,
-              display: 'flex', alignItems: 'center', gap: 6,
-              fontSize: 12, color: 'var(--brand-600)', fontWeight: 700,
+              position: 'absolute', top: 50, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 10, display: 'flex', alignItems: 'center', gap: 8,
+              background: 'var(--bg-surface)', border: '1px solid var(--brand-500)',
+              padding: '9px 20px', borderRadius: 999,
+              boxShadow: '0 10px 28px rgba(37, 99, 235, 0.22)',
+              fontSize: 13, color: 'var(--brand-600)', fontWeight: 800,
+              backdropFilter: 'blur(10px)', animation: 'fadeIn .15s ease-out',
             }}>
-              <Loader2 size={13} className="spin" /> Đang cập nhật...
+              <Loader2 size={16} className="spin" style={{ color: 'var(--brand-500)' }} />
+              <span>Đang lọc dữ liệu...</span>
             </div>
           )}
 
@@ -1286,8 +1342,10 @@ export default function PotentialProjectsPage() {
           <div style={{
             display: 'grid', gap: 18,
             gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-            opacity: isPageFetching ? 0.75 : 1,
-            transition: 'opacity .15s ease',
+            opacity: isPageFetching ? 0.38 : 1,
+            filter: isPageFetching ? 'grayscale(0.2)' : 'none',
+            pointerEvents: isPageFetching ? 'none' : 'auto',
+            transition: 'all .15s ease',
           }}>
             {displayItems.map((item) => {
               const key = itemKey(item);
