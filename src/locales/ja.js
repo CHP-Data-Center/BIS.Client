@@ -1211,5 +1211,16 @@ export default {
   'potential.minAmount': '最低金額（VND）',
   'potential.minAmountHint': '国内入札のみが対象です — ODA案件はUSD表記のため除外されます。',
   'potential.sectorCount': '{count} 件',
+
+  // ── Missing UI & View toggle keys ──
+  'ui.dang-luoi': 'グリッド表示',
+  'ui.tinh-gon': 'コンパクト表示',
+  'ui.grid-view-title': 'グリッドカード表示',
+  'ui.compact-view-title': 'コンパクト一覧表示',
+  'bookmarks.listView': 'リスト表示',
+  'bookmarks.gridView': 'グリッド表示',
+  'common.tryAgain': '再試行',
+  'search.resultsCount': '件',
+  'auth.loginTitle': 'BISシステムにログイン',
 };
 

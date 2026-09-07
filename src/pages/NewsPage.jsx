@@ -872,9 +872,9 @@ export default function NewsPage() {
                     boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.15s ease'
                   }}
-                  title="Chế độ lưới thẻ (Grid)"
+                  title={tUI('ui.grid-view-title', 'Chế độ lưới thẻ (Grid)')}
                 >
-                  <LayoutGrid size={13} /> {tUI('ui.dang-luoi') || 'Lưới'}
+                  <LayoutGrid size={13} /> {tUI('ui.dang-luoi', 'Dạng lưới')}
                 </button>
                 <button
                   type="button"
@@ -887,9 +887,9 @@ export default function NewsPage() {
                     boxShadow: viewMode === 'compact' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     transition: 'all 0.15s ease'
                   }}
-                  title="Chế độ danh sách dòng tinh gọn (Compact List)"
+                  title={tUI('ui.compact-view-title', 'Chế độ danh sách dòng tinh gọn (Compact List)')}
                 >
-                  <List size={14} /> {tUI('ui.tinh-gon') || 'Tinh gọn'}
+                  <List size={14} /> {tUI('ui.tinh-gon', 'Tinh gọn')}
                 </button>
               </div>
 

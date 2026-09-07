@@ -1143,7 +1143,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 <AlertCircle size={36} color="#ef4444" style={{ margin: '0 auto 12px' }} />
                 <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{error}</div>
                 <button className="btn btn-secondary btn-sm" onClick={loadData} style={{ marginTop: 14 }}>
-                  {t('common.tryAgain') || 'Thử lại'}
+                  {t('common.tryAgain', 'Thử lại')}
                 </button>
               </div>
             ) : filteredProjects.length === 0 ? (

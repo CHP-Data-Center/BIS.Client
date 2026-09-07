@@ -1210,5 +1210,17 @@ export default {
   'potential.minAmount': 'Giá trị tối thiểu (VND)',
   'potential.minAmountHint': 'Chỉ lọc gói thầu trong nước — dự án ODA ghi bằng USD nên sẽ bị loại.',
   'potential.sectorCount': '{count} mục',
+
+  // ── Missing UI & View toggle keys ──
+  'ui.dang-luoi': 'Dạng lưới',
+  'ui.tinh-gon': 'Tinh gọn',
+  'ui.grid-view-title': 'Chế độ lưới thẻ (Grid)',
+  'ui.compact-view-title': 'Chế độ danh sách dòng tinh gọn (Compact List)',
+  'bookmarks.listView': 'Danh sách',
+  'bookmarks.gridView': 'Lưới',
+  'common.tryAgain': 'Thử lại',
+  'search.resultsCount': 'kết quả',
+  'auth.loginTitle': 'Đăng nhập Hệ thống BIS',
+  'projects.profileTitleShort': 'Hồ sơ năng lực',
 };
 

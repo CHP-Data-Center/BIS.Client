@@ -1211,5 +1211,16 @@ export default {
   'potential.minAmount': 'Minimum value (VND)',
   'potential.minAmountHint': 'Filters domestic tenders only — ODA projects are priced in USD and get excluded.',
   'potential.sectorCount': '{count} items',
+
+  // ── Missing UI & View toggle keys ──
+  'ui.dang-luoi': 'Grid View',
+  'ui.tinh-gon': 'Compact List',
+  'ui.grid-view-title': 'Grid Card View',
+  'ui.compact-view-title': 'Compact Row List View',
+  'bookmarks.listView': 'List View',
+  'bookmarks.gridView': 'Grid View',
+  'common.tryAgain': 'Try again',
+  'search.resultsCount': 'results',
+  'projects.profileTitleShort': 'Profile',
 };
 

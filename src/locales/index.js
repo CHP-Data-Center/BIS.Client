@@ -1,7 +1,7 @@
 // src/locales/index.js
-import vi from './vi';
-import en from './en';
-import ja from './ja';
+import vi from './vi.js';
+import en from './en.js';
+import ja from './ja.js';
 
 export const DICT = { vi, en, ja };
 
@@ -67,6 +67,6 @@ export const TRANSLATIONS = {
  * Đổi ngôn ngữ vẫn cập nhật ngay vì App remount toàn cây theo `lang` (xem App.jsx).
  */
 export function tUI(key, fallback) {
-  const lang = localStorage.getItem('app_lang') || localStorage.getItem('news_lang') || 'vi';
+  const lang = (typeof localStorage !== 'undefined' && (localStorage.getItem('app_lang') || localStorage.getItem('news_lang'))) || 'vi';
   return DICT[lang]?.[key] ?? DICT.vi?.[key] ?? fallback ?? key;
 }
