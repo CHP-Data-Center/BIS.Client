@@ -4,6 +4,7 @@
 
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import { procurementLink } from '../utils/procurementLink';
+import { getCountryCode } from '../utils/countryFlags';
 
 const PROC_TYPE = { notice: 'TB Mời thầu', plan: 'Kế hoạch thầu' };
 
@@ -46,7 +47,7 @@ const VIETNAM_PROVINCES = [
 ];
 
 const COUNTRY_COORDS = {
-  Vietnam: [21.0245, 105.8412],
+  Vietnam: [16.0544, 108.2022],
   Philippines: [14.5995, 120.9842],
   Indonesia: [-6.2088, 106.8456],
   Thailand: [13.7563, 100.5018],
@@ -86,10 +87,30 @@ export function adaptOdaProject(p) {
     ? worldBankProjectUrl(p.url || origId)
     : (p.url || `https://www.adb.org/projects/${origId}/main`);
 
+  const rawCountry = (p.country || '').trim();
+  const isRegional = /^regional/i.test(rawCountry) || /^multinational/i.test(rawCountry);
+  const countryCode = isRegional ? null : getCountryCode(rawCountry);
+  const normCountry = isRegional ? 'Regional' : (countryCode === 'vn' ? 'Vietnam' : (rawCountry || 'Unknown'));
+
   let lat = p.lat;
   let lng = p.lng;
-  if (lat == null || lng == null) {
-    const fallback = COUNTRY_COORDS[p.country] || [15.0, 107.0];
+
+  // Phát hiện toạ độ rơi vào biên giới Lào cũ (16.0, 106.0 hoặc 15.0, 107.0)
+  const isBuggyLaosCoords = lat != null && lng != null && (
+    (Math.abs(lat - 16.0) < 0.05 && Math.abs(lng - 106.0) < 0.05) ||
+    (Math.abs(lat - 15.0) < 0.05 && Math.abs(lng - 107.0) < 0.05)
+  );
+
+  if (normCountry === 'Vietnam') {
+    // Dự án Việt Nam: nếu toạ độ null, hoặc là toạ độ lỗi ở Lào, hoặc là toạ độ tâm tĩnh của Đà Nẵng,
+    // dùng bộ phân bổ thông minh theo tỉnh thành / tiêu đề để rải đều trong nước
+    if (lat == null || lng == null || isBuggyLaosCoords || (Math.abs(lat - 16.0544) < 0.01 && Math.abs(lng - 108.2022) < 0.01)) {
+      const coords = getVietnamFallbackCoords(origId, p.borrower || p.implementing_agency, p.title);
+      lat = coords[0];
+      lng = coords[1];
+    }
+  } else if (lat == null || lng == null || isBuggyLaosCoords) {
+    const fallback = COUNTRY_COORDS[normCountry] || [16.0544, 108.2022];
     lat = fallback[0];
     lng = fallback[1];
   }
@@ -101,7 +122,7 @@ export function adaptOdaProject(p) {
     type: p.source_org === 'adb' ? 'Dự án ADB' : 'Dự án World Bank',
     title: p.title,
     titleVi: p.title_vi || p.title,
-    country: p.country,
+    country: normCountry,
     amount: p.amount,
     status: p.status,
     sector: p.sector,
@@ -144,7 +165,10 @@ export function adaptProcurement(p) {
 
 /** Một dự án ODA -> shape thẻ NewsCard (trang list ADB/World Bank). */
 export function adaptOdaToCard(p) {
-  const bits = [p.country, p.status].filter(Boolean).join(' · ');
+  const rawCountry = (p.country || '').trim();
+  const isRegional = /^regional/i.test(rawCountry) || /^multinational/i.test(rawCountry);
+  const normCountry = isRegional ? 'Regional' : (getCountryCode(rawCountry) === 'vn' ? 'Vietnam' : rawCountry);
+  const bits = [normCountry, p.status].filter(Boolean).join(' · ');
   const origId = p.external_id || p.id;
   const projectUrl = p.source_org === 'worldbank'
     ? worldBankProjectUrl(p.url || origId)

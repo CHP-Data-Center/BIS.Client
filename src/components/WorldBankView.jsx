@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Globe, Building2, ShoppingBag, Search, Filter, RotateCcw, ArrowUpDown, ChevronUp, ChevronDown,
   Bookmark, BookmarkCheck, ExternalLink, Download, LayoutGrid, List,
-  DollarSign, Layers, CheckCircle2, AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, FileText
+  DollarSign, CheckCircle2, AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, FileText
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { odaService } from '../services/oda';
@@ -195,7 +195,6 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const [savedIds, setSavedIds] = useState(new Set());
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
   const [toastMessage, setToastMessage] = useState(null);
-  const [detailItem, setDetailItem] = useState(null); // dự án WB đang mở modal chi tiết
 
   // Pagination & Sort
   const [currentPage, setCurrentPage] = useState(1);
@@ -667,15 +666,6 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
   return (
     <div className="wb-container" style={{ width: '100%', height: 'calc(100vh - 128px)', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
-      {/* Modal chi tiết dự án ODA (WB/ADB) — xem trong app, không 403 */}
-      {detailItem && (
-        <OdaProjectDetailModal
-          item={detailItem}
-          source={normType}
-          stageLabel={config.stageLabel}
-          onClose={() => setDetailItem(null)}
-        />
-      )}
 
       {/* Toast Notification */}
       {toastMessage && (

@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  Zap, Check, X, Building2, Globe, ShoppingBag, Bot, Sparkles, Crown,
-  ShieldCheck, CheckCircle2, ArrowRight, ChevronRight, Star, Layers, Lock, Gift, PhoneCall, Palette
+  Zap, Check, X, Building2, Globe, ShoppingBag, Bot, Sparkles,
+  CheckCircle2, Layers, Palette
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
@@ -15,7 +15,7 @@ import classicBg from '../assets/theme_classic_bg.png';
 import sapphireBg from '../assets/theme_sapphire_bg.png';
 import luxuryBg from '../assets/theme_luxury_bg.png';
 
-import { getUserTheme, setUserTheme, syncUserTheme, applyTheme, isThemeUnlocked, unlockThemeForUser } from '../utils/theme';
+import { getUserTheme, setUserTheme, applyTheme, isThemeUnlocked, unlockThemeForUser } from '../utils/theme';
 import { tUI } from '../locales';
 
 export default function UpgradePage() {

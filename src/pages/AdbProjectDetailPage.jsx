@@ -3,12 +3,13 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
   ArrowLeft, Calendar, Globe, ExternalLink, Bookmark, BookmarkCheck,
-  Share2, ChevronRight, Loader2, Building2, Wallet, Landmark, Users,
-  Layers, FileText, CheckCircle2, Tag, Cpu, RefreshCw, CalendarDays, ShieldCheck
+  Share2, ChevronRight, Building2, Wallet, Landmark, Users,
+  Layers, FileText, CheckCircle2, Tag, Cpu, RefreshCw, CalendarDays
 } from 'lucide-react';
 import { adbService } from '../services/adb';
 import ThemePageLoader from '../components/common/ThemePageLoader';
 import { tUI } from '../locales';
+import { formatFullDate as fmtDate, formatShortDate as fmtShortDate, formatUsdAmount as formatAmountDisplay } from '../utils/format';
 
 const ADB_LABEL_VI = {
   'Project Number': 'Mã dự án',
@@ -48,35 +49,6 @@ const ADB_LABEL_VI = {
 };
 
 const adbLabel = (en) => ADB_LABEL_VI[en] || en;
-
-const fmtDate = (d) => {
-  if (!d) return 'N/A';
-  try {
-    return new Date(d).toLocaleDateString('vi-VN', {
-      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
-    });
-  } catch {
-    return d;
-  }
-};
-
-const fmtShortDate = (d) => {
-  if (!d) return 'N/A';
-  try {
-    return new Date(d).toLocaleDateString('vi-VN', {
-      day: '2-digit', month: '2-digit', year: 'numeric'
-    });
-  } catch {
-    return d;
-  }
-};
-
-const formatAmountDisplay = (amount) => {
-  if (!amount || amount <= 0) return 'N/A';
-  if (amount >= 1e9) return `$${(amount / 1e9).toFixed(2)} tỷ (B)`;
-  if (amount >= 1e6) return `$${(amount / 1e6).toFixed(2)} triệu (M)`;
-  return `$${amount.toLocaleString('en-US')}`;
-};
 
 const getStatusBadge = (status) => {
   const s = (status || '').toLowerCase();

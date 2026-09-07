@@ -2,10 +2,10 @@
 // Tìm kiếm TOÀN CỤC từ ô search header: 1 từ khóa quét CẢ 4 kho đã crawl
 // (Báo chí, Mua sắm công TBMT/KHLCNT, World Bank, ADB)
 import { useEffect, useState, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Newspaper, ShoppingBag, Globe, Building2, Search, ExternalLink,
-  ChevronRight, Sparkles, Filter, Layers, ArrowRight, Clock, MapPin, DollarSign
+  ChevronRight, Filter, Layers, ArrowRight
 } from 'lucide-react';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';

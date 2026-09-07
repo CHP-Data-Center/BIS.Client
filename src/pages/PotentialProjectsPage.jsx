@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Target, Settings2, Loader2, ExternalLink, Plus, Check, X,
+  Target, Settings2, Loader2, ExternalLink, Plus, X,
   Building2, Calendar, Coins, MapPin, Filter, RefreshCw, AlertCircle,
   ShoppingBag, Globe, Newspaper, Search, ArrowRight, BookmarkCheck,
   CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock

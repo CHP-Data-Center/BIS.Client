@@ -2,10 +2,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Send, Cpu, Loader2, ExternalLink, Bot, User,
+  Cpu, Loader2, ExternalLink, Bot, User,
   MessageSquarePlus, Trash2, Pencil, History, X,
   FileText, ShoppingBag, Globe, Building2, Sparkles,
-  Layers, ArrowRight, CornerDownLeft, BookOpen, ChevronRight,
+  Layers, CornerDownLeft, BookOpen, ChevronRight,
   ChevronDown, ChevronUp, CheckCircle2, Search, Zap, Brain,
 } from 'lucide-react';
 import { aiService } from '../services/ai';

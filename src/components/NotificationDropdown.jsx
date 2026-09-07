@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Bell, CheckCheck, Trash2, ExternalLink, FileText,
-  Newspaper, AlertCircle, Zap, Sparkles, X, ChevronRight, Clock, ShieldAlert
+  Bell, CheckCheck, Trash2, FileText,
+  Newspaper, AlertCircle, Zap, Sparkles, ChevronRight, Clock
 } from 'lucide-react';
 import { articlesService } from '../services/articles';
 import { adminService } from '../services/admin';

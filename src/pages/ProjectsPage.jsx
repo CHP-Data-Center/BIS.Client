@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FolderKanban, Plus, Trash2, Calendar, Clock, Filter,
-  Sparkles, Loader2, ArrowRight, Tag, Layers, ExternalLink, ChevronRight, ChevronLeft,
+  FolderKanban, Plus, Trash2, Calendar, Filter,
+  Sparkles, Loader2, Layers, ChevronRight, ChevronLeft,
   UploadCloud, Building2, ShoppingBag, Newspaper, Search, FileSpreadsheet, Download,
-  LayoutGrid, List, Maximize2, FileText, ShieldCheck
+  LayoutGrid, List, Maximize2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { projectsService } from '../services/projects';

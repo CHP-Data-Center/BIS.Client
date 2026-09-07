@@ -2,10 +2,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Flame, TrendingUp, Newspaper, Building2, Globe, ShoppingBag,
+  Flame, TrendingUp, Newspaper, Globe, ShoppingBag,
   Clock, Bookmark, BookmarkCheck,
-  ChevronRight, RefreshCw, DollarSign, ArrowUpRight, ExternalLink,
-  Play, Camera, Loader2, Sparkles, AlertCircle, FileText, CheckCircle2,
+  ChevronRight, RefreshCw, ArrowUpRight, ExternalLink,
+  Play, Camera, Loader2, Sparkles, AlertCircle,
   HardHat, Landmark, Search, ArrowLeft, ChevronLeft, X,
   Zap, Crown, Trophy, Award, Star
 } from 'lucide-react';
@@ -16,7 +16,6 @@ import { keywordsService } from '../services/keywords';
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { apiCache } from '../utils/apiCache';
-import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 
 function formatRelativeTime(dateStr, lang = 'vi') {
   if (!dateStr) return lang === 'ja' ? '本日' : lang === 'en' ? 'Today' : 'Hôm nay';

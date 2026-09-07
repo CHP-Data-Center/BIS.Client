@@ -3,35 +3,14 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
   ArrowLeft, Calendar, Globe, ExternalLink, Bookmark, BookmarkCheck,
-  Share2, ChevronRight, Loader2, Building2, Wallet, Landmark, Users,
+  Share2, ChevronRight, Building2, Wallet, Landmark, Users,
   Layers, FileText, CheckCircle2, Tag, Cpu, RefreshCw
 } from 'lucide-react';
 import { worldBankService } from '../services/worldbank';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import ThemePageLoader from '../components/common/ThemePageLoader';
 import { tUI } from '../locales';
-
-const fmtDate = (d) => {
-  if (!d) return 'N/A';
-  try {
-    return new Date(d).toLocaleDateString('vi-VN', {
-      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
-    });
-  } catch {
-    return d;
-  }
-};
-
-const fmtShortDate = (d) => {
-  if (!d) return 'N/A';
-  try {
-    return new Date(d).toLocaleDateString('vi-VN', {
-      day: '2-digit', month: '2-digit', year: 'numeric'
-    });
-  } catch {
-    return d;
-  }
-};
+import { formatFullDate as fmtDate, formatShortDate as fmtShortDate } from '../utils/format';
 
 const fmtM = (usd) => {
   if (usd == null || usd === 0) return null;

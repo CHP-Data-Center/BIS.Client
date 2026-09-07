@@ -1,7 +1,7 @@
 // src/components/admin/OrganizationsPanel.jsx
 // Super admin quản tổ chức (ADR-005): tạo tổ chức, sửa tên, xóa tổ chức, gán/tạo org admin, đặt phạm vi, xem user.
 import { useState, useEffect, useCallback } from 'react';
-import { Building2, Plus, Loader2, ShieldCheck, Users, Sliders, UserPlus, CheckCircle, Pencil, Trash2, X, Check, AlertTriangle } from 'lucide-react';
+import { Building2, Plus, Loader2, ShieldCheck, Users, Sliders, UserPlus, Pencil, Trash2, X, Check } from 'lucide-react';
 import { orgService } from '../../services/organizations';
 import { useAuth } from '../../context/AuthContext';
 import ScopePanel from './ScopePanel';

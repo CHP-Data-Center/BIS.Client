@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles,
-  Play, CheckCircle2, AlertCircle, Loader2, Globe, Cpu, Zap, Activity,
-  Search, ArrowUpRight, Check, X, Server, Edit, CheckCircle, XCircle, Building2,
+  CheckCircle2, AlertCircle, Loader2, Globe, Zap, Activity,
+  Search, Check, X, Edit, CheckCircle, XCircle, Building2,
   ChevronDown, Eye
 } from 'lucide-react';
 

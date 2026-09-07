@@ -4,6 +4,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useState } from 'react';
 import { DICT, TRANSLATIONS } from '../locales';
+import { getCountryCode } from '../utils/countryFlags';
 
 const LanguageContext = createContext({
   lang: 'vi',
@@ -47,7 +48,14 @@ export function LanguageProvider({ children }) {
     (code) => {
       if (!code) return '';
       const cUpper = String(code).toUpperCase();
-      return TRANSLATIONS.countries[cUpper]?.[lang] || TRANSLATIONS.countries[cUpper]?.vi || code;
+      if (TRANSLATIONS.countries[cUpper]) {
+        return TRANSLATIONS.countries[cUpper]?.[lang] || TRANSLATIONS.countries[cUpper]?.vi || code;
+      }
+      const iso = getCountryCode(code)?.toUpperCase();
+      if (iso && TRANSLATIONS.countries[iso]) {
+        return TRANSLATIONS.countries[iso]?.[lang] || TRANSLATIONS.countries[iso]?.vi || code;
+      }
+      return code;
     },
     [lang]
   );

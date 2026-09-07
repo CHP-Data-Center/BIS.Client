@@ -3,16 +3,15 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   MapPin, Tag, Mail, CheckCircle2, ChevronRight, ChevronLeft, 
-  Sparkles, X, Plus, Clock, Globe, ShieldCheck, Check, 
-  Building, Compass, Cpu, Zap, Activity, Layers,
-  Loader2, BellRing, Search, Flame, Award, Send, CheckCircle,
-  ExternalLink, CheckSquare, Square, Newspaper, FolderGit2, Bot
+  Sparkles, X, Plus, Clock, Globe, Check, 
+  Building, Cpu, Zap, Activity, Layers,
+  Loader2, BellRing, Search, Flame,
+  Newspaper, Bot
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { settingsService } from '../../services/settings';
 import { keywordsService } from '../../services/keywords';
-import { tUI } from '../../locales';
 
 const ALL_REGIONS = [
   { id: 'Toàn quốc', label: 'Toàn quốc', desc: 'Theo dõi toàn bộ dự án, ODA & tin tức khắp cả nước' },

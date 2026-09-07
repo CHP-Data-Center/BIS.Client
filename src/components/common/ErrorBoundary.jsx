@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw, Bug, Copy, Check, Trash2, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Bug, Copy, Check, Trash2, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
 import { apiCache } from '../../utils/apiCache';
 import { tUI } from '../../locales';
 

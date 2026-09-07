@@ -2,9 +2,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles, X, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Mail, Lock, ShieldCheck, X, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { useLang } from '../context/LanguageContext';
 import { authService } from '../services/auth';
 import { syncUserTheme } from '../utils/theme';

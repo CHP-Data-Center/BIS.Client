@@ -1,12 +1,14 @@
 // src/pages/DashboardPage.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import logoImg from '../assets/logo.png';
 import {
   Newspaper, Globe, Building2, ShoppingBag, Cpu, ExternalLink,
   RefreshCw, ArrowRight, TrendingUp, ChevronLeft, ChevronRight, Zap, Loader2,
-  Crown, Trophy, Award
+  Crown, Trophy, Award, Search, X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { FlagImg, getCountryCode } from '../utils/countryFlags';
+import { stripAccents } from '../utils/format';
 import StatsCard from '../components/StatsCard';
 import NewsCard from '../components/NewsCard';
 import { statsService } from '../services/stats';
@@ -336,17 +338,27 @@ function MapFlyTo({ items, source, country, sector, status }) {
   return null;
 }
 
-// ── MultiSelectDropdown ──────────────────────────────────────
-function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
+// ── MultiSelectDropdown with Fast Search ──────────────────────────────────────
+function MultiSelectDropdown({ options, selected, onChange, placeholder, searchPlaceholder }) {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const ref = useRef(null);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => searchInputRef.current?.focus(), 60);
+    } else {
+      setSearchQuery('');
+    }
+  }, [open]);
 
   const toggle = val => {
     const next = new Set(selected);
@@ -360,6 +372,16 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
     : selCount === 1
       ? (options.find(o => o.value === [...selected][0])?.label || placeholder)
       : `${selCount} ${t('common.selected')}`;
+
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery.trim()) return options;
+    const q = stripAccents(searchQuery.trim());
+    return options.filter(opt => {
+      const lMatch = stripAccents(String(opt.label || '')).includes(q);
+      const vMatch = stripAccents(String(opt.value || '')).includes(q);
+      return lMatch || vMatch;
+    });
+  }, [options, searchQuery]);
 
   return (
     <div ref={ref} style={{ position: 'relative', zIndex: open ? 2000 : 1 }}>
@@ -391,53 +413,111 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder }) {
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
           background: 'white', border: '1px solid #e2e8f0',
-          borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-          maxHeight: 200, overflowY: 'auto', zIndex: 9999,
+          borderRadius: 10, boxShadow: '0 10px 28px rgba(0,0,0,0.16), 0 2px 6px rgba(0,0,0,0.06)',
+          maxHeight: 250, display: 'flex', flexDirection: 'column', zIndex: 9999,
+          overflow: 'hidden',
         }}>
-          <div onClick={() => onChange(new Set())} style={{
-            padding: '8px 10px', fontSize: 11, fontWeight: 600,
-            color: selCount === 0 ? '#3b82f6' : '#94a3b8',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7,
+          {/* Ô tìm kiếm nhanh dính trên cùng */}
+          <div style={{
+            padding: '6px 8px',
+            background: '#ffffff',
             borderBottom: '1px solid #f1f5f9',
-            background: selCount === 0 ? '#eff6ff' : 'white',
+            flexShrink: 0,
           }}>
             <div style={{
-              width: 14, height: 14, borderRadius: 4, border: '1.5px solid',
-              borderColor: selCount === 0 ? '#3b82f6' : '#cbd5e1',
-              background: selCount === 0 ? '#3b82f6' : 'white',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: '#f8fafc', border: '1px solid #e2e8f0',
+              borderRadius: 6, padding: '4px 7px',
             }}>
-              {selCount === 0 && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
+              <Search size={12} color="#94a3b8" style={{ flexShrink: 0 }} />
+              <input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
+                placeholder={searchPlaceholder || t('common.search') + '...'}
+                style={{
+                  border: 'none', background: 'transparent', outline: 'none',
+                  fontSize: 11, width: '100%', color: '#1e293b', fontWeight: 500,
+                }}
+                onClick={e => e.stopPropagation()}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setSearchQuery('');
+                    searchInputRef.current?.focus();
+                  }}
+                  style={{
+                    border: 'none', background: 'transparent', cursor: 'pointer',
+                    padding: 0, display: 'flex', alignItems: 'center', color: '#94a3b8',
+                  }}
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
-            {t('common.all')}
           </div>
-          {options.map(opt => {
-            const isChecked = selected.has(opt.value);
-            return (
-              <div key={opt.value} onClick={() => toggle(opt.value)} style={{
-                padding: '7px 10px', fontSize: 11, fontWeight: isChecked ? 700 : 500,
-                color: isChecked ? '#1e293b' : '#475569',
+
+          {/* Danh sách các tùy chọn có thể cuộn */}
+          <div style={{ overflowY: 'auto', flex: 1, padding: '2px 0' }}>
+            {!searchQuery.trim() && (
+              <div onClick={() => onChange(new Set())} style={{
+                padding: '7px 10px', fontSize: 11, fontWeight: 600,
+                color: selCount === 0 ? '#3b82f6' : '#94a3b8',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7,
-                background: isChecked ? '#f8faff' : 'white',
-                transition: 'background 0.1s',
-              }}
-                onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = isChecked ? '#f8faff' : 'white'; }}
-              >
+                borderBottom: '1px solid #f1f5f9',
+                background: selCount === 0 ? '#eff6ff' : 'white',
+              }}>
                 <div style={{
                   width: 14, height: 14, borderRadius: 4, border: '1.5px solid',
-                  borderColor: isChecked ? '#3b82f6' : '#cbd5e1',
-                  background: isChecked ? '#3b82f6' : 'white',
+                  borderColor: selCount === 0 ? '#3b82f6' : '#cbd5e1',
+                  background: selCount === 0 ? '#3b82f6' : 'white',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  transition: 'all 0.15s',
                 }}>
-                  {isChecked && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
+                  {selCount === 0 && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
                 </div>
-                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{opt.icon}</div>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt.label}</span>
+                <span>{t('common.all')}</span>
               </div>
-            );
-          })}
+            )}
+
+            {filteredOptions.length === 0 ? (
+              <div style={{ padding: '16px 10px', textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>
+                <Search size={18} style={{ opacity: 0.35, margin: '0 auto 4px', display: 'block' }} />
+                <span>{t('common.searchNoResult') || 'Không tìm thấy kết quả'}</span>
+              </div>
+            ) : (
+              filteredOptions.map(opt => {
+                const isChecked = selected.has(opt.value);
+                return (
+                  <div key={opt.value} onClick={() => toggle(opt.value)} style={{
+                    padding: '6px 10px', fontSize: 11, fontWeight: isChecked ? 700 : 500,
+                    color: isChecked ? '#1e293b' : '#475569',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7,
+                    background: isChecked ? '#f8faff' : 'white',
+                    transition: 'background 0.1s',
+                  }}
+                    onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isChecked ? '#f8faff' : 'white'; }}
+                  >
+                    <div style={{
+                      width: 14, height: 14, borderRadius: 4, border: '1.5px solid',
+                      borderColor: isChecked ? '#3b82f6' : '#cbd5e1',
+                      background: isChecked ? '#3b82f6' : 'white',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                      transition: 'all 0.15s',
+                    }}>
+                      {isChecked && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
+                    </div>
+                    <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{opt.icon}</div>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt.label}</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -712,7 +792,7 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
 }
 
 function ProjectDistributionMap() {
-  const { t, tCountry, tSector, tStatus } = useLang();
+  const { lang, t, tCountry, tSector, tStatus } = useLang();
   const [selSources,   setSelSources]   = useState(new Set());
   const [selCountries, setSelCountries] = useState(new Set());
   const [selStatuses,  setSelStatuses]  = useState(new Set());
@@ -751,35 +831,52 @@ function ProjectDistributionMap() {
   const usingReal = realItems != null;
   const allItems = usingReal ? realItems : mockItems;
 
+  const canonicalCountry = useCallback((raw) => {
+    if (!raw) return '';
+    const trimmed = String(raw).trim();
+    if (/^regional/i.test(trimmed) || /^multinational/i.test(trimmed)) return 'Regional';
+    const code = getCountryCode(trimmed);
+    if (code === 'vn') return 'Vietnam';
+    return trimmed;
+  }, []);
+
+  const countryLabel = useCallback(c => tCountry(c) || c, [tCountry]);
+
   const filteredItems = allItems.filter(item => {
     if (selSources.size   > 0 && !selSources.has(item.source))     return false;
-    if (selCountries.size > 0 && !selCountries.has(item.country))  return false;
+    if (selCountries.size > 0) {
+      const canon = canonicalCountry(item.country);
+      const code = getCountryCode(item.country);
+      const isMatch = selCountries.has(item.country) ||
+                      selCountries.has(canon) ||
+                      (code && [...selCountries].some(sc => getCountryCode(sc) === code));
+      if (!isMatch) return false;
+    }
     if (selStatuses.size  > 0 && !selStatuses.has(item.status))    return false;
     if (selSectors.size   > 0 && !selSectors.has(item.sector))     return false;
     return true;
   });
 
-  const countryList  = [...new Set(allItems.map(i => i.country).filter(Boolean))];
-  const statusList   = [...new Set(allItems.map(i => i.status).filter(Boolean))];
-  const sectorList   = [...new Set(allItems.map(i => i.sector).filter(Boolean))];
+  // Khử trùng tuyệt đối các biến thể quốc gia (ví dụ: 'Vietnam', 'Viet Nam', 'Việt Nam' -> chỉ 1 mục duy nhất)
+  const countryOptions = useMemo(() => {
+    const map = new Map();
+    for (const item of allItems) {
+      if (!item.country) continue;
+      const canon = canonicalCountry(item.country);
+      if (!canon) continue;
+      if (!map.has(canon)) {
+        map.set(canon, {
+          value: canon,
+          label: countryLabel(canon),
+          icon: <FlagImg country={canon} size={18} />,
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+  }, [allItems, lang, canonicalCountry, countryLabel]);
 
-  const FLAG_CODES = {
-    Vietnam: 'vn', Philippines: 'ph', Indonesia: 'id',
-    Thailand: 'th', Cambodia: 'kh', 'South Africa': 'za',
-    Tajikistan: 'tj', Brazil: 'br',
-  };
-  const FlagImg = ({ country, size = 18 }) => {
-    const code = FLAG_CODES[country];
-    if (!code) return <span style={{ fontSize: size * 0.85 }}>🌏</span>;
-    return (
-      <img
-        src={`https://flagcdn.com/w20/${code}.webp`}
-        alt={country}
-        style={{ width: size, height: Math.round(size * 0.67), borderRadius: 2, objectFit: 'cover', flexShrink: 0, verticalAlign: 'middle' }}
-      />
-    );
-  };
-  const countryLabel = c => tCountry(c) || c;
+  const statusList   = [...new Set(allItems.map(i => i.status).filter(Boolean))];
+  const sectorList   = [...new Set(allItems.map(i => i.sector).filter(Boolean))].sort();
 
   const SECTOR_ICONS = {
     Energy: '⚡', 'Urban Dev': '🏙️', Finance: '💰', Climate: '🌱',
@@ -1019,11 +1116,8 @@ function ProjectDistributionMap() {
                 selected={selCountries}
                 onChange={setSelCountries}
                 placeholder={t('dashboard.filterAllCountries')}
-                options={countryList.map(c => ({
-                  value: c,
-                  label: countryLabel(c),
-                  icon: <FlagImg country={c} size={20} />,
-                }))}
+                searchPlaceholder={t('dashboard.searchCountry')}
+                options={countryOptions}
               />
             </div>
 
@@ -1033,6 +1127,7 @@ function ProjectDistributionMap() {
                 selected={selSectors}
                 onChange={setSelSectors}
                 placeholder={t('dashboard.filterAllSectors')}
+                searchPlaceholder={t('dashboard.searchSector')}
                 options={sectorList.map(s => ({
                   value: s,
                   label: SECTOR_NAMES[s] || s,
@@ -1047,6 +1142,7 @@ function ProjectDistributionMap() {
                 selected={selStatuses}
                 onChange={setSelStatuses}
                 placeholder={t('dashboard.filterAllStatuses')}
+                searchPlaceholder={t('dashboard.searchStatus')}
                 options={statusList.map(st => ({
                   value: st,
                   label: tStatus(st) || st,

@@ -7,7 +7,7 @@ import { settingsService } from '../services/settings';
 import { useNavigate } from 'react-router-dom';
 import {
   KeyRound, BellRing, CheckCircle2, AlertCircle, Loader2,
-  Mail, Sparkles, ShieldCheck, Lock, Palette, MapPin, Compass, Check
+  Mail, Sparkles, ShieldCheck, Lock, Palette, MapPin, Check
 } from 'lucide-react';
 import AdminDigestConfig from '../components/AdminDigestConfig';
 import { getUserTheme, setUserTheme, isThemeUnlocked } from '../utils/theme';

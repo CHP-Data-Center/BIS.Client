@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
-  ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck,
+  ArrowLeft, Calendar, Globe, ExternalLink, Bookmark, BookmarkCheck,
   Share2, ChevronRight, Loader2, Sparkles, CheckCircle2, Building2, Coins, TrendingUp
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -10,15 +10,7 @@ import { useLang } from '../context/LanguageContext';
 import { getSourceStyle } from '../utils/sourceStyle';
 import ThemePageLoader from '../components/common/ThemePageLoader';
 import { tUI } from '../locales';
-
-function stripAccents(str = '') {
-  return str
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase();
-}
+import { stripAccents } from '../utils/format';
 
 function isTagMatched(tag, query) {
   if (!query || !query.trim()) return false;
