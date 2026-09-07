@@ -615,15 +615,21 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
         <div
           style={{
             position: 'fixed',
-            inset: 0,
-            zIndex: 99999,
-            background: 'rgba(0, 0, 0, 0.65)',
-            backdropFilter: 'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 1000000,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: 16,
+            boxSizing: 'border-box',
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedArticle(null);
@@ -637,6 +643,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
               borderRadius: 16, boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
               display: 'flex', flexDirection: 'column', overflow: 'hidden',
               animation: 'fadeIn 0.18s ease-out',
+              margin: 'auto',
             }}
             onClick={(e) => e.stopPropagation()}
           >

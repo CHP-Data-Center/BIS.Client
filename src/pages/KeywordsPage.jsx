@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Plus, Trash2, Edit3, X, Tag, Loader2, Search, 
   LayoutGrid, Sparkles, Star, Folder, Globe, ChevronDown
@@ -695,24 +696,41 @@ export default function KeywordsPage() {
       ) : (
         <>
           {/* EDIT MODAL */}
-          {editId && (
+          {editId && typeof document !== 'undefined' && createPortal(
             <div
               onClick={(e) => { if (e.target === e.currentTarget) setEditId(null); }}
               style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000,
-                padding: 20
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 1000000,
+                background: 'rgba(15, 23, 42, 0.75)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 20,
+                boxSizing: 'border-box',
               }}
             >
               <div style={{
-                background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                borderRadius: 16, padding: 24, width: '100%', maxWidth: 440,
-                boxShadow: 'var(--shadow-xl)'
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 20,
+                padding: 24,
+                width: '100%',
+                maxWidth: 440,
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
+                margin: 'auto',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>✏️ {t('keywords.editModalTitle')}</div>
-                  <button onClick={() => setEditId(null)} style={{ color: 'var(--text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+                  <button onClick={() => setEditId(null)} style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none' }}><X size={18} /></button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -759,7 +777,8 @@ export default function KeywordsPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body
           )}
 
           {/* VIEW 1: COMPACT CHIPS */}

@@ -76,13 +76,22 @@ export default function ConfirmModal({
   return createPortal(
     <div
       style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        background: 'rgba(15, 23, 42, 0.65)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(15, 23, 42, 0.75)',
         backdropFilter: 'blur(10px) saturate(180%)',
         WebkitBackdropFilter: 'blur(10px) saturate(180%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000000,
         padding: 20,
+        boxSizing: 'border-box',
         animation: 'modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
       }}
       onClick={(e) => {
@@ -103,7 +112,8 @@ export default function ConfirmModal({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          textAlign: 'center'
+          textAlign: 'center',
+          margin: 'auto',
         }}
       >
         {/* Close Button */}

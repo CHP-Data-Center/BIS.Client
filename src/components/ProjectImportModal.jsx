@@ -3,6 +3,7 @@
 //   · Excel  — người dùng đã khai từng dòng  -> TẠO THẲNG
 //   · Profile — máy đoán từ hồ sơ năng lực   -> CHỈ GỢI Ý, người dùng chọn rồi mới tạo
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X, FileSpreadsheet, FileText, UploadCloud, Loader2, Check,
   AlertTriangle, Plus, Quote,
@@ -60,12 +61,25 @@ function ExcelTab({ onDone }) {
   const [tpl, setTpl] = useState(null);
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [downloadingTpl, setDownloadingTpl] = useState(false);
   const [result, setResult] = useState(null);
   const [err, setErr] = useState(null);
 
   useEffect(() => {
     projectsService.getImportTemplate().then(setTpl).catch(() => setTpl(null));
   }, []);
+
+  const handleDownloadSample = async () => {
+    setDownloadingTpl(true);
+    try {
+      await projectsService.downloadSampleExcel();
+    } catch (e) {
+      console.error('Download sample error:', e);
+      setErr('Không thể tải file mẫu Excel. Vui lòng thử lại.');
+    } finally {
+      setDownloadingTpl(false);
+    }
+  };
 
   const pick = (f) => {
     setResult(null);
@@ -94,119 +108,157 @@ function ExcelTab({ onDone }) {
         {t('projects.importDesc')}
       </p>
 
-      {tpl && (
-        <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 12 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 440 }}>
-            <thead>
-              <tr>
-                {['', t('projects.nameLabel'), t('projects.note')].map((h, i) => (
-                  <th key={i} style={{
-                    textAlign: 'left', padding: '8px 12px', fontSize: 11,
-                    letterSpacing: '.05em', textTransform: 'uppercase',
-                    color: 'var(--text-muted)', background: 'var(--bg-surface-2)',
-                    borderBottom: '1px solid var(--border)',
-                  }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tpl.columns.map((c) => (
-                <tr key={c.column}>
-                  <td style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontWeight: 700 }}>
-                    {c.column}
-                  </td>
-                  <td style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <strong style={{ color: 'var(--text-primary)' }}>{c.header}</strong>
-                    {c.required && (
-                      <span style={{
-                        marginLeft: 7, fontSize: 10, fontWeight: 800, padding: '1px 6px',
-                        borderRadius: 5, background: '#fee2e2', color: '#b91c1c',
-                      }}>
-                        {t('projects.colRequired')}
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-                    {c.description}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <FilePicker accept={EXCEL_ACCEPT} file={file} onPick={pick} disabled={busy}
-        hint={t('projects.importPick')} />
-
-      {err && (
-        <div style={{
-          display: 'flex', gap: 9, padding: '11px 14px', borderRadius: 11,
-          background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c',
-          fontSize: 13, fontWeight: 600,
-        }}>
-          <AlertTriangle size={16} style={{ flex: 'none', marginTop: 1 }} /> {err}
-        </div>
-      )}
-
-      {result && (
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
+        gap: 20,
+        alignItems: 'start',
+      }}>
+        {/* Cột 1: Quy cách cột dữ liệu & Tải file mẫu */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(112px,1fr))', gap: 10 }}>
-            {[
-              { label: t('projects.importCreated'), value: result.row_created, color: '#10b981' },
-              { label: t('projects.importSkipped'), value: result.row_skipped, color: '#f59e0b' },
-              { label: t('projects.importFailed'), value: result.row_failed, color: '#ef4444' },
-              { label: t('projects.importTotal'), value: result.row_total, color: 'var(--text-muted)' },
-            ].map((s) => (
-              <div key={s.label} style={{
-                padding: '12px 14px', borderRadius: 12, background: 'var(--bg-surface-2)',
-                border: '1px solid var(--border)',
-              }}>
-                <div style={{
-                  fontSize: 22, fontWeight: 900, color: s.color, fontVariantNumeric: 'tabular-nums',
-                }}>{s.value}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 700 }}>{s.label}</div>
-              </div>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
+              Quy cách các cột dữ liệu theo dõi:
+            </span>
+            <button
+              type="button"
+              onClick={handleDownloadSample}
+              disabled={downloadingTpl}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 8,
+                background: 'var(--brand-50, #eff6ff)',
+                color: 'var(--brand-700, #1d4ed8)',
+                border: '1px solid var(--brand-300, #93c5fd)',
+                fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Tải file mẫu Excel (.xlsx) có sẵn dữ liệu mẫu thực tế"
+            >
+              {downloadingTpl ? <Loader2 size={13} style={{ animation: 'spin 0.7s linear infinite' }} /> : <FileSpreadsheet size={14} />}
+              Tải file Excel mẫu (.xlsx)
+            </button>
           </div>
 
-          {result.errors?.length > 0 && (
-            <div>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 7 }}>
-                {t('projects.importErrors')}
-              </div>
-              <div style={{
-                maxHeight: 170, overflowY: 'auto', borderRadius: 11,
-                border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
-              }}>
-                {result.errors.map((e, i) => (
-                  <div key={i} style={{
-                    padding: '8px 13px', fontSize: 12.5, color: 'var(--text-secondary)',
-                    borderBottom: i < result.errors.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  }}>
-                    <strong style={{ color: '#b91c1c' }}>{t('projects.importRow')} {e.row}</strong>
-                    {' — '}{e.message}
-                  </div>
-                ))}
-              </div>
+          {tpl && (
+            <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 12, maxHeight: 330, overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 360 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                  <tr>
+                    {['Cột', t('projects.nameLabel'), t('projects.note')].map((h, i) => (
+                      <th key={i} style={{
+                        textAlign: 'left', padding: '8px 10px', fontSize: 11,
+                        letterSpacing: '.05em', textTransform: 'uppercase',
+                        color: 'var(--text-muted)', background: 'var(--bg-surface-2)',
+                        borderBottom: '1px solid var(--border)',
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tpl.columns.map((c) => (
+                    <tr key={c.column}>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontWeight: 800 }}>
+                        {c.column}
+                      </td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)' }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>{c.header}</strong>
+                        {c.required && (
+                          <span style={{
+                            marginLeft: 6, fontSize: 9.5, fontWeight: 800, padding: '1px 5px',
+                            borderRadius: 4, background: '#fee2e2', color: '#b91c1c',
+                          }}>
+                            {t('projects.colRequired')}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: 11.5 }}>
+                        {c.description}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
-      )}
 
-      <button
-        type="button" onClick={run} disabled={!file || busy}
-        style={{
-          padding: '13px 20px', borderRadius: 12, border: 'none', fontSize: 14, fontWeight: 800,
-          background: !file || busy ? 'var(--bg-surface-2)' : 'var(--brand-500)',
-          color: !file || busy ? 'var(--text-muted)' : '#fff',
-          cursor: !file || busy ? 'default' : 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}
-      >
-        {busy ? <Loader2 size={16} className="spin" /> : <FileSpreadsheet size={16} />}
-        {t('projects.importRun')}
-      </button>
+        {/* Cột 2: Chọn file, Báo lỗi, Kết quả & Nút nhập */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <FilePicker accept={EXCEL_ACCEPT} file={file} onPick={pick} disabled={busy}
+            hint={t('projects.importPick')} />
+
+          {err && (
+            <div style={{
+              display: 'flex', gap: 9, padding: '11px 14px', borderRadius: 11,
+              background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c',
+              fontSize: 13, fontWeight: 600,
+            }}>
+              <AlertTriangle size={16} style={{ flex: 'none', marginTop: 1 }} /> {err}
+            </div>
+          )}
+
+          {result && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                {[
+                  { label: t('projects.importCreated'), value: result.row_created, color: '#10b981' },
+                  { label: t('projects.importSkipped'), value: result.row_skipped, color: '#f59e0b' },
+                  { label: t('projects.importFailed'), value: result.row_failed, color: '#ef4444' },
+                  { label: t('projects.importTotal'), value: result.row_total, color: 'var(--text-muted)' },
+                ].map((s) => (
+                  <div key={s.label} style={{
+                    padding: '10px 14px', borderRadius: 12, background: 'var(--bg-surface-2)',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <div style={{
+                      fontSize: 20, fontWeight: 900, color: s.color, fontVariantNumeric: 'tabular-nums',
+                    }}>{s.value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {result.errors?.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+                    {t('projects.importErrors')}
+                  </div>
+                  <div style={{
+                    maxHeight: 140, overflowY: 'auto', borderRadius: 10,
+                    border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
+                  }}>
+                    {result.errors.map((e, i) => (
+                      <div key={i} style={{
+                        padding: '6px 12px', fontSize: 12, color: 'var(--text-secondary)',
+                        borderBottom: i < result.errors.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                      }}>
+                        <strong style={{ color: '#b91c1c' }}>{t('projects.importRow')} {e.row}</strong>
+                        {' — '}{e.message}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button" onClick={run} disabled={!file || busy}
+            style={{
+              padding: '13px 20px', borderRadius: 12, border: 'none', fontSize: 14, fontWeight: 800,
+              background: !file || busy ? 'var(--bg-surface-2)' : 'var(--brand-500)',
+              color: !file || busy ? 'var(--text-muted)' : '#fff',
+              cursor: !file || busy ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: file && !busy ? '0 4px 14px rgba(37,99,235,0.3)' : 'none',
+            }}
+          >
+            {busy ? <Loader2 size={16} className="spin" /> : <FileSpreadsheet size={16} />}
+            {t('projects.importRun')}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -462,13 +514,26 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
     { id: 'profile', label: t('projects.tabProfile'), icon: <FileText size={15} /> },
   ];
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(15,23,42,.65)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 1000000,
+        background: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        boxSizing: 'border-box',
       }}
     >
       <div
@@ -476,10 +541,11 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
         role="dialog"
         aria-label={tab === 'excel' ? t('projects.importTitle') : t('projects.profileTitle')}
         style={{
-          width: '100%', maxWidth: 620, maxHeight: '88vh', overflowY: 'auto',
-          background: 'var(--bg-surface)', borderRadius: 22, padding: 26,
-          border: '1px solid var(--border)', boxShadow: '0 20px 50px rgba(0,0,0,.3)',
-          display: 'flex', flexDirection: 'column', gap: 18,
+          width: 'min(980px, 95vw)', maxWidth: 980, maxHeight: '90vh', overflowY: 'auto',
+          background: 'var(--bg-surface)', borderRadius: 24, padding: 28,
+          border: '1px solid var(--border)', boxShadow: '0 25px 60px rgba(0,0,0,.35)',
+          display: 'flex', flexDirection: 'column', gap: 20,
+          margin: 'auto',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -524,6 +590,7 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
           ? <ExcelTab onDone={onImported} />
           : <ProfileTab onDone={onImported} />}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,5 +1,6 @@
 // src/pages/LoginPage.jsx
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Cpu, Mail, Lock, ShieldCheck, Sparkles, X, Loader2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -513,20 +514,40 @@ export default function LoginPage() {
       {/* ── Centered Modal Popup: Quên mật khẩu ── */}
 
 
-      {showForgotModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-        }}
-        onClick={() => setShowForgotModal(false)}
+      {showForgotModal && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 1000000,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            boxSizing: 'border-box',
+          }}
+          onClick={() => setShowForgotModal(false)}
         >
           <div
             style={{
-              width: '100%', maxWidth: 460, background: 'var(--bg-surface)',
-              borderRadius: 24, padding: 32, border: '1px solid var(--border)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.35)', position: 'relative',
+              width: '100%',
+              maxWidth: 460,
+              background: 'var(--bg-surface)',
+              borderRadius: 24,
+              padding: 32,
+              border: '1px solid var(--border)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+              position: 'relative',
               color: 'var(--text-primary)',
+              margin: 'auto',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -587,24 +608,45 @@ export default function LoginPage() {
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Centered Modal Popup: Đặt lại mật khẩu ── */}
-      {showResetModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
-        }}
-        onClick={() => setShowResetModal(false)}
+      {showResetModal && typeof document !== 'undefined' && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 1000000,
+            background: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            boxSizing: 'border-box',
+          }}
+          onClick={() => setShowResetModal(false)}
         >
           <div
             style={{
-              width: '100%', maxWidth: 460, background: 'var(--bg-surface)',
-              borderRadius: 24, padding: 32, border: '1px solid var(--border)',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.35)', position: 'relative',
+              width: '100%',
+              maxWidth: 460,
+              background: 'var(--bg-surface)',
+              borderRadius: 24,
+              padding: 32,
+              border: '1px solid var(--border)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+              position: 'relative',
               color: 'var(--text-primary)',
+              margin: 'auto',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -680,7 +722,8 @@ export default function LoginPage() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

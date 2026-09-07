@@ -1,7 +1,10 @@
-// src/pages/NewsPage.jsx
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
-import { Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck, RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag, Newspaper, FileText, X } from 'lucide-react';
+import {
+  Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck,
+  RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag,
+  Newspaper, FileText, X, LayoutGrid, List, Cpu, ExternalLink
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import { articlesService } from '../services/articles';
@@ -9,6 +12,7 @@ import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
 import WorldBankView from '../components/WorldBankView';
+import { getSourceStyle } from '../utils/sourceStyle';
 import { tUI } from '../locales';
 
 const PAGE_SIZE = 12;
@@ -41,6 +45,205 @@ function SkeletonCard() {
         <div className="skeleton" style={{ height: 16, borderRadius: 5 }} />
         <div className="skeleton" style={{ height: 16, width: '75%', borderRadius: 5 }} />
         <div className="skeleton" style={{ height: 12, borderRadius: 5 }} />
+      </div>
+    </div>
+  );
+}
+
+function CompactSkeleton() {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 14,
+      padding: '12px 16px', borderRadius: 10,
+      background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+      marginBottom: 8
+    }}>
+      <div className="skeleton" style={{ width: 75, height: 22, borderRadius: 6, flexShrink: 0 }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="skeleton" style={{ width: '60%', height: 16, borderRadius: 4 }} />
+        <div className="skeleton" style={{ width: '90%', height: 12, borderRadius: 4 }} />
+      </div>
+      <div className="skeleton" style={{ width: 28, height: 28, borderRadius: 6, flexShrink: 0 }} />
+    </div>
+  );
+}
+
+function CompactNewsRow({ article, index }) {
+  const nav = useNavigate();
+  const { lang, t } = useLang();
+  const [bookmarked, setBookmarked] = useState(article.is_bookmarked || false);
+  const [bkLoading, setBkLoading] = useState(false);
+
+  const src = getSourceStyle(article);
+  const dateLocale = lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'vi-VN';
+  const publishedDate = article.published_at
+    ? new Date(article.published_at).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : article.date
+      ? new Date(article.date).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : null;
+
+  const titleText = article.titleVi || article.title;
+  const excerptText = article.excerptVi || article.excerpt;
+
+  const handleClick = () => {
+    const isWbOrAdb = article.source === 'worldbank' || article.source === 'adb' || article.source_type === 'worldbank' || article.source_type === 'adb' || article.local_key === 'saved_worldbank_projects' || article.local_key === 'saved_adb_projects';
+    if (isWbOrAdb) {
+      const targetId = article.original_id || article.project_code || article.id;
+      nav(`/worldbank/project/${targetId}`, { state: { project: article } });
+    } else {
+      nav(`/article/${article.id}`, { state: { article } });
+    }
+  };
+
+  const handleBookmark = async (e) => {
+    e.stopPropagation();
+    if (bkLoading) return;
+    setBkLoading(true);
+    try {
+      if (bookmarked) {
+        if (typeof article.id === 'number') await articlesService.removeBookmark(article.id);
+        setBookmarked(false);
+      } else {
+        if (typeof article.id === 'number') await articlesService.addBookmark(article.id);
+        setBookmarked(true);
+      }
+    } catch (err) {
+      console.warn('Bookmark err:', err);
+    } finally {
+      setBkLoading(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="compact-news-row"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14,
+        padding: '12px 18px',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 12,
+        marginBottom: 8,
+        cursor: 'pointer',
+        transition: 'all 0.18s ease',
+        animation: 'fadeIn 0.25s ease-out forwards',
+        animationDelay: `${Math.min(index * 35, 300)}ms`
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'var(--brand-400, #3b82f6)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.04)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'var(--border-subtle)';
+        e.currentTarget.style.transform = 'none';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      {/* Source tag & Date */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 110, flexShrink: 0 }}>
+        <span
+          className="news-source-tag"
+          style={{
+            background: src.bg,
+            color: src.color,
+            border: `1px solid ${src.border}`,
+            fontSize: 10,
+            padding: '2px 7px',
+            width: 'fit-content'
+          }}
+        >
+          {src.icon} {src.name}
+        </span>
+        {publishedDate && (
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+            {publishedDate}
+          </span>
+        )}
+      </div>
+
+      {/* Title & Short Excerpt */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h4 style={{
+            fontSize: 13.5, fontWeight: 700, margin: 0, color: 'var(--text-primary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            lineHeight: 1.4
+          }}>
+            {titleText}
+          </h4>
+          {article.is_read && (
+            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic', flexShrink: 0 }}>
+              ✓ {t('common.readStatus')}
+            </span>
+          )}
+        </div>
+
+        {excerptText && (
+          <p style={{
+            fontSize: 12, color: 'var(--text-secondary)', margin: 0,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            lineHeight: 1.4
+          }}>
+            {excerptText}
+          </p>
+        )}
+      </div>
+
+      {/* Keywords / AI badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {article.aiSummary && (
+          <span className="ai-badge" style={{ fontSize: 10, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <Cpu size={10} /> AI
+          </span>
+        )}
+        {article.matched_keywords?.slice(0, 2).map(kw => (
+          <span
+            key={kw}
+            style={{
+              fontSize: 10.5, fontWeight: 600, color: 'var(--brand-700)',
+              background: 'var(--brand-50, #eff6ff)',
+              padding: '2px 7px', borderRadius: 6,
+              border: '1px solid var(--brand-200, #bfdbfe)'
+            }}
+          >
+            #{kw}
+          </span>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+        <button
+          onClick={handleBookmark}
+          disabled={bkLoading}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            padding: 6, borderRadius: 6, color: bookmarked ? '#f59e0b' : 'var(--text-muted)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s'
+          }}
+          title={bookmarked ? 'Bỏ lưu' : 'Lưu bài viết'}
+        >
+          {bookmarked ? <BookmarkCheck size={16} fill="#f59e0b" /> : <Bookmark size={16} />}
+        </button>
+
+        {article.url && (
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--text-muted)', padding: 6, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              textDecoration: 'none'
+            }}
+            title="Xem bài gốc"
+          >
+            <ExternalLink size={14} />
+          </a>
+        )}
       </div>
     </div>
   );
@@ -116,6 +319,14 @@ export default function NewsPage() {
   const [onlyBookmarked, setOnlyBookmarked]   = useState(false);
   const [bookmarkedArticles, setBookmarkedArticles] = useState([]);
   const [loadingBookmarks, setLoadingBookmarks]     = useState(false);
+  const [viewMode, setViewMode]               = useState(() => {
+    return localStorage.getItem('bis_news_view_mode') || 'grid';
+  });
+
+  const handleToggleViewMode = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('bis_news_view_mode', mode);
+  };
 
   // Filters
   const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
@@ -643,6 +854,44 @@ export default function NewsPage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* View Mode Switcher: Lưới thẻ vs Dòng tinh gọn */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center',
+                background: 'var(--bg-surface-2)',
+                padding: '2px', borderRadius: 8,
+                border: '1px solid var(--border)'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => handleToggleViewMode('grid')}
+                  style={{
+                    background: viewMode === 'grid' ? 'var(--bg-surface)' : 'transparent',
+                    color: viewMode === 'grid' ? 'var(--brand-600)' : 'var(--text-muted)',
+                    border: 'none', borderRadius: 6, padding: '4px 9px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700,
+                    boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Chế độ lưới thẻ (Grid)"
+                >
+                  <LayoutGrid size={13} /> {tUI('ui.dang-luoi') || 'Lưới'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleViewMode('compact')}
+                  style={{
+                    background: viewMode === 'compact' ? 'var(--bg-surface)' : 'transparent',
+                    color: viewMode === 'compact' ? 'var(--brand-600)' : 'var(--text-muted)',
+                    border: 'none', borderRadius: 6, padding: '4px 9px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700,
+                    boxShadow: viewMode === 'compact' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Chế độ danh sách dòng tinh gọn (Compact List)"
+                >
+                  <List size={14} /> {tUI('ui.tinh-gon') || 'Tinh gọn'}
+                </button>
+              </div>
 
               <button
                 className="btn btn-ghost btn-sm"
@@ -696,31 +945,59 @@ export default function NewsPage() {
           ref={scrollContainerRef}
           className="news-scroll-area"
         >
-          <div className="news-grid news-page-grid">
-            {isPageLoading
-              ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonCard key={i} />)
-              : displayedArticles.length === 0
-                ? (
-                  <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 300 }}>
-                    <div className="empty-icon">{onlyBookmarked ? '🔖' : '📭'}</div>
-                    <div className="empty-title">
-                      {onlyBookmarked ? 'Chưa có bài viết nào được lưu' : 'Không tìm thấy bài viết'}
+          {viewMode === 'compact' ? (
+            <div className="news-compact-list" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {isPageLoading
+                ? Array.from({ length: PAGE_SIZE }, (_, i) => <CompactSkeleton key={i} />)
+                : displayedArticles.length === 0
+                  ? (
+                    <div className="empty-state" style={{ minHeight: 300 }}>
+                      <div className="empty-icon">{onlyBookmarked ? '🔖' : '📭'}</div>
+                      <div className="empty-title">
+                        {onlyBookmarked ? 'Chưa có bài viết nào được lưu' : 'Không tìm thấy bài viết'}
+                      </div>
+                      <div className="empty-sub">
+                        {onlyBookmarked
+                          ? 'Bấm vào biểu tượng bookmark trên dòng bài viết để lưu lại.'
+                          : (search ? `Không có kết quả cho "${search}". Thử từ khóa khác.` : 'Hệ thống tự động crawl dữ liệu mới nhất.')}
+                      </div>
+                      {(search || onlyBookmarked) && (
+                        <button className="btn btn-secondary" onClick={handleReset} style={{ marginTop: 12 }}>
+                          Xóa bộ lọc
+                        </button>
+                      )}
                     </div>
-                    <div className="empty-sub">
-                      {onlyBookmarked
-                        ? 'Bấm vào biểu tượng bookmark trên thẻ bài viết để lưu lại.'
-                        : (search ? `Không có kết quả cho "${search}". Thử từ khóa khác.` : 'Hệ thống tự động crawl dữ liệu mới nhất.')}
+                  )
+                  : displayedArticles.map((a, i) => <CompactNewsRow key={a.id} article={a} index={i} />)
+              }
+            </div>
+          ) : (
+            <div className="news-grid news-page-grid">
+              {isPageLoading
+                ? Array.from({ length: PAGE_SIZE }, (_, i) => <SkeletonCard key={i} />)
+                : displayedArticles.length === 0
+                  ? (
+                    <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 300 }}>
+                      <div className="empty-icon">{onlyBookmarked ? '🔖' : '📭'}</div>
+                      <div className="empty-title">
+                        {onlyBookmarked ? 'Chưa có bài viết nào được lưu' : 'Không tìm thấy bài viết'}
+                      </div>
+                      <div className="empty-sub">
+                        {onlyBookmarked
+                          ? 'Bấm vào biểu tượng bookmark trên thẻ bài viết để lưu lại.'
+                          : (search ? `Không có kết quả cho "${search}". Thử từ khóa khác.` : 'Hệ thống tự động crawl dữ liệu mới nhất.')}
+                      </div>
+                      {(search || onlyBookmarked) && (
+                        <button className="btn btn-secondary" onClick={handleReset} style={{ marginTop: 12 }}>
+                          Xóa bộ lọc
+                        </button>
+                      )}
                     </div>
-                    {(search || onlyBookmarked) && (
-                      <button className="btn btn-secondary" onClick={handleReset} style={{ marginTop: 12 }}>
-                        Xóa bộ lọc
-                      </button>
-                    )}
-                  </div>
-                )
-                : displayedArticles.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)
-            }
-          </div>
+                  )
+                  : displayedArticles.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)
+              }
+            </div>
+          )}
 
           {!isPageLoading && (
             <Pagination

@@ -1751,16 +1751,17 @@ export default function AdminPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setEditingUser(null); }}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+            width: '100vw', height: '100vh', boxSizing: 'border-box',
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 99999, padding: 20,
+            zIndex: 1000000, padding: 20,
           }}
         >
           <div style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
             borderRadius: 24, width: '100%', maxWidth: 640,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
-            animation: 'fadeIn 0.2s ease-out',
+            animation: 'fadeIn 0.2s ease-out', margin: 'auto',
             maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
             overflow: 'hidden',
           }}>
@@ -2279,9 +2280,10 @@ export default function AdminPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setViewingUser(null); }}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)',
+            width: '100vw', height: '100vh', boxSizing: 'border-box',
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 99999, padding: 20,
+            zIndex: 1000000, padding: 20,
           }}
         >
           <div style={{
@@ -2289,7 +2291,7 @@ export default function AdminPage() {
             borderRadius: 24, width: '100%', maxWidth: 640,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
             maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out', margin: 'auto',
           }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
@@ -2462,9 +2464,10 @@ export default function AdminPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setEditingSource(null); }}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+            width: '100vw', height: '100vh', boxSizing: 'border-box',
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 99999, padding: 20,
+            zIndex: 1000000, padding: 20,
           }}
         >
           <div style={{
@@ -2472,7 +2475,7 @@ export default function AdminPage() {
             borderRadius: 24, width: '100%', maxWidth: 560,
             boxShadow: '0 24px 60px rgba(0,0,0,0.3)', position: 'relative',
             maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out', margin: 'auto',
           }}>
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
@@ -2649,9 +2652,10 @@ export default function AdminPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setShowBuySlotModal(false); }}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)',
+            width: '100vw', height: '100vh', boxSizing: 'border-box',
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 99999, padding: 20,
+            zIndex: 1000000, padding: 20,
           }}
         >
           <div style={{
@@ -2659,7 +2663,7 @@ export default function AdminPage() {
             borderRadius: 24, width: '100%', maxWidth: 540,
             boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
             maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
-            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out', margin: 'auto',
           }}>
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 28px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>

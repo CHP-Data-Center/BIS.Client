@@ -108,6 +108,42 @@ export const projectsService = {
     return data; // ImportTemplate
   },
 
+  /** Tải file Excel mẫu chuẩn (.xlsx) */
+  async downloadSampleExcel() {
+    const response = await api.get('/projects/import-template/download', {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Mau_theo_doi_du_an_BIS.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+
+  /** Xuất danh sách dự án đang theo dõi ra file .xlsx */
+  async exportProjectsExcel() {
+    const response = await api.get('/projects/export', {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Danh_sach_du_an_theo_doi_BIS.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+
   /** Nhập danh sách dự án từ .xlsx — TẠO THẲNG dự án theo dõi */
   async importExcel(file) {
     const form = new FormData();

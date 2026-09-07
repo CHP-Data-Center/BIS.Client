@@ -3,6 +3,7 @@
 // nên KHÔNG bao giờ 403. WB dùng dữ liệu API v3 (financers, milestones, cơ quan thực hiện…)
 // trình bày như trang project-detail thật; ADB dùng layout gọn.
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ExternalLink, Building2, Globe2, Landmark, CalendarDays, Wallet, FileText, Users, Layers } from 'lucide-react';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import { useLang } from '../context/LanguageContext';
@@ -341,14 +342,41 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
   const goesToSearch = isNotice && externalUrl.includes('/projects?terms=');
   const externalLabel = `${t('oda.openOfficial')} (${meta.label})`;
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
-      style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 1000000,
+        background: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        boxSizing: 'border-box',
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: 'var(--bg-surface)', borderRadius: 16, width: 'min(760px, 100%)', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.35)', overflow: 'hidden' }}
+        style={{
+          background: 'var(--bg-surface)',
+          borderRadius: 20,
+          width: 'min(780px, 95vw)',
+          maxHeight: '88vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+          overflow: 'hidden',
+          margin: 'auto',
+        }}
       >
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -385,6 +413,7 @@ export default function OdaProjectDetailModal({ item, source = 'worldbank', stag
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

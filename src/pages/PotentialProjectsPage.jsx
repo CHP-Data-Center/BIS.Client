@@ -292,7 +292,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             className={`potential-action-btn tracked ${isHoveredTrack ? 'danger-hover' : ''}`}
           >
             {tracking ? (
-              <Loader2 size={14} className="spin" />
+              <Loader2 size={14} className="spin" style={{ animation: 'spin 0.8s linear infinite' }} />
             ) : isHoveredTrack ? (
               <Trash2 size={14} />
             ) : (
@@ -307,7 +307,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
             disabled={tracking}
             className="potential-action-btn track"
           >
-            {tracking ? <Loader2 size={14} className="spin" /> : <Plus size={14} />}
+            {tracking ? <Loader2 size={14} className="spin" style={{ animation: 'spin 0.8s linear infinite' }} /> : <Plus size={14} />}
             <span>{t('potential.track')}</span>
           </button>
         )}

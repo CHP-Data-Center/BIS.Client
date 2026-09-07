@@ -11,10 +11,9 @@ import { tUI } from '../locales';
 // Nhãn qua khóa i18n (t('nav.…')) — đổi ngôn ngữ giao diện là menu đổi theo.
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, labelKey: 'nav.dashboard', badge: null },
-  { to: '/trending',  icon: <Flame size={16} />,           labelKey: 'nav.trending',  badge: 'HOT', color: '#f97316' },
-  // Dự án tiềm năng thuộc nhóm CHÍNH chứ không phải Công cụ: đây là màn hình đọc hằng
-  // ngày như Dashboard/Xu hướng, không phải tiện ích cá nhân kiểu từ khóa/bookmark.
+  { to: '/projects',  icon: <FolderKanban size={16} />,     labelKey: 'nav.projects',  badge: null, color: '#2563eb' },
   { to: '/potential-projects', icon: <Target size={16} />, labelKey: 'nav.potential', badge: null, color: '#10b981' },
+  { to: '/trending',  icon: <Flame size={16} />,           labelKey: 'nav.trending',  badge: 'HOT', color: '#f97316' },
 ];
 
 
@@ -90,7 +89,6 @@ function NavGroup({ group, id, t, onClose }) {
 
 const toolItems = [
   { to: '/keywords',  icon: <Tag size={16} />,          labelKey: 'nav.keywords',  badge: null },
-  { to: '/projects',  icon: <FolderKanban size={16} />, labelKey: 'nav.projects',  badge: null },
   { to: '/bookmarks', icon: <Bookmark size={16} />,     labelKey: 'nav.bookmarks', badge: null },
   { to: '/ai-chat',   icon: <Bot size={16} />,          labelKey: 'nav.ai',        badge: null, highlight: true },
 ];

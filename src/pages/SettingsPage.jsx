@@ -35,6 +35,10 @@ export default function SettingsPage() {
   const [digestEnabled, setDigestEnabled] = useState(false);
   const [digestHour, setDigestHour] = useState(8);
   const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
+  const [digestProjects, setDigestProjects] = useState(true);
+  const [digestPotential, setDigestPotential] = useState(true);
+  const [digestTrending, setDigestTrending] = useState(true);
+  const [digestKeywords, setDigestKeywords] = useState(true);
   const [bellRinging, setBellRinging] = useState(false);
   const [prefLoading, setPrefLoading] = useState(false);
   const [prefMsg, setPrefMsg] = useState(null);
@@ -53,6 +57,13 @@ export default function SettingsPage() {
       setDigestHour(user.digest_hour ?? 8);
       setTimezone(user.timezone || 'Asia/Ho_Chi_Minh');
       setSavedTheme(getUserTheme(user));
+
+      if (user.permissions) {
+        if (typeof user.permissions.digest_projects === 'boolean') setDigestProjects(user.permissions.digest_projects);
+        if (typeof user.permissions.digest_potential === 'boolean') setDigestPotential(user.permissions.digest_potential);
+        if (typeof user.permissions.digest_trending === 'boolean') setDigestTrending(user.permissions.digest_trending);
+        if (typeof user.permissions.digest_keywords === 'boolean') setDigestKeywords(user.permissions.digest_keywords);
+      }
     }
   }, [user]);
 
@@ -97,6 +108,13 @@ export default function SettingsPage() {
         email_digest_enabled: digestEnabled,
         digest_hour: Number(digestHour),
         timezone,
+        permissions: {
+          ...(user?.permissions || {}),
+          digest_projects: digestProjects,
+          digest_potential: digestPotential,
+          digest_trending: digestTrending,
+          digest_keywords: digestKeywords,
+        },
       });
       const userKey = user?.email || user?.id;
       if (userKey) {
@@ -451,35 +469,167 @@ export default function SettingsPage() {
               </div>
 
               {digestEnabled && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <div>
-                    <label className="form-label">{t('settings.digestHour')}</label>
-                    <input
-                      type="number" min={0} max={23}
-                      className="form-input"
-                      value={digestHour}
-                      onChange={(e) => setDigestHour(e.target.value)}
-                      id="input-digest-hour"
-                      style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10 }}
-                    />
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                      <label className="form-label">{t('settings.digestHour')}</label>
+                      <input
+                        type="number" min={0} max={23}
+                        className="form-input"
+                        value={digestHour}
+                        onChange={(e) => setDigestHour(e.target.value)}
+                        id="input-digest-hour"
+                        style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10 }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label">{t('settings.digestTimezone')}</label>
+                      <select
+                        className="form-input"
+                        value={timezone}
+                        onChange={(e) => setTimezone(e.target.value)}
+                        id="select-timezone"
+                        style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10, lineHeight: '1.4' }}
+                      >
+                        <option value="Asia/Ho_Chi_Minh">Việt Nam (UTC+7)</option>
+                        <option value="Asia/Bangkok">Bangkok (UTC+7)</option>
+                        <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+                        <option value="UTC">UTC (Quốc tế)</option>
+                      </select>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="form-label">{t('settings.digestTimezone')}</label>
-                    <select
-                      className="form-input"
-                      value={timezone}
-                      onChange={(e) => setTimezone(e.target.value)}
-                      id="select-timezone"
-                      style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10, lineHeight: '1.4' }}
-                    >
-                      <option value="Asia/Ho_Chi_Minh">Việt Nam (UTC+7)</option>
-                      <option value="Asia/Bangkok">Bangkok (UTC+7)</option>
-                      <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
-                      <option value="UTC">UTC (Quốc tế)</option>
-                    </select>
+                  {/* Cấu hình 04 Chuyên mục nhận Email Digest */}
+                  <div style={{
+                    background: 'var(--bg-surface-2)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 12,
+                    padding: '12px 14px',
+                  }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>📬 Nội dung tích hợp vào Email Digest:</span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {/* 1. Dự án theo dõi */}
+                      <div
+                        onClick={() => setDigestProjects(prev => !prev)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: digestProjects ? 'rgba(37, 99, 235, 0.08)' : 'var(--bg-surface)',
+                          border: digestProjects ? '1.5px solid #2563eb' : '1px solid var(--border)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <span style={{ fontSize: 14 }}>📂</span>
+                          <span style={{ fontSize: 12, fontWeight: digestProjects ? 700 : 500, color: digestProjects ? '#1d4ed8' : 'var(--text-secondary)' }}>
+                            Dự án theo dõi
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={digestProjects}
+                          onChange={() => {}}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </div>
+
+                      {/* 2. Dự án tiềm năng */}
+                      <div
+                        onClick={() => setDigestPotential(prev => !prev)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: digestPotential ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-surface)',
+                          border: digestPotential ? '1.5px solid #10b981' : '1px solid var(--border)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <span style={{ fontSize: 14 }}>🚀</span>
+                          <span style={{ fontSize: 12, fontWeight: digestPotential ? 700 : 500, color: digestPotential ? '#047857' : 'var(--text-secondary)' }}>
+                            Dự án tiềm năng
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={digestPotential}
+                          onChange={() => {}}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </div>
+
+                      {/* 3. Trending */}
+                      <div
+                        onClick={() => setDigestTrending(prev => !prev)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: digestTrending ? 'rgba(249, 115, 22, 0.08)' : 'var(--bg-surface)',
+                          border: digestTrending ? '1.5px solid #f97316' : '1px solid var(--border)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <span style={{ fontSize: 14 }}>🔥</span>
+                          <span style={{ fontSize: 12, fontWeight: digestTrending ? 700 : 500, color: digestTrending ? '#c2410c' : 'var(--text-secondary)' }}>
+                            Xu hướng &amp; Trending
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={digestTrending}
+                          onChange={() => {}}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </div>
+
+                      {/* 4. Từ khóa cá nhân */}
+                      <div
+                        onClick={() => setDigestKeywords(prev => !prev)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: digestKeywords ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-surface)',
+                          border: digestKeywords ? '1.5px solid #6366f1' : '1px solid var(--border)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <span style={{ fontSize: 14 }}>🏷️</span>
+                          <span style={{ fontSize: 12, fontWeight: digestKeywords ? 700 : 500, color: digestKeywords ? '#4338ca' : 'var(--text-secondary)' }}>
+                            Từ khóa của bạn
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={digestKeywords}
+                          onChange={() => {}}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>

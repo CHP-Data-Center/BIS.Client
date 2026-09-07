@@ -169,6 +169,9 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
   const [digestEnabled, setDigestEnabled] = useState(true);
   const [digestHour, setDigestHour] = useState(8);
   const [timezone, setTimezone] = useState('Asia/Ho_Chi_Minh');
+  const [digestProjects, setDigestProjects] = useState(true);
+  const [digestPotential, setDigestPotential] = useState(true);
+  const [digestTrending, setDigestTrending] = useState(true);
   const [bellRinging, setBellRinging] = useState(false);
 
   const [saving, setSaving] = useState(false);
@@ -201,6 +204,11 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
       }
       if (user.timezone) {
         setTimezone(user.timezone);
+      }
+      if (user.permissions) {
+        if (typeof user.permissions.digest_projects === 'boolean') setDigestProjects(user.permissions.digest_projects);
+        if (typeof user.permissions.digest_potential === 'boolean') setDigestPotential(user.permissions.digest_potential);
+        if (typeof user.permissions.digest_trending === 'boolean') setDigestTrending(user.permissions.digest_trending);
       }
     }
   }, [user]);
@@ -271,7 +279,11 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
         digest_hour: Number(digestHour),
         timezone,
         permissions: {
+          ...(user?.permissions || {}),
           onboarding_completed: true,
+          digest_projects: digestProjects,
+          digest_potential: digestPotential,
+          digest_trending: digestTrending,
         }
       });
 
@@ -1073,6 +1085,86 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                         <option value="UTC">UTC (Quốc tế)</option>
                       </select>
                     </div>
+
+                    {/* Lựa chọn 03 Chuyên mục trọng tâm */}
+                    <div style={{
+                      background: 'var(--bg-surface)',
+                      borderRadius: 10,
+                      padding: '10px 12px',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+                        📬 Tích hợp nội dung vào Email Digest:
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                        {/* 1. Dự án theo dõi */}
+                        <div
+                          onClick={() => setDigestProjects(prev => !prev)}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            background: digestProjects ? 'rgba(37, 99, 235, 0.08)' : 'var(--bg-surface-2)',
+                            border: digestProjects ? '1.5px solid #2563eb' : '1px solid var(--border)',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <span style={{ fontSize: 13 }}>📂 Dự án theo dõi</span>
+                            <input type="checkbox" checked={digestProjects} onChange={() => {}} style={{ cursor: 'pointer' }} />
+                          </div>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>Tiến độ các dự án bạn đã lưu</span>
+                        </div>
+
+                        {/* 2. Dự án tiềm năng */}
+                        <div
+                          onClick={() => setDigestPotential(prev => !prev)}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            background: digestPotential ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-surface-2)',
+                            border: digestPotential ? '1.5px solid #10b981' : '1px solid var(--border)',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <span style={{ fontSize: 13 }}>🚀 Dự án tiềm năng</span>
+                            <input type="checkbox" checked={digestPotential} onChange={() => {}} style={{ cursor: 'pointer' }} />
+                          </div>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>Cơ hội theo dõi theo lĩnh vực</span>
+                        </div>
+
+                        {/* 3. Trending */}
+                        <div
+                          onClick={() => setDigestTrending(prev => !prev)}
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            background: digestTrending ? 'rgba(249, 115, 22, 0.08)' : 'var(--bg-surface-2)',
+                            border: digestTrending ? '1.5px solid #f97316' : '1px solid var(--border)',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <span style={{ fontSize: 13 }}>🔥 Điểm tin Trending</span>
+                            <input type="checkbox" checked={digestTrending} onChange={() => {}} style={{ cursor: 'pointer' }} />
+                          </div>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>Chủ đề nổi bật &amp; thảo luận nóng</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1097,7 +1189,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                     <Sparkles size={14} />
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.35 }}>
-                    <strong style={{ color: 'var(--text-primary)' }}>Bản tin AI:</strong> Tổng hợp tin tức, gói thầu GOV & ODA theo từ khóa gửi về email lúc <strong>{digestHour}:00</strong>.
+                    <strong style={{ color: 'var(--text-primary)' }}>Bản tin AI thông minh:</strong> Tự động tổng hợp Dự án theo dõi, Dự án tiềm năng, Xu hướng Trending &amp; Tin tức từ khóa gửi về email lúc <strong>{digestHour}:00</strong>.
                   </div>
                 </div>
               </div>
@@ -1155,7 +1247,14 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                     fontSize: 13, fontWeight: 800,
                     color: digestEnabled ? '#15803d' : '#64748b'
                   }}>
-                    {digestEnabled ? `🟢 Bật lúc ${digestHour}:00 hàng ngày` : '⚪ Đang tắt'}
+                    {digestEnabled ? (
+                      <>
+                        🟢 Bật lúc {digestHour}:00 hàng ngày
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginTop: 2 }}>
+                          {[digestProjects && '📂 Dự án', digestPotential && '🚀 Tiềm năng', digestTrending && '🔥 Trending'].filter(Boolean).join(' · ') || 'Bộ lọc chuẩn'}
+                        </div>
+                      </>
+                    ) : '⚪ Đang tắt'}
                   </div>
                 </div>
 

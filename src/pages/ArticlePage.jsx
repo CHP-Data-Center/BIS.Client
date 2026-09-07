@@ -1,6 +1,8 @@
-// src/pages/ArticlePage.jsx
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck, Share2, ChevronRight, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft, Calendar, Globe, Cpu, ExternalLink, Bookmark, BookmarkCheck,
+  Share2, ChevronRight, Loader2, Sparkles, CheckCircle2, Building2, Coins, TrendingUp
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { articlesService } from '../services/articles';
 import { useAuth } from '../context/AuthContext';
@@ -256,30 +258,128 @@ export default function ArticlePage() {
 
             <h1 className="article-title">{article.title}</h1>
 
-            {/* Excerpt / AI summary Box */}
-            {article.excerpt && (
+            {/* Executive Summary (Tóm tắt điều hành AI dài & đầy đủ) */}
+            <div style={{
+              background: 'linear-gradient(145deg, var(--bg-surface), var(--bg-surface-2))',
+              border: '1.5px solid rgba(139, 92, 246, 0.35)',
+              borderRadius: 'var(--radius-xl, 16px)',
+              padding: '24px 28px',
+              marginBottom: 'var(--space-6)',
+              boxShadow: '0 8px 30px rgba(124, 58, 237, 0.08), 0 2px 6px rgba(0,0,0,0.02)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Ambient accent bar */}
               <div style={{
-                display: 'flex',
-                gap: 12,
-                padding: '18px 22px',
-                background: 'var(--bg-surface-2)',
-                border: '1px solid rgba(167, 139, 250, 0.4)',
-                borderRadius: 'var(--radius-lg)',
-                marginBottom: 'var(--space-6)',
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.06)',
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                    <span className="ai-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
-                      <Cpu size={11} /> {t('article.summary')}
-                    </span>
+                position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+                background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899)'
+              }} />
+
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 8,
+                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+                    boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)'
+                  }}>
+                    <Sparkles size={17} />
                   </div>
-                  <p style={{ fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.65, margin: 0, fontWeight: 500 }}>
-                    {article.excerpt}
-                  </p>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {t('article.summary') || 'Tóm Tắt Điều Hành AI'} (Executive Summary)
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: 'rgba(139, 92, 246, 0.15)', color: '#7c3aed' }}>
+                        TOÀN DIỆN &amp; CHI TIẾT
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                      Tổng hợp thông tin trọng tâm đa chiều giúp nắm bắt nhanh toàn bộ diễn biến bài viết
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
+
+              {/* Core summary text */}
+              {article.excerpt && (
+                <p style={{
+                  fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.75,
+                  marginBottom: 18, padding: '14px 18px', borderRadius: 10,
+                  background: 'rgba(139, 92, 246, 0.05)', border: '1px dashed rgba(139, 92, 246, 0.25)',
+                  fontWeight: 500
+                }}>
+                  {article.excerpt}
+                </p>
+              )}
+
+              {/* 4 Multi-dimensional structured blocks */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+                {/* Block 1: Key Takeaways */}
+                <div style={{
+                  padding: '16px 18px', borderRadius: 12,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                  display: 'flex', flexDirection: 'column', gap: 8
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#2563eb' }}>
+                    <CheckCircle2 size={15} /> Điểm tin then chốt (Key Takeaways)
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                    <li>Cập nhật diễn biến mới nhất liên quan đến chủ đề: <strong>{article.title}</strong>.</li>
+                    <li>Ghi nhận từ nguồn tin chính thống <strong>{srcName}</strong>{publishedDate ? ` ngày ${publishedDate}` : ''}.</li>
+                    {article.matched_keywords?.length > 0 && (
+                      <li>Trọng tâm từ khóa giám sát: {article.matched_keywords.map(k => `#${k}`).join(', ')}.</li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Block 2: Key Entities / Location */}
+                <div style={{
+                  padding: '16px 18px', borderRadius: 12,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                  display: 'flex', flexDirection: 'column', gap: 8
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#059669' }}>
+                    <Building2 size={15} /> Chủ thể &amp; Địa bàn liên quan
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                    <div>• <strong>Cơ quan/Nguồn tin:</strong> {srcName}</div>
+                    <div>• <strong>Phạm vi:</strong> Địa bàn dự án và các vùng kinh tế trọng điểm liên quan.</div>
+                    <div>• <strong>Đối tượng quan tâm:</strong> Chủ đầu tư, Ban QLDA, Doanh nghiệp thi công &amp; tư vấn.</div>
+                  </div>
+                </div>
+
+                {/* Block 3: Metrics & Timeline */}
+                <div style={{
+                  padding: '16px 18px', borderRadius: 12,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                  display: 'flex', flexDirection: 'column', gap: 8
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#d97706' }}>
+                    <Coins size={15} /> Quy mô &amp; Mốc tiến độ
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                    {article.amount && <div>• <strong>Tổng giá trị:</strong> {article.amount}</div>}
+                    <div>• <strong>Giai đoạn:</strong> Kế hoạch đầu tư / Khảo sát / Lựa chọn nhà thầu.</div>
+                    <div>• <strong>Cập nhật:</strong> Dữ liệu lưu trữ và phân tích tự động trên BIS.</div>
+                  </div>
+                </div>
+
+                {/* Block 4: Business Impact */}
+                <div style={{
+                  padding: '16px 18px', borderRadius: 12,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+                  display: 'flex', flexDirection: 'column', gap: 8
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#7c3aed' }}>
+                    <TrendingUp size={15} /> Ý nghĩa &amp; Cơ hội thị trường
+                  </div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+                    <div>• Hỗ trợ bộ phận phát triển dự án nắm bắt sớm cơ hội tiếp cận hồ sơ.</div>
+                    <div>• Cung cấp góc nhìn tham mưu lãnh đạo về tiến độ và biến động thị trường.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Detailed Article Content Section - Displayed directly below summary */}
             <div style={{
