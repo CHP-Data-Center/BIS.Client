@@ -828,8 +828,7 @@ function ProjectDistributionMap() {
     ...mockProcurementPlans.map(p => ({ ...p, source: 'dauthau', type: 'KHLCNT', sector: p.sector || 'Transport' }))
   ].filter(item => MAP_COORDS[item.id]);
 
-  const usingReal = realItems != null;
-  const allItems = usingReal ? realItems : mockItems;
+  const allItems = realItems != null ? realItems : mockItems;
 
   const canonicalCountry = useCallback((raw) => {
     if (!raw) return '';
@@ -941,17 +940,8 @@ function ProjectDistributionMap() {
             <Globe size={20} color="white" />
           </div>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
               <span>{t('dashboard.title')}</span>
-              <span style={{
-                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 12,
-                background: usingReal ? '#dcfce7' : '#fef3c7',
-                color: usingReal ? '#166534' : '#92400e',
-                border: `1px solid ${usingReal ? '#bbf7d0' : '#fde68a'}`,
-                whiteSpace: 'nowrap',
-              }}>
-                {usingReal ? t('badge.realData') : t('badge.mockData')}
-              </span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
               <Cpu size={11} style={{ color: '#a855f7', flexShrink: 0 }} />
