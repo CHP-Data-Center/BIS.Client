@@ -76,9 +76,16 @@ export const articlesService = {
     await api.delete(`/articles/bookmarks/${articleId}`);
   },
 
-  /** Đánh dấu đã đọc */
+  /** Đánh dấu đã đọc một bài viết */
   async markRead(articleId) {
+    apiCache.clear('articles');
     await api.post(`/articles/${articleId}/read`);
+  },
+
+  /** Đánh dấu tất cả đã đọc (hoặc danh sách article_ids cụ thể) */
+  async markAllRead(articleIds = null) {
+    apiCache.clear('articles');
+    await api.post('/articles/read-all', articleIds && articleIds.length ? { article_ids: articleIds } : {});
   },
 };
 
