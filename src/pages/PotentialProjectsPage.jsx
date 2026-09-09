@@ -6,7 +6,8 @@ import {
   Target, Settings2, Loader2, ExternalLink, Plus, X,
   Building2, Calendar, Coins, MapPin, Filter, RefreshCw, AlertCircle,
   ShoppingBag, Globe, Newspaper, Search, ArrowRight, BookmarkCheck,
-  CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock
+  CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock, RotateCcw,
+  ChevronDown, Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { potentialService, itemKey } from '../services/potential';
@@ -438,6 +439,183 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
   return createPortal(modalContent, document.body);
 }
 
+// Danh sách các tỉnh/thành và khu vực phổ biến
+const PROVINCES_LIST = [
+  'Toàn quốc / Việt Nam',
+  'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+  'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+  'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước',
+  'Bình Thuận', 'Cà Mau', 'Cao Bằng', 'Đắk Lắk', 'Đắk Nông',
+  'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang',
+  'Hà Nam', 'Hà Tĩnh', 'Hải Dương', 'Hậu Giang', 'Hòa Bình',
+  'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu',
+  'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+  'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên',
+  'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+  'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên',
+  'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'Trà Vinh', 'Tuyên Quang',
+  'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái',
+  'Philippines', 'Indonesia', 'Thailand', 'Lào', 'Campuchia',
+];
+
+// Danh sách chủ đầu tư / bên mời thầu lớn thường gặp
+const POPULAR_INVESTORS = [
+  'Ban QLDA Đường sắt',
+  'Ban QLDA Thăng Long',
+  'Ban QLDA Mỹ Thuận',
+  'Ban QLDA Giao thông',
+  'Ban QLDA 2',
+  'Ban QLDA 6',
+  'Ban QLDA 7',
+  'Ban QLDA 85',
+  'Tập đoàn Điện lực Việt Nam (EVN)',
+  'Tập đoàn Dầu khí Việt Nam (PVN)',
+  'Tổng công ty Cảng hàng không (ACV)',
+  'Tổng công ty Đầu tư phát triển đường cao tốc (VEC)',
+  'Tập đoàn Bưu chính Viễn thông (VNPT)',
+  'Tập đoàn Công nghiệp - Viễn thông Quân đội (Viettel)',
+  'Ngân hàng Phát triển Châu Á (ADB)',
+  'Ngân hàng Thế giới (World Bank)',
+  'Sở Giao thông Vận tải',
+  'Sở Xây dựng',
+  'Sở Nông nghiệp và Phát triển nông thôn',
+  'UBND Tỉnh / Thành phố',
+];
+
+/** Component Dropdown chọn kèm tìm kiếm nhanh (Combobox) */
+function PotentialDropdown({
+  icon: Icon,
+  placeholder,
+  value,
+  onChange,
+  options = [],
+  allLabel = 'Tất cả',
+  accentColor = 'var(--brand-500)',
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [open]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return options;
+    const s = normalizeText(search);
+    return options.filter((opt) => normalizeText(opt).includes(s));
+  }, [options, search]);
+
+  const handleSelect = (val) => {
+    onChange(val === allLabel ? '' : val);
+    setOpen(false);
+    setSearch('');
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    onChange('');
+    setOpen(false);
+    setSearch('');
+  };
+
+  return (
+    <div className="potential-dropdown-wrapper" ref={ref}>
+      <button
+        type="button"
+        className={`potential-dropdown-trigger ${value ? 'has-value' : ''}`}
+        onClick={() => setOpen(!open)}
+      >
+        <Icon size={15} className="potential-dropdown-icon" style={{ color: value ? accentColor : 'var(--text-muted)' }} />
+        <span className="potential-dropdown-label" style={{ color: value ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          {value ? <strong>{value}</strong> : placeholder}
+        </span>
+        {value ? (
+          <span
+            role="button"
+            className="potential-dropdown-clear"
+            onClick={handleClear}
+            title="Xóa lựa chọn"
+          >
+            <X size={14} />
+          </span>
+        ) : (
+          <ChevronDown size={14} className={`potential-dropdown-arrow ${open ? 'open' : ''}`} />
+        )}
+      </button>
+
+      {open && (
+        <div className="potential-dropdown-menu card">
+          <div className="potential-dropdown-search">
+            <Search size={13} style={{ color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Gõ tìm nhanh trong danh sách..."
+              className="potential-dropdown-search-input"
+            />
+            {search && (
+              <button
+                type="button"
+                className="potential-search-clear"
+                onClick={() => setSearch('')}
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <div className="potential-dropdown-list">
+            <button
+              type="button"
+              className={`potential-dropdown-item ${!value ? 'selected' : ''}`}
+              onClick={() => handleSelect('')}
+            >
+              <span>{allLabel}</span>
+              {!value && <Check size={14} className="potential-dropdown-check" />}
+            </button>
+
+            {filtered.map((opt) => {
+              const isSelected = value && value.toLowerCase() === opt.toLowerCase();
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  className={`potential-dropdown-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleSelect(opt)}
+                >
+                  <span className="truncate">{opt}</span>
+                  {isSelected && <Check size={14} className="potential-dropdown-check" />}
+                </button>
+              );
+            })}
+
+            {search.trim() && !filtered.some((o) => o.toLowerCase() === search.trim().toLowerCase()) && (
+              <button
+                type="button"
+                className="potential-dropdown-item custom-search-item"
+                onClick={() => handleSelect(search.trim())}
+              >
+                <span>🔍 Chọn tìm theo "{search.trim()}"</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PotentialProjectsPage() {
   const { t } = useLang();
   const navigate = useNavigate();
@@ -457,7 +635,31 @@ export default function PotentialProjectsPage() {
   const [filterSectors, setFilterSectors] = useState([]);
   const [kind, setKind] = useState('');
   const [minAmount, setMinAmount] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filterName, setFilterName] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [filterInvestor, setFilterInvestor] = useState('');
+
+  const [data, setData] = useState(() => initialCachedList || { items: [], total: 0, sectors_applied: [] });
+
+  // Danh sách các địa phương gồm tỉnh thành cố định + các địa phương có trong dữ liệu
+  const availableProvinces = useMemo(() => {
+    const fromItems = (data.items || [])
+      .map((i) => i.province)
+      .filter(Boolean);
+    const set = new Set([...PROVINCES_LIST, ...fromItems]);
+    return Array.from(set);
+  }, [data.items]);
+
+  // Danh sách các chủ đầu tư / bên mời thầu gồm danh sách phổ biến + thực tế từ dữ liệu
+  const availableInvestors = useMemo(() => {
+    const fromItems = (data.items || [])
+      .map((i) => i.investor)
+      .filter(Boolean);
+    const set = new Set([...POPULAR_INVESTORS, ...fromItems]);
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'vi'));
+  }, [data.items]);
+
+  const [page, setPage] = useState(1);
 
   // Tự động hoàn lại bộ lọc về '' nếu loại nguồn được chọn không thuộc gói đã mua
   useEffect(() => {
@@ -478,9 +680,6 @@ export default function PotentialProjectsPage() {
       setPage(1);
     }
   }, [kind, canProc, canAdb, canWb, canOda]);
-
-  const [data, setData] = useState(() => initialCachedList || { items: [], total: 0, sectors_applied: [] });
-  const [page, setPage] = useState(1);
   const [initialLoading, setInitialLoading] = useState(() => !initialCachedList);
   const [isPageFetching, setIsPageFetching] = useState(false);
   const [err, setErr] = useState(null);
@@ -540,6 +739,9 @@ export default function PotentialProjectsPage() {
       sectors: filterSectors,
       kinds: kind ? [kind] : undefined,
       minAmount: minAmount ? Number(minAmount) : undefined,
+      title: filterName,
+      province: filterLocation,
+      investor: filterInvestor,
       page,
       size: PAGE_SIZE,
     });
@@ -564,6 +766,9 @@ export default function PotentialProjectsPage() {
         sectors: filterSectors,
         kinds: kind ? [kind] : undefined,
         minAmount: minAmount ? Number(minAmount) : undefined,
+        title: filterName,
+        province: filterLocation,
+        investor: filterInvestor,
         page,
         size: PAGE_SIZE,
         forceFresh,
@@ -585,7 +790,7 @@ export default function PotentialProjectsPage() {
         setIsPageFetching(false);
       }
     }
-  }, [filterSectors, kind, minAmount, page, data.items?.length]);
+  }, [filterSectors, kind, minAmount, filterName, filterLocation, filterInvestor, page, data.items?.length]);
 
   useEffect(() => {
     // 1. Nếu có sẵn trong cache -> cập nhật ngay tức thì 0ms, không cần debounce
@@ -593,6 +798,9 @@ export default function PotentialProjectsPage() {
       sectors: filterSectors,
       kinds: kind ? [kind] : undefined,
       minAmount: minAmount ? Number(minAmount) : undefined,
+      title: filterName,
+      province: filterLocation,
+      investor: filterInvestor,
       page,
       size: PAGE_SIZE,
     });
@@ -608,21 +816,21 @@ export default function PotentialProjectsPage() {
       setIsPageFetching(true);
     }
 
-    // 3. Debounce nhẹ 150ms để gộp các lượt click liên tiếp thành 1 request duy nhất
+    // 3. Debounce nhẹ 250ms để gộp các lượt click / gõ phím liên tiếp thành 1 request duy nhất
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(() => {
       load();
-    }, 150);
+    }, 250);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [load, filterSectors, kind, minAmount, page]);
+  }, [load, filterSectors, kind, minAmount, filterName, filterLocation, filterInvestor, page]);
 
 
   // Danh sách các dự án chuẩn hóa từ DB của user để tra cứu tức thời
@@ -749,19 +957,33 @@ export default function PotentialProjectsPage() {
     }
   };
 
-  // Lọc trực tiếp theo ô tìm kiếm trên trang (dữ liệu nguồn đã được server phân loại theo kinds)
+  // Dữ liệu đã được server phân loại và lọc theo lĩnh vực, nguồn, giá trị, tên, vị trí, chủ đầu tư
   const displayItems = useMemo(() => {
-    let items = data.items || [];
+    return data.items || [];
+  }, [data.items]);
 
-    if (!searchQuery.trim()) return items;
-    const qNorm = normalizeText(searchQuery);
-    return items.filter((item) => {
-      const titleNorm = normalizeText(item.title);
-      const invNorm = normalizeText(item.investor);
-      const provNorm = normalizeText(item.province);
-      return titleNorm.includes(qNorm) || invNorm.includes(qNorm) || provNorm.includes(qNorm);
-    });
-  }, [data.items, searchQuery]);
+  // Đếm số lượng tiêu chí lọc đang được áp dụng
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filterSectors.length > 0) count++;
+    if (kind) count++;
+    if (minAmount) count++;
+    if (filterName.trim()) count++;
+    if (filterLocation.trim()) count++;
+    if (filterInvestor.trim()) count++;
+    return count;
+  }, [filterSectors.length, kind, minAmount, filterName, filterLocation, filterInvestor]);
+
+  // Đặt lại toàn bộ bộ lọc về trạng thái ban đầu
+  const resetAllFilters = useCallback(() => {
+    setFilterSectors([]);
+    setKind('');
+    setMinAmount('');
+    setFilterName('');
+    setFilterLocation('');
+    setFilterInvestor('');
+    setPage(1);
+  }, []);
 
   const applied = data.sectors_applied || [];
   const totalPages = Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE));
@@ -854,7 +1076,7 @@ export default function PotentialProjectsPage() {
 
       {/* Bộ lọc & Tìm kiếm */}
       <div className="potential-filter-card card">
-        {/* Hàng 1: Tiêu đề bộ lọc + Tìm kiếm nhanh */}
+        {/* Hàng 1: Tiêu đề bộ lọc + Nút đặt lại */}
         <div className="potential-filter-header">
           <div className="potential-filter-title-group">
             <Filter size={16} className="potential-filter-icon" />
@@ -877,26 +1099,17 @@ export default function PotentialProjectsPage() {
             )}
           </div>
 
-          {/* Ô tìm kiếm nhanh */}
-          <div className="potential-search-box">
-            <Search size={15} className="potential-search-icon" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm nhanh tiêu đề, chủ đầu tư..."
-              className="potential-search-input"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="potential-search-clear"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
+          {activeFiltersCount > 0 && (
+            <button
+              type="button"
+              onClick={resetAllFilters}
+              className="potential-clear-all-btn"
+              title={t('potential.clearFilters') || 'Đặt lại bộ lọc'}
+            >
+              <RotateCcw size={13} />
+              <span>{t('potential.clearFilters') || 'Đặt lại bộ lọc'} ({activeFiltersCount})</span>
+            </button>
+          )}
         </div>
 
         {/* Danh sách Sector Chips */}
@@ -909,6 +1122,53 @@ export default function PotentialProjectsPage() {
               onToggle={toggleSector}
             />
           ))}
+        </div>
+
+        {/* Hàng 2: 3 Ô Lọc Tìm kiếm: Tên dự án, Vị trí, Chủ đầu tư */}
+        <div className="potential-filter-inputs-row">
+          {/* 1. Lọc theo Tên dự án */}
+          <div className={`potential-filter-input-box ${filterName ? 'has-value' : ''}`}>
+            <Search size={15} className="potential-filter-input-icon" style={{ color: filterName ? 'var(--brand-500)' : 'var(--text-muted)' }} />
+            <input
+              type="text"
+              value={filterName}
+              onChange={(e) => { setFilterName(e.target.value); setPage(1); }}
+              placeholder={t('potential.filterNamePlaceholder') || 'Tìm theo tên dự án, gói thầu...'}
+              className="potential-search-input"
+            />
+            {filterName && (
+              <button
+                type="button"
+                onClick={() => { setFilterName(''); setPage(1); }}
+                className="potential-search-clear"
+                title="Xóa tìm kiếm tên dự án"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* 2. Lọc theo Vị trí / Địa phương (Dropdown) */}
+          <PotentialDropdown
+            icon={MapPin}
+            placeholder={t('potential.filterLocationPlaceholder') || 'Chọn vị trí, địa phương...'}
+            value={filterLocation}
+            onChange={(val) => { setFilterLocation(val); setPage(1); }}
+            options={availableProvinces}
+            allLabel="Tất cả vị trí"
+            accentColor="#10b981"
+          />
+
+          {/* 3. Lọc theo Chủ đầu tư (Dropdown) */}
+          <PotentialDropdown
+            icon={Building2}
+            placeholder={t('potential.filterInvestorPlaceholder') || 'Chọn chủ đầu tư, bên mời thầu...'}
+            value={filterInvestor}
+            onChange={(val) => { setFilterInvestor(val); setPage(1); }}
+            options={availableInvestors}
+            allLabel="Tất cả chủ đầu tư"
+            accentColor="#f59e0b"
+          />
         </div>
 
         {/* Hàng 3: Loại nguồn + Giá trị tối thiểu + Preset buttons */}
@@ -1028,17 +1288,18 @@ export default function PotentialProjectsPage() {
           <div className="empty-icon">🎯</div>
           <div className="empty-title">{t('potential.empty')}</div>
           <div className="empty-sub">{t('potential.emptySub')}</div>
-          {(filterSectors.length > 0 || kind || minAmount || searchQuery) && (
+          {activeFiltersCount > 0 && (
             <button
               type="button"
-              onClick={() => { setFilterSectors([]); setKind(''); setMinAmount(''); setSearchQuery(''); setPage(1); }}
+              onClick={resetAllFilters}
               style={{
                 marginTop: 14, padding: '9px 18px', borderRadius: 10, border: '1px solid var(--border)',
                 background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700,
-                cursor: 'pointer',
+                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
               }}
             >
-              Đặt lại tất cả bộ lọc
+              <RotateCcw size={14} />
+              <span>{t('potential.clearFilters') || 'Đặt lại tất cả bộ lọc'}</span>
             </button>
           )}
         </div>
@@ -1067,9 +1328,9 @@ export default function PotentialProjectsPage() {
               <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>
                 {t('potential.total', { count: data.total })}
               </span>
-              {searchQuery && (
+              {(filterName || filterLocation || filterInvestor) && (
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  (Lọc hiển thị {displayItems.length} kết quả)
+                  (Khớp {data.total} kết quả)
                 </span>
               )}
             </div>

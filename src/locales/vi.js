@@ -1211,8 +1211,15 @@ export default {
   'potential.emptyLockedSub': 'Nâng cấp để xem gói thầu và dự án ODA tiềm năng.',
   'potential.total': '{count} dự án tiềm năng',
   'potential.minAmount': 'Giá trị tối thiểu (VND)',
-  'potential.minAmountHint': 'Chỉ lọc gói thầu trong nước — dự án ODA ghi bằng USD nên sẽ bị loại.',
   'potential.sectorCount': '{count} mục',
+  'potential.filterName': 'Tên dự án',
+  'potential.filterNamePlaceholder': 'Tìm theo tên dự án, gói thầu...',
+  'potential.filterLocation': 'Vị trí',
+  'potential.filterLocationPlaceholder': 'Tìm theo vị trí, địa phương, quốc gia...',
+  'potential.filterInvestor': 'Chủ đầu tư',
+  'potential.filterInvestorPlaceholder': 'Tìm theo chủ đầu tư, bên mời thầu...',
+  'potential.clearFilters': 'Đặt lại bộ lọc',
+  'potential.activeFiltersCount': 'Đang lọc {count} tiêu chí',
 
   // ── Missing UI & View toggle keys ──
   'ui.dang-luoi': 'Dạng lưới',

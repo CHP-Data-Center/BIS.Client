@@ -153,6 +153,21 @@ export const projectsService = {
     return data; // { row_total, row_created, row_skipped, row_failed, errors[] }
   },
 
+  /** Xem trước file Excel trước khi nhập */
+  async previewImportExcel(file) {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await api.post('/projects/imports/preview', form, UPLOAD_CONFIG);
+    return data; // ExcelPreviewResult: { filename, total_rows, valid_rows, duplicate_rows, error_rows, rows }
+  },
+
+  /** Xác nhận nhập các dòng đã xem trước và chỉnh sửa */
+  async confirmImportExcel(items, filename) {
+    const { data } = await api.post('/projects/imports/confirm', { items, filename });
+    apiCache.clear('user_tracked_projects');
+    return data; // ProjectImportResult
+  },
+
   /**
    * Trích tên dự án từ hồ sơ năng lực (.pdf/.docx/.txt).
    * CHỈ GỢI Ý — người dùng chọn rồi mới gọi createProject cho từng mục.

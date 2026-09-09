@@ -5,7 +5,7 @@ import {
   FolderKanban, Plus, Trash2, Calendar, Filter,
   Sparkles, Loader2, Layers, ChevronRight, ChevronLeft,
   UploadCloud, Building2, ShoppingBag, Newspaper, Search, FileSpreadsheet, Download,
-  LayoutGrid, List, Maximize2
+  LayoutGrid, List, Maximize2, Pencil
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { projectsService } from '../services/projects';
@@ -14,6 +14,7 @@ import { useLang } from '../context/LanguageContext';
 import ConfirmModal from '../components/common/ConfirmModal';
 import ProjectImportModal from '../components/ProjectImportModal';
 import ProcurementListModal from '../components/ProcurementListModal';
+import EditProjectModal from '../components/EditProjectModal';
 import { tUI } from '../locales';
 
 // Nhãn + màu trạng thái nghiệp vụ của dự án theo dõi.
@@ -63,13 +64,19 @@ export default function ProjectsPage() {
   const [sector, setSector] = useState('');
   const [province, setProvince] = useState('');
   const [status, setStatus] = useState('watching');
+  const [workItems, setWorkItems] = useState('');
+  const [totalInvestment, setTotalInvestment] = useState('');
+  const [capitalSource, setCapitalSource] = useState('');
+  const [progress, setProgress] = useState('');
+  const [note, setNote] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
   // Gợi ý từ khóa: form tạo (suggesting) và dự án đã có (regenId = id đang xử lý)
   const [suggesting, setSuggesting] = useState(false);
   const [regenId, setRegenId] = useState(null);
 
-  // Confirm delete
+  // Edit & Confirm delete
+  const [editingProject, setEditingProject] = useState(null);
   const [deletingProject, setDeletingProject] = useState(null);
   const [msg, setMsg] = useState(null);
   const [exportingExcel, setExportingExcel] = useState(false);
@@ -181,9 +188,15 @@ export default function ProjectsPage() {
         sector: sector || undefined,
         province: province.trim() || undefined,
         status: status || undefined,
+        work_items: workItems.trim() || undefined,
+        total_investment: totalInvestment.trim() || undefined,
+        capital_source: capitalSource.trim() || undefined,
+        progress: progress.trim() || undefined,
+        note: note.trim() || undefined,
       });
       setName(''); setKeywordFilter(''); setInvestor('');
       setSector(''); setProvince(''); setStatus('watching');
+      setWorkItems(''); setTotalInvestment(''); setCapitalSource(''); setProgress(''); setNote('');
       setShowCreateModal(false);
       showAlert('success', `Đã tạo dự án theo dõi "${created.name}"!`);
       // force=true: getProjects() có cache localStorage 5 phút, không ép thì dự án vừa tạo chưa hiện.
@@ -258,6 +271,18 @@ export default function ProjectsPage() {
       setRegenId(null);
       setTimelineLoading(false);
     }
+  };
+
+  const handleProjectUpdated = async (updatedProject) => {
+    showAlert('success', `Đã cập nhật dự án "${updatedProject.name}".`);
+    setProjects((cur) => cur.map((p) => (p.id === updatedProject.id ? updatedProject : p)));
+    if (selectedProjectId === updatedProject.id) {
+      setTimelineLoading(true);
+      const tl = await projectsService.getTimeline(updatedProject.id, 100).catch(() => null);
+      if (tl) setTimelineData(tl);
+      setTimelineLoading(false);
+    }
+    loadSummary();
   };
 
   const handleDeleteProject = async () => {
@@ -637,22 +662,42 @@ export default function ProjectsPage() {
                         )}
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingProject(p);
-                      }}
-                      title={t('common.delete')}
-                      style={{
-                        background: 'transparent', border: 'none', color: '#ef4444',
-                        cursor: 'pointer', padding: 6, borderRadius: 8, opacity: 0.7,
-                        transition: 'opacity 0.15s',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                      onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingProject(p);
+                        }}
+                        title="Chỉnh sửa dự án"
+                        style={{
+                          background: 'transparent', border: 'none', color: 'var(--brand-600, #2563eb)',
+                          cursor: 'pointer', padding: 6, borderRadius: 8, opacity: 0.75,
+                          transition: 'opacity 0.15s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingProject(p);
+                        }}
+                        title={t('common.delete')}
+                        style={{
+                          background: 'transparent', border: 'none', color: '#ef4444',
+                          cursor: 'pointer', padding: 6, borderRadius: 8, opacity: 0.7,
+                          transition: 'opacity 0.15s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -676,58 +721,184 @@ export default function ProjectsPage() {
               {/* Project Details Header */}
               <div style={{
                 paddingBottom: 16, marginBottom: 20, borderBottom: '1px solid var(--border-subtle)',
-                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14,
+                display: 'flex', flexDirection: 'column', gap: 14,
               }}>
-                <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-                  <h2 style={{
-                    fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0,
-                    wordBreak: 'break-word', overflowWrap: 'anywhere', lineHeight: 1.35
-                  }}>
-                    {selectedProject.name}
-                  </h2>
-                  {selectedProject.keyword_filter && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{t('projects.trackedKeywords')}:</span>
-                      {selectedProject.keyword_filter.split(',').map((kw, idx) => (
-                        <span key={idx} style={{
-                          fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                          background: 'var(--brand-50)', color: 'var(--brand-700)',
-                          border: '1px solid var(--brand-200)',
-                        }}>
-                          #{kw.trim()}
-                        </span>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => regenKeywords(selectedProject)}
-                        disabled={regenId === selectedProject.id}
-                        title={t('projects.keywordsHint')}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5,
-                          fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                          border: '1px dashed var(--border)', background: 'transparent',
-                          color: 'var(--text-secondary)', cursor: 'pointer',
-                          opacity: regenId === selectedProject.id ? 0.6 : 1,
-                        }}
-                      >
-                        {regenId === selectedProject.id
-                          ? <Loader2 size={11} className="spin" style={{ animation: 'spin 0.8s linear infinite' }} />
-                          : <Sparkles size={11} />}
-                        {t('projects.regenKeywords')}
-                      </button>
+                <div style={{
+                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14,
+                }}>
+                  <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+                    <h2 style={{
+                      fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0,
+                      wordBreak: 'break-word', overflowWrap: 'anywhere', lineHeight: 1.35
+                    }}>
+                      {selectedProject.name}
+                    </h2>
+                    {selectedProject.keyword_filter && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{t('projects.trackedKeywords')}:</span>
+                        {selectedProject.keyword_filter.split(',').map((kw, idx) => (
+                          <span key={idx} style={{
+                            fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                            background: 'var(--brand-50)', color: 'var(--brand-700)',
+                            border: '1px solid var(--brand-200)',
+                          }}>
+                            #{kw.trim()}
+                          </span>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => regenKeywords(selectedProject)}
+                          disabled={regenId === selectedProject.id}
+                          title={t('projects.keywordsHint')}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                            fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                            border: '1px dashed var(--border)', background: 'transparent',
+                            color: 'var(--text-secondary)', cursor: 'pointer',
+                            opacity: regenId === selectedProject.id ? 0.6 : 1,
+                          }}
+                        >
+                          {regenId === selectedProject.id
+                            ? <Loader2 size={11} className="spin" style={{ animation: 'spin 0.8s linear infinite' }} />
+                            : <Sparkles size={11} />}
+                          {t('projects.regenKeywords')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setEditingProject(selectedProject)}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '7px 15px', borderRadius: 10,
+                        background: 'var(--brand-50, #eff6ff)',
+                        color: 'var(--brand-700, #1d4ed8)',
+                        border: '1px solid var(--brand-300, #93c5fd)',
+                        fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title="Chỉnh sửa thông tin dự án"
+                    >
+                      <Pencil size={14} /> Chỉnh sửa
+                    </button>
+
+                    {timelineData && (
+                      <div style={{
+                        fontSize: 13, fontWeight: 800, padding: '6px 16px', borderRadius: 20,
+                        background: 'var(--bg-surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)',
+                        flexShrink: 0,
+                      }}>
+                        {newsArticlesCount} bài viết {currentTendersCount > 0 ? `· ${currentTendersCount} gói thầu` : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Thông tin chi tiết dự án (Chủ đầu tư, Vị trí, Lĩnh vực, Tiến độ, Vốn, Hạng mục...) */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: '8px 14px',
+                  padding: '12px 14px',
+                  background: 'var(--bg-surface-2)',
+                  borderRadius: 12,
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: 12,
+                }}>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                      Chủ đầu tư:
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {selectedProject.investor || '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                      Vị trí:
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {selectedProject.province || '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                      Lĩnh vực:
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {selectedProject.sector_name || selectedProject.sector || '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                      Trạng thái:
+                    </span>
+                    <span style={{
+                      display: 'inline-block',
+                      fontWeight: 800,
+                      fontSize: 10.5,
+                      padding: '1px 7px',
+                      borderRadius: 4,
+                      background: (STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).bg,
+                      color: (STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).fg,
+                    }}>
+                      {t((STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).key)}
+                    </span>
+                  </div>
+                  {selectedProject.total_investment && (
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                        Tổng mức đầu tư:
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#047857' }}>
+                        💰 {selectedProject.total_investment}
+                      </span>
+                    </div>
+                  )}
+                  {selectedProject.capital_source && (
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                        Nguồn vốn:
+                      </span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                        🏛️ {selectedProject.capital_source}
+                      </span>
+                    </div>
+                  )}
+                  {selectedProject.progress && (
+                    <div>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                        Tiến độ:
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#1d4ed8' }}>
+                        ⏱️ {selectedProject.progress}
+                      </span>
+                    </div>
+                  )}
+                  {selectedProject.work_items && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                        Hạng mục công việc / Gói thầu quan tâm:
+                      </span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                        📋 {selectedProject.work_items}
+                      </span>
+                    </div>
+                  )}
+                  {selectedProject.note && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                        Ghi chú:
+                      </span>
+                      <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                        📝 {selectedProject.note}
+                      </span>
                     </div>
                   )}
                 </div>
-
-                {timelineData && (
-                  <div style={{
-                    fontSize: 13, fontWeight: 800, padding: '6px 16px', borderRadius: 20,
-                    background: 'var(--bg-surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)',
-                    flexShrink: 0,
-                  }}>
-                    {newsArticlesCount} bài viết {currentTendersCount > 0 ? `· ${currentTendersCount} gói thầu` : ''}
-                  </div>
-                )}
               </div>
 
               {/* Timeline Items Section */}
@@ -1171,7 +1342,9 @@ export default function ProjectsPage() {
           <div
             style={{
               width: '100%',
-              maxWidth: 480,
+              maxWidth: 560,
+              maxHeight: '92vh',
+              overflowY: 'auto',
               background: 'var(--bg-surface)',
               borderRadius: 24,
               padding: 28,
@@ -1185,7 +1358,7 @@ export default function ProjectsPage() {
               ➕ {t('projects.modalTitle')}
             </h3>
 
-            <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label className="form-label">{t('projects.nameLabel')} *</label>
                 <input
@@ -1227,7 +1400,7 @@ export default function ProjectsPage() {
                     {t('projects.suggestKeywords')}
                   </button>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 5, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.5 }}>
                   {t('projects.keywordsHint')}
                 </div>
               </div>
@@ -1237,13 +1410,10 @@ export default function ProjectsPage() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: Ban QLDA giao thông Hà Nội"
+                  placeholder="Ví dụ: Ban QLDA Thăng Long, EVN, v.v."
                   value={investor}
                   onChange={(e) => setInvestor(e.target.value)}
                 />
-                <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 5, lineHeight: 1.5 }}>
-                  Khai chủ đầu tư để hệ thống đối chiếu với bên mời thầu trên cổng đấu thầu.
-                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -1254,7 +1424,7 @@ export default function ProjectsPage() {
                     value={sector}
                     onChange={(e) => setSector(e.target.value)}
                   >
-                    <option value="">—</option>
+                    <option value="">— Chưa chọn —</option>
                     {sectors.map((s) => (
                       <option key={s.slug} value={s.slug}>{s.name}</option>
                     ))}
@@ -1279,13 +1449,73 @@ export default function ProjectsPage() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: Hà Nội"
+                  placeholder="Ví dụ: Hà Nội, TP.HCM, Toàn quốc..."
                   value={province}
                   onChange={(e) => setProvince(e.target.value)}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+              <div>
+                <label className="form-label">Hạng mục công việc / Gói thầu quan tâm</label>
+                <textarea
+                  rows={2}
+                  className="form-input"
+                  placeholder="Ví dụ: Cọc khoan nhồi, thi công hầm, tư vấn giám sát..."
+                  value={workItems}
+                  onChange={(e) => setWorkItems(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>Tổng mức đầu tư</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="1.200 tỷ VNĐ..."
+                    value={totalInvestment}
+                    onChange={(e) => setTotalInvestment(e.target.value)}
+                    style={{ fontSize: 12 }}
+                  />
+                </div>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>Nguồn vốn</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Ngân sách, ODA..."
+                    value={capitalSource}
+                    onChange={(e) => setCapitalSource(e.target.value)}
+                    style={{ fontSize: 12 }}
+                  />
+                </div>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>Tiến độ</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Đang đấu thầu..."
+                    value={progress}
+                    onChange={(e) => setProgress(e.target.value)}
+                    style={{ fontSize: 12 }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">Ghi chú</label>
+                <textarea
+                  rows={2}
+                  className="form-input"
+                  placeholder="Ghi chú thêm về dự án..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
                 <button
                   type="button"
                   className="btn"
@@ -1325,6 +1555,16 @@ export default function ProjectsPage() {
         investorName={selectedProject?.investor}
         tenders={currentTenders}
       />
+
+      {/* Edit Project Modal */}
+      {editingProject && (
+        <EditProjectModal
+          project={editingProject}
+          sectors={sectors}
+          onClose={() => setEditingProject(null)}
+          onSaved={handleProjectUpdated}
+        />
+      )}
 
       {/* Confirm Delete Modal */}
       {deletingProject && (

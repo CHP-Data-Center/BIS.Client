@@ -1212,8 +1212,15 @@ export default {
   'potential.emptyLockedSub': 'Upgrade to see potential tenders and ODA projects.',
   'potential.total': '{count} potential projects',
   'potential.minAmount': 'Minimum value (VND)',
-  'potential.minAmountHint': 'Filters domestic tenders only — ODA projects are priced in USD and get excluded.',
   'potential.sectorCount': '{count} items',
+  'potential.filterName': 'Project name',
+  'potential.filterNamePlaceholder': 'Search by project name, tender...',
+  'potential.filterLocation': 'Location',
+  'potential.filterLocationPlaceholder': 'Search by location, province, country...',
+  'potential.filterInvestor': 'Project owner',
+  'potential.filterInvestorPlaceholder': 'Search by owner, procuring entity...',
+  'potential.clearFilters': 'Reset filters',
+  'potential.activeFiltersCount': 'Filtering by {count} criteria',
 
   // ── Missing UI & View toggle keys ──
   'ui.dang-luoi': 'Grid View',

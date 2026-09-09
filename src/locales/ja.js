@@ -1212,8 +1212,15 @@ export default {
   'potential.emptyLockedSub': 'アップグレードすると入札・ODA案件も表示されます。',
   'potential.total': '有望プロジェクト {count} 件',
   'potential.minAmount': '最低金額（VND）',
-  'potential.minAmountHint': '国内入札のみが対象です — ODA案件はUSD表記のため除外されます。',
   'potential.sectorCount': '{count} 件',
+  'potential.filterName': 'プロジェクト名',
+  'potential.filterNamePlaceholder': 'プロジェクト名・入札名で検索...',
+  'potential.filterLocation': '所在地',
+  'potential.filterLocationPlaceholder': '地域・省・国名で検索...',
+  'potential.filterInvestor': '事業主',
+  'potential.filterInvestorPlaceholder': '発注者・事業主名で検索...',
+  'potential.clearFilters': '絞り込みをリセット',
+  'potential.activeFiltersCount': '{count} 件の条件で絞り込み中',
 
   // ── Missing UI & View toggle keys ──
   'ui.dang-luoi': 'グリッド表示',
