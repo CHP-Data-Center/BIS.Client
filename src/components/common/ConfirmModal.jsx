@@ -33,6 +33,15 @@ export default function ConfirmModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, loading, onClose]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const isDanger = type === 'danger';
@@ -92,7 +101,14 @@ export default function ConfirmModal({
         zIndex: 1000000,
         padding: 20,
         boxSizing: 'border-box',
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
         animation: 'modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+      }}
+      onWheel={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) onClose?.();
@@ -106,6 +122,7 @@ export default function ConfirmModal({
           padding: '30px 28px 26px',
           width: '100%',
           maxWidth: 460,
+          overscrollBehavior: 'contain',
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
           animation: 'modalScaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           position: 'relative',

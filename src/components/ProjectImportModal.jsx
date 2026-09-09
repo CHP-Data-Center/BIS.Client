@@ -80,6 +80,14 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
   const [note, setNote] = useState(row?.note || '');
   const [err, setErr] = useState('');
 
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   if (!row) return null;
 
   const handleSave = (e) => {
@@ -111,11 +119,18 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
   return createPortal(
     <div
       onClick={onClose}
+      onWheel={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
         zIndex: 1000005, background: 'rgba(15, 23, 42, 0.75)',
         backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
       }}
     >
       <div
@@ -125,6 +140,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
           borderRadius: 20, padding: 24, border: '1px solid var(--border)',
           boxShadow: '0 20px 50px rgba(0,0,0,0.3)', display: 'flex',
           flexDirection: 'column', gap: 16, maxHeight: '90vh', overflowY: 'auto',
+          overscrollBehavior: 'contain',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1310,6 +1326,11 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
     if (open) {
       setTab('excel');
       setExcelStep('upload');
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
     }
   }, [open]);
 
@@ -1325,6 +1346,11 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
   return createPortal(
     <div
       onClick={onClose}
+      onWheel={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
@@ -1342,6 +1368,8 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
         justifyContent: 'center',
         padding: 20,
         boxSizing: 'border-box',
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
       }}
     >
       <div
@@ -1353,6 +1381,7 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
           maxWidth: isWide ? 1150 : 980,
           maxHeight: '92vh',
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
           background: 'var(--bg-surface)',
           borderRadius: 24,
           padding: 26,

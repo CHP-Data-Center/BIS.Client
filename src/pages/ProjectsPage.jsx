@@ -153,6 +153,17 @@ export default function ProjectsPage() {
     potentialService.getSectors().then(setSectors).catch(() => setSectors([]));
   }, []);
 
+  // Khóa cuộn trang nền khi modal tạo dự án mở
+  useEffect(() => {
+    if (showCreateModal) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [showCreateModal]);
+
   // Fetch timeline when selected project changes
   useEffect(() => {
     if (!selectedProjectId) {
@@ -492,16 +503,17 @@ export default function ProjectsPage() {
       {/* Main Layout Grid */}
       <div className="projects-layout-grid">
         {/* Left Sidebar: Project List */}
-        <div style={{
+        <div className="projects-sidebar-sticky" style={{
           background: 'var(--bg-surface)', borderRadius: 20, padding: 20,
           border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12,
-          boxShadow: '0 2px 12px rgba(0,0,0,0.04)', height: 'fit-content',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
           minWidth: 0,
         }}>
           <div style={{
             fontSize: 14, fontWeight: 900, color: 'var(--text-primary)',
             paddingBottom: 12, borderBottom: '1px solid var(--border-subtle)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexShrink: 0,
           }}>
             <span>{t('projects.projectList')} ({visibleProjects.length}/{projects.length})</span>
             <Layers size={16} style={{ color: 'var(--brand-500)' }} />
@@ -509,7 +521,7 @@ export default function ProjectsPage() {
 
           {/* Bộ lọc — chỉ hiện khi có đủ dự án để việc lọc thật sự có ích */}
           {projects.length > 3 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
               <div style={{ position: 'relative' }}>
                 <Search size={14} style={{
                   position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
@@ -568,7 +580,19 @@ export default function ProjectsPage() {
               <div style={{ fontSize: 12, marginTop: 4 }}>{t('projects.emptySub')}</div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div
+              className="projects-list-scroll"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                paddingRight: 4,
+                overscrollBehavior: 'contain',
+              }}
+            >
               {visibleProjects.length === 0 && (
                 <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12.5 }}>
                   Không có dự án nào khớp bộ lọc.
@@ -799,58 +823,64 @@ export default function ProjectsPage() {
 
                 {/* Thông tin chi tiết dự án (Chủ đầu tư, Vị trí, Lĩnh vực, Tiến độ, Vốn, Hạng mục...) */}
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '8px 14px',
-                  padding: '12px 14px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'flex-start',
+                  gap: '12px 24px',
+                  padding: '14px 18px',
                   background: 'var(--bg-surface-2)',
-                  borderRadius: 12,
+                  borderRadius: 14,
                   border: '1px solid var(--border-subtle)',
-                  fontSize: 12,
+                  fontSize: 12.5,
                 }}>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                  {/* Chủ đầu tư: Tự do co giãn chiếm trọn khoảng trống bên phải, không bị ép xuống dòng sớm */}
+                  <div style={{ flex: '1 1 340px', minWidth: 'min(300px, 100%)' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       Chủ đầu tư:
                     </span>
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: 1.45 }}>
                       {selectedProject.investor || '—'}
                     </span>
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+
+                  <div style={{ flex: '0 0 auto', minWidth: 90 }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       Vị trí:
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                       {selectedProject.province || '—'}
                     </span>
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+
+                  <div style={{ flex: '0 0 auto', minWidth: 90 }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       Lĩnh vực:
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                       {selectedProject.sector_name || selectedProject.sector || '—'}
                     </span>
                   </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+
+                  <div style={{ flex: '0 0 auto', minWidth: 100 }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       Trạng thái:
                     </span>
                     <span style={{
                       display: 'inline-block',
                       fontWeight: 800,
-                      fontSize: 10.5,
-                      padding: '1px 7px',
-                      borderRadius: 4,
+                      fontSize: 11,
+                      padding: '2px 8px',
+                      borderRadius: 5,
                       background: (STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).bg,
                       color: (STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).fg,
                     }}>
                       {t((STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).key)}
                     </span>
                   </div>
+
                   {selectedProject.total_investment && (
-                    <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                    <div style={{ flex: '0 0 auto', minWidth: 120 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                         Tổng mức đầu tư:
                       </span>
                       <span style={{ fontWeight: 700, color: '#047857' }}>
@@ -858,9 +888,10 @@ export default function ProjectsPage() {
                       </span>
                     </div>
                   )}
+
                   {selectedProject.capital_source && (
-                    <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                    <div style={{ flex: '0 0 auto', minWidth: 120 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                         Nguồn vốn:
                       </span>
                       <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -868,9 +899,10 @@ export default function ProjectsPage() {
                       </span>
                     </div>
                   )}
+
                   {selectedProject.progress && (
-                    <div>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                    <div style={{ flex: '0 0 auto', minWidth: 110 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                         Tiến độ:
                       </span>
                       <span style={{ fontWeight: 700, color: '#1d4ed8' }}>
@@ -878,22 +910,24 @@ export default function ProjectsPage() {
                       </span>
                     </div>
                   )}
+
                   {selectedProject.work_items && (
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                    <div style={{ width: '100%', flex: '1 1 100%', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 2 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                         Hạng mục công việc / Gói thầu quan tâm:
                       </span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.45 }}>
                         📋 {selectedProject.work_items}
                       </span>
                     </div>
                   )}
+
                   {selectedProject.note && (
-                    <div style={{ gridColumn: '1 / -1' }}>
-                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+                    <div style={{ width: '100%', flex: '1 1 100%', borderTop: selectedProject.work_items ? 'none' : '1px dashed var(--border-subtle)', paddingTop: selectedProject.work_items ? 0 : 10, marginTop: selectedProject.work_items ? 0 : 2 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                         Ghi chú:
                       </span>
-                      <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                      <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
                         📝 {selectedProject.note}
                       </span>
                     </div>
@@ -1336,6 +1370,13 @@ export default function ProjectsPage() {
             justifyContent: 'center',
             padding: 20,
             boxSizing: 'border-box',
+            overflow: 'hidden',
+            overscrollBehavior: 'contain',
+          }}
+          onWheel={(e) => {
+            if (e.target === e.currentTarget) {
+              e.preventDefault();
+            }
           }}
           onClick={() => setShowCreateModal(false)}
         >
@@ -1345,6 +1386,7 @@ export default function ProjectsPage() {
               maxWidth: 560,
               maxHeight: '92vh',
               overflowY: 'auto',
+              overscrollBehavior: 'contain',
               background: 'var(--bg-surface)',
               borderRadius: 24,
               padding: 28,

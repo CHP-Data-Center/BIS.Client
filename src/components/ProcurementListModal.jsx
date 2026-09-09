@@ -18,6 +18,16 @@ export default function ProcurementListModal({
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
+  React.useEffect(() => {
+    if (open) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [open]);
+
   if (!open || typeof document === 'undefined') return null;
 
   const handleCopy = (e, id) => {
@@ -46,6 +56,11 @@ export default function ProcurementListModal({
   return createPortal(
     <div
       onClick={onClose}
+      onWheel={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
@@ -63,6 +78,8 @@ export default function ProcurementListModal({
         justifyContent: 'center',
         padding: '24px 16px',
         boxSizing: 'border-box',
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
       }}
     >
       <div
@@ -73,6 +90,7 @@ export default function ProcurementListModal({
         style={{
           width: 'min(1000px, 95vw)',
           maxHeight: '88vh',
+          overscrollBehavior: 'contain',
           background: 'var(--bg-surface, #ffffff)',
           borderRadius: 24,
           border: '1px solid var(--border, #e2e8f0)',

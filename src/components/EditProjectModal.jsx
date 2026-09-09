@@ -46,6 +46,14 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
     }
   }, [project]);
 
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   if (!project) return null;
 
   const suggestKeywords = async () => {
@@ -104,6 +112,11 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
   return createPortal(
     <div
       onClick={onClose}
+      onWheel={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
       style={{
         position: 'fixed',
         top: 0,
@@ -121,6 +134,8 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
         justifyContent: 'center',
         padding: 20,
         boxSizing: 'border-box',
+        overflow: 'hidden',
+        overscrollBehavior: 'contain',
       }}
     >
       <div
@@ -132,6 +147,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           maxWidth: 720,
           maxHeight: '92vh',
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
           background: 'var(--bg-surface)',
           borderRadius: 24,
           padding: 26,
