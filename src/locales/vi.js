@@ -18,6 +18,7 @@ export default {
   'nav.tools': 'Công Cụ',
   'nav.keywords': 'Từ Khóa',
   'nav.projects': 'Dự Án Theo Dõi',
+  'nav.investors': 'Chủ Đầu Tư',
   'nav.potential': 'Dự Án Tiềm Năng',
   'nav.bookmarks': 'Đã Lưu',
   'nav.ai': 'Trợ Lý AI',

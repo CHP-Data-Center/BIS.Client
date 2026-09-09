@@ -12,6 +12,7 @@ import { tUI } from '../locales';
 const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, labelKey: 'nav.dashboard', badge: null },
   { to: '/projects',  icon: <FolderKanban size={16} />,     labelKey: 'nav.projects',  badge: null, color: '#2563eb' },
+  { to: '/investors', icon: <Building2 size={16} />,        labelKey: 'nav.investors', badge: null, color: '#3b82f6' },
   { to: '/potential-projects', icon: <Target size={16} />, labelKey: 'nav.potential', badge: null, color: '#10b981' },
   { to: '/trending',  icon: <Flame size={16} />,           labelKey: 'nav.trending',  badge: 'HOT', color: '#f97316' },
 ];

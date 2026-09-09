@@ -33,6 +33,7 @@ const ProcurementDetailPage = lazy(() => import('./pages/ProcurementDetailPage')
 const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const InvestorsPage = lazy(() => import('./pages/InvestorsPage'));
 const PotentialProjectsPage = lazy(() => import('./pages/PotentialProjectsPage'));
 
 function PageLoader({ message, fullScreen = true }) {
@@ -258,6 +259,12 @@ export default function App() {
               <Route path="/projects" element={
                 <ProtectedRoute>
                   <AppLayout><ProjectsPage /></AppLayout>
+                </ProtectedRoute>
+              } />
+
+              <Route path="/investors" element={
+                <ProtectedRoute>
+                  <AppLayout><InvestorsPage /></AppLayout>
                 </ProtectedRoute>
               } />
 

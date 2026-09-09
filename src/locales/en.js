@@ -18,6 +18,7 @@ export default {
   'nav.tools': 'Tools',
   'nav.keywords': 'Keywords',
   'nav.projects': 'Tracked Projects',
+  'nav.investors': 'Tracked Investors',
   'nav.potential': 'Potential Projects',
   'nav.bookmarks': 'Bookmarks',
   'nav.ai': 'AI Assistant',
