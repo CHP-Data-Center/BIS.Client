@@ -18,7 +18,6 @@ export default {
   'nav.tools': 'ツール',
   'nav.keywords': 'キーワード',
   'nav.projects': '追跡プロジェクト',
-  'nav.investors': '発注者・事業主体',
   'nav.potential': '有望プロジェクト',
   'nav.bookmarks': '保存済み',
   'nav.ai': 'AIアシスタント',
