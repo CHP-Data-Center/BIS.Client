@@ -464,8 +464,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo Fast Login Shortcut — Chỉ hiển thị khi chạy ở Localhost */}
-        {(import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+        {/* Điền nhanh tài khoản dùng thử — CHỈ khi chạy `npm run dev`.
+            Điều kiện phải là `import.meta.env.DEV &&` đứng đầu, KHÔNG được `||` với
+            kiểm tra hostname: Vite thay `import.meta.env.DEV` bằng hằng `false` lúc
+            build, nên `false && (...)` bị loại bỏ hoàn toàn, còn `false || hostname===…`
+            thì cả khối vẫn nằm nguyên trong bundle. Đã kiểm bằng `vite build`: bản cũ
+            để lộ nguyên ba mật khẩu trong dist/assets/LoginPage-*.js — ai mở DevTools
+            trên trang production cũng đọc được. */}
+        {import.meta.env.DEV && (
           <div className="login-demo-hint">
             <div className="demo-hint-title">
               <ShieldCheck size={13} style={{ color: 'var(--brand-600)' }} />

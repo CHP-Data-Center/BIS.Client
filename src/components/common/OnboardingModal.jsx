@@ -1,17 +1,18 @@
 // src/components/common/OnboardingModal.jsx
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  MapPin, Tag, Mail, CheckCircle2, ChevronRight, ChevronLeft, 
-  Sparkles, X, Plus, Clock, Globe, Check, 
+import {
+  MapPin, Tag, Mail, CheckCircle2, ChevronRight, ChevronLeft,
+  Sparkles, X, Plus, Clock, Globe, Check,
   Building, Cpu, Zap, Activity, Layers,
   Loader2, BellRing, Search, Flame,
-  Newspaper, Bot
+  Newspaper, Bot, FileSpreadsheet, Download, Upload, Trash2, FolderKanban
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { settingsService } from '../../services/settings';
-import { keywordsService } from '../../services/keywords';
+import { projectsService } from '../../services/projects';
+import { potentialService } from '../../services/potential';
 
 const ALL_REGIONS = [
   { id: 'Toàn quốc', label: 'Toàn quốc', desc: 'Theo dõi toàn bộ dự án, ODA & tin tức khắp cả nước' },
@@ -160,10 +161,20 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
   const [useCustomRegion, setUseCustomRegion] = useState(false);
   const [regionSearch, setRegionSearch] = useState('');
 
-  const [selectedKeywords, setSelectedKeywords] = useState([
-    'Đường sắt cao tốc', 'Chuyển đổi số', 'Năng lượng tái tạo'
-  ]);
-  const [customKeywordInput, setCustomKeywordInput] = useState('');
+  // Bước 2 — DỰ ÁN THEO DÕI (thay cho bước chọn từ khóa thủ công).
+  // Người dùng khai dự án; từ khóa theo dõi do máy chủ tự rút từ tên dự án
+  // (`project_keyword_service`) rồi nạp vào bộ lọc crawl. Trước đây bước này bắt tự gõ
+  // từ khóa, mà người dùng thường chép nguyên tiêu đề dài dòng vào nên lọc tin vô dụng.
+  const [projectDrafts, setProjectDrafts] = useState([]);
+  const [draft, setDraft] = useState({ name: '', investor: '', province: '', sector: '' });
+  const [draftError, setDraftError] = useState('');
+  const [sectorOptions, setSectorOptions] = useState([]);
+  // 'manual' | 'excel'
+  const [projectMode, setProjectMode] = useState('manual');
+  const [excelBusy, setExcelBusy] = useState(false);
+  const [excelResult, setExcelResult] = useState(null);
+  const [excelError, setExcelError] = useState('');
+  const excelInputRef = useRef(null);
 
   const [digestEnabled, setDigestEnabled] = useState(true);
   const [digestHour, setDigestHour] = useState(8);
@@ -212,6 +223,25 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
     }
   }, [user]);
 
+  // Danh mục lĩnh vực lấy từ máy chủ, KHÔNG cắm cứng danh sách ở đây: slug phải khớp
+  // `app/utils/sectors.py`, lệch một chữ là dòng đó bị bộ nhập từ chối với lỗi
+  // "lĩnh vực không có trong danh mục".
+  useEffect(() => {
+    if (!isOpen) return;
+    let huy = false;
+    potentialService
+      .getSectors()
+      .then((ds) => {
+        if (!huy) setSectorOptions(Array.isArray(ds) ? ds : []);
+      })
+      .catch(() => {
+        // Không chặn onboarding vì một lỗi tải danh mục — bước này vẫn bỏ qua được.
+      });
+    return () => {
+      huy = true;
+    };
+  }, [isOpen]);
+
   // Khóa cuộn trang nền khi popup setup đang mở
   useEffect(() => {
     if (!isOpen) return;
@@ -229,33 +259,50 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
     r.desc.toLowerCase().includes(regionSearch.toLowerCase())
   );
 
-  const handleToggleKeyword = (kw) => {
-    if (selectedKeywords.includes(kw)) {
-      setSelectedKeywords(prev => prev.filter(item => item !== kw));
-    } else {
-      if (selectedKeywords.length >= 30) return;
-      setSelectedKeywords(prev => [...prev, kw]);
-    }
-  };
-
-  const handleAddCustomKeyword = (e) => {
+  // Bốn ô BẮT BUỘC, khớp đúng bốn cột bắt buộc của file Excel: hai ô đầu để nhận diện
+  // dự án, hai ô sau để xác nhận bối cảnh (xem `app/utils/project_terms.py` phía máy chủ).
+  const handleAddDraft = (e) => {
     if (e) e.preventDefault();
-    const term = customKeywordInput.trim();
-    if (!term) return;
-    if (!selectedKeywords.includes(term)) {
-      if (selectedKeywords.length >= 30) return;
-      setSelectedKeywords(prev => [...prev, term]);
+    const name = draft.name.trim();
+    const investor = draft.investor.trim();
+    const province = draft.province.trim();
+    if (!name || !investor || !province || !draft.sector) {
+      setDraftError(t('onboarding.projectMissingField'));
+      return;
     }
-    setCustomKeywordInput('');
+    const daCo = projectDrafts.some(
+      (p) => p.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (daCo) {
+      setDraftError(t('onboarding.projectDuplicate'));
+      return;
+    }
+    setProjectDrafts((prev) => [...prev, { name, investor, province, sector: draft.sector }]);
+    setDraft({ name: '', investor: '', province: '', sector: draft.sector });
+    setDraftError('');
   };
 
-  const handleSelectAllCategory = (items) => {
-    const newItems = items.filter(it => !selectedKeywords.includes(it));
-    setSelectedKeywords(prev => [...prev, ...newItems].slice(0, 30));
+  const handleRemoveDraft = (name) => {
+    setProjectDrafts((prev) => prev.filter((p) => p.name !== name));
   };
 
-  const handleRemoveKeyword = (kw) => {
-    setSelectedKeywords(prev => prev.filter(item => item !== kw));
+  const handlePickExcel = async (e) => {
+    const file = e.target.files?.[0];
+    // Xóa value ngay để chọn LẠI cùng một file vẫn kích hoạt onChange.
+    e.target.value = '';
+    if (!file) return;
+    setExcelBusy(true);
+    setExcelError('');
+    setExcelResult(null);
+    try {
+      setExcelResult(await projectsService.importExcel(file));
+    } catch (err) {
+      setExcelError(
+        err.response?.data?.detail || t('onboarding.projectExcelFailed')
+      );
+    } finally {
+      setExcelBusy(false);
+    }
   };
 
   const getEffectiveRegion = () => {
@@ -286,15 +333,28 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
         }
       });
 
-      // 2. Thêm các từ khóa đã chọn vào hệ thống
-      if (selectedKeywords.length > 0) {
-        for (const term of selectedKeywords) {
-          try {
-            await keywordsService.createKeyword({ term, is_primary: true });
-          } catch {
-            // bỏ qua nếu từ khóa đã tồn tại
+      // 2. Tạo các dự án đã khai. KHÔNG gửi `keyword_filter`: bỏ trống thì máy chủ tự
+      //    rút vài từ khóa ngắn từ tên dự án rồi nạp vào bộ lọc crawl. Gửi nguyên tên
+      //    dài dòng vào đây chính là lỗi cũ khiến bộ thẻ theo dõi thành vô nghĩa.
+      const loiTao = [];
+      for (const p of projectDrafts) {
+        try {
+          await projectsService.createProject({
+            name: p.name,
+            investor: p.investor,
+            province: p.province,
+            sector: p.sector,
+          });
+        } catch (err) {
+          // Trùng tên với dự án đã theo dõi thì bỏ qua; lỗi khác phải nói ra, không
+          // được nuốt — người dùng sẽ tin là đã lưu xong trong khi chưa.
+          if (err.response?.status !== 409) {
+            loiTao.push(`${p.name}: ${err.response?.data?.detail || 'lỗi không rõ'}`);
           }
         }
+      }
+      if (loiTao.length > 0) {
+        throw new Error(`Không tạo được ${loiTao.length} dự án — ${loiTao[0]}`);
       }
 
       // 3. Đánh dấu đã hoàn thành setup vào localStorage
@@ -311,7 +371,9 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
       if (onClose) onClose();
     } catch (err) {
       console.error('Error saving onboarding:', err);
-      setSaveError(err.response?.data?.detail || 'Không thể lưu cài đặt. Vui lòng thử lại.');
+      setSaveError(
+        err.response?.data?.detail || err.message || 'Không thể lưu cài đặt. Vui lòng thử lại.'
+      );
     } finally {
       setSaving(false);
     }
@@ -327,7 +389,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
 
   const stepsList = [
     { num: 1, title: t('onboarding.stepRegion'), icon: <MapPin size={14} /> },
-    { num: 2, title: t('onboarding.stepKeywords'), icon: <Tag size={14} /> },
+    { num: 2, title: t('onboarding.stepProjects'), icon: <FolderKanban size={14} /> },
     { num: 3, title: t('onboarding.stepDigest'), icon: <Mail size={14} /> },
     { num: 4, title: t('onboarding.stepComplete'), icon: <CheckCircle2 size={14} /> },
   ];
@@ -747,25 +809,25 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
             </div>
           )}
 
-          {/* ══════════ STEP 2: TỪ KHÓA & LĨNH VỰC ══════════ */}
+          {/* ══════════ STEP 2: DỰ ÁN THEO DÕI ══════════ */}
           {step === 2 && (
             <div key="step-2" className="onboarding-tab-pane">
               <div style={{ marginBottom: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, flexShrink: 0 }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <Tag size={16} style={{ color: 'var(--brand-500, #3b82f6)' }} />
-                    {t('onboarding.keywordsTitle')}
+                    <FolderKanban size={16} style={{ color: 'var(--brand-500, #3b82f6)' }} />
+                    {t('onboarding.projectsTitle')}
                   </h3>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, marginBottom: 0 }}>
-                    {t('onboarding.keywordsDesc')}
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, marginBottom: 0, maxWidth: 560 }}>
+                    {t('onboarding.projectsDesc')}
                   </p>
                 </div>
                 <div style={{
                   padding: '3px 10px',
                   borderRadius: 16,
-                  background: selectedKeywords.length > 0 ? 'var(--brand-50, rgba(59, 130, 246, 0.08))' : '#fee2e2',
-                  border: `1px solid ${selectedKeywords.length > 0 ? 'var(--brand-300, #93c5fd)' : '#fca5a5'}`,
-                  color: selectedKeywords.length > 0 ? 'var(--brand-600, #2563eb)' : '#dc2626',
+                  background: projectDrafts.length > 0 ? 'var(--brand-50, rgba(59, 130, 246, 0.08))' : 'var(--bg-surface-2)',
+                  border: `1px solid ${projectDrafts.length > 0 ? 'var(--brand-300, #93c5fd)' : 'var(--border)'}`,
+                  color: projectDrafts.length > 0 ? 'var(--brand-600, #2563eb)' : 'var(--text-muted)',
                   fontSize: 11.5,
                   fontWeight: 800,
                   display: 'flex',
@@ -773,153 +835,236 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                   gap: 5
                 }}>
                   <Flame size={12} style={{ color: '#f59e0b' }} />
-                  {t('onboarding.selectedKeywordsCount').replace('{count}', selectedKeywords.length)}
+                  {t('onboarding.projectsCount').replace('{count}', projectDrafts.length)}
                 </div>
               </div>
 
-              {/* Add Custom Keyword bar */}
-              <form onSubmit={handleAddCustomKeyword} style={{ display: 'flex', gap: 6, marginBottom: 10, flexShrink: 0 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <Tag size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder={t('onboarding.customKeywordPlaceholder')}
-                    value={customKeywordInput}
-                    onChange={(e) => setCustomKeywordInput(e.target.value)}
-                    style={{ paddingLeft: 30, height: 34, fontSize: 12, borderRadius: 8 }}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ gap: 5, padding: '0 14px', fontWeight: 800, fontSize: 12, borderRadius: 8 }}
-                >
-                  <Plus size={14} /> Thêm
-                </button>
-              </form>
+              {/* Chọn cách khai: gõ tay hay tải Excel */}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexShrink: 0 }}>
+                {[
+                  { id: 'manual', label: t('onboarding.projectModeManual'), icon: <Plus size={13} /> },
+                  { id: 'excel', label: t('onboarding.projectModeExcel'), icon: <FileSpreadsheet size={13} /> },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setProjectMode(m.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      padding: '6px 14px', borderRadius: 8, cursor: 'pointer',
+                      fontSize: 12, fontWeight: 800,
+                      border: projectMode === m.id ? '1px solid var(--brand-500, #3b82f6)' : '1px solid var(--border)',
+                      background: projectMode === m.id ? 'var(--brand-50, rgba(59, 130, 246, 0.12))' : 'var(--bg-surface)',
+                      color: projectMode === m.id ? 'var(--brand-600, #2563eb)' : 'var(--text-secondary)',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {m.icon} {m.label}
+                  </button>
+                ))}
+              </div>
 
-              {/* Selected keywords pills bar */}
-              {selectedKeywords.length > 0 && (
+              {projectMode === 'manual' && (
+                <form
+                  onSubmit={handleAddDraft}
+                  style={{
+                    background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+                    borderRadius: 10, padding: '10px 12px', marginBottom: 10, flexShrink: 0,
+                  }}
+                >
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 4, fontSize: 11.5, fontWeight: 800, color: 'var(--text-primary)' }}>
+                        {t('onboarding.projectFieldName')} <span style={{ color: '#dc2626' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={draft.name}
+                        onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                        placeholder={t('onboarding.projectNamePlaceholder')}
+                        style={{ height: 34, fontSize: 12, borderRadius: 8 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 4, fontSize: 11.5, fontWeight: 800, color: 'var(--text-primary)' }}>
+                        {t('onboarding.projectFieldInvestor')} <span style={{ color: '#dc2626' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={draft.investor}
+                        onChange={(e) => setDraft({ ...draft, investor: e.target.value })}
+                        placeholder={t('onboarding.projectInvestorPlaceholder')}
+                        style={{ height: 34, fontSize: 12, borderRadius: 8 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 4, fontSize: 11.5, fontWeight: 800, color: 'var(--text-primary)' }}>
+                        {t('onboarding.projectFieldProvince')} <span style={{ color: '#dc2626' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={draft.province}
+                        onChange={(e) => setDraft({ ...draft, province: e.target.value })}
+                        placeholder={t('onboarding.projectProvincePlaceholder')}
+                        style={{ height: 34, fontSize: 12, borderRadius: 8 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ display: 'block', marginBottom: 4, fontSize: 11.5, fontWeight: 800, color: 'var(--text-primary)' }}>
+                        {t('onboarding.projectFieldSector')} <span style={{ color: '#dc2626' }}>*</span>
+                      </label>
+                      <select
+                        className="form-input"
+                        value={draft.sector}
+                        onChange={(e) => setDraft({ ...draft, sector: e.target.value })}
+                        style={{ height: 34, fontSize: 12, borderRadius: 8 }}
+                      >
+                        <option value="">{t('onboarding.projectSectorPlaceholder')}</option>
+                        {sectorOptions.map((s) => (
+                          <option key={s.slug} value={s.slug}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        style={{ gap: 5, height: 34, width: '100%', fontWeight: 800, fontSize: 12, borderRadius: 8 }}
+                      >
+                        <Plus size={14} /> {t('onboarding.projectAdd')}
+                      </button>
+                    </div>
+                  </div>
+                  {draftError && (
+                    <div style={{ marginTop: 7, fontSize: 11.5, color: '#dc2626', fontWeight: 700 }}>
+                      ⚠️ {draftError}
+                    </div>
+                  )}
+                </form>
+              )}
+
+              {projectMode === 'excel' && (
                 <div style={{
-                  background: 'var(--bg-surface-2)',
-                  borderRadius: 10,
-                  padding: '8px 12px',
-                  marginBottom: 10,
-                  border: '1px solid var(--border)',
-                  flexShrink: 0
+                  background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+                  borderRadius: 10, padding: '12px 14px', marginBottom: 10, flexShrink: 0,
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-                      Từ khóa đang chọn ({selectedKeywords.length}/30):
-                    </span>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 10px' }}>
+                    {t('onboarding.projectExcelDesc')}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
                       type="button"
-                      onClick={() => setSelectedKeywords([])}
-                      style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}
+                      className="btn btn-secondary"
+                      onClick={() => projectsService.downloadSampleExcel()}
+                      style={{ gap: 6, height: 34, fontSize: 12, fontWeight: 800, borderRadius: 8 }}
                     >
-                      Xóa tất cả
+                      <Download size={14} /> {t('onboarding.projectExcelSample')}
                     </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={excelBusy}
+                      onClick={() => excelInputRef.current?.click()}
+                      style={{ gap: 6, height: 34, fontSize: 12, fontWeight: 800, borderRadius: 8 }}
+                    >
+                      {excelBusy ? <Loader2 size={14} className="spin" /> : <Upload size={14} />}
+                      {excelBusy ? t('onboarding.projectExcelBusy') : t('onboarding.projectExcelPick')}
+                    </button>
+                    <input
+                      ref={excelInputRef}
+                      type="file"
+                      accept=".xlsx"
+                      onChange={handlePickExcel}
+                      style={{ display: 'none' }}
+                    />
                   </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, maxHeight: 50, overflowY: 'auto' }}>
-                    {selectedKeywords.map((kw) => (
-                      <span
-                        key={kw}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          padding: '3px 8px',
-                          borderRadius: 12,
-                          background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                          color: '#ffffff',
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                        }}
-                      >
-                        🏷️ {kw}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveKeyword(kw)}
-                          style={{
-                            background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', cursor: 'pointer',
-                            padding: 2, borderRadius: '50%', display: 'flex', alignItems: 'center'
-                          }}
-                        >
-                          <X size={10} />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+
+                  {excelError && (
+                    <div style={{ marginTop: 9, fontSize: 11.5, color: '#dc2626', fontWeight: 700 }}>
+                      ⚠️ {excelError}
+                    </div>
+                  )}
+
+                  {excelResult && (
+                    <div style={{
+                      marginTop: 10, padding: '9px 11px', borderRadius: 8,
+                      background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                      fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.7,
+                    }}>
+                      <div style={{ fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
+                        ✅ {t('onboarding.projectExcelDone')
+                          .replace('{created}', excelResult.row_created)
+                          .replace('{total}', excelResult.row_total)}
+                      </div>
+                      {excelResult.row_skipped > 0 && (
+                        <div>• {t('onboarding.projectExcelSkipped').replace('{n}', excelResult.row_skipped)}</div>
+                      )}
+                      {excelResult.row_failed > 0 && (
+                        <div style={{ color: '#dc2626' }}>
+                          {/* Nêu ĐÍCH DANH dòng lỗi đầu tiên: chỉ báo "3 dòng lỗi" thì
+                              người dùng phải tự dò 500 dòng để đoán sai ở đâu. */}
+                          • {t('onboarding.projectExcelFailedRows').replace('{n}', excelResult.row_failed)}
+                          {excelResult.errors?.[0] && (
+                            <> — {t('onboarding.projectExcelFirstError')
+                              .replace('{row}', excelResult.errors[0].row)
+                              .replace('{message}', excelResult.errors[0].message)}</>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Curated keyword chips grouped by industry category */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, overflowY: 'auto' }}>
-                {CURATED_KEYWORD_TOPICS.map((group) => (
-                  <div
-                    key={group.category}
-                    style={{
-                      background: 'var(--bg-surface-2)',
-                      borderRadius: 10,
-                      padding: '10px 12px',
-                      border: '1px solid var(--border)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)' }}>
-                        <div style={{
-                          width: 22, height: 22, borderRadius: 6,
-                          background: group.bg, color: group.color,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                          {group.icon}
-                        </div>
-                        <span>{group.category}</span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleSelectAllCategory(group.items)}
+              {/* Danh sách dự án sắp tạo */}
+              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                {projectDrafts.length === 0 ? (
+                  <div style={{
+                    height: '100%', minHeight: 90, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 5,
+                    border: '1px dashed var(--border)', borderRadius: 10,
+                    color: 'var(--text-muted)', fontSize: 12, textAlign: 'center', padding: 14,
+                  }}>
+                    <FolderKanban size={20} style={{ opacity: 0.5 }} />
+                    <span>{t('onboarding.projectEmpty')}</span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {projectDrafts.map((p) => (
+                      <div
+                        key={p.name}
                         style={{
-                          background: 'none', border: 'none', color: 'var(--brand-600, #2563eb)',
-                          fontSize: 11, fontWeight: 700, cursor: 'pointer'
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '8px 11px', borderRadius: 9,
+                          background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
                         }}
                       >
-                        + Chọn tất cả
-                      </button>
-                    </div>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                      {group.items.map((item) => {
-                        const isChosen = selectedKeywords.includes(item);
-                        return (
-                          <button
-                            key={item}
-                            type="button"
-                            onClick={() => handleToggleKeyword(item)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 4,
-                              padding: '4px 10px',
-                              borderRadius: 12,
-                              fontSize: 11.5,
-                              fontWeight: isChosen ? 800 : 600,
-                              cursor: 'pointer',
-                              border: isChosen ? '1px solid var(--brand-500, #3b82f6)' : '1px solid var(--border)',
-                              background: isChosen ? 'var(--brand-50, rgba(59, 130, 246, 0.12))' : 'var(--bg-surface)',
-                              color: isChosen ? 'var(--brand-600, #2563eb)' : 'var(--text-secondary)',
-                              transition: 'all 0.15s ease',
-                            }}
-                          >
-                            {isChosen ? '✓' : '+'} {item}
-                          </button>
-                        );
-                      })}
-                    </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            🏛️ {p.investor} · 📍 {p.province} · 🏗️ {sectorOptions.find((s) => s.slug === p.sector)?.name || p.sector}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDraft(p.name)}
+                          aria-label={t('onboarding.projectRemove')}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: '#dc2626', padding: 4, display: 'flex', alignItems: 'center',
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
@@ -1257,30 +1402,37 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                   </div>
                 </div>
 
-                {/* 3. Keywords Full Width */}
+                {/* 3. Dự án sẽ theo dõi */}
                 <div style={{
                   gridColumn: 'span 2',
                   padding: '12px 14px', borderRadius: 10, background: 'var(--bg-surface-2)', border: '1px solid var(--border)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' }}>
-                      <Tag size={13} style={{ color: 'var(--brand-500)' }} />
-                      {t('onboarding.summaryKeywords')} ({selectedKeywords.length})
+                      <FolderKanban size={13} style={{ color: 'var(--brand-500)' }} />
+                      {t('onboarding.summaryProjects')} ({projectDrafts.length})
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, maxHeight: 65, overflowY: 'auto' }}>
-                    {selectedKeywords.length > 0 ? (
-                      selectedKeywords.map((kw) => (
-                        <span key={kw} style={{
+                    {projectDrafts.length > 0 ? (
+                      projectDrafts.map((p) => (
+                        <span key={p.name} style={{
                           padding: '2px 8px', borderRadius: 10, background: 'var(--bg-surface)',
                           border: '1px solid var(--border)', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)'
                         }}>
-                          🏷️ {kw}
+                          📁 {p.name}
                         </span>
                       ))
+                    ) : excelResult?.row_created > 0 ? (
+                      // Dự án nhập qua Excel đã được máy chủ tạo ngay ở bước 2, không nằm
+                      // trong `projectDrafts` — không nói ra thì ô này hiện "chưa có dự án"
+                      // ngay sau khi người dùng vừa nhập thành công 50 dòng.
+                      <span style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                        {t('onboarding.summaryProjectsExcel').replace('{n}', excelResult.row_created)}
+                      </span>
                     ) : (
-                      <span style={{ fontSize: 11.5, color: '#dc2626', fontStyle: 'italic' }}>
-                        {t('onboarding.noKeywordsAlert')}
+                      <span style={{ fontSize: 11.5, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                        {t('onboarding.summaryProjectsEmpty')}
                       </span>
                     )}
                   </div>
