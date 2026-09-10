@@ -7,11 +7,24 @@ import { createPortal } from 'react-dom';
 import {
   X, FileSpreadsheet, FileText, UploadCloud, Loader2, Check,
   AlertTriangle, Plus, Quote, Pencil, Trash2, ArrowLeft,
-  CheckSquare, Square, Search, Eye
+  CheckSquare, Square, Search, Eye, Globe
 } from 'lucide-react';
 import { projectsService } from '../services/projects';
 import { potentialService } from '../services/potential';
 import { useLang } from '../context/LanguageContext';
+
+function formatRowError(err, t) {
+  if (!err) return null;
+  const codeMap = {
+    missing_name: t('projects.err_missing_name') || 'Thiếu tên dự án (Cột A)',
+    missing_investor: t('projects.err_missing_investor') || 'Thiếu thông tin Chủ đầu tư (Cột B)',
+    missing_province: t('projects.err_missing_province') || 'Thiếu thông tin Vị trí / Địa phương (Cột C)',
+    missing_sector: t('projects.err_missing_sector') || 'Thiếu thông tin Lĩnh vực (Cột D)',
+    invalid_sector: t('projects.err_invalid_sector') || 'Lĩnh vực không thuộc danh mục chuẩn (8 nhóm ngành)',
+    invalid_investor_url: t('projects.err_invalid_investor_url') || 'Website chủ đầu tư không đúng định dạng URL hợp lệ',
+  };
+  return codeMap[err] || err;
+}
 
 const MAX_BYTES = 5 * 1024 * 1024; // khớp trần phía backend
 const EXCEL_ACCEPT = '.xlsx';
@@ -70,6 +83,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
   const [name, setName] = useState(row?.name || '');
   const [keywordFilter, setKeywordFilter] = useState(row?.keyword_filter || '');
   const [investor, setInvestor] = useState(row?.investor || '');
+  const [investorUrl, setInvestorUrl] = useState(row?.investor_url || '');
   const [sector, setSector] = useState(row?.sector || '');
   const [province, setProvince] = useState(row?.province || '');
   const [status, setStatus] = useState(row?.status || 'watching');
@@ -102,6 +116,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
       name: name.trim(),
       keyword_filter: keywordFilter.trim() || null,
       investor: investor.trim() || null,
+      investor_url: investorUrl.trim() || null,
       sector: sector || null,
       sector_name: foundSec ? foundSec.name : row.sector_name,
       province: province.trim() || null,
@@ -211,6 +226,22 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
               type="text"
               value={investor} onChange={(e) => setInvestor(e.target.value)}
               placeholder="Ban QLDA..."
+              style={{
+                width: '100%', padding: '8px 11px', borderRadius: 8, fontSize: 12.5,
+                border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
+                color: 'var(--text-primary)', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}>
+              Website chủ đầu tư (tùy chọn)
+            </label>
+            <input
+              type="text"
+              value={investorUrl} onChange={(e) => setInvestorUrl(e.target.value)}
+              placeholder="vd: acv.vn hoặc https://acv.vn"
               style={{
                 width: '100%', padding: '8px 11px', borderRadius: 8, fontSize: 12.5,
                 border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -470,6 +501,7 @@ function ExcelTab({ onDone, onStepChange }) {
         name: r.name,
         keyword_filter: r.keyword_filter || undefined,
         investor: r.investor || undefined,
+        investor_url: r.investor_url || undefined,
         sector: r.sector || undefined,
         province: r.province || undefined,
         status: r.status || 'watching',
@@ -538,9 +570,10 @@ function ExcelTab({ onDone, onStepChange }) {
       const q = searchQuery.toLowerCase();
       const inName = (r.name || '').toLowerCase().includes(q);
       const inInvestor = (r.investor || '').toLowerCase().includes(q);
+      const inUrl = (r.investor_url || '').toLowerCase().includes(q);
       const inProvince = (r.province || '').toLowerCase().includes(q);
       const inWork = (r.work_items || '').toLowerCase().includes(q);
-      if (!inName && !inInvestor && !inProvince && !inWork) return false;
+      if (!inName && !inInvestor && !inUrl && !inProvince && !inWork) return false;
     }
     return true;
   });
@@ -844,14 +877,14 @@ function ExcelTab({ onDone, onStepChange }) {
               <th style={{ width: 44, padding: '8px 8px', borderBottom: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-muted)' }}>
                 Dòng
               </th>
-              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 200, color: 'var(--text-primary)' }}>
+              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 180, color: 'var(--text-primary)' }}>
                 Tên dự án
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 140, color: 'var(--text-muted)' }}>
-                Từ khóa
-              </th>
-              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 160, color: 'var(--text-muted)' }}>
                 Chủ đầu tư
+              </th>
+              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 130, color: 'var(--text-muted)' }}>
+                {t('projects.colInvestorUrl') || 'Website CĐT'}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 90, color: 'var(--text-muted)' }}>
                 Lĩnh vực
@@ -859,10 +892,13 @@ function ExcelTab({ onDone, onStepChange }) {
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 90, color: 'var(--text-muted)' }}>
                 Địa phương
               </th>
-              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 130, color: 'var(--text-muted)' }}>
+              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 110, color: 'var(--text-muted)' }}>
+                Từ khóa
+              </th>
+              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 120, color: 'var(--text-muted)' }}>
                 Thông tin khác
               </th>
-              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 90, color: 'var(--text-muted)' }}>
+              <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 85, color: 'var(--text-muted)' }}>
                 Trạng thái
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'center', width: 70, color: 'var(--text-muted)' }}>
@@ -873,7 +909,7 @@ function ExcelTab({ onDone, onStepChange }) {
           <tbody>
             {filteredRows.length === 0 ? (
               <tr>
-                <td colSpan={10} style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                <td colSpan={11} style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
                   Không có dòng dữ liệu nào phù hợp với bộ lọc hiện tại.
                 </td>
               </tr>
@@ -933,21 +969,36 @@ function ExcelTab({ onDone, onStepChange }) {
                               fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 4,
                               background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5',
                             }}>
-                              {r.error}
+                              {formatRowError(r.error, t)}
                             </span>
                           )}
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
-                      {r.keyword_filter ? (
-                        <span>{r.keyword_filter}</span>
-                      ) : (
-                        <em style={{ color: 'var(--text-muted)' }}>Tự động rút</em>
-                      )}
-                    </td>
-                    <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
                       {r.investor || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td style={{ padding: '8px 10px', color: 'var(--text-secondary)', fontSize: 11 }}>
+                      {r.investor_url ? (
+                        <a
+                          href={r.investor_url.startsWith('http') ? r.investor_url : `https://${r.investor_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={r.investor_url}
+                          style={{
+                            color: 'var(--brand-600)', textDecoration: 'none',
+                            display: 'inline-flex', alignItems: 'center', gap: 3,
+                            maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                          }}
+                        >
+                          <Globe size={11} style={{ flex: 'none' }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {r.investor_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                          </span>
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>—</span>
+                      )}
                     </td>
                     <td style={{ padding: '8px 10px' }}>
                       {r.sector_name || r.sector ? (
@@ -964,6 +1015,13 @@ function ExcelTab({ onDone, onStepChange }) {
                     </td>
                     <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
                       {r.province || <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
+                      {r.keyword_filter ? (
+                        <span>{r.keyword_filter}</span>
+                      ) : (
+                        <em style={{ color: 'var(--text-muted)' }}>Tự động rút</em>
+                      )}
                     </td>
                     <td style={{ padding: '8px 10px', fontSize: 11 }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

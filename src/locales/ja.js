@@ -1264,5 +1264,22 @@ export default {
   'common.tryAgain': '再試行',
   'search.resultsCount': '件',
   'auth.loginTitle': 'BISシステムにログイン',
+
+  // ── Tracked Projects & Potential Projects Handover ──
+  'projects.investorUrl': '事業主ウェブサイト',
+  'projects.investorUrlPlaceholder': '例: acv.vn または https://acv.vn',
+  'projects.investorUrlHint': 'このウェブサイトからニュースや情報を自動収集します',
+  'projects.timelineLogicHint': '記事の照合条件: (事業名 または 事業主) かつ (分野 または 所在地)',
+  'projects.colInvestorUrl': '事業主URL',
+  'projects.err_missing_name': 'プロジェクト名が未入力です (列A)',
+  'projects.err_missing_investor': '事業主が未入力です (列B)',
+  'projects.err_missing_province': '所在地・地域が未入力です (列C)',
+  'projects.err_missing_sector': '分野が未入力です (列D)',
+  'projects.err_invalid_sector': '分野が標準8区分に含まれていません',
+  'projects.err_invalid_investor_url': '事業主ウェブサイトのURL形式が無効です',
+  'potential.relatedOnly': '追跡案件に関連',
+  'potential.relatedProject': '関連',
+  'potential.emptyRelated': '追跡中のプロジェクトに関連する有望案件は見つかりませんでした',
+  'potential.emptyRelatedSub': '登録された事業名・事業主・分野・所在地に基づいて照合されます。',
 };
 

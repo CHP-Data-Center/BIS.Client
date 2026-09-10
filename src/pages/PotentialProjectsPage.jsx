@@ -223,6 +223,21 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
         {item.title}
       </h3>
 
+      {/* Related Projects tag */}
+      {item.related_projects?.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4, marginBottom: 6 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 6,
+            background: 'rgba(99, 102, 241, 0.12)', color: '#4f46e5',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+          }}>
+            <Sparkles size={11} />
+            <span>{t('potential.relatedProject')}: {item.related_projects.join(', ')}</span>
+          </span>
+        </div>
+      )}
+
       {/* Chi tiết dữ liệu */}
       <div className="potential-data-rows">
         {item.investor && (
@@ -660,6 +675,7 @@ export default function PotentialProjectsPage() {
   }, [data.items]);
 
   const [page, setPage] = useState(1);
+  const [relatedOnly, setRelatedOnly] = useState(false);
 
   // Tự động hoàn lại bộ lọc về '' nếu loại nguồn được chọn không thuộc gói đã mua
   useEffect(() => {
@@ -742,6 +758,7 @@ export default function PotentialProjectsPage() {
       title: filterName,
       province: filterLocation,
       investor: filterInvestor,
+      relatedOnly,
       page,
       size: PAGE_SIZE,
     });
@@ -769,6 +786,7 @@ export default function PotentialProjectsPage() {
         title: filterName,
         province: filterLocation,
         investor: filterInvestor,
+        relatedOnly,
         page,
         size: PAGE_SIZE,
         forceFresh,
@@ -790,7 +808,7 @@ export default function PotentialProjectsPage() {
         setIsPageFetching(false);
       }
     }
-  }, [filterSectors, kind, minAmount, filterName, filterLocation, filterInvestor, page, data.items?.length]);
+  }, [filterSectors, kind, minAmount, filterName, filterLocation, filterInvestor, relatedOnly, page, data.items?.length]);
 
   useEffect(() => {
     // 1. Nếu có sẵn trong cache -> cập nhật ngay tức thì 0ms, không cần debounce
@@ -801,6 +819,7 @@ export default function PotentialProjectsPage() {
       title: filterName,
       province: filterLocation,
       investor: filterInvestor,
+      relatedOnly,
       page,
       size: PAGE_SIZE,
     });
@@ -971,8 +990,9 @@ export default function PotentialProjectsPage() {
     if (filterName.trim()) count++;
     if (filterLocation.trim()) count++;
     if (filterInvestor.trim()) count++;
+    if (relatedOnly) count++;
     return count;
-  }, [filterSectors.length, kind, minAmount, filterName, filterLocation, filterInvestor]);
+  }, [filterSectors.length, kind, minAmount, filterName, filterLocation, filterInvestor, relatedOnly]);
 
   // Đặt lại toàn bộ bộ lọc về trạng thái ban đầu
   const resetAllFilters = useCallback(() => {
@@ -982,6 +1002,7 @@ export default function PotentialProjectsPage() {
     setFilterName('');
     setFilterLocation('');
     setFilterInvestor('');
+    setRelatedOnly(false);
     setPage(1);
   }, []);
 
@@ -1171,8 +1192,8 @@ export default function PotentialProjectsPage() {
           />
         </div>
 
-        {/* Hàng 3: Loại nguồn + Giá trị tối thiểu + Preset buttons */}
-        <div className="potential-filter-subrow">
+        {/* Hàng 3: Loại nguồn + Lọc liên quan + Giá trị tối thiểu */}
+        <div className="potential-filter-subrow" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           {/* Nút lọc nguồn */}
           <div className="potential-kind-group">
             <span className="potential-subrow-label">
@@ -1212,6 +1233,29 @@ export default function PotentialProjectsPage() {
               })}
             </div>
           </div>
+
+          {/* Nút bật/tắt Lọc liên quan dự án đang theo dõi */}
+          <button
+            type="button"
+            onClick={() => {
+              setRelatedOnly((prev) => !prev);
+              setPage(1);
+            }}
+            title={relatedOnly ? 'Đang chỉ hiện tin liên quan dự án của bạn (Bấm để xem tất cả)' : 'Bấm để chỉ lọc tin liên quan dự án của bạn'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '6px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
+              cursor: 'pointer', transition: 'all 0.15s ease',
+              border: relatedOnly ? '1px solid #6366f1' : '1px solid var(--border)',
+              background: relatedOnly ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-surface-2)',
+              color: relatedOnly ? '#4f46e5' : 'var(--text-secondary)',
+              boxShadow: relatedOnly ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
+            }}
+          >
+            <Sparkles size={13} style={{ color: relatedOnly ? '#4f46e5' : 'var(--text-muted)' }} />
+            <span>{t('potential.relatedOnly')}</span>
+            {relatedOnly && <Check size={13} style={{ strokeWidth: 3 }} />}
+          </button>
 
           {/* Lọc giá tối thiểu & Presets (Chỉ hiện khi có quyền xem Đấu thầu công) */}
           {canProc && (
@@ -1285,23 +1329,43 @@ export default function PotentialProjectsPage() {
         </div>
       ) : displayItems.length === 0 ? (
         <div className="empty-state" style={{ minHeight: 320, background: 'var(--bg-surface)', borderRadius: 20, border: '1px solid var(--border)' }}>
-          <div className="empty-icon">🎯</div>
-          <div className="empty-title">{t('potential.empty')}</div>
-          <div className="empty-sub">{t('potential.emptySub')}</div>
-          {activeFiltersCount > 0 && (
-            <button
-              type="button"
-              onClick={resetAllFilters}
-              style={{
-                marginTop: 14, padding: '9px 18px', borderRadius: 10, border: '1px solid var(--border)',
-                background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700,
-                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              <RotateCcw size={14} />
-              <span>{t('potential.clearFilters') || 'Đặt lại tất cả bộ lọc'}</span>
-            </button>
-          )}
+          <div className="empty-icon">{relatedOnly ? '🔍' : '🎯'}</div>
+          <div className="empty-title">
+            {relatedOnly ? (t('potential.emptyRelated') || 'Không tìm thấy tin liên quan đến các dự án bạn đang theo dõi') : t('potential.empty')}
+          </div>
+          <div className="empty-sub">
+            {relatedOnly ? (t('potential.emptyRelatedSub') || 'Hệ thống đối chiếu theo Tên, Chủ đầu tư, Lĩnh vực và Địa phương của các dự án bạn đã khai báo.') : t('potential.emptySub')}
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {relatedOnly && (
+              <button
+                type="button"
+                onClick={() => { setRelatedOnly(false); setPage(1); }}
+                style={{
+                  padding: '9px 18px', borderRadius: 10, border: 'none',
+                  background: 'var(--brand-500)', color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
+                }}
+              >
+                <span>Xem tất cả tin tiềm năng</span>
+              </button>
+            )}
+            {activeFiltersCount > 0 && (
+              <button
+                type="button"
+                onClick={resetAllFilters}
+                style={{
+                  padding: '9px 18px', borderRadius: 10, border: '1px solid var(--border)',
+                  background: 'var(--bg-surface-2)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                <RotateCcw size={14} />
+                <span>{t('potential.clearFilters') || 'Đặt lại tất cả bộ lọc'}</span>
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div style={{ position: 'relative' }}>

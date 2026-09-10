@@ -5,7 +5,7 @@ import {
   FolderKanban, Plus, Trash2, Calendar, Filter,
   Sparkles, Loader2, Layers, ChevronRight, ChevronLeft,
   UploadCloud, Building2, ShoppingBag, Newspaper, Search, FileSpreadsheet, Download,
-  LayoutGrid, List, Maximize2, Pencil
+  LayoutGrid, List, Maximize2, Pencil, Globe, ExternalLink
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { projectsService } from '../services/projects';
@@ -61,6 +61,7 @@ export default function ProjectsPage() {
   const [name, setName] = useState('');
   const [keywordFilter, setKeywordFilter] = useState('');
   const [investor, setInvestor] = useState('');
+  const [investorUrl, setInvestorUrl] = useState('');
   const [sector, setSector] = useState('');
   const [province, setProvince] = useState('');
   const [status, setStatus] = useState('watching');
@@ -196,6 +197,7 @@ export default function ProjectsPage() {
         keyword_filter: keywordFilter.trim() || name.trim(),
         // Chỉ gửi trường có giá trị: gửi chuỗi rỗng sẽ ghi đè thành rỗng chứ không phải "bỏ qua".
         investor: investor.trim() || undefined,
+        investor_url: investorUrl.trim() || undefined,
         sector: sector || undefined,
         province: province.trim() || undefined,
         status: status || undefined,
@@ -205,7 +207,7 @@ export default function ProjectsPage() {
         progress: progress.trim() || undefined,
         note: note.trim() || undefined,
       });
-      setName(''); setKeywordFilter(''); setInvestor('');
+      setName(''); setKeywordFilter(''); setInvestor(''); setInvestorUrl('');
       setSector(''); setProvince(''); setStatus('watching');
       setWorkItems(''); setTotalInvestment(''); setCapitalSource(''); setProgress(''); setNote('');
       setShowCreateModal(false);
@@ -661,7 +663,13 @@ export default function ProjectsPage() {
                           display: 'flex', alignItems: 'center', gap: 5,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
-                          <Building2 size={11} style={{ flex: 'none' }} /> {p.investor}
+                          <Building2 size={11} style={{ flex: 'none' }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.investor}</span>
+                          {p.investor_url && (
+                            <span title={`Website: ${p.investor_url}`} style={{ color: 'var(--brand-600)', flex: 'none', display: 'inline-flex' }}>
+                              <Globe size={11} />
+                            </span>
+                          )}
                         </div>
                       )}
 
@@ -838,9 +846,27 @@ export default function ProjectsPage() {
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       Chủ đầu tư:
                     </span>
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: 1.45 }}>
-                      {selectedProject.investor || '—'}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: 1.45 }}>
+                        {selectedProject.investor || '—'}
+                      </span>
+                      {selectedProject.investor_url && (
+                        <a
+                          href={selectedProject.investor_url.startsWith('http') ? selectedProject.investor_url : `https://${selectedProject.investor_url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`Website: ${selectedProject.investor_url}`}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            fontSize: 11.5, fontWeight: 700, color: 'var(--brand-600)',
+                            textDecoration: 'none', background: 'var(--brand-50, #eff6ff)',
+                            padding: '2px 8px', borderRadius: 6, border: '1px solid var(--brand-200, #bfdbfe)'
+                          }}
+                        >
+                          <Globe size={12} /> Website <ExternalLink size={10} />
+                        </a>
+                      )}
+                    </div>
                   </div>
 
                   <div style={{ flex: '0 0 auto', minWidth: 90 }}>
@@ -949,6 +975,17 @@ export default function ProjectsPage() {
                 </div>
               ) : (
                 <div>
+                  {/* Timeline logic hint */}
+                  <div style={{
+                    fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 10,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '6px 12px', borderRadius: 8, background: 'var(--bg-surface-2)',
+                    border: '1px solid var(--border-subtle)'
+                  }}>
+                    <Sparkles size={13} style={{ color: 'var(--brand-500)', flex: 'none' }} />
+                    <span>{t('projects.timelineLogicHint')}</span>
+                  </div>
+
                   {/* Timeline Control Toolbar */}
                   <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1456,6 +1493,20 @@ export default function ProjectsPage() {
                   value={investor}
                   onChange={(e) => setInvestor(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <label className="form-label">{t('projects.investorUrl')}</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder={t('projects.investorUrlPlaceholder')}
+                  value={investorUrl}
+                  onChange={(e) => setInvestorUrl(e.target.value)}
+                />
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                  {t('projects.investorUrlHint')}
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

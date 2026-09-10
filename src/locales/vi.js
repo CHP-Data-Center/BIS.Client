@@ -1264,5 +1264,22 @@ export default {
   'search.resultsCount': 'kết quả',
   'auth.loginTitle': 'Đăng nhập Hệ thống BIS',
   'projects.profileTitleShort': 'Hồ sơ năng lực',
+
+  // ── Tracked Projects & Potential Projects Handover ──
+  'projects.investorUrl': 'Website chủ đầu tư',
+  'projects.investorUrlPlaceholder': 'vd: acv.vn hoặc https://acv.vn',
+  'projects.investorUrlHint': 'Hệ thống sẽ tự động quét tin tức, bài viết từ website này',
+  'projects.timelineLogicHint': 'Tin tức được đối chiếu: (Tên dự án HOẶC Chủ đầu tư) VÀ (Lĩnh vực HOẶC Vị trí)',
+  'projects.colInvestorUrl': 'Website CĐT',
+  'projects.err_missing_name': 'Thiếu tên dự án (Cột A)',
+  'projects.err_missing_investor': 'Thiếu thông tin Chủ đầu tư (Cột B)',
+  'projects.err_missing_province': 'Thiếu thông tin Vị trí / Địa phương (Cột C)',
+  'projects.err_missing_sector': 'Thiếu thông tin Lĩnh vực (Cột D)',
+  'projects.err_invalid_sector': 'Lĩnh vực không thuộc danh mục chuẩn (8 nhóm ngành)',
+  'projects.err_invalid_investor_url': 'Website chủ đầu tư không đúng định dạng URL hợp lệ',
+  'potential.relatedOnly': 'Liên quan dự án tôi',
+  'potential.relatedProject': 'Liên quan',
+  'potential.emptyRelated': 'Không tìm thấy tin liên quan đến các dự án bạn đang theo dõi',
+  'potential.emptyRelatedSub': 'Hệ thống đối chiếu theo Tên, Chủ đầu tư, Lĩnh vực và Địa phương của các dự án bạn đã khai báo.',
 };
 

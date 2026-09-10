@@ -1264,5 +1264,22 @@ export default {
   'common.tryAgain': 'Try again',
   'search.resultsCount': 'results',
   'projects.profileTitleShort': 'Profile',
+
+  // ── Tracked Projects & Potential Projects Handover ──
+  'projects.investorUrl': 'Project Owner Website',
+  'projects.investorUrlPlaceholder': 'e.g. acv.vn or https://acv.vn',
+  'projects.investorUrlHint': 'The system will automatically crawl news and updates from this website',
+  'projects.timelineLogicHint': 'Articles matched by: (Project name OR Owner) AND (Sector OR Location)',
+  'projects.colInvestorUrl': 'Owner Website',
+  'projects.err_missing_name': 'Missing project name (Column A)',
+  'projects.err_missing_investor': 'Missing project owner (Column B)',
+  'projects.err_missing_province': 'Missing location / province (Column C)',
+  'projects.err_missing_sector': 'Missing sector (Column D)',
+  'projects.err_invalid_sector': 'Sector not in standard catalog (8 sectors)',
+  'projects.err_invalid_investor_url': 'Project owner website is not a valid URL',
+  'potential.relatedOnly': 'Related to my projects',
+  'potential.relatedProject': 'Related',
+  'potential.emptyRelated': 'No potential projects related to your tracked projects found',
+  'potential.emptyRelatedSub': 'Articles are matched against Name, Owner, Sector, and Location of your tracked projects.',
 };
 
