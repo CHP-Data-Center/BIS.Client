@@ -36,6 +36,16 @@ export const articlesService = {
     return data; // ArticlePage: { items, total, page, size }
   },
 
+  /** Lấy danh sách các nguồn bài viết đã duyệt phục vụ bộ lọc */
+  async getSources(rawParams = {}) {
+    const cacheKey = `articles:sources:${JSON.stringify(rawParams)}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+    const { data } = await api.get('/articles/sources', { params: rawParams });
+    apiCache.set(cacheKey, data, 120000); // cache 2 phút
+    return data;
+  },
+
   /** Lấy chi tiết 1 bài viết theo ID (hiển thị theo ngôn ngữ đang chọn nếu có bản dịch) */
   async getArticle(articleId, force = false) {
     const lang = currentLang();

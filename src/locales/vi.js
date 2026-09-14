@@ -143,6 +143,8 @@ export default {
 
   // ── News Page ──
   'news.title': 'Tin Tức & Báo Cáo',
+  'news.source': 'Nguồn báo chí:',
+  'news.allSources': 'Tất cả nguồn',
   'news.sort': 'Sắp xếp:',
   'news.sortNewest': 'Mới nhất',
   'news.sortMatch': 'Khớp nhiều nhất',

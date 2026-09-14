@@ -43,6 +43,17 @@ export default function ArticlePage() {
       setBookmarked(navStateArticle.is_bookmarked);
       articlesService.markRead(navStateArticle.id).catch(() => {});
       setLoading(false);
+
+      // Nếu navStateArticle chưa có ảnh, tự động tải bản mới nhất từ backend để lấy ảnh
+      if (!navStateArticle.image_url) {
+        articlesService.getArticle(id)
+          .then((fresh) => {
+            if (fresh && fresh.image_url) {
+              setArticle((prev) => ({ ...prev, ...fresh, image_url: fresh.image_url }));
+            }
+          })
+          .catch(() => {});
+      }
     } else {
       setLoading(true);
       articlesService.getArticle(id)
@@ -196,7 +207,12 @@ export default function ArticlePage() {
               overflow: 'hidden',
             }}>
               {article.image_url ? (
-                <img src={article.image_url} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img
+                  src={article.image_url}
+                  alt={article.title}
+                  referrerPolicy="no-referrer"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               ) : (
                 <span style={{ fontSize: 72, filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.08))' }}>📰</span>
               )}

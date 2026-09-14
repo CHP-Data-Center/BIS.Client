@@ -143,6 +143,8 @@ export default {
 
   // ── News Page ──
   'news.title': 'News & Market Reports',
+  'news.source': 'Press Source:',
+  'news.allSources': 'All Sources',
   'news.sort': 'Sort by:',
   'news.sortNewest': 'Newest',
   'news.sortMatch': 'Most matched',

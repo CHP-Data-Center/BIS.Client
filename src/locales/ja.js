@@ -143,6 +143,8 @@ export default {
 
   // ── News Page ──
   'news.title': 'ニュース・市場動向',
+  'news.source': '情報源:',
+  'news.allSources': 'すべての情報源',
   'news.sort': '並び替え:',
   'news.sortNewest': '新着順',
   'news.sortMatch': '一致数順',
