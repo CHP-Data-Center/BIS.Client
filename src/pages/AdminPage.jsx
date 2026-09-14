@@ -986,13 +986,19 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <label className="form-label">{t('admin.sourceUrl')} *</label>
-                    <input className="form-input" placeholder="https://vnexpress.net/rss/kinh-doanh.rss" value={newSource.url} onChange={e => setNewSource({ ...newSource, url: e.target.value })} required />
+                    <input className="form-input" placeholder="Link RSS hoặc trang chuyên mục tin tức" title="Dán link RSS (vd https://vnexpress.net/rss/kinh-doanh.rss) hoặc link trang chuyên mục tin tức — hệ thống tự nhận diện" value={newSource.url} onChange={e => setNewSource({ ...newSource, url: e.target.value })} required />
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
                     {isSuperAdmin ? t('admin.addSourceBtn') : tUI('ui.gui-de-xuat')}
                   </button>
                 </form>
+                {/* Trước đây form này ngầm coi mọi link là RSS: dán trang chủ báo vào thì nguồn
+                    ra 0 bài mà nhật ký crawl vẫn ghi "thành công". Nay máy chủ tự nhận diện. */}
+                <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  Có thể dán <b>link RSS</b> hoặc <b>trang chuyên mục tin tức</b> — hệ thống tự nhận diện.
+                  Trang chặn truy cập tự động (yêu cầu chạy JavaScript) sẽ báo lỗi kèm lý do trong nhật ký crawl.
+                </p>
               </div>
 
               {/* Sources Table */}

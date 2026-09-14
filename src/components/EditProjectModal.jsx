@@ -1,7 +1,7 @@
 // src/components/EditProjectModal.jsx
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Sparkles, Loader2, Save, Pencil, Building2, MapPin, Layers, Briefcase, DollarSign, Calendar, FileText } from 'lucide-react';
+import { X, Sparkles, Loader2, Save, Pencil, Building2, MapPin, Layers, Briefcase, DollarSign, Calendar, FileText, Globe } from 'lucide-react';
 import { projectsService } from '../services/projects';
 import { useLang } from '../context/LanguageContext';
 
@@ -17,6 +17,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
   const [name, setName] = useState('');
   const [keywordFilter, setKeywordFilter] = useState('');
   const [investor, setInvestor] = useState('');
+  const [investorUrl, setInvestorUrl] = useState('');
   const [sector, setSector] = useState('');
   const [province, setProvince] = useState('');
   const [status, setStatus] = useState('watching');
@@ -34,6 +35,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
       setName(project.name || '');
       setKeywordFilter(project.keyword_filter || '');
       setInvestor(project.investor || '');
+      setInvestorUrl(project.investor_url || '');
       setSector(project.sector || '');
       setProvince(project.province || '');
       setStatus(project.status || 'watching');
@@ -87,6 +89,10 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
       name: name.trim(),
       keyword_filter: keywordFilter.trim() || name.trim(),
       investor: investor.trim() || null,
+      // Gửi nguyên thứ người dùng gõ — máy chủ tự chuẩn hóa ("acv.vn" → "https://acv.vn/")
+      // và trả lỗi 400 kèm lý do nếu không dùng được. Không tự kiểm lại ở đây: hai bộ luật
+      // sớm muộn sẽ lệch nhau.
+      investor_url: investorUrl.trim() || null,
       sector: sector || null,
       province: province.trim() || null,
       status: status || 'watching',
@@ -354,6 +360,34 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                 Tỉnh/thành phố hoặc khu vực địa lý thực hiện dự án.
               </div>
+            </div>
+          </div>
+
+          {/* Website chủ đầu tư — hệ thống crawl trang tin trên đó */}
+          <div>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+              <Globe size={13} style={{ color: 'var(--brand-600)' }} /> Website chủ đầu tư
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={investorUrl}
+              onChange={(e) => setInvestorUrl(e.target.value)}
+              placeholder="Ví dụ: vietnamairport.vn hoặc trang chuyên mục tin tức của chủ đầu tư"
+              style={{
+                width: '100%',
+                padding: '9px 12px',
+                borderRadius: 10,
+                border: '1px solid var(--border)',
+                background: 'var(--bg-surface-2)',
+                color: 'var(--text-primary)',
+                fontSize: 13,
+                boxSizing: 'border-box',
+              }}
+            />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              Hệ thống sẽ theo dõi trang tin trên website này. Tốt nhất dán link trang chuyên mục tin tức
+              hoặc link RSS; trang chủ cũng được, hệ thống tự lọc lấy các bài viết.
             </div>
           </div>
 

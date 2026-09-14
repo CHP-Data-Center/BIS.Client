@@ -839,6 +839,7 @@ export default function PotentialProjectsPage() {
       id: p.id,
       name: p.name,
       note: p.note || '',
+      originRef: p.origin_ref || '',
       normName: normalizeText(p.name),
       normKw: normalizeText(p.keyword_filter),
     }));
@@ -851,7 +852,9 @@ export default function PotentialProjectsPage() {
     if (!itemNorm && !key) return null;
 
     return normalizedUserProjects.find((p) => {
-      // 1. So khớp chính xác qua mã ref đã lưu trong note
+      // 1. So khớp chính xác qua mã mục gốc. `origin_ref` là cột riêng; dự án tạo theo lối
+      //    cũ mang mã trong ghi chú dạng "[ref:...]" — vẫn nhận để không mất trạng thái.
+      if (key && p.originRef === key) return true;
       if (key && p.note && p.note.includes(`[ref:${key}]`)) return true;
       // 2. So khớp theo tên / từ khóa dự án
       if (!itemNorm) return false;
@@ -936,8 +939,14 @@ export default function PotentialProjectsPage() {
           // phẩy thành các thẻ dài dòng vô nghĩa.
           investor: item.investor || undefined,
           sector: item.sectors?.[0] || undefined,
+          // Gói thầu KHLCNT không có trường địa phương: để trống thì máy chủ tự suy tỉnh từ
+          // tiêu đề + chủ đầu tư ("..., tỉnh Vĩnh Long").
           province: item.province || undefined,
-          note: `[ref:${key}]`,
+          // Link về gói thầu / dự án ODA / bài báo gốc — hiện ở thẻ dự án.
+          source_url: item.url || undefined,
+          // KHÔNG nhét mã vào ghi chú như trước: chuỗi "[ref:procurement:...]" hiện nguyên
+          // văn ở mục "Ghi chú" trên thẻ dự án.
+          origin_ref: key,
         });
         setTrackedKeys((cur) => new Set(cur).add(key));
         setUserProjects((cur) => [created, ...cur]);

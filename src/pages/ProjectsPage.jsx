@@ -7,7 +7,7 @@ import {
   UploadCloud, Building2, ShoppingBag, Newspaper, Search, FileSpreadsheet, Download,
   LayoutGrid, List, Maximize2, Pencil
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { projectsService } from '../services/projects';
 import { potentialService } from '../services/potential';
 import { useLang } from '../context/LanguageContext';
@@ -16,6 +16,40 @@ import ProjectImportModal from '../components/ProjectImportModal';
 import ProcurementListModal from '../components/ProcurementListModal';
 import EditProjectModal from '../components/EditProjectModal';
 import { tUI } from '../locales';
+
+// Chỉ render link khi là http/https — `javascript:` trong href là XSS. Máy chủ đã kiểm lúc lưu;
+// đây là lớp thứ hai cho dữ liệu cũ hoặc bản còn nằm trong cache trình duyệt.
+const laLinkAnToan = (u) => typeof u === 'string' && /^https?:\/\//i.test(u);
+
+// Mã mục gốc "<kind>:<ref>" → trang chi tiết NGAY TRONG ứng dụng, nếu loại đó có trang riêng.
+const trangNoiBoCuaNguon = (originRef) => {
+  const i = (originRef || '').indexOf(':');
+  if (i < 0) return null;
+  const kind = originRef.slice(0, i);
+  const ref = encodeURIComponent(originRef.slice(i + 1));
+  if (kind === 'procurement') return { to: `/procurement/${ref}`, label: 'Xem chi tiết gói thầu' };
+  if (kind === 'article') return { to: `/article/${ref}`, label: 'Xem bài báo' };
+  return null;
+};
+
+const nhanLinkNguon = (originRef) => {
+  const kind = (originRef || '').split(':')[0];
+  if (kind === 'procurement') return 'Mở trên Hệ thống mạng đấu thầu quốc gia';
+  if (kind === 'oda') return 'Mở trang dự án ODA';
+  if (kind === 'article') return 'Mở bài báo gốc';
+  return 'Mở liên kết nguồn';
+};
+
+// Dự án tạo theo lối cũ mang chuỗi "[ref:procurement:...]" trong ghi chú. Máy chủ đã tách nó
+// khi trả dữ liệu, nhưng danh sách có thể vẫn nằm trong apiCache (5 phút) từ trước bản sửa.
+// Cùng mẫu với `_MAU_REF_CU` ở backend (project_service.py): chỉ xóa đúng mã máy sinh, không
+// xóa một đoạn "[ref: ...]" bất kỳ mà người dùng tự gõ vào ghi chú.
+const lamSachGhiChu = (note) => (note || '').replace(/\[ref:[a-z]{2,16}:[A-Za-z0-9._-]{1,100}\]/g, '').trim();
+
+const LINK_STYLE = {
+  display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4,
+  fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', textDecoration: 'none',
+};
 
 // Nhãn + màu trạng thái nghiệp vụ của dự án theo dõi.
 const STATUS_META = {
@@ -841,6 +875,17 @@ export default function ProjectsPage() {
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: 1.45 }}>
                       {selectedProject.investor || '—'}
                     </span>
+                    {laLinkAnToan(selectedProject.investor_url) && (
+                      <a
+                        href={selectedProject.investor_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ ...LINK_STYLE, display: 'flex' }}
+                        title="Hệ thống đang theo dõi trang tin trên website này"
+                      >
+                        🌐 Website chủ đầu tư ↗
+                      </a>
+                    )}
                   </div>
 
                   <div style={{ flex: '0 0 auto', minWidth: 90 }}>
@@ -911,6 +956,26 @@ export default function ProjectsPage() {
                     </div>
                   )}
 
+                  {(trangNoiBoCuaNguon(selectedProject.origin_ref) || laLinkAnToan(selectedProject.source_url)) && (
+                    <div style={{ width: '100%', flex: '1 1 100%', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 2 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
+                        Nguồn gốc:
+                      </span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', alignItems: 'center' }}>
+                        {trangNoiBoCuaNguon(selectedProject.origin_ref) && (
+                          <Link to={trangNoiBoCuaNguon(selectedProject.origin_ref).to} style={LINK_STYLE}>
+                            📄 {trangNoiBoCuaNguon(selectedProject.origin_ref).label}
+                          </Link>
+                        )}
+                        {laLinkAnToan(selectedProject.source_url) && (
+                          <a href={selectedProject.source_url} target="_blank" rel="noopener noreferrer" style={LINK_STYLE}>
+                            🔗 {nhanLinkNguon(selectedProject.origin_ref)} ↗
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {selectedProject.work_items && (
                     <div style={{ width: '100%', flex: '1 1 100%', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 2 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
@@ -922,13 +987,13 @@ export default function ProjectsPage() {
                     </div>
                   )}
 
-                  {selectedProject.note && (
+                  {lamSachGhiChu(selectedProject.note) && (
                     <div style={{ width: '100%', flex: '1 1 100%', borderTop: selectedProject.work_items ? 'none' : '1px dashed var(--border-subtle)', paddingTop: selectedProject.work_items ? 0 : 10, marginTop: selectedProject.work_items ? 0 : 2 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                         Ghi chú:
                       </span>
                       <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                        📝 {selectedProject.note}
+                        📝 {lamSachGhiChu(selectedProject.note)}
                       </span>
                     </div>
                   )}
