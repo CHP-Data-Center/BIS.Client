@@ -10,8 +10,9 @@ import { stripAccents } from '../utils/format';
 
 function isTagMatched(tag, query) {
   if (!query || !query.trim()) return false;
+  const qClean = query.trim().replace(/^#/, '');
   const normTag = stripAccents(tag);
-  const normQ = stripAccents(query.trim());
+  const normQ = stripAccents(qClean);
   return normTag.includes(normQ);
 }
 
@@ -149,6 +150,7 @@ export default function NewsCard({ article, index = 0 }) {
           <img
             src={article.image_url}
             alt={titleText}
+            referrerPolicy="no-referrer"
             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
           />
         ) : (
@@ -240,7 +242,7 @@ export default function NewsCard({ article, index = 0 }) {
                   key={kw}
                   onClick={(e) => {
                     e.stopPropagation();
-                    nav(`/news/all?q=${encodeURIComponent(kw)}`);
+                    nav(`/news/all?q=${encodeURIComponent('#' + kw)}`);
                   }}
                   style={{
                     fontSize: 10,
@@ -333,7 +335,7 @@ export default function NewsCard({ article, index = 0 }) {
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowOverflow(false);
-                            nav(`/news/all?q=${encodeURIComponent(kw)}`);
+                            nav(`/news/all?q=${encodeURIComponent('#' + kw)}`);
                           }}
                           style={{
                             fontSize: 10,

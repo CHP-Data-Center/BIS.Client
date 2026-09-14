@@ -52,7 +52,7 @@ export const projectsService = {
 
   /**
    * Thêm dự án theo dõi.
-   * @param {{name, keyword_filter, investor?, sector?, province?, status?, note?}} payload
+   * @param {{name, keyword_filter, investor?, investor_url?, sector?, province?, status?, note?}} payload
    */
   async createProject(payload) {
     const { data } = await api.post('/projects', payload);

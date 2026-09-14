@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import {
-  Search, Filter, ChevronRight, ChevronDown, Bookmark, BookmarkCheck,
+  Search, Filter, ChevronRight, ChevronDown, ChevronUp, Bookmark, BookmarkCheck,
   RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag,
-  Newspaper, FileText, X, LayoutGrid, List, Cpu, ExternalLink
+  Newspaper, FileText, X, LayoutGrid, List, Cpu, ExternalLink, Tag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import { articlesService } from '../services/articles';
+import { keywordsService } from '../services/keywords';
 import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
@@ -305,8 +306,10 @@ export default function NewsPage() {
   const { source = 'all' } = useParams();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isPersonalUser, hasSourceAccess } = useAuth();
+  const { user, isPersonalUser, hasSourceAccess } = useAuth();
   const scrollContainerRef = useRef(null);
+  const tagContainerRef = useRef(null);
+  const [canExpand, setCanExpand] = useState(false);
 
   if (source !== 'all' && source !== 'press' && !hasSourceAccess(source)) {
     return <Navigate to="/upgrade" replace />;
@@ -335,32 +338,75 @@ export default function NewsPage() {
   const [dateFrom, setDateFrom]       = useState(searchParams.get('from') || '');
   const [dateTo, setDateTo]           = useState(searchParams.get('to') || '');
   const [onlyMyKw, setOnlyMyKw]       = useState(false);
+  const [selectedSourceId, setSelectedSourceId] = useState(searchParams.get('source_id') || '');
+  const [availableSources, setAvailableSources] = useState([]);
+  const [loadingSources, setLoadingSources]     = useState(false);
+  const [userKeywords, setUserKeywords]         = useState([]);
+  const [kwExpanded, setKwExpanded]             = useState(false);
   // Ngôn ngữ TOÀN CỤC (header 🌐): đổi là menu + nhãn + nội dung tin đổi theo.
   const { lang, setLang, t } = useLang();
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const srcConfig = SOURCE_MAP[source] || SOURCE_MAP.all;
 
-  const filtersRef = useRef({ page: 1, search: '', sortBy: 'newest', dateFrom: '', dateTo: '', onlyMyKw: false, lang: 'vi' });
+  // Lấy danh sách từ khóa đã lưu của người dùng
   useEffect(() => {
-    filtersRef.current = { page, search, sortBy, dateFrom, dateTo, onlyMyKw, lang };
+    let isMounted = true;
+    keywordsService.getKeywords()
+      .then(res => {
+        if (isMounted && Array.isArray(res)) {
+          setUserKeywords(res);
+        }
+      })
+      .catch(err => console.warn('Failed to load user keywords:', err));
+    return () => { isMounted = false; };
+  }, [lang, user?.id]);
+
+  useEffect(() => {
+    if (tagContainerRef.current) {
+      setCanExpand(tagContainerRef.current.scrollHeight > 56);
+    }
+  }, [userKeywords, kwExpanded]);
+
+  // Lấy danh sách nguồn báo chí khi ở mục tin bài
+  useEffect(() => {
+    if (srcConfig.api !== 'articles') return;
+    let isMounted = true;
+    setLoadingSources(true);
+    articlesService.getSources(srcConfig.type ? { source_type: srcConfig.type } : {})
+      .then(res => {
+        if (isMounted) setAvailableSources(res || []);
+      })
+      .catch(err => console.warn('Failed to load sources list:', err))
+      .finally(() => {
+        if (isMounted) setLoadingSources(false);
+      });
+    return () => { isMounted = false; };
+  }, [srcConfig.api, srcConfig.type]);
+
+  const filtersRef = useRef({ page: 1, search: '', sortBy: 'newest', dateFrom: '', dateTo: '', onlyMyKw: false, selectedSourceId: '', lang: 'vi' });
+  useEffect(() => {
+    filtersRef.current = { page, search, sortBy, dateFrom, dateTo, onlyMyKw, selectedSourceId, lang };
   });
 
-  const updateQueryParams = useCallback((newQ, newFrom, newTo) => {
+  const updateQueryParams = useCallback((newQ, newFrom, newTo, newSourceId) => {
     const p = new URLSearchParams();
     if (newQ) p.set('q', newQ);
     if (newFrom) p.set('from', newFrom);
     if (newTo) p.set('to', newTo);
+    const sid = newSourceId !== undefined ? newSourceId : selectedSourceId;
+    if (sid) p.set('source_id', sid);
     const qs = p.toString();
     nav(`/news/${source}${qs ? `?${qs}` : ''}`, { replace: true });
-  }, [nav, source]);
+  }, [nav, source, selectedSourceId]);
 
-  const fetchArticles = useCallback(async (p = 1, overrideSearch = null, force = false, overrideDates = null) => {
+  const fetchArticles = useCallback(async (p = 1, overrideSearch = null, force = false, overrideFilters = null) => {
     setLoading(true);
     try {
       const q = (overrideSearch !== null ? overrideSearch : search).trim();
-      const from = overrideDates ? overrideDates.from : dateFrom;
-      const to = overrideDates ? overrideDates.to : dateTo;
+      const from = overrideFilters && overrideFilters.from !== undefined ? overrideFilters.from : dateFrom;
+      const to = overrideFilters && overrideFilters.to !== undefined ? overrideFilters.to : dateTo;
+      const sid = overrideFilters && overrideFilters.sourceId !== undefined ? overrideFilters.sourceId : selectedSourceId;
 
       if (from && to && from > to) {
         setLoading(false);
@@ -394,6 +440,7 @@ export default function NewsPage() {
         const params = { page: p, size: PAGE_SIZE, sort: sortBy, only_my_keywords: onlyMyKw };
         if (q)              params.q           = q;
         if (srcConfig.type) params.source_type = srcConfig.type;
+        if (sid)            params.source_id   = Number(sid);
         if (from)           params.date_from   = from;
         if (to)             params.date_to     = to;
         if (lang !== 'vi')  params.lang        = lang; // bài có bản dịch hiện EN/JA
@@ -411,7 +458,7 @@ export default function NewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw, lang]);
+  }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw, selectedSourceId, lang]);
 
   const fetchBookmarks = useCallback(async () => {
     setLoadingBookmarks(true);
@@ -442,10 +489,12 @@ export default function NewsPage() {
     const q = searchParams.get('q') || '';
     const from = searchParams.get('from') || '';
     const to = searchParams.get('to') || '';
+    const sid = searchParams.get('source_id') || '';
     setSearchInput(q);
     setSearch(q);
     setDateFrom(from);
     setDateTo(to);
+    setSelectedSourceId(sid);
     setOnlyBookmarked(false);
     setPage(1);
   }, [source, searchParams]);
@@ -454,7 +503,7 @@ export default function NewsPage() {
   useEffect(() => {
     if (dateFrom && dateTo && dateFrom > dateTo) return;
     fetchArticles(page);
-  }, [source, search, page, sortBy, dateFrom, dateTo, onlyMyKw, lang, fetchArticles]);
+  }, [source, search, page, sortBy, selectedSourceId, dateFrom, dateTo, onlyMyKw, lang, fetchArticles]);
 
   // Bookmarks & background update event listener
   useEffect(() => {
@@ -462,7 +511,7 @@ export default function NewsPage() {
 
     const onDataUpdated = () => {
       const f = filtersRef.current;
-      fetchArticles(f.page, f.search, true, { from: f.dateFrom, to: f.dateTo });
+      fetchArticles(f.page, f.search, true, { from: f.dateFrom, to: f.dateTo, sourceId: f.selectedSourceId });
       fetchBookmarks(true);
     };
     window.addEventListener('bis:data_updated', onDataUpdated);
@@ -474,8 +523,8 @@ export default function NewsPage() {
     const q = searchInput.trim();
     setSearch(q);
     setPage(1);
-    updateQueryParams(q, dateFrom, dateTo);
-    fetchArticles(1, q, true, { from: dateFrom, to: dateTo });
+    updateQueryParams(q, dateFrom, dateTo, selectedSourceId);
+    fetchArticles(1, q, true, { from: dateFrom, to: dateTo, sourceId: selectedSourceId });
   };
 
   const handleApplyDateRange = (fVal = dateFrom, tVal = dateTo) => {
@@ -483,8 +532,8 @@ export default function NewsPage() {
     setDateFrom(fVal);
     setDateTo(tVal);
     setPage(1);
-    updateQueryParams(search, fVal, tVal);
-    fetchArticles(1, search, true, { from: fVal, to: tVal });
+    updateQueryParams(search, fVal, tVal, selectedSourceId);
+    fetchArticles(1, search, true, { from: fVal, to: tVal, sourceId: selectedSourceId });
   };
 
   const getActivePreset = () => {
@@ -530,11 +579,12 @@ export default function NewsPage() {
     setSortBy('newest');
     setDateFrom('');
     setDateTo('');
+    setSelectedSourceId('');
     setOnlyMyKw(false);
     setOnlyBookmarked(false);
     setPage(1);
-    updateQueryParams('', '', '');
-    fetchArticles(1, '', true, { from: '', to: '' });
+    updateQueryParams('', '', '', '');
+    fetchArticles(1, '', true, { from: '', to: '', sourceId: '' });
   };
 
   const handlePageChange = (p) => {
@@ -709,6 +759,144 @@ export default function NewsPage() {
             {t('common.search')}
           </button>
         </form>
+
+        {/* Danh sách từ khóa đã lưu của người dùng (giới hạn 2 dòng, có mở rộng) */}
+        {(() => {
+          const defaultKws = ['cầu', 'cao tốc', 'đường sắt', 'đấu thầu', 'ODA'];
+          const activeKws = userKeywords.length > 0
+            ? [...new Set(userKeywords.map(k => k.display_term || k.term).filter(Boolean))]
+            : defaultKws;
+          if (!activeKws.length) return null;
+
+          return (
+            <div style={{ marginTop: -2 }}>
+              <div
+                ref={tagContainerRef}
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 4,
+                  maxHeight: kwExpanded ? 240 : 54,
+                  overflowY: kwExpanded ? 'auto' : 'hidden',
+                  transition: 'max-height 0.25s ease',
+                  paddingBottom: 2,
+                }}
+              >
+                {activeKws.map((kw) => {
+                  const tagText = kw.startsWith('#') ? kw : `#${kw}`;
+                  const rawTerm = kw.replace(/^#/, '').toLowerCase();
+                  const curSearch = (search || '').trim().toLowerCase();
+                  const isActive =
+                    curSearch === tagText.toLowerCase() ||
+                    curSearch === rawTerm ||
+                    curSearch === `#${rawTerm}`;
+
+                  return (
+                    <button
+                      key={kw}
+                      type="button"
+                      onClick={() => {
+                        if (isActive) {
+                          setSearchInput('');
+                          setSearch('');
+                          setPage(1);
+                          fetchArticles(1, '');
+                          updateQueryParams('', dateFrom, dateTo);
+                        } else {
+                          setSearchInput(tagText);
+                          setSearch(tagText);
+                          setPage(1);
+                          fetchArticles(1, tagText);
+                          updateQueryParams(tagText, dateFrom, dateTo);
+                        }
+                      }}
+                      style={{
+                        fontSize: 11,
+                        padding: '2.5px 8px',
+                        height: 24,
+                        borderRadius: 12,
+                        border: isActive ? '1px solid #2563eb' : '1px solid var(--border-subtle)',
+                        background: isActive
+                          ? 'linear-gradient(135deg, #2563eb, #1d4ed8)'
+                          : 'var(--bg-surface-2)',
+                        color: isActive ? '#fff' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        fontWeight: isActive ? 700 : 500,
+                        transition: 'all 0.15s ease',
+                        boxShadow: isActive ? '0 1px 4px rgba(37, 99, 235, 0.3)' : 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={`Lọc theo từ khóa ${tagText}`}
+                    >
+                      {tagText}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {(activeKws.length > 5 || canExpand) && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 3 }}>
+                  <button
+                    type="button"
+                    onClick={() => setKwExpanded((v) => !v)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: 10.5,
+                      color: 'var(--brand-600, #2563eb)',
+                      cursor: 'pointer',
+                      padding: '1px 4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {kwExpanded ? (
+                      <>
+                        Thu gọn <ChevronUp size={12} />
+                      </>
+                    ) : (
+                      <>
+                        Xem thêm ({activeKws.length}) <ChevronDown size={12} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Dropdown Lựa chọn Nguồn (khi xem báo chí) */}
+        {srcConfig.api === 'articles' && (
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>
+              {t('news.source')}
+            </label>
+            <select
+              id="select-news-source"
+              className="form-input"
+              style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
+              value={selectedSourceId}
+              onChange={e => {
+                const val = e.target.value;
+                setSelectedSourceId(val);
+                setPage(1);
+                updateQueryParams(search, dateFrom, dateTo, val);
+                fetchArticles(1, search, true, { from: dateFrom, to: dateTo, sourceId: val });
+              }}
+              disabled={loadingSources}
+            >
+              <option value="">{t('news.allSources')}</option>
+              {availableSources.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Dropdown Sắp xếp */}
         <div>

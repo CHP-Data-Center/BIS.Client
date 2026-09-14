@@ -33,12 +33,13 @@ export const potentialService = {
   /**
    * Danh sách dự án tiềm năng (có cache Client để chuyển tab không bị load lại)
    */
-  async list({ sectors, kinds, minAmount, title, province, investor, page = 1, size = 8, forceFresh = false } = {}) {
+  async list({ sectors, kinds, minAmount, title, province, investor, relatedOnly = false, page = 1, size = 8, forceFresh = false } = {}) {
     const t = (title || '').trim();
     const prov = (province || '').trim();
     const inv = (investor || '').trim();
+    const rel = relatedOnly ? 1 : 0;
 
-    const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${page}_${size}`;
+    const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${rel}_${page}_${size}`;
     if (!forceFresh) {
       const cached = apiCache.get(cacheKey);
       if (cached) return cached;
@@ -51,6 +52,7 @@ export const potentialService = {
     if (t) params.title = t;
     if (prov) params.province = prov;
     if (inv) params.investor = inv;
+    if (relatedOnly) params.related_only = true;
 
     const { data } = await api.get('/potential-projects', { params });
     apiCache.set(cacheKey, data, TTL_LIST);
@@ -58,11 +60,12 @@ export const potentialService = {
   },
 
   /** Lấy nhanh từ cache nếu có (trả về null nếu chưa có) */
-  getCachedList({ sectors, kinds, minAmount, title, province, investor, page = 1, size = 8 } = {}) {
+  getCachedList({ sectors, kinds, minAmount, title, province, investor, relatedOnly = false, page = 1, size = 8 } = {}) {
     const t = (title || '').trim();
     const prov = (province || '').trim();
     const inv = (investor || '').trim();
-    const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${page}_${size}`;
+    const rel = relatedOnly ? 1 : 0;
+    const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${rel}_${page}_${size}`;
     return apiCache.get(cacheKey);
   },
 
