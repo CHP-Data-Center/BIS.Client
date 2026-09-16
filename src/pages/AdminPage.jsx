@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles,
+  ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles, FolderKanban,
   CheckCircle2, AlertCircle, Loader2, Globe, Zap, Activity,
   Search, Check, X, Edit, CheckCircle, XCircle, Building2,
   ChevronDown, Eye
@@ -25,6 +25,7 @@ import { useLang } from '../context/LanguageContext';
 import OrganizationsPanel from '../components/admin/OrganizationsPanel';
 import MyRegionPanel from '../components/admin/MyRegionPanel';
 import KeywordSuggestionsPanel from '../components/admin/KeywordSuggestionsPanel';
+import TrackedProjectsPanel from '../components/admin/TrackedProjectsPanel';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { tUI } from '../locales';
 
@@ -676,6 +677,9 @@ export default function AdminPage() {
     // Đa tổ chức (ADR-005): super admin quản MỌI phân vùng; admin phân vùng chỉ vùng mình
     // (đổi tên + phạm vi dữ liệu) — gộp chung 1 tab để không phải nhảy qua lại.
     ...(isSuperAdmin ? [{ id: 'orgs', label: t('admin.orgsTab'), icon: <Building2 size={16} /> }] : []),
+    // Người dùng thêm/sửa dự án là hiện ngay (không phê duyệt) — tab này để super admin nhìn
+    // toàn bộ ở một chỗ và sửa/xóa khi cần.
+    ...(isSuperAdmin ? [{ id: 'projects', label: t('admin.projectsTab'), icon: <FolderKanban size={16} /> }] : []),
     ...(isRegionalAdmin ? [{ id: 'myRegion', label: t('admin.myRegionTab'), icon: <Building2 size={16} /> }] : []),
     { id: 'filters',   label: t('admin.keywordsTab'), icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
     { id: 'suggest',   label: t('admin.suggestTab'),  icon: <Sparkles size={16} /> },
@@ -1711,6 +1715,10 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === 'projects' && (
+            <TrackedProjectsPanel onMessage={showAlert} />
           )}
 
           {/* TAB 4: DIGEST */}

@@ -3,6 +3,31 @@ import api from './api';
 import { apiCache } from '../utils/apiCache';
 
 export const adminService = {
+  /**
+   * Toàn bộ dự án theo dõi của MỌI tài khoản (chỉ super admin).
+   * Người dùng thêm/sửa là hiện ngay — không có bước phê duyệt; tab này để quản trị xem lại.
+   */
+  async getAllProjects({ q, status, sector, ownerId, page = 1, size = 20 } = {}) {
+    const params = { page, size };
+    if (q) params.q = q;
+    if (status) params.status = status;
+    if (sector) params.sector = sector;
+    if (ownerId) params.owner_id = ownerId;
+    const { data } = await api.get('/admin/projects', { params });
+    return data; // { items, total, page, size }
+  },
+
+  /** Sửa dự án của bất kỳ tài khoản nào */
+  async updateAnyProject(projectId, patch) {
+    const { data } = await api.patch(`/admin/projects/${projectId}`, patch);
+    return data;
+  },
+
+  /** Xóa dự án của bất kỳ tài khoản nào (xóa kèm liên kết mục tiềm năng) */
+  async deleteAnyProject(projectId) {
+    await api.delete(`/admin/projects/${projectId}`);
+  },
+
   // ── Users ──────────────────────────────────────────────────────
   async getUsers() {
     const { data } = await api.get('/admin/users');

@@ -12,7 +12,12 @@ const STATUS_OPTIONS = [
   { value: 'closed', labelKey: 'projects.statusClosed', defaultLabel: 'Đã đóng' },
 ];
 
-export default function EditProjectModal({ project, sectors = [], onClose, onSaved }) {
+/**
+ * @param {Function} [onSave] - Hàm lưu thay cho đường mặc định (PATCH /projects/{id} của chính
+ *   chủ dự án). Tab quản trị truyền `adminService.updateAnyProject` vào đây: super admin sửa dự
+ *   án của người khác thì endpoint người dùng trả 403.
+ */
+export default function EditProjectModal({ project, sectors = [], onClose, onSaved, onSave }) {
   const { t } = useLang();
   const [name, setName] = useState('');
   const [keywordFilter, setKeywordFilter] = useState('');
@@ -111,7 +116,8 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
     };
 
     try {
-      const updated = await projectsService.updateProject(project.id, payload);
+      const luu = onSave || projectsService.updateProject.bind(projectsService);
+      const updated = await luu(project.id, payload);
       onSaved?.(updated);
       onClose();
     } catch (err) {
