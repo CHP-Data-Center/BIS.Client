@@ -7,7 +7,7 @@ import {
   Building2, Calendar, Coins, MapPin, Filter, RefreshCw, AlertCircle,
   ShoppingBag, Globe, Newspaper, Search, ArrowRight, BookmarkCheck,
   CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock, RotateCcw,
-  ChevronDown, Check
+  ChevronDown, Check, Link2, Unlink, FolderKanban
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { potentialService, itemKey } from '../services/potential';
@@ -129,7 +129,7 @@ function PotentialSkeletonCard() {
 }
 
 /** Một dự án tiềm năng với hỗ trợ bật/tắt theo dõi (Follow/Unfollow). */
-function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
+function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, onUnlink, linking }) {
   const { t } = useLang();
   const navigate = useNavigate();
   const [isHoveredTrack, setIsHoveredTrack] = useState(false);
@@ -211,6 +211,12 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
           </span>
         )}
 
+        {link && (
+          <span className="potential-tracked-tag" title={t('potential.linkedTo')}>
+            <FolderKanban size={12} /> {link.project_name || link.display_name}
+          </span>
+        )}
+
         {item.published_at && (
           <span className="potential-date-tag">
             {fmtDate(item.published_at)}
@@ -218,10 +224,22 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
         )}
       </div>
 
-      {/* Title */}
+      {/* Title — đã gắn vào dự án theo dõi thì hiện TÊN DỰ ÁN, giữ tiêu đề gốc ngay dưới để
+          người dùng vẫn đối chiếu được với nguồn. */}
       <h3 className="potential-card-title" title={item.title}>
-        {item.title}
+        {link?.display_name || item.title}
       </h3>
+      {link?.display_name && link.display_name !== item.title && (
+        <div
+          title={item.title}
+          style={{
+            fontSize: 11.5, color: 'var(--text-muted)', marginTop: -2, marginBottom: 6,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}
+        >
+          {t('potential.originalTitle')}: {item.title}
+        </div>
+      )}
 
       {/* Related Projects tag */}
       {item.related_projects?.length > 0 && (
@@ -325,6 +343,34 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked }) {
           >
             {tracking ? <Loader2 size={14} className="spin" style={{ animation: 'spin 0.8s linear infinite' }} /> : <Plus size={14} />}
             <span>{t('potential.track')}</span>
+          </button>
+        )}
+
+        {link ? (
+          <button
+            type="button"
+            onClick={() => onUnlink(link)}
+            disabled={linking}
+            title={t('potential.unlink')}
+            className="potential-action-btn view-source"
+          >
+            {linking ? (
+              <Loader2 size={13} style={{ animation: 'spin 0.8s linear infinite', flex: 'none' }} />
+            ) : (
+              <Unlink size={13} style={{ flex: 'none' }} />
+            )}
+            <span>{t('potential.unlink')}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onLink(item)}
+            disabled={linking}
+            title={t('potential.linkProjectHint')}
+            className="potential-action-btn view-source"
+          >
+            <Link2 size={13} style={{ flex: 'none' }} />
+            <span>{t('potential.linkProject')}</span>
           </button>
         )}
 
@@ -631,6 +677,174 @@ function PotentialDropdown({
   );
 }
 
+/** "2026-10-01" → "01/10/2026" (cột DATE, không giờ — không dựng Date để khỏi lệch múi giờ). */
+function fmtNgay(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+}
+
+/**
+ * Chọn một dự án ĐANG THEO DÕI để gắn mục tiềm năng vào (yêu cầu khách hàng 16/09/2026).
+ *
+ * Gõ tới đâu tìm tới đó qua `/projects/lookup` (máy chủ lọc không dấu), chọn xong hiện ngay
+ * vị trí / lĩnh vực / thời gian / trạng thái của dự án để người dùng biết mình gắn đúng chỗ.
+ */
+function ProjectLinkModal({ item, onClose, onLinked }) {
+  const { t } = useLang();
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [chon, setChon] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    const hen = setTimeout(async () => {
+      try {
+        const ds = await projectsService.lookupProjects(q, 20);
+        if (alive) setItems(ds || []);
+      } catch {
+        if (alive) setItems([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }, 250); // chờ người dùng ngừng gõ, không bắn request mỗi phím
+    return () => {
+      alive = false;
+      clearTimeout(hen);
+    };
+  }, [q]);
+
+  const gan = async () => {
+    if (!chon) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const link = await projectsService.addPotentialLink(chon.id, {
+        kind: item.kind,
+        ref: String(item.ref),
+        // Link + tiêu đề gốc: mã của ODA/bài báo là id tuần tự, nạp lại nguồn là đổi.
+        source_url: item.url || null,
+        title_snapshot: item.title || null,
+      });
+      onLinked({ ...link, project_name: link.project_name || chon.name });
+    } catch (e) {
+      setError(e.response?.data?.detail || t('potential.linkFailed'));
+      setSaving(false);
+    }
+  };
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="card"
+        style={{
+          width: '100%', maxWidth: 560, maxHeight: '86vh', display: 'flex', flexDirection: 'column',
+          background: 'var(--bg-surface)', borderRadius: 14, padding: 18, gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 15.5, fontWeight: 800, color: 'var(--text-primary)' }}>
+              {t('potential.pickProjectTitle')}
+            </h3>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
+              {t('potential.pickProjectDesc')}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="btn" style={{ padding: 6, background: 'transparent', border: 'none' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', borderLeft: '3px solid var(--border)', paddingLeft: 8 }}>
+          {item.title}
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <Search size={15} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--text-muted)' }} />
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t('potential.searchProject')}
+            className="form-input"
+            style={{ width: '100%', padding: '8px 10px 8px 32px', fontSize: 12.5, boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 120 }}>
+          {loading && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
+              <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('common.loading')}
+            </div>
+          )}
+          {!loading && items.length === 0 && (
+            <div style={{ color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
+              {t('potential.noProjectFound')}
+            </div>
+          )}
+          {!loading && items.map((p) => {
+            const dangChon = chon?.id === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setChon(p)}
+                style={{
+                  textAlign: 'left', padding: '9px 11px', borderRadius: 9, cursor: 'pointer',
+                  border: `1px solid ${dangChon ? 'var(--brand-600, #2563eb)' : 'var(--border)'}`,
+                  background: dangChon ? 'rgba(37, 99, 235, 0.07)' : 'var(--bg-surface-2, transparent)',
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 14px', marginTop: 4, fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                  <span><MapPin size={11} /> {p.province || '—'}</span>
+                  <span>{t('potential.fieldSector')}: {p.sector_name || p.sector || '—'}</span>
+                  <span><Calendar size={11} /> {fmtNgay(p.start_date)} → {fmtNgay(p.end_date)}</span>
+                  <span>{t('projects.status')}: {p.status}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {error && (
+          <div style={{ fontSize: 12, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <AlertCircle size={14} /> {error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button type="button" className="btn" onClick={onClose} style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border)' }}>
+            {t('common.cancel')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!chon || saving}
+            onClick={gan}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            {saving ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Link2 size={14} />}
+            {t('potential.confirmLink')}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function PotentialProjectsPage() {
   const { t } = useLang();
   const navigate = useNavigate();
@@ -707,6 +921,11 @@ export default function PotentialProjectsPage() {
   const [userProjects, setUserProjects] = useState(() => projectsService.getCachedProjects() || []);
   const [msg, setMsg] = useState(null);
 
+  // Liên kết "mục tiềm năng ↔ dự án đang theo dõi": nạp MỘT lượt cho cả trang.
+  const [links, setLinks] = useState([]);
+  const [linkingItem, setLinkingItem] = useState(null);
+  const [linkBusyKey, setLinkBusyKey] = useState(null);
+
   // Chống Race Condition khi bấm filter liên tục và Debounce
   const reqIdRef = useRef(0);
   const debounceTimerRef = useRef(null);
@@ -730,6 +949,39 @@ export default function PotentialProjectsPage() {
   useEffect(() => {
     loadUserProjects(true);
   }, [loadUserProjects]);
+
+  const loadLinks = useCallback(async () => {
+    try {
+      setLinks((await projectsService.getPotentialLinks()) || []);
+    } catch {
+      // Lỗi phụ (chưa đăng nhập / mạng chập chờn) không được chặn cả trang.
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLinks();
+  }, [loadLinks]);
+
+  const linkTheoMuc = useMemo(() => {
+    const bang = new Map();
+    for (const lk of links) bang.set(`${lk.kind}:${lk.ref}`, lk);
+    return bang;
+  }, [links]);
+
+  const handleUnlink = useCallback(async (link) => {
+    setLinkBusyKey(`${link.kind}:${link.ref}`);
+    try {
+      await projectsService.removePotentialLink(link.tracked_project_id, link.id);
+      setLinks((cur) => cur.filter((x) => x.id !== link.id));
+      setMsg({ type: 'success', text: t('potential.unlinked') });
+      setTimeout(() => setMsg(null), 4000);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.response?.data?.detail || t('potential.linkFailed') });
+      setTimeout(() => setMsg(null), 4000);
+    } finally {
+      setLinkBusyKey(null);
+    }
+  }, [t]);
 
   // Danh mục lĩnh vực + lựa chọn của người dùng
   useEffect(() => {
@@ -1436,6 +1688,10 @@ export default function PotentialProjectsPage() {
                   onToggleTrack={handleToggleTrack}
                   tracking={trackingKey === key}
                   tracked={tracked}
+                  link={linkTheoMuc.get(key)}
+                  linking={linkBusyKey === key}
+                  onLink={setLinkingItem}
+                  onUnlink={handleUnlink}
                 />
               );
             })}
@@ -1493,6 +1749,19 @@ export default function PotentialProjectsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {linkingItem && (
+        <ProjectLinkModal
+          item={linkingItem}
+          onClose={() => setLinkingItem(null)}
+          onLinked={(link) => {
+            setLinks((cur) => [link, ...cur.filter((x) => x.id !== link.id)]);
+            setLinkingItem(null);
+            setMsg({ type: 'success', text: t('potential.linked', { name: link.project_name || link.display_name }) });
+            setTimeout(() => setMsg(null), 4000);
+          }}
+        />
       )}
 
       <SectorConfigModal

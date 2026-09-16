@@ -187,4 +187,36 @@ export const projectsService = {
     const { data } = await api.post('/projects/extract-keywords', { title });
     return data;
   },
+
+  /** Chi tiết một dự án theo dõi */
+  async getProject(id) {
+    const { data } = await api.get(`/projects/${id}`);
+    return data; // TrackedProjectOut
+  },
+
+  /**
+   * Ô chọn dự án đang theo dõi: bản gọn (id, tên, vị trí, lĩnh vực, thời gian, trạng thái).
+   * Lọc KHÔNG DẤU ở máy chủ — gõ "tu lien" ra "Cầu Tứ Liên".
+   */
+  async lookupProjects(q, limit = 10) {
+    const { data } = await api.get('/projects/lookup', { params: { q: q || undefined, limit } });
+    return data; // TrackedProjectLookup[]
+  },
+
+  /** Mọi liên kết "mục tiềm năng ↔ dự án theo dõi" của tài khoản (một lượt cho cả trang) */
+  async getPotentialLinks() {
+    const { data } = await api.get('/projects/potential-links');
+    return data; // PotentialLinkOut[]
+  },
+
+  /** Gắn một mục tiềm năng vào dự án theo dõi; bỏ trống display_name = lấy tên dự án */
+  async addPotentialLink(projectId, payload) {
+    const { data } = await api.post(`/projects/${projectId}/potential-links`, payload);
+    return data; // PotentialLinkOut
+  },
+
+  /** Gỡ liên kết */
+  async removePotentialLink(projectId, linkId) {
+    await api.delete(`/projects/${projectId}/potential-links/${linkId}`);
+  },
 };

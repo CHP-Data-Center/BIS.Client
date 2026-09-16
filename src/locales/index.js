@@ -96,6 +96,17 @@ export const TRANSLATIONS = {
  * Đổi ngôn ngữ vẫn cập nhật ngay vì App remount toàn cây theo `lang` (xem App.jsx).
  */
 export function tUI(key, fallback) {
-  const lang = (typeof localStorage !== 'undefined' && (localStorage.getItem('app_lang') || localStorage.getItem('news_lang'))) || 'vi';
+  // Kiểm `typeof localStorage !== 'undefined'` là chưa đủ: Node 22+ (và Node 25 chạy bộ test
+  // i18n) có sẵn biến `localStorage` nhưng KHÔNG có getItem khi chưa bật kho web, nên gọi
+  // thẳng là ném TypeError. Trình duyệt ở chế độ riêng tư cũng có thể ném khi đọc.
+  let lang = 'vi';
+  try {
+    lang =
+      (typeof localStorage?.getItem === 'function' &&
+        (localStorage.getItem('app_lang') || localStorage.getItem('news_lang'))) ||
+      'vi';
+  } catch {
+    lang = 'vi';
+  }
   return DICT[lang]?.[key] ?? DICT.vi?.[key] ?? fallback ?? key;
 }

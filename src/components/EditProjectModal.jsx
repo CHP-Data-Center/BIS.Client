@@ -25,6 +25,8 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
   const [totalInvestment, setTotalInvestment] = useState('');
   const [capitalSource, setCapitalSource] = useState('');
   const [progress, setProgress] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
@@ -43,6 +45,8 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
       setTotalInvestment(project.total_investment || '');
       setCapitalSource(project.capital_source || '');
       setProgress(project.progress || '');
+      setStartDate(project.start_date || '');
+      setEndDate(project.end_date || '');
       setNote(project.note || '');
       setError(null);
     }
@@ -100,6 +104,9 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
       total_investment: totalInvestment.trim() || null,
       capital_source: capitalSource.trim() || null,
       progress: progress.trim() || null,
+      // Ô <input type="date"> trả "" khi để trống — gửi null để xóa ngày, không gửi "".
+      start_date: startDate || null,
+      end_date: endDate || null,
       note: note.trim() || null,
     };
 
@@ -541,6 +548,50 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                   value={progress}
                   onChange={(e) => setProgress(e.target.value)}
                   placeholder="Ví dụ: Đang lập FS, Đang đấu thầu, Đang thi công..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-surface)',
+                    color: 'var(--text-primary)',
+                    fontSize: 12.5,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4, color: 'var(--text-secondary)' }}>
+                  {t('projects.startDate')}
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-surface)',
+                    color: 'var(--text-primary)',
+                    fontSize: 12.5,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4, color: 'var(--text-secondary)' }}>
+                  {t('projects.endDate')}
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  // Trình duyệt chặn ngay ngày kết thúc trước ngày bắt đầu; máy chủ vẫn kiểm lại.
+                  min={startDate || undefined}
+                  onChange={(e) => setEndDate(e.target.value)}
                   style={{
                     width: '100%',
                     padding: '8px 10px',

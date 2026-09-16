@@ -46,6 +46,13 @@ const nhanLinkNguon = (originRef) => {
 // xóa một đoạn "[ref: ...]" bất kỳ mà người dùng tự gõ vào ghi chú.
 const lamSachGhiChu = (note) => (note || '').replace(/\[ref:[a-z]{2,16}:[A-Za-z0-9._-]{1,100}\]/g, '').trim();
 
+// "2026-10-01" → "01/10/2026". Máy chủ trả ngày dạng ISO (kiểu DATE, không giờ nên không
+// dựng Date để tránh lệch ngày theo múi giờ trình duyệt).
+const fmtNgay = (iso) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+};
+
 const LINK_STYLE = {
   display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 4,
   fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', textDecoration: 'none',
@@ -103,6 +110,8 @@ export default function ProjectsPage() {
   const [totalInvestment, setTotalInvestment] = useState('');
   const [capitalSource, setCapitalSource] = useState('');
   const [progress, setProgress] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [note, setNote] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -239,11 +248,14 @@ export default function ProjectsPage() {
         total_investment: totalInvestment.trim() || undefined,
         capital_source: capitalSource.trim() || undefined,
         progress: progress.trim() || undefined,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
         note: note.trim() || undefined,
       });
       setName(''); setKeywordFilter(''); setInvestor(''); setInvestorUrl('');
       setSector(''); setProvince(''); setStatus('watching');
       setWorkItems(''); setTotalInvestment(''); setCapitalSource(''); setProgress(''); setNote('');
+      setStartDate(''); setEndDate('');
       setShowCreateModal(false);
       showAlert('success', `Đã tạo dự án theo dõi "${created.name}"!`);
       // force=true: getProjects() có cache localStorage 5 phút, không ép thì dự án vừa tạo chưa hiện.
@@ -930,6 +942,17 @@ export default function ProjectsPage() {
                       {t((STATUS_META[selectedProject.status || 'watching'] || STATUS_META.watching).key)}
                     </span>
                   </div>
+
+                  {(selectedProject.start_date || selectedProject.end_date) && (
+                    <div style={{ flex: '0 0 auto', minWidth: 150 }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
+                        {t('projects.timeRange')}:
+                      </span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                        📅 {fmtNgay(selectedProject.start_date)} → {fmtNgay(selectedProject.end_date)}
+                      </span>
+                    </div>
+                  )}
 
                   {selectedProject.total_investment && (
                     <div style={{ flex: '0 0 auto', minWidth: 120 }}>
@@ -1638,6 +1661,27 @@ export default function ProjectsPage() {
                     placeholder="Đang đấu thầu..."
                     value={progress}
                     onChange={(e) => setProgress(e.target.value)}
+                    style={{ fontSize: 12 }}
+                  />
+                </div>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>{t('projects.startDate')}</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{ fontSize: 12 }}
+                  />
+                </div>
+                <div>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>{t('projects.endDate')}</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={(e) => setEndDate(e.target.value)}
                     style={{ fontSize: 12 }}
                   />
                 </div>
