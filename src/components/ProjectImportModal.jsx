@@ -768,24 +768,41 @@ function ExcelTab({ onDone, onStepChange }) {
         </div>
       )}
 
-      {/* Kết quả sau khi xác nhận nhập */}
-      {importResult && (
-        <div style={{
-          display: 'flex', flexDirection: 'column', gap: 10, padding: 14,
-          borderRadius: 12, background: '#ecfdf5', border: '1px solid #a7f3d0',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#047857', fontWeight: 800, fontSize: 14 }}>
-            <Check size={18} /> Đã nhập thành công vào danh sách theo dõi!
-          </div>
-          <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#065f46' }}>
-            <span>Đã tạo mới: <strong>{importResult.row_created}</strong></span>
-            <span>Đã bỏ qua (trùng): <strong>{importResult.row_skipped}</strong></span>
-            {importResult.row_failed > 0 && (
-              <span style={{ color: '#b91c1c' }}>Lỗi: <strong>{importResult.row_failed}</strong></span>
+      {/* Kết quả sau khi xác nhận nhập — không tạo được dự án nào thì KHÔNG báo thành
+          công: mọi dòng trùng hoặc lỗi mà vẫn hiện khung xanh khiến người dùng tưởng
+          danh sách theo dõi đã có thêm dự án. */}
+      {importResult && (() => {
+        const coTaoMoi = (importResult.row_created || 0) > 0;
+        const mau = coTaoMoi
+          ? { bg: '#ecfdf5', vien: '#a7f3d0', chu: '#047857', so: '#065f46' }
+          : { bg: '#fffbeb', vien: '#fde68a', chu: '#b45309', so: '#92400e' };
+        return (
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 10, padding: 14,
+            borderRadius: 12, background: mau.bg, border: `1px solid ${mau.vien}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: mau.chu, fontWeight: 800, fontSize: 14 }}>
+              {coTaoMoi ? <Check size={18} /> : <AlertTriangle size={18} />}
+              {coTaoMoi
+                ? 'Đã nhập thành công vào danh sách theo dõi!'
+                : 'Không có dự án nào được thêm vào danh sách theo dõi.'}
+            </div>
+            <div style={{ display: 'flex', gap: 16, fontSize: 13, color: mau.so, flexWrap: 'wrap' }}>
+              <span>Đã tạo mới: <strong>{importResult.row_created}</strong></span>
+              <span>Đã bỏ qua (trùng): <strong>{importResult.row_skipped}</strong></span>
+              {importResult.row_failed > 0 && (
+                <span style={{ color: '#b91c1c' }}>Lỗi: <strong>{importResult.row_failed}</strong></span>
+              )}
+            </div>
+            {!coTaoMoi && (
+              <div style={{ fontSize: 12.5, color: mau.so, lineHeight: 1.5 }}>
+                Mọi dòng đã chọn đều trùng với dự án đang theo dõi hoặc còn lỗi. Hãy sửa
+                các dòng được đánh dấu rồi nhập lại.
+              </div>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Thanh công cụ: Lọc & Tìm kiếm dòng */}
       <div style={{

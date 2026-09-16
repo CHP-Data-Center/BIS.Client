@@ -76,7 +76,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
     try {
       setItems(await keywordSuggestionsService.list(st));
     } catch {
-      onMessage?.(t('suggest.loadError'), 'error');
+      onMessage?.('error', t('suggest.loadError'));
       setItems([]);
     } finally {
       setLoading(false);
@@ -103,13 +103,13 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
     try {
       const res = await keywordSuggestionsService.generate();
       onMessage?.(
-        res.created > 0 ? `${t('suggest.generated')}: ${res.created}` : t('suggest.noNew'),
         res.created > 0 ? 'success' : 'info',
+        res.created > 0 ? `${t('suggest.generated')}: ${res.created}` : t('suggest.noNew'),
       );
       await load('pending');
       setStatus('pending');
     } catch {
-      onMessage?.(t('suggest.generateError'), 'error');
+      onMessage?.('error', t('suggest.generateError'));
     } finally {
       setGenerating(false);
     }
@@ -119,7 +119,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
     setBusyId(id);
     try {
       await keywordSuggestionsService[action](id);
-      onMessage?.(action === 'approve' ? t('suggest.approved') : t('suggest.rejected'), 'success');
+      onMessage?.('success', action === 'approve' ? t('suggest.approved') : t('suggest.rejected'));
       setItems((prev) => prev.filter((x) => x.id !== id));
       setExpandedIds((prev) => {
         const next = new Set(prev);
@@ -127,7 +127,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
         return next;
       });
     } catch {
-      onMessage?.(t('suggest.actionError'), 'error');
+      onMessage?.('error', t('suggest.actionError'));
     } finally {
       setBusyId(null);
     }
@@ -144,13 +144,13 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
       const res = await keywordSuggestionsService.approveAll();
       const approvedCount = res?.count ?? count;
       onMessage?.(
+        'success',
         t('suggest.approvedAllSuccess', { count: approvedCount }) || `Đã duyệt ${approvedCount} từ khóa thành công`,
-        'success'
       );
       await load('pending');
       setExpandedIds(new Set());
     } catch {
-      onMessage?.(t('suggest.actionError'), 'error');
+      onMessage?.('error', t('suggest.actionError'));
     } finally {
       setBatchAction(null);
     }
@@ -167,13 +167,13 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
       const res = await keywordSuggestionsService.rejectAll();
       const rejectedCount = res?.count ?? count;
       onMessage?.(
+        'info',
         t('suggest.rejectedAllSuccess', { count: rejectedCount }) || `Đã bỏ qua ${rejectedCount} từ khóa`,
-        'info'
       );
       await load('pending');
       setExpandedIds(new Set());
     } catch {
-      onMessage?.(t('suggest.actionError'), 'error');
+      onMessage?.('error', t('suggest.actionError'));
     } finally {
       setBatchAction(null);
     }

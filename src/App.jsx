@@ -163,6 +163,11 @@ export default function App() {
             <Routes>
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
+              {/* Liên kết trong thư đặt lại mật khẩu trỏ tới /reset-password?token=…
+                  Không khai báo route này thì địa chỉ rơi vào "*" và bị Navigate về
+                  /login, mất luôn token -> người dùng không tự đặt lại được mật khẩu.
+                  LoginPage đọc tham số token và tự mở hộp nhập mật khẩu mới. */}
+              <Route path="/reset-password" element={<LoginPage />} />
 
               {/* Protected — Dashboard */}
               <Route path="/dashboard" element={

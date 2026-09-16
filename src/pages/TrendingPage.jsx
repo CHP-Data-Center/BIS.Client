@@ -42,6 +42,17 @@ function formatRelativeTime(dateStr, lang = 'vi') {
   }
 }
 
+/** Một mục (bài báo / dự án ODA / gói thầu) có khớp từ khóa nổi bật đang lọc không.
+ *  `q` đã lowercase + trim. Dùng chung cho mọi nguồn để bộ lọc áp nhất quán. */
+function khopTuKhoaNoiBat(item, q) {
+  const text = [
+    item.title, item.titleVi, item.excerpt, item.excerptVi, item.ai_summary,
+    item.project_name, item.sector, item.procuring_entity, item.country,
+    ...(item.matched_keywords || []),
+  ].filter(Boolean).join(' ').toLowerCase();
+  return text.includes(q);
+}
+
 // ── Filter Business articles by selected subtab ──
 function filterBizArticles(articles, tabIdx) {
   if (tabIdx === 0 || !articles.length) return articles;
@@ -714,35 +725,35 @@ export default function TrendingPage() {
   // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
   // Dữ liệu bài viết hiển thị: lọc theo activeTrendingTag nếu người dùng click vào từ khóa trên dải marquee
   const displayArticles = useMemo(() => {
-    let list = articles;
-    if (activeTrendingTag) {
-      const q = activeTrendingTag.toLowerCase().trim();
-      const filtered = list.filter(item => {
-        const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${(item.matched_keywords || []).join(' ')}`.toLowerCase();
-        return text.includes(q);
-      });
-      if (filtered.length > 0) return filtered;
-    }
-    return list;
+    if (!activeTrendingTag) return articles;
+    // Không khớp bài nào thì trả về DANH SÁCH RỖNG. Bản cũ rơi về `list` (toàn bộ bài),
+    // nên băng thông báo ghi "đang lọc theo #từ-khóa" trong khi trang hiện mọi bài viết.
+    const q = activeTrendingTag.toLowerCase().trim();
+    return articles.filter(item => khopTuKhoaNoiBat(item, q));
   }, [articles, activeTrendingTag]);
 
   // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
   const filteredArticles = useMemo(() => {
+    // Từ khóa nổi bật phải áp cho MỌI nguồn: lọc mỗi bài báo còn ODA/gói thầu bỏ qua thì
+    // trang vẫn đầy mục không liên quan trong lúc băng thông báo nói đang lọc.
+    const q = activeTrendingTag ? activeTrendingTag.toLowerCase().trim() : null;
+    const locTheoThe = (ds) => (q ? ds.filter(item => khopTuKhoaNoiBat(item, q)) : ds);
+
     if (activeSourceFilter === 'press') return displayArticles;
-    if (activeSourceFilter === 'adb') return adbProjects.map(adaptOda);
-    if (activeSourceFilter === 'worldbank') return wbProjects.map(adaptOda);
-    if (activeSourceFilter === 'gov') return procurementItems.map(adaptProc);
+    if (activeSourceFilter === 'adb') return locTheoThe(adbProjects.map(adaptOda));
+    if (activeSourceFilter === 'worldbank') return locTheoThe(wbProjects.map(adaptOda));
+    if (activeSourceFilter === 'gov') return locTheoThe(procurementItems.map(adaptProc));
 
     // activeSourceFilter === 'all': Gộp tất cả các nguồn mà người dùng có quyền và có dữ liệu
     const pool = [...displayArticles];
     if (canAdb && adbProjects.length > 0) {
-      pool.push(...adbProjects.map(adaptOda));
+      pool.push(...locTheoThe(adbProjects.map(adaptOda)));
     }
     if (canWb && wbProjects.length > 0) {
-      pool.push(...wbProjects.map(adaptOda));
+      pool.push(...locTheoThe(wbProjects.map(adaptOda)));
     }
     if (canProc && procurementItems.length > 0) {
-      pool.push(...procurementItems.map(adaptProc));
+      pool.push(...locTheoThe(procurementItems.map(adaptProc)));
     }
 
     // Sắp xếp theo ngày phát hành mới nhất
@@ -751,7 +762,7 @@ export default function TrendingPage() {
       const timeB = new Date(b.published_at || b.date || b.publish_date || b.approval_date || 0).getTime();
       return timeB - timeA;
     });
-  }, [activeSourceFilter, displayArticles, adbProjects, wbProjects, procurementItems, canAdb, canWb, canProc]);
+  }, [activeSourceFilter, activeTrendingTag, displayArticles, adbProjects, wbProjects, procurementItems, canAdb, canWb, canProc]);
 
   // Section 1: Lead Hero Item (Top Trending #1)
   const heroItem = useMemo(() => {
@@ -1084,7 +1095,11 @@ export default function TrendingPage() {
         }}>
           <span style={{ fontSize: 13, fontWeight: 750, color: 'var(--brand-700)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <Zap size={15} style={{ color: '#f59e0b' }} />
-            <span>Đang lọc bài viết theo từ khóa nổi bật: <strong>#{activeTrendingTag}</strong></span>
+            <span>
+              {filteredArticles.length === 0
+                ? <>Không có mục nào khớp từ khóa nổi bật: <strong>#{activeTrendingTag}</strong></>
+                : <>Đang lọc bài viết theo từ khóa nổi bật: <strong>#{activeTrendingTag}</strong> ({filteredArticles.length} mục)</>}
+            </span>
             {isUserKeyword(activeTrendingTag) && (
               <span className="user-matched-tag-chip" style={{ fontSize: 11, padding: '2px 8px' }}>
                 ⭐ Trùng với danh mục bạn theo dõi!
@@ -1107,6 +1122,16 @@ export default function TrendingPage() {
 
       {loading ? (
         <TrendingMagazineSkeleton />
+      ) : activeTrendingTag && filteredArticles.length === 0 ? (
+        /* Lọc không ra mục nào -> nói thẳng, không dựng lại toàn bộ tạp chí như khi
+           chưa lọc (người dùng sẽ tưởng từ khóa này có rất nhiều bài). */
+        <div className="empty-state" style={{ minHeight: '40vh' }}>
+          <div className="empty-icon">🔍</div>
+          <div className="empty-title">Không có mục nào khớp #{activeTrendingTag}</div>
+          <div className="empty-sub">
+            Hãy chọn từ khóa khác trên dải tin nổi bật, hoặc bấm “Bỏ lọc” để xem lại toàn bộ.
+          </div>
+        </div>
       ) : activeSourceFilter === 'all' ? (
         <>
 

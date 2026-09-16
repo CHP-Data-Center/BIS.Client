@@ -153,9 +153,10 @@ export default function LoginPage() {
   };
 
 
-  // Redirect if logged in
+  // Redirect if logged in — trừ khi đang mở liên kết đặt lại mật khẩu từ email:
+  // người còn phiên đăng nhập cũ vẫn phải đặt được mật khẩu mới.
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && !new URLSearchParams(window.location.search).get('token')) {
       const target = user?.role === 'personal' ? '/news/press' : '/dashboard';
       nav(target, { replace: true });
     }
@@ -186,27 +187,13 @@ export default function LoginPage() {
     if (hasError) return;
 
     setLoading(true);
-    try {
-      const res = await login(trimmedEmail, password, rememberMe);
-      const target = res?.user?.role === 'personal' ? '/news/press' : '/dashboard';
-      nav(target);
-    } catch (err) {
-      const status = err.response?.status;
-      const detail = err.response?.data?.detail;
-      if (status === 401) {
-        setLoginError('Email hoặc mật khẩu không chính xác.');
-      } else if (status === 403) {
-        setLoginError(detail || 'Tài khoản chưa được kích hoạt hoặc đã bị khóa.');
-      } else if (status === 429) {
-        setLoginError('Quá nhiều lần đăng nhập không thành công. Vui lòng thử lại sau ít phút.');
-      } else if (!navigator.onLine) {
-        setLoginError('Không có kết nối mạng. Vui lòng kiểm tra lại đường truyền internet.');
-      } else {
-        setLoginError('Không thể kết nối đến máy chủ xác thực. Vui lòng thử lại sau.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    // login() của AuthContext tự bắt lỗi, đặt loginError rồi trả về null — nó KHÔNG ném
+    // ra ngoài. Chuyển trang vô điều kiện sẽ bị route bảo vệ đẩy ngược về /login, trang
+    // dựng lại và xóa trắng email/mật khẩu vừa nhập, người dùng không kịp đọc lý do.
+    const res = await login(trimmedEmail, password, rememberMe);
+    setLoading(false);
+    if (!res) return;  // thất bại: ở lại trang, thông báo lỗi đã hiển thị sẵn
+    nav(res.role === 'personal' ? '/news/press' : '/dashboard', { replace: true });
   };
 
   const handleGoogleLogin = () => {

@@ -259,11 +259,23 @@ export default function AdminPage() {
   };
 
   // ODA Crawler Handlers
+  //
+  // Máy chủ CỐ Ý không để lỗi mạng của nguồn ngoài làm hỏng request: nó trả 200 kèm
+  // {new: 0, updated: 0, error: "..."} để job nền không chết. Vì vậy chỉ bắt exception là
+  // chưa đủ — không đọc `error` thì mọi lần nguồn sập vẫn hiện "cào thành công".
+  const baoKetQuaCrawl = (res, nhan) => {
+    if (res?.error) {
+      showAlert('error', `${nhan} không lấy được dữ liệu: ${res.error}`);
+      return;
+    }
+    showAlert('success', `${nhan} xong! Thêm mới ${res?.new ?? 0}, cập nhật ${res?.updated ?? 0}.`);
+  };
+
   const handleCrawlWorldBank = async (rows = 100) => {
     setActionLoading(true);
     try {
       const res = await adminService.crawlWorldBank(rows);
-      showAlert('success', `Đã kích hoạt cào World Bank thành công! (${res?.items || 0} bài)`);
+      baoKetQuaCrawl(res, 'Cào World Bank');
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào World Bank.');
@@ -275,8 +287,7 @@ export default function AdminPage() {
   const handleCrawlAdb = async () => {
     setActionLoading(true);
     try {
-      await adminService.crawlAdb();
-      showAlert('success', 'Đã kích hoạt cào dữ liệu ADB thành công!');
+      baoKetQuaCrawl(await adminService.crawlAdb(), 'Cào dữ liệu ADB');
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào ADB.');
@@ -288,8 +299,7 @@ export default function AdminPage() {
   const handleCrawlDauthau = async (kind = 'all', q = '', pages = 1) => {
     setActionLoading(true);
     try {
-      await adminService.crawlDauthau(kind, q, pages);
-      showAlert('success', `Đã kích hoạt cào dauthau.asia (${kind}) thành công!`);
+      baoKetQuaCrawl(await adminService.crawlDauthau(kind, q, pages), `Cào dauthau.asia (${kind})`);
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào dauthau.asia.');
@@ -301,8 +311,7 @@ export default function AdminPage() {
   const handleCrawlMuasamcong = async () => {
     setActionLoading(true);
     try {
-      await adminService.crawlMuasamcong();
-      showAlert('success', 'Đã kích hoạt cào Mua sắm công Playwright thành công!');
+      baoKetQuaCrawl(await adminService.crawlMuasamcong(), 'Cào Mua sắm công (Playwright)');
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào Muasamcong.');
@@ -501,7 +510,13 @@ export default function AdminPage() {
         payload.password = editingUser.password.trim();
       }
 
-      // Persist packages, AI status, expiration date, purchased themes, selected sources, and max_users
+      // KHÔNG bọc lời gọi này trong try/catch riêng: bắt lỗi rồi lấy chính dữ liệu vừa
+      // nhập làm "kết quả" khiến màn hình báo đã lưu trong khi máy chủ đã từ chối, và
+      // giá trị cũ quay lại ngay lần Làm Mới Data kế tiếp. Lỗi phải rơi xuống catch dưới.
+      const updated = await adminService.updateUser(editingUser.id, payload);
+
+      // Ghi các giá trị gói dịch vụ xuống trình duyệt SAU khi máy chủ nhận — ghi trước
+      // thì một lần lưu hỏng vẫn để lại gói mới trên máy quản trị viên.
       const uKey = editingUser.email || editingUser.id;
       localStorage.setItem(`bis_active_package_${uKey}`, editingUser.active_package);
       localStorage.setItem(`bis_ai_package_${uKey}`, editingUser.has_ai ? 'true' : 'false');
@@ -510,14 +525,6 @@ export default function AdminPage() {
       localStorage.setItem(`bis_purchased_themes_${uKey}`, JSON.stringify(editingUser.purchased_themes || []));
       localStorage.setItem(`bis_selected_sources_${uKey}`, JSON.stringify(editingUser.selected_sources || ['adb', 'worldbank']));
       localStorage.setItem(`bis_max_users_${uKey}`, String(editingUser.max_users || 10));
-
-      let updated;
-      try {
-        updated = await adminService.updateUser(editingUser.id, payload);
-      } catch (err) {
-        // Fallback for local mock user update
-        updated = { ...editingUser };
-      }
 
       const mergedUser = {
         ...updated,
@@ -775,19 +782,28 @@ export default function AdminPage() {
       </div>
 
       {/* Alert Notification Bar */}
-      {msg && (
-        <div style={{
-          padding: '14px 18px', borderRadius: 14, fontSize: 13.5, fontWeight: 700, marginBottom: 24,
-          background: msg.type === 'success' ? '#f0fdf4' : '#fff1f2',
-          border: `1.5px solid ${msg.type === 'success' ? '#86efac' : '#fca5a5'}`,
-          color: msg.type === 'success' ? '#15803d' : '#b91c1c',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
-          display: 'flex', alignItems: 'center', gap: 10,
-        }}>
-          {msg.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          {msg.text}
-        </div>
-      )}
+      {msg && (() => {
+        // 'info' phải có kiểu riêng: gộp chung với lỗi thì thông báo bình thường
+        // ("chưa có gợi ý mới") hiện trên nền đỏ như một sự cố.
+        const kieu = {
+          success: { bg: '#f0fdf4', vien: '#86efac', chu: '#15803d' },
+          info: { bg: '#eff6ff', vien: '#bfdbfe', chu: '#1d4ed8' },
+          error: { bg: '#fff1f2', vien: '#fca5a5', chu: '#b91c1c' },
+        }[msg.type] || { bg: '#fff1f2', vien: '#fca5a5', chu: '#b91c1c' };
+        return (
+          <div style={{
+            padding: '14px 18px', borderRadius: 14, fontSize: 13.5, fontWeight: 700, marginBottom: 24,
+            background: kieu.bg,
+            border: `1.5px solid ${kieu.vien}`,
+            color: kieu.chu,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            {msg.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+            {msg.text}
+          </div>
+        );
+      })()}
 
       {/* ── Segmented Navigation Tabs ── */}
       <div style={{
@@ -1856,6 +1872,12 @@ export default function AdminPage() {
                   )}
                   <option value="staff">{tUI('ui.nhan-vien-staff')}</option>
                   <option value="user">{tUI('ui.nguoi-dung-user')}</option>
+                  {/* Tài khoản đăng nhập Google mang vai trò 'personal'. Không liệt kê thì
+                      ô chọn hiện trống và mọi lần lưu đều gửi lại một vai trò không có
+                      trong danh sách. */}
+                  {editingUser.role === 'personal' && (
+                    <option value="personal">{tUI('admin.rolePersonal')}</option>
+                  )}
                 </select>
               </div>
 

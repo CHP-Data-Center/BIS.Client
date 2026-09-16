@@ -2,7 +2,7 @@
 // Cấu hình PHẠM VI dữ liệu của tổ chức (ADR-005): nguồn + quốc gia + từ khóa.
 // orgId có -> chế độ super admin (đặt cho org khác); không -> org admin đặt tổ chức mình.
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Save, Loader2, X, Plus, Globe, Tag, Database } from 'lucide-react';
+import { Save, Loader2, X, Plus, Globe, Tag, Database, AlertTriangle, RefreshCw } from 'lucide-react';
 import { orgService } from '../../services/organizations';
 import { tUI } from '../../locales';
 
@@ -46,6 +46,7 @@ function TagInput({ label, icon, values, onChange, placeholder }) {
 export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [scope, setScope] = useState({ sources: [], countries: [], keywords: [], article_types: [], categories: [] });
 
   const ARTICLE_TYPE_OPTIONS = [
@@ -71,8 +72,13 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
         article_types: data.article_types || [],
         categories: data.categories || [],
       });
+      setLoadError('');
     } catch (e) {
-      messageRef.current?.('error', e.response?.data?.detail || 'Không tải được phạm vi.');
+      // Không được rơi xuống biểu mẫu rỗng: phạm vi hiện tại vẫn còn trong máy chủ, bấm
+      // Lưu lúc này sẽ ghi đè bằng danh sách rỗng = xóa sạch giới hạn của cả phân vùng.
+      const detail = e.response?.data?.detail || tUI('admin.scopeLoadError');
+      setLoadError(typeof detail === 'string' ? detail : tUI('admin.scopeLoadError'));
+      messageRef.current?.('error', detail);
     } finally {
       setLoading(false);
     }
@@ -116,6 +122,34 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
 
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}><Loader2 className="spin" /> {tUI('common.loading')}</div>;
+  }
+
+  // Tải lỗi -> chỉ hiện lý do + nút thử lại. Cố tình KHÔNG dựng biểu mẫu để không ai
+  // bấm Lưu trên một bản rỗng và xóa mất phạm vi đang có.
+  if (loadError) {
+    return (
+      <div style={{
+        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+        borderRadius: 16, padding: 32, display: 'flex', gap: 14, alignItems: 'flex-start',
+      }}>
+        <AlertTriangle size={22} style={{ flexShrink: 0, color: '#d97706', marginTop: 2 }} />
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+            {tUI('admin.scopeUnavailable')}
+          </div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            {loadError}
+          </div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.6 }}>
+            {tUI('admin.scopeKeptSafe')}
+          </div>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={load}
+                  style={{ marginTop: 14, gap: 6 }}>
+            <RefreshCw size={14} /> {tUI('common.retry')}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

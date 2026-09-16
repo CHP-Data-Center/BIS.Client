@@ -320,9 +320,13 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
 
       const savedList = getSavedProjects();
       setSavedIds(new Set(savedList.map((p) => p.id)));
+      return true;
     } catch (err) {
       console.error(`${normType} load error:`, err);
       setError(err.message || `Không thể tải dữ liệu ${config.title}`);
+      // Trả kết quả thay vì chỉ ghi vào state: nút Làm mới cần biết lần tải này hỏng
+      // để không báo "thành công" đè lên màn hình đang báo lỗi.
+      return false;
     } finally {
       setLoading(false);
     }
@@ -606,18 +610,28 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const handleRefresh = async () => {
     setLoading(true);
     setError(null);
+    showToast(`Đang làm mới dữ liệu ${config.title}...`, 'info');
+
+    let loiLayMoi = null;
     try {
-      showToast(`Đang làm mới dữ liệu ${config.title}...`, 'info');
       if (normType === 'worldbank') {
         await worldBankService.crawlProjects(500);
       }
-      await loadData();
-      showToast(`Đã làm mới dữ liệu thành công!`, 'success');
     } catch (err) {
+      // Nguồn ngoài lỗi thì vẫn hiện lại dữ liệu đang có, nhưng phải nói rõ là dữ liệu cũ.
       console.error(`${normType} refresh error:`, err);
-      await loadData();
-    } finally {
-      setLoading(false);
+      loiLayMoi = err;
+    }
+
+    const tai_duoc = await loadData();
+    setLoading(false);
+
+    if (!tai_duoc) {
+      showToast(`Làm mới ${config.title} thất bại. Dữ liệu đang hiển thị có thể chưa cập nhật.`, 'error');
+    } else if (loiLayMoi) {
+      showToast(`Chưa lấy được dữ liệu mới từ nguồn (${loiLayMoi.response?.data?.detail || loiLayMoi.message || 'lỗi kết nối'}). Đang hiển thị dữ liệu đã lưu.`, 'warning');
+    } else {
+      showToast(`Đã làm mới dữ liệu thành công!`, 'success');
     }
   };
 
