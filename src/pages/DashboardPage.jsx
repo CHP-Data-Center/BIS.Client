@@ -15,7 +15,6 @@ import { statsService } from '../services/stats';
 import { articlesService } from '../services/articles';
 import { odaService } from '../services/oda';
 import { buildMapItems, adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
-import { mockAdbProjects, mockWbProjects, mockProcurementNotices, mockProcurementPlans } from '../data/mockData';
 import { apiCache } from '../utils/apiCache';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -702,35 +701,43 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             {activeItem.status && <span style={{ background: activeItem.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: activeItem.status === 'Active' ? '#16a34a' : '#475569', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>{STATUS_ICONS[activeItem.status] || '⚙️'} {activeItem.status}</span>}
           </div>
 
-          <div style={{
-            background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))',
-            border: '1px dashed rgba(168,85,247,.3)',
-            borderRadius: 10,
-            padding: '8px 10px',
-            fontSize: 11,
-            color: '#334155',
-            lineHeight: 1.45,
-          }}>
+          {/* Chi hien khi CO tom tat that. Cau mac dinh dung chung cho moi du an khien
+              nguoi dung tuong day la tom tat rieng cua du an dang xem. */}
+          {activeItem.aiSummary ? (
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              fontWeight: 700,
-              color: '#a855f7',
-              fontSize: 10,
-              marginBottom: 4,
+              background: 'linear-gradient(135deg,rgba(168,85,247,.07),rgba(59,130,246,.07))',
+              border: '1px dashed rgba(168,85,247,.3)',
+              borderRadius: 10,
+              padding: '8px 10px',
+              fontSize: 11,
+              color: '#334155',
+              lineHeight: 1.45,
             }}>
-              <Cpu size={10} /> {t('news.aiSummary')}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                fontWeight: 700,
+                color: '#a855f7',
+                fontSize: 10,
+                marginBottom: 4,
+              }}>
+                <Cpu size={10} /> {t('news.aiSummary')}
+              </div>
+              <div style={{
+                maxHeight: 100,
+                overflowY: 'auto',
+                wordBreak: 'break-word',
+                paddingRight: 2,
+              }}>
+                {activeItem.aiSummary}
+              </div>
             </div>
-            <div style={{
-              maxHeight: 100,
-              overflowY: 'auto',
-              wordBreak: 'break-word',
-              paddingRight: 2,
-            }}>
-              {activeItem.aiSummary || 'Dự án thúc đẩy nâng cấp hạ tầng, kết nối vùng và cải thiện an sinh xã hội khu vực.'}
+          ) : (
+            <div style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+              {t('news.noAiSummary')}
             </div>
-          </div>
+          )}
         </div>
       ) : (
         <div style={{ maxHeight: 250, overflowY: 'auto' }}>
@@ -798,9 +805,10 @@ function ProjectDistributionMap() {
   const [selStatuses,  setSelStatuses]  = useState(new Set());
   const [selSectors,   setSelSectors]   = useState(new Set());
   const [realItems,    setRealItems]    = useState(() => apiCache.get('oda:map_items'));
+  const [mapError,     setMapError]     = useState(null);  // {detail} khi tải hỏng
   const [mobileFilterOpen, setMobileFilterOpen] = useState(true);
 
-  // Lấy dự án ODA + mua sắm công THẬT từ backend; lỗi/rỗng -> giữ null (fallback mock).
+  // Lấy dự án ODA + mua sắm công THẬT từ backend.
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -810,25 +818,22 @@ function ProjectDistributionMap() {
           odaService.getProcurement({ size: 1000 }),
         ]);
         const items = buildMapItems(oda?.items || [], proc?.items || []);
-        if (alive && items.length > 0) {
-          setRealItems(items);
-          apiCache.set('oda:map_items', items, 120000);
-        }
+        if (!alive) return;
+        setRealItems(items);
+        setMapError(null);
+        if (items.length > 0) apiCache.set('oda:map_items', items, 120000);
       } catch (e) {
-        console.warn('ODA map data error (dùng mock):', e);
+        // KHÔNG rơi về bộ dữ liệu mẫu: bản đồ khi đó hiện các dự án không có thật, và
+        // người dùng không biết là mình đang nhìn dữ liệu bịa (hoặc bị từ chối quyền).
+        console.warn('ODA map data error:', e);
+        const detail = e.response?.data?.detail;
+        if (alive) setMapError({ detail: typeof detail === 'string' ? detail : '' });
       }
     })();
     return () => { alive = false; };
   }, []);
 
-  const mockItems = [
-    ...mockAdbProjects.map(p => ({ ...p, source: 'adb', type: 'ADB' })),
-    ...mockWbProjects.map(p => ({ ...p, source: 'worldbank', type: 'World Bank' })),
-    ...mockProcurementNotices.map(p => ({ ...p, source: 'dauthau', type: 'TBMT', sector: p.sector || 'Transport' })),
-    ...mockProcurementPlans.map(p => ({ ...p, source: 'dauthau', type: 'KHLCNT', sector: p.sector || 'Transport' }))
-  ].filter(item => MAP_COORDS[item.id]);
-
-  const allItems = realItems != null ? realItems : mockItems;
+  const allItems = realItems != null ? realItems : [];
 
   const canonicalCountry = useCallback((raw) => {
     if (!raw) return '';
@@ -1040,10 +1045,22 @@ function ProjectDistributionMap() {
 
         {filteredItems.length === 0 && (
           <div style={{ position:'absolute', inset:0, zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(15,23,42,0.5)', backdropFilter:'blur(6px)', borderRadius: 16 }}>
-            <div style={{ background:'white', borderRadius:16, padding:'20px 28px', textAlign:'center', boxShadow:'0 16px 48px rgba(0,0,0,0.2)' }}>
-              <div style={{ fontSize:36, marginBottom:10 }}>🔍</div>
-              <div style={{ fontWeight:700, color:'#0f172a', fontSize:15 }}>{t('dashboard.noFilterMatch')}</div>
-              <div style={{ fontSize:12, color:'#64748b', marginTop:4 }}>{t('dashboard.tryChangeFilter')}</div>
+            <div style={{ background:'white', borderRadius:16, padding:'20px 28px', textAlign:'center', boxShadow:'0 16px 48px rgba(0,0,0,0.2)', maxWidth: 360 }}>
+              {/* Phân biệt 3 trường hợp: lọc không ra, chưa có dữ liệu, và tải hỏng —
+                  gộp làm một sẽ khiến lỗi quyền/mạng trông như "không có dự án nào". */}
+              <div style={{ fontSize:36, marginBottom:10 }}>
+                {allItems.length > 0 ? '🔍' : mapError ? '⚠️' : '🗺️'}
+              </div>
+              <div style={{ fontWeight:700, color:'#0f172a', fontSize:15 }}>
+                {allItems.length > 0
+                  ? t('dashboard.noFilterMatch')
+                  : mapError ? t('dashboard.mapLoadError') : t('dashboard.mapEmpty')}
+              </div>
+              <div style={{ fontSize:12, color:'#64748b', marginTop:4, lineHeight:1.5 }}>
+                {allItems.length > 0
+                  ? t('dashboard.tryChangeFilter')
+                  : mapError ? (mapError.detail || t('dashboard.mapLoadErrorSub')) : t('dashboard.mapEmptySub')}
+              </div>
             </div>
           </div>
         )}
@@ -1207,6 +1224,8 @@ export default function DashboardPage() {
   const [trending, setTrending]   = useState(() => apiCache.get('stats:trending:15') || []);
   const [articles, setArticles]   = useState([]);
   const [totalArticles, setTotal] = useState(0);
+  // {denied, detail} khi tai danh sach hong / bi tu choi quyen — de khong bao "chua co bai viet".
+  const [articlesError, setArticlesError] = useState(null);
 
   // Fetch stats overview
   const fetchOverview = async (force = false) => {
@@ -1231,6 +1250,7 @@ export default function DashboardPage() {
   // Fetch articles / ODA / procurement items based on active tab
   const fetchArticles = async (filter = activeFilter, p = page) => {
     setLoading(true);
+    setArticlesError(null);
     try {
       if (filter === 'adb') {
         const data = await odaService.getProjects({ source: 'adb', page: p, size: PAGE_SIZE });
@@ -1255,7 +1275,14 @@ export default function DashboardPage() {
         setTotal(data.total || 0);
       }
     } catch (e) {
+      // 403 = goi dich vu chua duoc xem nguon nay. Nuot loi roi hien danh sach rong khien
+      // nguoi dung tuong he thong khong co du lieu, thay vi biet minh chua co quyen.
       console.warn('Articles error:', e);
+      const detail = e.response?.data?.detail;
+      setArticlesError({
+        denied: e.response?.status === 403,
+        detail: typeof detail === 'string' ? detail : '',
+      });
       setArticles([]);
       setTotal(0);
     } finally {
@@ -1437,9 +1464,20 @@ export default function DashboardPage() {
             : articles.length === 0
               ? (
                 <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 200 }}>
-                  <div className="empty-icon">📭</div>
-                  <div className="empty-title">{t('dashboard.emptyNewsTitle')}</div>
-                  <div className="empty-sub">{t('dashboard.emptyNewsSub')}</div>
+                  <div className="empty-icon">
+                    {articlesError ? (articlesError.denied ? '🔒' : '⚠️') : '📭'}
+                  </div>
+                  <div className="empty-title">
+                    {articlesError
+                      ? t(articlesError.denied ? 'dashboard.noAccessTitle' : 'dashboard.loadErrorTitle')
+                      : t('dashboard.emptyNewsTitle')}
+                  </div>
+                  <div className="empty-sub">
+                    {articlesError
+                      ? (articlesError.detail
+                          || t(articlesError.denied ? 'dashboard.noAccessSub' : 'dashboard.loadErrorSub'))
+                      : t('dashboard.emptyNewsSub')}
+                  </div>
                 </div>
               )
               : articles.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)

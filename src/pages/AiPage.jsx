@@ -99,8 +99,30 @@ function getSourceBadgeMeta(source) {
   };
 }
 
+/** Vị trí (0-based) của thẻ nguồn ứng với một trích dẫn, -1 nếu không có.
+ *
+ *  Máy chủ đánh số RIÊNG theo loại: [n] = tin tức thứ n, [Pn] = gói thầu thứ n,
+ *  [Dn] = dự án ODA thứ n; còn danh sách `sources` xếp nối tiếp tin tức → gói thầu → ODA.
+ *  Coi "P1" như "1" sẽ tô sáng thẻ tin tức đầu tiên thay vì gói thầu đầu tiên.
+ */
+function viTriNguonTheoTrichDan(sources, citationId) {
+  const m = /^([PD]?)(\d+)$/i.exec(String(citationId || '').trim());
+  if (!m || !Array.isArray(sources)) return -1;
+  const loai = { p: 'procurement', d: 'oda' }[m[1].toLowerCase()] || 'article';
+  const thuTu = Number(m[2]);
+  let dem = 0;
+  for (let i = 0; i < sources.length; i += 1) {
+    const kind = sources[i]?.kind || 'article';
+    if (kind === loai) {
+      dem += 1;
+      if (dem === thuTu) return i;
+    }
+  }
+  return -1;
+}
+
 /**
- * Parse & render text có định dạng markdown nhẹ nhàng (bold, bullets, numbers, citations [1], [P1])
+ * Parse & render text có định dạng markdown nhẹ nhàng (bold, bullets, numbers, citations [1], [P1], [D1])
  */
 function FormattedAiContent({ content, onCitationClick }) {
   if (!content) return null;
@@ -108,12 +130,12 @@ function FormattedAiContent({ content, onCitationClick }) {
   const lines = content.split('\n');
 
   const renderInline = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*|\[P?\d+\])/g);
+    const parts = text.split(/(\*\*.*?\*\*|\[[PD]?\d+\])/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
       }
-      const citationMatch = part.match(/^\[(P?\d+)\]$/);
+      const citationMatch = part.match(/^\[([PD]?\d+)\]$/);
       if (citationMatch) {
         const citationId = citationMatch[1];
         return (
@@ -273,18 +295,16 @@ function SourcesRightPanel({ sources, highlightedId, onClose }) {
   const { t } = useLang();
   const nav = useNavigate();
 
-  useEffect(() => {
-    if (!highlightedId) return;
-    const cleanId = String(highlightedId).replace(/^P/i, '');
-    const targetElem =
-      document.getElementById(`source-card-${highlightedId}`) ||
-      document.getElementById(`source-card-${cleanId}`) ||
-      document.getElementById(`source-card-${Number(cleanId)}`);
+  // Thẻ cần tô sáng, tính theo LOẠI nguồn chứ không theo con số trần.
+  const viTriToSang = viTriNguonTheoTrichDan(sources, highlightedId);
 
+  useEffect(() => {
+    if (!highlightedId || viTriToSang < 0) return;
+    const targetElem = document.getElementById(`source-card-${viTriToSang + 1}`);
     if (targetElem) {
       targetElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [highlightedId]);
+  }, [highlightedId, viTriToSang]);
 
   return (
     <aside
@@ -371,11 +391,7 @@ function SourcesRightPanel({ sources, highlightedId, onClose }) {
             const meta = getSourceBadgeMeta(s);
             const Icon = meta.icon;
             const internalRoute = getInternalSourceRoute(s);
-            const isHighlighted = highlightedId && (
-              String(idx + 1) === String(highlightedId) ||
-              String(idx + 1) === String(highlightedId).replace(/^P/i, '') ||
-              String(s.id).toLowerCase() === String(highlightedId).toLowerCase()
-            );
+            const isHighlighted = !!highlightedId && idx === viTriToSang;
 
             return (
               <div
@@ -1405,20 +1421,19 @@ export default function AiPage() {
   };
 
   const handleSelectCitation = (citationId, sources) => {
+    const dsNguon = sources && sources.length > 0 ? sources : activeSources;
     if (sources && sources.length > 0) {
       setActiveSources(sources);
     }
     setShowSources(true);
     setHighlightedCitation(citationId);
 
-    // Tự động cuộn mượt (smooth scroll) đến thẻ nguồn tương ứng ở bảng bên phải
+    // Tự động cuộn mượt (smooth scroll) đến thẻ nguồn tương ứng ở bảng bên phải.
+    // Vị trí tính theo LOẠI nguồn: [P1] là gói thầu đầu tiên, không phải thẻ số 1.
     setTimeout(() => {
-      const cleanId = String(citationId).replace(/^P/i, '');
-      const targetElem =
-        document.getElementById(`source-card-${citationId}`) ||
-        document.getElementById(`source-card-${cleanId}`) ||
-        document.getElementById(`source-card-${Number(cleanId)}`);
-
+      const viTri = viTriNguonTheoTrichDan(dsNguon, citationId);
+      if (viTri < 0) return;
+      const targetElem = document.getElementById(`source-card-${viTri + 1}`);
       if (targetElem) {
         targetElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }

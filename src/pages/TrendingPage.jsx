@@ -1176,7 +1176,11 @@ export default function TrendingPage() {
                             #{userMatches[0].term}
                           </span>
                         )}
-                        <span className="trending-view-count">👁️ {heroItem.match_count ? `${heroItem.match_count * 120 + 350}` : '1.4k'} {t('trending.views')}</span>
+                        {/* So "luot xem" cu duoc bia ra tu match_count (*120+350) va 1.4k mac
+                            dinh — he thong khong dem luot xem. Thay bang so tu khoa KHOP that. */}
+                        {heroItem.match_count > 0 && (
+                          <span className="trending-view-count">🎯 {t('trending.matchCount', { count: heroItem.match_count })}</span>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -2668,7 +2672,9 @@ export default function TrendingPage() {
                             🎯 TRÙNG TỪ KHÓA: #{userMatches.map(m => m.term).join(', #')}
                           </span>
                         ) : null}
-                        <span className="trending-view-count">👁️ 1.8k lượt đọc</span>
+                        {heroItem.match_count > 0 && (
+                          <span className="trending-view-count">🎯 {t('trending.matchCount', { count: heroItem.match_count })}</span>
+                        )}
                       </div>
                     </div>
                   ) : (

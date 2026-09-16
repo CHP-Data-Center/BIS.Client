@@ -52,7 +52,18 @@ export default function NewsCard({ article, index = 0 }) {
   const [searchParams] = useSearchParams();
   const currentQ = searchParams.get('q') || '';
 
-  const [bookmarked, setBookmarked] = useState(article.is_bookmarked || false);
+  // Thẻ ODA / gói thầu được lưu trong localStorage chứ không qua API bookmark, nên trạng
+  // thái ban đầu phải đọc từ đó — nếu không, tải lại trang là biểu tượng lưu mất dấu.
+  const [bookmarked, setBookmarked] = useState(() => {
+    if (article.is_bookmarked) return true;
+    if (!article.is_local_project || !article.local_key) return false;
+    try {
+      const raw = localStorage.getItem(article.local_key);
+      return raw ? JSON.parse(raw).some((p) => p.id === article.original_id) : false;
+    } catch {
+      return false;
+    }
+  });
   const [bkLoading, setBkLoading]   = useState(false);
   const [showOverflow, setShowOverflow] = useState(false);
 
@@ -105,7 +116,29 @@ export default function NewsCard({ article, index = 0 }) {
         }
         setBookmarked(false);
       } else {
-        if (typeof article.id === 'number') await articlesService.addBookmark(article.id);
+        if (article.is_local_project && article.local_key) {
+          // Thẻ ODA / gói thầu có id dạng chuỗi ("adb-12", "proc-IB…") nên không lưu được
+          // qua API bookmark bài báo. Trước đây nhánh này chỉ đổi biểu tượng, tải lại
+          // trang là mất — ghi vào đúng kho localStorage mà trang Đã Lưu đọc.
+          const raw = localStorage.getItem(article.local_key);
+          const list = raw ? JSON.parse(raw) : [];
+          if (!list.some((p) => p.id === article.original_id)) {
+            list.push({
+              id: article.original_id,
+              project_name: article.titleVi || article.title,
+              countryshortname: article.country || null,
+              totalCommitmentAmount: article.amount ?? null,
+              projectstatusdisplay: article.status || null,
+              boardapprovaldate: article.date || null,
+              last_stage_reached_name: article.sector || null,
+              rawUrl: article.url || null,
+              saved_at: new Date().toISOString(),
+            });
+            localStorage.setItem(article.local_key, JSON.stringify(list));
+          }
+        } else if (typeof article.id === 'number') {
+          await articlesService.addBookmark(article.id);
+        }
         setBookmarked(true);
       }
     } catch (err) {
@@ -116,10 +149,18 @@ export default function NewsCard({ article, index = 0 }) {
   };
 
   const handleClick = () => {
-    const isWbOrAdb = article.source === 'worldbank' || article.source === 'adb' || article.source_type === 'worldbank' || article.source_type === 'adb' || article.local_key === 'saved_worldbank_projects' || article.local_key === 'saved_adb_projects';
-    if (isWbOrAdb) {
-      const targetId = article.original_id || article.project_code || article.id;
+    // Mỗi loại có trang chi tiết riêng: đưa ADB sang trang World Bank sẽ mở nhầm dự án
+    // của ngân hàng khác, còn gói thầu vào /article luôn ra "Không tìm thấy bài viết".
+    const loai = article.source_type || article.source
+      || { saved_worldbank_projects: 'worldbank', saved_adb_projects: 'adb', saved_procurement_items: 'gov' }[article.local_key];
+    const targetId = article.original_id || article.project_code || article.id;
+
+    if (loai === 'worldbank') {
       nav(`/worldbank/project/${targetId}`, { state: { project: article } });
+    } else if (loai === 'adb') {
+      nav(`/adb/project/${targetId}`, { state: { project: article } });
+    } else if (loai === 'gov' || loai === 'procurement') {
+      nav(`/procurement/${targetId}`, { state: { project: article } });
     } else {
       nav(`/article/${article.id}`, { state: { article } });
     }

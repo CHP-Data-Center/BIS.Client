@@ -238,10 +238,19 @@ export default function BookmarksPage() {
 
   const handleViewDetail = (bm, e) => {
     if (e) e.stopPropagation();
-    const isWbOrAdb = bm.source_type === 'worldbank' || bm.source_type === 'adb' || bm.local_key === 'saved_worldbank_projects' || bm.local_key === 'saved_adb_projects';
-    if (isWbOrAdb) {
-      const targetId = bm.original_id || bm.project_code || bm.article_id || bm.id;
+    // Mỗi loại mục có trang chi tiết RIÊNG. Gộp ADB vào trang World Bank thì mở ra dự án
+    // của ngân hàng khác, còn đẩy gói thầu vào /article thì luôn ra "Không tìm thấy bài
+    // viết" vì id gói thầu không phải id bài báo.
+    const loai = bm.source_type
+      || { saved_worldbank_projects: 'worldbank', saved_adb_projects: 'adb', saved_procurement_items: 'gov' }[bm.local_key];
+    const targetId = bm.original_id || bm.project_code || bm.article_id || bm.id;
+
+    if (loai === 'worldbank') {
       nav(`/worldbank/project/${targetId}`, { state: { project: bm } });
+    } else if (loai === 'adb') {
+      nav(`/adb/project/${targetId}`, { state: { project: bm } });
+    } else if (loai === 'gov' || loai === 'procurement') {
+      nav(`/procurement/${targetId}`, { state: { project: bm } });
     } else {
       nav(`/article/${bm.article_id || bm.id}`);
     }
