@@ -14,12 +14,13 @@ export const authService = {
 
   /** Đăng nhập bằng Google (credential hoặc access_token) */
   async googleLogin(credential, accessToken = null, userInfo = null) {
-    const { data } = await api.post('/auth/google', {
-      credential: credential || null,
-      access_token: accessToken || null,
-      email: userInfo?.email || null,
-      name: userInfo?.name || null,
-    });
+    // Máy chủ tự xác thực token với Google (tokeninfo/userinfo) nên cần thời gian chờ dài hơn
+    // mặc định 15 giây; email/tên do trình duyệt gửi bị máy chủ bỏ qua nên không gửi nữa.
+    const { data } = await api.post(
+      '/auth/google',
+      { credential: credential || null, access_token: accessToken || null },
+      { timeout: 45000 },
+    );
     return data;
   },
 

@@ -102,6 +102,10 @@ export function AuthProvider({ children }) {
       setLoginError('');
       return me;
     } catch (err) {
+      // Token đã ghi mà lấy hồ sơ thất bại -> gỡ token, tránh trạng thái nửa đăng nhập
+      localStorage.removeItem('bis_token');
+      setToken(null);
+      setUser(null);
       let msg = 'Đăng nhập Google không thành công. Vui lòng thử lại.';
       if (err.response?.data?.detail) {
         const detail = err.response.data.detail;

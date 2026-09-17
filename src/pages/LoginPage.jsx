@@ -196,13 +196,28 @@ export default function LoginPage() {
     nav(res.role === 'personal' ? '/news/press' : '/dashboard', { replace: true });
   };
 
-  const handleGoogleLogin = () => {
+  // Script Google Identity Services nạp async trong index.html; bấm nút trước khi script tải
+  // xong (mạng chậm) hoặc script bị chặn lần đầu thì nạp lại tại chỗ thay vì báo lỗi ngay.
+  const ensureGoogleScript = () => new Promise((resolve) => {
+    if (window.google?.accounts?.oauth2) { resolve(true); return; }
+    const done = () => resolve(Boolean(window.google?.accounts?.oauth2));
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = done;
+    s.onerror = () => resolve(false);
+    document.head.appendChild(s);
+    setTimeout(done, 8000);
+  });
+
+  const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
       setLoginError('');
 
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '227924702568-q0kmobftaj5crfve5vu9tmr6kkl2vvec.apps.googleusercontent.com';
 
+      await ensureGoogleScript();
       if (window.google?.accounts?.oauth2) {
         const client = window.google.accounts.oauth2.initTokenClient({
           client_id: clientId,
@@ -213,7 +228,7 @@ export default function LoginPage() {
                 const res = await loginWithGoogle(null, tokenResponse.access_token);
                 if (res) {
                   const target = res?.role === 'personal' ? '/news/press' : '/dashboard';
-                  nav(target);
+                  nav(target, { replace: true });
                 }
               } catch (err) {
                 setLoginError(err.response?.data?.detail || 'Đăng nhập Google thất bại. Hãy thử lại.');
@@ -237,7 +252,7 @@ export default function LoginPage() {
         client.requestAccessToken({ prompt: 'select_account' });
       } else {
         setGoogleLoading(false);
-        setLoginError('Dịch vụ Google Sign-In chưa sẵn sàng. Vui lòng tải lại trang.');
+        setLoginError('Không tải được dịch vụ Google Sign-In. Kiểm tra kết nối mạng hoặc trình chặn quảng cáo rồi thử lại.');
       }
     } catch (err) {
       setGoogleLoading(false);
