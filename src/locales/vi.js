@@ -533,7 +533,7 @@ export default {
   'settings.digestTimezone': 'Múi giờ làm việc (Timezone)',
   'settings.saveDigestBtn': 'Lưu Cấu Hình',
   'settings.testDigestBtn': 'Gửi Thử Ngay',
-  'settings.digestSuccessMsg': 'Đã lưu cấu hình Email Digest thành công!',
+  'settings.digestSuccessMsg': 'Đã gửi email thử nghiệm thành công! Vui lòng kiểm tra hộp thư của bạn (cả mục Spam/Quảng cáo).',
   'settings.themeTab': 'Tùy Chỉnh Giao Diện Hệ Thống (UI/UX Themes)',
   'settings.currentTheme': 'Đang Áp Dụng',
   'settings.applyTheme': 'Áp Dụng Giao Diện',

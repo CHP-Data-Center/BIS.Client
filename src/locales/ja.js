@@ -533,7 +533,7 @@ export default {
   'settings.digestTimezone': 'タイムゾーン',
   'settings.saveDigestBtn': '設定を保存',
   'settings.testDigestBtn': 'テスト送信',
-  'settings.digestSuccessMsg': 'メールダイジェスト設定を保存しました！',
+  'settings.digestSuccessMsg': 'テストメールを送信しました！受信トレイ（迷惑メールフォルダを含む）をご確認ください。',
   'settings.themeTab': 'UI/UX テーマ設定',
   'settings.currentTheme': '適用中',
   'settings.applyTheme': 'テーマを適用',

@@ -101,6 +101,7 @@ export default function SettingsPage() {
 
   const handleSavePreferences = async () => {
     setPrefLoading(true);
+    setRunResult(null);
     try {
       const finalRegion = region.trim() || 'Toàn quốc';
       await settingsService.updateSettings({
@@ -132,6 +133,7 @@ export default function SettingsPage() {
   const handleRunDigest = async () => {
     setRunLoading(true);
     setRunResult(null);
+    setPrefMsg(null);
     try {
       const res = await settingsService.runDigestNow();
       setRunResult(res);
@@ -644,9 +646,19 @@ export default function SettingsPage() {
               </div>
 
               {runResult && (
-                <div style={{ padding: '10px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, fontSize: 12, color: '#15803d', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Sparkles size={15} />
-                  {t('settings.digestSuccessMsg')}
+                <div style={{
+                  padding: '12px 16px', background: '#f0fdf4', border: '1.5px solid #86efac',
+                  borderRadius: 12, fontSize: 12.5, color: '#15803d', fontWeight: 600,
+                  display: 'flex', flexDirection: 'column', gap: 4, marginTop: 10,
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 13, color: '#166534' }}>
+                    <Sparkles size={16} style={{ color: '#10b981' }} />
+                    <span>Đã gửi email thử nghiệm thành công!</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#15803d' }}>
+                    Bản tin ({runResult.total_items || 0} mục) đã được gửi về <strong>{user?.email}</strong>. Vui lòng kiểm tra Hộp thư đến hoặc mục Spam/Quảng cáo.
+                  </div>
                 </div>
               )}
             </div>

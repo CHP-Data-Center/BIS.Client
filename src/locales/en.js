@@ -533,7 +533,7 @@ export default {
   'settings.digestTimezone': 'Timezone',
   'settings.saveDigestBtn': 'Save Configuration',
   'settings.testDigestBtn': 'Send Test Email',
-  'settings.digestSuccessMsg': 'Email digest configuration saved successfully!',
+  'settings.digestSuccessMsg': 'Test email sent successfully! Please check your inbox (and Spam folder).',
   'settings.themeTab': 'System UI/UX Themes',
   'settings.currentTheme': 'In Use',
   'settings.applyTheme': 'Apply Theme',
