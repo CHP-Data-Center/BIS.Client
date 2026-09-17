@@ -337,6 +337,139 @@ function MapFlyTo({ items, source, country, sector, status }) {
   return null;
 }
 
+
+// ── Sector Classification & Multi-language Helper ─────────────
+const SECTOR_DEFINITIONS = {
+  seaport: {
+    icon: '⚓',
+    name: { vi: 'Cảng biển & Hàng hải', en: 'Seaport & Maritime', ja: '港湾・海運' },
+    test: (s) => /cảng biển/i.test(s),
+  },
+  bridge: {
+    icon: '🌉',
+    name: { vi: 'Cầu đường', en: 'Bridges', ja: '橋梁' },
+    test: (s) => /^cầu($| đường)/i.test(s),
+  },
+  road: {
+    icon: '🛣️',
+    name: { vi: 'Đường bộ & Cao tốc', en: 'Roads & Highways', ja: '道路・高速道路' },
+    test: (s) => /^đường bộ/i.test(s),
+  },
+  railway: {
+    icon: '🚆',
+    name: { vi: 'Đường sắt & Metro', en: 'Railways & Metro', ja: '鉄道・地下鉄' },
+    test: (s) => /^đường sắt/i.test(s),
+  },
+  aviation: {
+    icon: '✈️',
+    name: { vi: 'Hàng không & Sân bay', en: 'Aviation & Airports', ja: '航空・空港' },
+    test: (s) => /^hàng không/i.test(s),
+  },
+  transport_infrastructure: {
+    icon: '🚗',
+    name: { vi: 'Hạ tầng giao thông', en: 'Transport Infrastructure', ja: '交通インフラ' },
+    test: (s) => /^giao thông$/i.test(s),
+  },
+  procurement: {
+    icon: '📋',
+    name: { vi: 'Mua sắm công', en: 'Public Procurement', ja: '公共調達' },
+    test: (s) => /^mua sắm công/i.test(s),
+  },
+  oda_project: {
+    icon: '🌐',
+    name: { vi: 'Dự án ODA', en: 'ODA Projects', ja: 'ODAプロジェクト' },
+    test: (s) => /^oda$/i.test(s),
+  },
+  agriculture: {
+    icon: '🌾',
+    name: { vi: 'Nông nghiệp & Nông thôn', en: 'Agriculture & Rural Dev', ja: '農業・農村開発' },
+    test: (s) => /agriculture|rural dev|nông nghiệp/i.test(s),
+  },
+  transport: {
+    icon: '🛣️',
+    name: { vi: 'Giao thông vận tải', en: 'Transport & Infrastructure', ja: '交通・運輸' },
+    test: (s) => /transport|vận tải|multimodal/i.test(s),
+  },
+  energy: {
+    icon: '⚡',
+    name: { vi: 'Năng lượng & Điện lực', en: 'Energy & Power', ja: 'エネルギー・電力' },
+    test: (s) => /energy|năng lượng|electricity|solar|power/i.test(s),
+  },
+  urban_water: {
+    icon: '🏙️',
+    name: { vi: 'Hạ tầng đô thị & Cấp thoát nước', en: 'Urban Dev & Water', ja: '都市開発・上下水道' },
+    test: (s) => /urban|cấp thoát nước|đô thị|water/i.test(s),
+  },
+  public_sector: {
+    icon: '🏛️',
+    name: { vi: 'Quản lý công & Thể chế', en: 'Public Sector Management', ja: '公共セクター管理' },
+    test: (s) => /public sector|public administration|public expenditure|economic affairs|quản lý công/i.test(s),
+  },
+  finance: {
+    icon: '💰',
+    name: { vi: 'Tài chính & Ngân hàng', en: 'Finance & Banking', ja: '金融・銀行' },
+    test: (s) => /finance|tài chính|ngân hàng/i.test(s),
+  },
+  industry_trade: {
+    icon: '🏭',
+    name: { vi: 'Công nghiệp & Thương mại', en: 'Industry & Trade', ja: '商工業・SME' },
+    test: (s) => /industry|trade|commerce|doanh nghiệp|thương mại|công nghiệp/i.test(s),
+  },
+  education: {
+    icon: '🎓',
+    name: { vi: 'Giáo dục & Đào tạo', en: 'Education & Training', ja: '教育・訓練' },
+    test: (s) => /education|giáo dục|đào tạo/i.test(s),
+  },
+  health: {
+    icon: '🏥',
+    name: { vi: 'Y tế & Sức khỏe', en: 'Health & Healthcare', ja: '保健・医療' },
+    test: (s) => /health|nutrition|y tế|sức khỏe/i.test(s),
+  },
+  ict: {
+    icon: '💻',
+    name: { vi: 'Công nghệ thông tin', en: 'Information Technology', ja: '情報通信技術' },
+    test: (s) => /information and communication|ict|công nghệ thông tin|digital/i.test(s),
+  },
+  environment: {
+    icon: '🌱',
+    name: { vi: 'Môi trường & Biến đổi khí hậu', en: 'Environment & Climate', ja: '環境・気候変動' },
+    test: (s) => /climate|environment|môi trường|khí hậu/i.test(s),
+  },
+};
+
+function getSectorKey(rawSector) {
+  if (!rawSector) return '';
+  const s = String(rawSector).trim();
+  const primary = s.includes('/') ? s.split('/')[0].trim() : s;
+  for (const [key, def] of Object.entries(SECTOR_DEFINITIONS)) {
+    if (def.test(primary)) return key;
+  }
+  for (const [key, def] of Object.entries(SECTOR_DEFINITIONS)) {
+    if (def.test(s)) return key;
+  }
+  return primary;
+}
+
+function getSectorMeta(rawSector, lang = 'vi') {
+  if (!rawSector) return { key: '', label: '', icon: '🏷️' };
+  const key = getSectorKey(rawSector);
+  const def = SECTOR_DEFINITIONS[key];
+  if (def) {
+    return {
+      key,
+      label: def.name[lang] || def.name.vi || def.name.en,
+      icon: def.icon,
+    };
+  }
+  const s = String(rawSector).trim();
+  const primary = s.includes('/') ? s.split('/')[0].trim() : s;
+  return {
+    key,
+    label: primary,
+    icon: '🏷️',
+  };
+}
+
 // ── MultiSelectDropdown with Fast Search ──────────────────────────────────────
 function MultiSelectDropdown({ options, selected, onChange, placeholder, searchPlaceholder }) {
   const { t } = useLang();
@@ -384,15 +517,24 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, searchP
 
   return (
     <div ref={ref} style={{ position: 'relative', zIndex: open ? 2000 : 1 }}>
-      <button onClick={() => setOpen(v => !v)} style={{
-        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '6px 9px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)',
-        background: 'rgba(255,255,255,0.85)', color: selCount > 0 ? '#1e293b' : '#64748b',
-        fontSize: 11, fontWeight: selCount > 0 ? 700 : 500, cursor: 'pointer',
-        boxShadow: open ? '0 0 0 2px rgba(59,130,246,0.25)' : 'none',
-        transition: 'all 0.15s',
-      }}>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 145 }}>
+      <button
+        type="button"
+        title={typeof label === 'string' ? label : undefined}
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 9px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)',
+          background: 'rgba(255,255,255,0.85)', color: selCount > 0 ? '#1e293b' : '#64748b',
+          fontSize: 11, fontWeight: selCount > 0 ? 700 : 500, cursor: 'pointer',
+          boxShadow: open ? '0 0 0 2px rgba(59,130,246,0.25)' : 'none',
+          transition: 'all 0.15s',
+          gap: 6,
+        }}
+      >
+        <span style={{
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          flex: 1, textAlign: 'left', minWidth: 0,
+        }}>
           {label}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
@@ -410,10 +552,11 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, searchP
 
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+          position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+          minWidth: 280, maxWidth: 350, width: 'max-content',
           background: 'white', border: '1px solid #e2e8f0',
-          borderRadius: 10, boxShadow: '0 10px 28px rgba(0,0,0,0.16), 0 2px 6px rgba(0,0,0,0.06)',
-          maxHeight: 250, display: 'flex', flexDirection: 'column', zIndex: 9999,
+          borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.06)',
+          maxHeight: 280, display: 'flex', flexDirection: 'column', zIndex: 9999,
           overflow: 'hidden',
         }}>
           {/* Ô tìm kiếm nhanh dính trên cùng */}
@@ -466,7 +609,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, searchP
               <div onClick={() => onChange(new Set())} style={{
                 padding: '7px 10px', fontSize: 11, fontWeight: 600,
                 color: selCount === 0 ? '#3b82f6' : '#94a3b8',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
                 borderBottom: '1px solid #f1f5f9',
                 background: selCount === 0 ? '#eff6ff' : 'white',
               }}>
@@ -491,13 +634,17 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, searchP
               filteredOptions.map(opt => {
                 const isChecked = selected.has(opt.value);
                 return (
-                  <div key={opt.value} onClick={() => toggle(opt.value)} style={{
-                    padding: '6px 10px', fontSize: 11, fontWeight: isChecked ? 700 : 500,
-                    color: isChecked ? '#1e293b' : '#475569',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7,
-                    background: isChecked ? '#f8faff' : 'white',
-                    transition: 'background 0.1s',
-                  }}
+                  <div
+                    key={opt.value}
+                    onClick={() => toggle(opt.value)}
+                    title={typeof opt.label === 'string' ? opt.label : undefined}
+                    style={{
+                      padding: '7px 10px', fontSize: 11.5, fontWeight: isChecked ? 700 : 500,
+                      color: isChecked ? '#1e293b' : '#475569',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+                      background: isChecked ? '#f8faff' : 'white',
+                      transition: 'background 0.1s',
+                    }}
                     onMouseEnter={e => { if (!isChecked) e.currentTarget.style.background = '#f8fafc'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = isChecked ? '#f8faff' : 'white'; }}
                   >
@@ -510,8 +657,16 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, searchP
                     }}>
                       {isChecked && <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
                     </div>
-                    <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>{opt.icon}</div>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt.label}</span>
+                    {opt.icon && <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', fontSize: 13 }}>{opt.icon}</div>}
+                    <span style={{
+                      flex: 1,
+                      minWidth: 0,
+                      lineHeight: 1.35,
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal',
+                    }}>
+                      {opt.label}
+                    </span>
                   </div>
                 );
               })
@@ -523,7 +678,7 @@ function MultiSelectDropdown({ options, selected, onChange, placeholder, searchP
   );
 }
 
-function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SECTOR_ICONS, SECTOR_NAMES, STATUS_ICONS }) {
+function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, STATUS_ICONS }) {
   const { t } = useLang();
   const nav = useNavigate();
   const [viewMode, setViewMode] = useState('card');
@@ -696,8 +851,16 @@ function MultiProjectPopupCard({ items, sourceConfig, countryLabel, FlagImg, SEC
             {activeItem.amount && <span style={{ fontWeight: 700, color: cfg.color }}>💰 {activeItem.amount}</span>}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#475569', marginBottom: 8, flexWrap: 'wrap' }}>
-            {activeItem.sector && <span>{SECTOR_ICONS[activeItem.sector] || '🏷️'} {SECTOR_NAMES[activeItem.sector] || activeItem.sector}</span>}
+          <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#475569', marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {activeItem.sector && (() => {
+              const meta = getSectorMeta(activeItem.sector);
+              return (
+                <span title={activeItem.sector} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f1f5f9', padding: '1px 8px', borderRadius: 20, fontWeight: 600, color: '#334155' }}>
+                  <span>{meta.icon}</span>
+                  <span>{meta.label}</span>
+                </span>
+              );
+            })()}
             {activeItem.status && <span style={{ background: activeItem.status === 'Active' ? '#dcfce7' : '#f1f5f9', color: activeItem.status === 'Active' ? '#16a34a' : '#475569', borderRadius: 20, padding: '1px 8px', fontWeight: 600 }}>{STATUS_ICONS[activeItem.status] || '⚙️'} {activeItem.status}</span>}
           </div>
 
@@ -857,7 +1020,7 @@ function ProjectDistributionMap() {
       if (!isMatch) return false;
     }
     if (selStatuses.size  > 0 && !selStatuses.has(item.status))    return false;
-    if (selSectors.size   > 0 && !selSectors.has(item.sector))     return false;
+    if (selSectors.size   > 0 && !selSectors.has(getSectorKey(item.sector))) return false;
     return true;
   });
 
@@ -880,16 +1043,26 @@ function ProjectDistributionMap() {
   }, [allItems, lang, canonicalCountry, countryLabel]);
 
   const statusList   = [...new Set(allItems.map(i => i.status).filter(Boolean))];
-  const sectorList   = [...new Set(allItems.map(i => i.sector).filter(Boolean))].sort();
 
-  const SECTOR_ICONS = {
-    Energy: '⚡', 'Urban Dev': '🏙️', Finance: '💰', Climate: '🌱',
-    Transport: '🛣️', Water: '💧', Nutrition: '🍏', Agriculture: '🌾',
-  };
-  const SECTOR_NAMES = {
-    Energy: tSector('energy'), 'Urban Dev': tSector('urban'), Finance: tSector('finance'), Climate: tSector('environment'),
-    Transport: tSector('transport'), Water: tSector('water'), Nutrition: tSector('health'), Agriculture: tSector('agriculture'),
-  };
+  // Chuẩn hóa và gom nhóm lĩnh vực đa ngôn ngữ (loại bỏ lặp lại, dịch 100% tiếng Việt)
+  const sectorOptions = useMemo(() => {
+    const map = new Map();
+    for (const item of allItems) {
+      if (!item.sector) continue;
+      const key = getSectorKey(item.sector);
+      if (!key) continue;
+      if (!map.has(key)) {
+        const meta = getSectorMeta(item.sector, lang);
+        map.set(key, {
+          value: key,
+          label: meta.label,
+          icon: meta.icon,
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+  }, [allItems, lang]);
+
   const STATUS_ICONS = { Active: '🟢', Planned: '🔵', Completed: '✅', Pipeline: '🟡' };
 
   const sourceConfig = {
@@ -1032,8 +1205,6 @@ function ProjectDistributionMap() {
                       sourceConfig={sourceConfig}
                       countryLabel={countryLabel}
                       FlagImg={FlagImg}
-                      SECTOR_ICONS={SECTOR_ICONS}
-                      SECTOR_NAMES={SECTOR_NAMES}
                       STATUS_ICONS={STATUS_ICONS}
                     />
                   </Popup>
@@ -1135,11 +1306,7 @@ function ProjectDistributionMap() {
                 onChange={setSelSectors}
                 placeholder={t('dashboard.filterAllSectors')}
                 searchPlaceholder={t('dashboard.searchSector')}
-                options={sectorList.map(s => ({
-                  value: s,
-                  label: SECTOR_NAMES[s] || s,
-                  icon: SECTOR_ICONS[s] || '🏷️',
-                }))}
+                options={sectorOptions}
               />
             </div>
 
