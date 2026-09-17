@@ -13,6 +13,7 @@ const navItems = [
   { to: '/dashboard', icon: <LayoutDashboard size={16} />, labelKey: 'nav.dashboard', badge: null },
   { to: '/projects',  icon: <FolderKanban size={16} />,     labelKey: 'nav.projects',  badge: null, color: '#2563eb' },
   { to: '/potential-projects', icon: <Target size={16} />, labelKey: 'nav.potential', badge: null, color: '#10b981' },
+  { to: '/project-documents', icon: <FileText size={16} />, labelKey: 'nav.projectDocs', badge: null, color: '#6366f1' },
   { to: '/trending',  icon: <Flame size={16} />,           labelKey: 'nav.trending',  badge: 'HOT', color: '#f97316' },
 ];
 

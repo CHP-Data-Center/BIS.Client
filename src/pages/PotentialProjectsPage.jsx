@@ -684,18 +684,40 @@ function fmtNgay(iso) {
 }
 
 /**
- * Chọn một dự án ĐANG THEO DÕI để gắn mục tiềm năng vào (yêu cầu khách hàng 16/09/2026).
+ * Gắn một mục tiềm năng vào dự án ĐANG THEO DÕI (yêu cầu khách hàng 16/09, MoM 15/09/2026).
  *
- * Gõ tới đâu tìm tới đó qua `/projects/lookup` (máy chủ lọc không dấu), chọn xong hiện ngay
- * vị trí / lĩnh vực / thời gian / trạng thái của dự án để người dùng biết mình gắn đúng chỗ.
+ * Ba bước: (1) lọc & chọn tên dự án — `/projects/lookup` lọc không dấu, mỗi dòng hiện vị trí /
+ * lĩnh vực / thời gian / trạng thái; (2) chỉnh sửa thông tin; (3) bảng duyệt thay đổi — chỉ khi
+ * người dùng bấm "Phê duyệt & lưu" mới ghi dự án theo dõi và tạo liên kết.
  */
-function ProjectLinkModal({ item, onClose, onLinked }) {
+const TRANG_THAI_DU_AN = ['watching', 'active', 'completed', 'closed'];
+const NHAN_TRANG_THAI = {
+  watching: 'projects.statusWatching',
+  active: 'projects.statusActive',
+  completed: 'projects.statusCompleted',
+  closed: 'projects.statusClosed',
+};
+
+function thongTinDuAn(p) {
+  return {
+    display_name: p?.name || '',
+    province: p?.province || '',
+    sector: p?.sector || '',
+    start_date: p?.start_date || '',
+    end_date: p?.end_date || '',
+    status: p?.status || 'watching',
+  };
+}
+
+function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
   const { t } = useLang();
   const [q, setQ] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [chon, setChon] = useState(null);
+  const [buoc, setBuoc] = useState('pick'); // pick | edit | review
+  const [form, setForm] = useState(thongTinDuAn(null));
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -717,14 +739,57 @@ function ProjectLinkModal({ item, onClose, onLinked }) {
     };
   }, [q]);
 
-  const gan = async () => {
+  const tenLinhVuc = (slug) => sectors.find((s) => s.slug === slug)?.name || slug || '—';
+  const nhanTrangThai = (st) => (NHAN_TRANG_THAI[st] ? t(NHAN_TRANG_THAI[st]) : st || '—');
+
+  const goc = thongTinDuAn(chon);
+  // Mỗi dòng bảng duyệt: [nhãn, giá trị hiện tại, giá trị sau chỉnh sửa, đã đổi?]
+  const dongDuyet = [
+    ['potential.reviewDisplayName', item.title || '—', form.display_name || goc.display_name,
+      (form.display_name || goc.display_name) !== (item.title || '')],
+    ['potential.fieldLocation', goc.province || '—', form.province || '—', form.province !== goc.province],
+    ['potential.fieldSector', tenLinhVuc(goc.sector), tenLinhVuc(form.sector), form.sector !== goc.sector],
+    ['potential.fieldStart', fmtNgay(goc.start_date), fmtNgay(form.start_date), form.start_date !== goc.start_date],
+    ['potential.fieldEnd', fmtNgay(goc.end_date), fmtNgay(form.end_date), form.end_date !== goc.end_date],
+    ['projects.status', nhanTrangThai(goc.status), nhanTrangThai(form.status), form.status !== goc.status],
+  ];
+
+  const moChinhSua = () => {
+    if (!chon) return;
+    setForm(thongTinDuAn(chon));
+    setError(null);
+    setBuoc('edit');
+  };
+
+  const sangDuyet = () => {
+    if (form.start_date && form.end_date && form.end_date < form.start_date) {
+      setError(t('potential.dateRangeInvalid'));
+      return;
+    }
+    setError(null);
+    setBuoc('review');
+  };
+
+  const pheDuyet = async () => {
     if (!chon) return;
     setSaving(true);
     setError(null);
     try {
+      // Chỉ gửi trường THẬT SỰ đổi; ô ngày để trống = xóa ngày (null).
+      const patch = {};
+      if (form.province !== goc.province) patch.province = form.province || null;
+      if (form.sector !== goc.sector) patch.sector = form.sector || null;
+      if (form.start_date !== goc.start_date) patch.start_date = form.start_date || null;
+      if (form.end_date !== goc.end_date) patch.end_date = form.end_date || null;
+      if (form.status !== goc.status) patch.status = form.status;
+      if (Object.keys(patch).length > 0) {
+        await projectsService.updateProject(chon.id, patch);
+      }
+      const ten = (form.display_name || '').trim();
       const link = await projectsService.addPotentialLink(chon.id, {
         kind: item.kind,
         ref: String(item.ref),
+        display_name: ten && ten !== chon.name ? ten : null,
         // Link + tiêu đề gốc: mã của ODA/bài báo là id tuần tự, nạp lại nguồn là đổi.
         source_url: item.url || null,
         title_snapshot: item.title || null,
@@ -736,9 +801,18 @@ function ProjectLinkModal({ item, onClose, onLinked }) {
     }
   };
 
+  const nhan = { fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' };
+  const o = { width: '100%', padding: '7px 9px', fontSize: 12.5, boxSizing: 'border-box' };
+  const nutPhu = { background: 'var(--bg-surface-2)', border: '1px solid var(--border)' };
+  const tieuDe = {
+    pick: ['potential.pickProjectTitle', 'potential.pickProjectDesc'],
+    edit: ['potential.editLinkTitle', 'potential.editLinkDesc'],
+    review: ['potential.reviewTitle', 'potential.reviewDesc'],
+  }[buoc];
+
   return createPortal(
     <div
-      onClick={onClose}
+      onClick={saving ? undefined : onClose}
       style={{
         position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.55)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16,
@@ -747,21 +821,26 @@ function ProjectLinkModal({ item, onClose, onLinked }) {
       <div
         onClick={(e) => e.stopPropagation()}
         className="card"
+        role="dialog"
+        aria-modal="true"
         style={{
-          width: '100%', maxWidth: 560, maxHeight: '86vh', display: 'flex', flexDirection: 'column',
+          width: '100%', maxWidth: 600, maxHeight: '88vh', display: 'flex', flexDirection: 'column',
           background: 'var(--bg-surface)', borderRadius: 14, padding: 18, gap: 12,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>
+              {t('potential.linkStep', { n: { pick: 1, edit: 2, review: 3 }[buoc] })}
+            </div>
             <h3 style={{ margin: 0, fontSize: 15.5, fontWeight: 800, color: 'var(--text-primary)' }}>
-              {t('potential.pickProjectTitle')}
+              {t(tieuDe[0])}
             </h3>
             <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-secondary)' }}>
-              {t('potential.pickProjectDesc')}
+              {t(tieuDe[1])}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="btn" style={{ padding: 6, background: 'transparent', border: 'none' }}>
+          <button type="button" onClick={onClose} disabled={saving} className="btn" style={{ padding: 6, background: 'transparent', border: 'none' }}>
             <X size={18} />
           </button>
         </div>
@@ -770,53 +849,167 @@ function ProjectLinkModal({ item, onClose, onLinked }) {
           {item.title}
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <Search size={15} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--text-muted)' }} />
-          <input
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={t('potential.searchProject')}
-            className="form-input"
-            style={{ width: '100%', padding: '8px 10px 8px 32px', fontSize: 12.5, boxSizing: 'border-box' }}
-          />
-        </div>
+        {buoc === 'pick' && (
+          <>
+            <div style={{ position: 'relative' }}>
+              <Search size={15} style={{ position: 'absolute', left: 10, top: 10, color: 'var(--text-muted)' }} />
+              <input
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t('potential.searchProject')}
+                className="form-input"
+                style={{ width: '100%', padding: '8px 10px 8px 32px', fontSize: 12.5, boxSizing: 'border-box' }}
+              />
+            </div>
 
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 120 }}>
-          {loading && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
-              <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('common.loading')}
-            </div>
-          )}
-          {!loading && items.length === 0 && (
-            <div style={{ color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
-              {t('potential.noProjectFound')}
-            </div>
-          )}
-          {!loading && items.map((p) => {
-            const dangChon = chon?.id === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setChon(p)}
-                style={{
-                  textAlign: 'left', padding: '9px 11px', borderRadius: 9, cursor: 'pointer',
-                  border: `1px solid ${dangChon ? 'var(--brand-600, #2563eb)' : 'var(--border)'}`,
-                  background: dangChon ? 'rgba(37, 99, 235, 0.07)' : 'var(--bg-surface-2, transparent)',
-                }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 14px', marginTop: 4, fontSize: 11.5, color: 'var(--text-secondary)' }}>
-                  <span><MapPin size={11} /> {p.province || '—'}</span>
-                  <span>{t('potential.fieldSector')}: {p.sector_name || p.sector || '—'}</span>
-                  <span><Calendar size={11} /> {fmtNgay(p.start_date)} → {fmtNgay(p.end_date)}</span>
-                  <span>{t('projects.status')}: {p.status}</span>
+            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 120 }}>
+              {loading && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
+                  <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('common.loading')}
                 </div>
-              </button>
-            );
-          })}
-        </div>
+              )}
+              {!loading && items.length === 0 && (
+                <div style={{ color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
+                  {t('potential.noProjectFound')}
+                </div>
+              )}
+              {!loading && items.map((p) => {
+                const dangChon = chon?.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setChon(p)}
+                    onDoubleClick={() => { setChon(p); setForm(thongTinDuAn(p)); setBuoc('edit'); }}
+                    style={{
+                      textAlign: 'left', padding: '9px 11px', borderRadius: 9, cursor: 'pointer',
+                      border: `1px solid ${dangChon ? 'var(--brand-600, #2563eb)' : 'var(--border)'}`,
+                      background: dangChon ? 'rgba(37, 99, 235, 0.07)' : 'var(--bg-surface-2, transparent)',
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 14px', marginTop: 4, fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                      <span><MapPin size={11} /> {p.province || '—'}</span>
+                      <span>{t('potential.fieldSector')}: {p.sector_name || p.sector || '—'}</span>
+                      <span><Calendar size={11} /> {fmtNgay(p.start_date)} → {fmtNgay(p.end_date)}</span>
+                      <span>{t('projects.status')}: {nhanTrangThai(p.status)}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {buoc === 'edit' && chon && (
+          <div style={{ overflowY: 'auto', minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+            <label style={{ gridColumn: '1 / -1' }}>
+              <span style={nhan}>{t('potential.reviewDisplayName')}</span>
+              <input
+                autoFocus
+                className="form-input"
+                style={o}
+                maxLength={255}
+                value={form.display_name}
+                onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))}
+              />
+            </label>
+            <label>
+              <span style={nhan}>{t('potential.fieldLocation')}</span>
+              <input
+                className="form-input"
+                style={o}
+                maxLength={255}
+                value={form.province}
+                onChange={(e) => setForm((f) => ({ ...f, province: e.target.value }))}
+              />
+            </label>
+            <label>
+              <span style={nhan}>{t('potential.fieldSector')}</span>
+              <select
+                className="form-input"
+                style={o}
+                value={form.sector}
+                onChange={(e) => setForm((f) => ({ ...f, sector: e.target.value }))}
+              >
+                <option value="">—</option>
+                {form.sector && !sectors.some((s) => s.slug === form.sector) && (
+                  <option value={form.sector}>{form.sector}</option>
+                )}
+                {sectors.map((s) => (
+                  <option key={s.slug} value={s.slug}>{s.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span style={nhan}>{t('potential.fieldStart')}</span>
+              <input
+                type="date"
+                className="form-input"
+                style={o}
+                value={form.start_date}
+                onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+              />
+            </label>
+            <label>
+              <span style={nhan}>{t('potential.fieldEnd')}</span>
+              <input
+                type="date"
+                className="form-input"
+                style={o}
+                value={form.end_date}
+                onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+              />
+            </label>
+            <label>
+              <span style={nhan}>{t('projects.status')}</span>
+              <select
+                className="form-input"
+                style={o}
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
+              >
+                {TRANG_THAI_DU_AN.map((st) => (
+                  <option key={st} value={st}>{nhanTrangThai(st)}</option>
+                ))}
+              </select>
+            </label>
+            <p style={{ gridColumn: '1 / -1', margin: 0, fontSize: 11.5, color: 'var(--text-muted)' }}>
+              {t('potential.editLinkNote')}
+            </p>
+          </div>
+        )}
+
+        {buoc === 'review' && chon && (
+          <div style={{ overflowY: 'auto', minHeight: 0 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>
+                  <th style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{t('potential.reviewField')}</th>
+                  <th style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{t('potential.reviewBefore')}</th>
+                  <th style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>{t('potential.reviewAfter')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '6px 8px', fontWeight: 700 }}>{t('potential.reviewProject')}</td>
+                  <td colSpan={2} style={{ padding: '6px 8px' }}>{chon.name}</td>
+                </tr>
+                {dongDuyet.map(([k, truoc, sau, doi]) => (
+                  <tr key={k} style={{ background: doi ? 'rgba(234, 179, 8, 0.12)' : 'transparent' }}>
+                    <td style={{ padding: '6px 8px', fontWeight: 700, borderTop: '1px solid var(--border)' }}>{t(k)}</td>
+                    <td style={{ padding: '6px 8px', borderTop: '1px solid var(--border)', color: 'var(--text-secondary)' }}>{truoc}</td>
+                    <td style={{ padding: '6px 8px', borderTop: '1px solid var(--border)', fontWeight: doi ? 700 : 400 }}>{sau}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--text-muted)' }}>
+              {t('potential.reviewNote')}
+            </p>
+          </div>
+        )}
 
         {error && (
           <div style={{ fontSize: 12, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -824,20 +1017,55 @@ function ProjectLinkModal({ item, onClose, onLinked }) {
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <button type="button" className="btn" onClick={onClose} style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border)' }}>
-            {t('common.cancel')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={!chon || saving}
-            onClick={gan}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            {saving ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Link2 size={14} />}
-            {t('potential.confirmLink')}
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+          {buoc === 'pick' && (
+            <>
+              <button type="button" className="btn" onClick={onClose} style={nutPhu}>
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!chon}
+                onClick={moChinhSua}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <ArrowRight size={14} /> {t('potential.nextEdit')}
+              </button>
+            </>
+          )}
+          {buoc === 'edit' && (
+            <>
+              <button type="button" className="btn" onClick={() => { setError(null); setBuoc('pick'); }} style={nutPhu}>
+                {t('potential.backToPick')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={sangDuyet}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <Check size={14} /> {t('common.save')}
+              </button>
+            </>
+          )}
+          {buoc === 'review' && (
+            <>
+              <button type="button" className="btn" disabled={saving} onClick={() => setBuoc('edit')} style={nutPhu}>
+                {t('potential.backToEdit')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={saving}
+                onClick={pheDuyet}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                {saving ? <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : <CheckCircle2 size={14} />}
+                {t('potential.approveSave')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,
@@ -1754,6 +1982,7 @@ export default function PotentialProjectsPage() {
       {linkingItem && (
         <ProjectLinkModal
           item={linkingItem}
+          sectors={sectors}
           onClose={() => setLinkingItem(null)}
           onLinked={(link) => {
             setLinks((cur) => [link, ...cur.filter((x) => x.id !== link.id)]);
