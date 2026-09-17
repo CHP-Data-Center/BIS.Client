@@ -463,10 +463,8 @@ export default function TrendingPage() {
   // State từ khóa đã lưu của người dùng & từ khóa xu hướng thị trường
   const [userKeywords, setUserKeywords] = useState(() => apiCache.get(`keywords:all:${lang}`) || []);
   const [trendingKeywords, setTrendingKeywords] = useState(() => apiCache.get('trending:keywords_strip') || []);
+  const [trendingTopicsData, setTrendingTopicsData] = useState(() => apiCache.get('trending:topics_data') || null);
   const [activeTrendingTag, setActiveTrendingTag] = useState(null);
-
-  const hasAnyData = (articles && articles.length > 0) || (canAdb && adbProjects.length > 0) || (canWb && wbProjects.length > 0) || (canProc && procurementItems.length > 0);
-  const [loading, setLoading] = useState(() => !hasAnyData);
 
   // Set các term của userKeywords (lowercase, trimmed)
   const userKeywordTerms = useMemo(() => {
@@ -488,6 +486,175 @@ export default function TrendingPage() {
     }
     return false;
   }, [userKeywordTerms]);
+
+
+  // Map các chủ đề hot & emerging từ API /stats/trending-topics (n-gram, velocity, multi-source)
+  const hotTopicScores = useMemo(() => {
+    const map = new Map();
+    if (trendingTopicsData?.hot && Array.isArray(trendingTopicsData.hot)) {
+      trendingTopicsData.hot.forEach(t => {
+        if (t.phrase) {
+          map.set(t.phrase.toLowerCase().trim(), {
+            phrase: t.phrase,
+            score: t.score || 0,
+            count: t.count || 0,
+            sources: t.sources || 1,
+            is_new: false,
+          });
+        }
+      });
+    }
+    if (trendingTopicsData?.emerging && Array.isArray(trendingTopicsData.emerging)) {
+      trendingTopicsData.emerging.forEach(t => {
+        if (t.phrase) {
+          const lower = t.phrase.toLowerCase().trim();
+          const existing = map.get(lower);
+          if (!existing || (t.score || 0) > existing.score) {
+            map.set(lower, {
+              phrase: t.phrase,
+              score: (t.score || 0) * 1.3,
+              count: t.count || 0,
+              sources: t.sources || 1,
+              is_new: true,
+            });
+          }
+        }
+      });
+    }
+    return map;
+  }, [trendingTopicsData]);
+
+  // Map số lượng bài của từ khóa trending
+  const trendingTermCounts = useMemo(() => {
+    const map = new Map();
+    (trendingKeywords || []).forEach(k => {
+      const term = (k.term || '').toLowerCase().trim();
+      if (term) map.set(term, k.count || 0);
+    });
+    return map;
+  }, [trendingKeywords]);
+
+  // Thuật toán chấm điểm Xu Hướng Thực Sự (Trending Score Engine)
+  const computeItemScore = useCallback((item) => {
+    if (!item) return { score: 0, matchedTopic: null, multiSourceCount: 1, isHot: false };
+
+    // Loại bỏ các mục dạng tab chuyên mục, tiêu đề quá ngắn hoặc tiêu đề trùng tóm tắt
+    const rawTitle = (item.titleVi || item.title || '').trim();
+    const rawExcerpt = (item.excerptVi || item.excerpt || item.ai_summary || '').trim();
+    const wordCount = rawTitle.split(/\s+/).filter(Boolean).length;
+
+    if (wordCount < 4) {
+      return { score: -999, matchedTopic: null, multiSourceCount: 1, isHot: false };
+    }
+    if (rawExcerpt && rawTitle.toLowerCase() === rawExcerpt.toLowerCase() && wordCount < 6) {
+      return { score: -999, matchedTopic: null, multiSourceCount: 1, isHot: false };
+    }
+    if (item.url && /-[A-Z0-9]{7,12}$/.test(item.url)) {
+      return { score: -999, matchedTopic: null, multiSourceCount: 1, isHot: false };
+    }
+
+    let baseScore = 12;
+    let matchedTopic = null;
+    let highestTopicWeight = 0;
+    let isHotTopic = false;
+
+    const title = (item.titleVi || item.title || '').toLowerCase();
+    const excerpt = (item.excerptVi || item.excerpt || item.ai_summary || '').toLowerCase();
+    const fullText = `${title} ${excerpt}`;
+
+    // 1. Đối chiếu cụm chủ đề nóng thực sự từ /stats/trending-topics
+    for (const [phrase, data] of hotTopicScores.entries()) {
+      if (phrase.length < 2) continue;
+      if (title.includes(phrase)) {
+        const weight = Math.min((data.score || 10) * 0.45, 55);
+        baseScore += weight;
+        if (weight > highestTopicWeight) {
+          highestTopicWeight = weight;
+          matchedTopic = data.phrase;
+          isHotTopic = true;
+        }
+      } else if (excerpt.includes(phrase)) {
+        const weight = Math.min((data.score || 10) * 0.22, 28);
+        baseScore += weight;
+        if (!matchedTopic && weight > highestTopicWeight) {
+          highestTopicWeight = weight;
+          matchedTopic = data.phrase;
+          isHotTopic = true;
+        }
+      }
+    }
+
+    // 2. Đối chiếu từ khóa xu hướng hệ thống
+    const itemKws = item.matched_keywords || [];
+    for (const [term, count] of trendingTermCounts.entries()) {
+      if (term.length < 2) continue;
+      const kwMatch = itemKws.some(mk => mk.toLowerCase() === term);
+      const textMatch = fullText.includes(term);
+      if (kwMatch || textMatch) {
+        const bonus = Math.min(count * 0.18, 30);
+        baseScore += bonus;
+        if (!matchedTopic) {
+          matchedTopic = term;
+        }
+      }
+    }
+
+    // 3. Sự kiện Đa Nguồn Báo Chí (Multi-source Cluster) - Dấu hiệu chuẩn nhất của tin nóng
+    const sourceCount = (item.sources && item.sources.length > 0)
+      ? item.sources.length
+      : (item.source_urls && item.source_urls.length > 0 ? item.source_urls.length : 1);
+    if (sourceCount > 1) {
+      baseScore += Math.min((sourceCount - 1) * 35, 75);
+    }
+
+    // 4. Khớp từ khóa người dùng theo dõi
+    if (isUserKeyword(title) || isUserKeyword(excerpt)) {
+      baseScore += 18;
+    }
+
+    // 5. Ảnh đại diện sắc nét cho thẻ tạp chí
+    if (item.image_url) {
+      baseScore += 22;
+    }
+
+    // 6. Tín hiệu tương tác (Bookmark, Read)
+    if (item.is_bookmarked) baseScore += 20;
+    if (item.is_read) baseScore += 8;
+    if (item.match_count) baseScore += Math.min(item.match_count * 4, 20);
+
+    // 7. Hệ số suy giảm thời gian (Recency decay)
+    const pubDateStr = item.published_at || item.date || item.publish_date || item.approval_date;
+    const pubTime = pubDateStr ? new Date(pubDateStr).getTime() : 0;
+    const now = Date.now();
+    const hoursAgo = pubTime > 0 ? Math.max(0, (now - pubTime) / (1000 * 60 * 60)) : 168;
+
+    // Chu kỳ bán rã ~ 4 ngày (96 giờ). Tin nóng hôm qua vẫn giữ nhiệt hơn tin vặt vừa crawl 5 phút!
+    let timeFactor = 1 / (1 + hoursAgo / 96);
+    if (hoursAgo <= 24) timeFactor *= 1.25;
+    else if (hoursAgo <= 48) timeFactor *= 1.1;
+
+    // Giảm nhẹ điểm các văn bản thông báo hành chính/tập huấn nhỏ lẻ
+    if (
+      title.includes('thông báo mời chào giá') ||
+      title.includes('thông báo tuyển dụng') ||
+      title.includes('tập huấn') ||
+      title.includes('kế hoạch đấu giá quyền sử dụng đất đối với diện tích đất nông nghiệp')
+    ) {
+      baseScore *= 0.55;
+    }
+
+    const finalScore = Math.round(baseScore * timeFactor * 10) / 10;
+
+    return {
+      score: finalScore,
+      matchedTopic,
+      multiSourceCount: sourceCount,
+      isHot: isHotTopic
+    };
+  }, [hotTopicScores, trendingTermCounts, isUserKeyword]);
+
+  const hasAnyData = (articles && articles.length > 0) || (canAdb && adbProjects.length > 0) || (canWb && wbProjects.length > 0) || (canProc && procurementItems.length > 0);
+  const [loading, setLoading] = useState(() => !hasAnyData);
 
   // Lấy chi tiết các từ khóa khớp cho 1 item (bài báo, dự án ODA, gói thầu)
   const getMatchedUserKeywords = useCallback((item) => {
@@ -566,8 +733,8 @@ export default function TrendingPage() {
     else if (!hasAnyData) setLoading(true);
 
     const fetchArticles = articlesService.getArticles({
-      size: 60,
-      sort: 'newest',
+      size: 80,
+      sort: 'trending',
       only_my_keywords: false,
       ...(lang !== 'vi' ? { lang } : {})
     }, force)
@@ -622,7 +789,7 @@ export default function TrendingPage() {
         }
       }).catch(err => console.warn('Keywords error:', err));
 
-    const fetchTrendingKws = statsService.getTrending(25, force)
+    const fetchTrendingKws = statsService.getTrending(30, force)
       .then(res => {
         if (Array.isArray(res) && res.length > 0) {
           setTrendingKeywords(res);
@@ -630,7 +797,15 @@ export default function TrendingPage() {
         }
       }).catch(err => console.warn('Trending keywords error:', err));
 
-    await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchKeywords, fetchTrendingKws]);
+    const fetchTrendingTopics = statsService.getTrendingTopics({ window_days: 14, min_count: 2, min_sources: 1 }, force)
+      .then(res => {
+        if (res && (res.hot || res.emerging)) {
+          setTrendingTopicsData(res);
+          apiCache.set('trending:topics_data', res, 300000);
+        }
+      }).catch(err => console.warn('Trending topics error:', err));
+
+    await Promise.allSettled([fetchArticles, fetchAdb, fetchWb, fetchProc, fetchKeywords, fetchTrendingKws, fetchTrendingTopics]);
     trendingLastFetchTime = Date.now();
     trendingLastLang = lang;
     setLoading(false);
@@ -722,14 +897,18 @@ export default function TrendingPage() {
     published_at: p.publish_date || p.date,
   });
 
-  // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
-  // Dữ liệu bài viết hiển thị: lọc theo activeTrendingTag nếu người dùng click vào từ khóa trên dải marquee
+  // Dữ liệu bài viết hiển thị: chấm điểm xu hướng và sắp xếp theo trendingScore thật sự
   const displayArticles = useMemo(() => {
-    if (!activeTrendingTag) return articles;
-    // Không khớp bài nào thì trả về DANH SÁCH RỖNG. Bản cũ rơi về `list` (toàn bộ bài),
-    // nên băng thông báo ghi "đang lọc theo #từ-khóa" trong khi trang hiện mọi bài viết.
-    const q = activeTrendingTag.toLowerCase().trim();
-    return articles.filter(item => khopTuKhoaNoiBat(item, q));
+    let list = articles;
+    if (activeTrendingTag) {
+      const q = activeTrendingTag.toLowerCase().trim();
+      const filtered = list.filter(item => {
+        const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${(item.matched_keywords || []).join(' ')}`.toLowerCase();
+        return text.includes(q);
+      });
+      if (filtered.length > 0) return filtered;
+    }
+    return list;
   }, [articles, activeTrendingTag]);
 
   // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
@@ -756,18 +935,31 @@ export default function TrendingPage() {
       pool.push(...locTheoThe(procurementItems.map(adaptProc)));
     }
 
-    // Sắp xếp theo ngày phát hành mới nhất
-    return pool.sort((a, b) => {
+    return pool.map(item => {
+      if (item._trendingScore !== undefined) return item;
+      const meta = computeItemScore(item);
+      return {
+        ...item,
+        _trendingScore: meta.score,
+        _matchedTopic: meta.matchedTopic,
+        _multiSourceCount: meta.multiSourceCount,
+        _isHot: meta.isHot
+      };
+    }).filter(item => item._trendingScore >= 0).sort((a, b) => {
+      if (b._trendingScore !== a._trendingScore) {
+        return b._trendingScore - a._trendingScore;
+      }
       const timeA = new Date(a.published_at || a.date || a.publish_date || a.approval_date || 0).getTime();
       const timeB = new Date(b.published_at || b.date || b.publish_date || b.approval_date || 0).getTime();
       return timeB - timeA;
     });
-  }, [activeSourceFilter, activeTrendingTag, displayArticles, adbProjects, wbProjects, procurementItems, canAdb, canWb, canProc]);
+  }, [activeSourceFilter, displayArticles, adbProjects, wbProjects, procurementItems, canAdb, canWb, canProc]);
 
-  // Section 1: Lead Hero Item (Top Trending #1)
+  // Section 1: Lead Hero Item (Top Trending #1) - Bài viết xu hướng thực sự cao nhất có ảnh đại diện
   const heroItem = useMemo(() => {
     if (filteredArticles.length > 0) {
-      const withImg = filteredArticles.find(a => a.image_url) || filteredArticles[0];
+      // Ưu tiên bài có điểm xu hướng cao nhất VÀ có ảnh minh họa
+      const withImg = filteredArticles.find(a => a.image_url && (a.titleVi || a.title)) || filteredArticles[0];
       return withImg;
     }
     return null;
@@ -794,32 +986,63 @@ export default function TrendingPage() {
     return filteredRemainingItems.slice(start, start + pageSize);
   }, [filteredRemainingItems, filterPage, pageSize]);
 
-  // Section 2: Sub-Spotlight 3 Thẻ Chuẩn Báo Chí (Đồng bộ 100% cho mọi người dùng)
+  // Section 2: Sub-Spotlight 3 Thẻ Chuẩn Báo Chí (Top #2, #3, #4 xu hướng, đảm bảo đa dạng chủ đề)
   const spotlightCards = useMemo(() => {
+    if (!heroItem) return displayArticles.slice(1, 4);
+    const heroTitlePrefix = (heroItem.titleVi || heroItem.title || '').toLowerCase().slice(0, 25);
+    const seenTopics = new Set([heroTitlePrefix]);
+    if (heroItem._matchedTopic) seenTopics.add(heroItem._matchedTopic.toLowerCase());
+
     const cards = [];
-    if (displayArticles[1]) cards.push(displayArticles[1]);
-    if (displayArticles[2]) cards.push(displayArticles[2]);
-    if (displayArticles[3]) cards.push(displayArticles[3]);
-    // Đảm bảo đủ 3 thẻ
-    while (cards.length < 3 && displayArticles.length > cards.length) {
-      cards.push(displayArticles[cards.length]);
+    for (const item of displayArticles) {
+      if (item.id === heroItem.id) continue;
+      const titlePrefix = (item.titleVi || item.title || '').toLowerCase().slice(0, 25);
+      // Tránh trùng lặp cùng một sự kiện tin tức
+      if (seenTopics.has(titlePrefix)) continue;
+      seenTopics.add(titlePrefix);
+      cards.push(item);
+      if (cards.length === 3) break;
+    }
+
+    // Nếu bộ lọc đa dạng còn thiếu, bổ sung các bài tiếp theo
+    if (cards.length < 3) {
+      for (const item of displayArticles) {
+        if (item.id === heroItem.id || cards.some(c => c.id === item.id)) continue;
+        cards.push(item);
+        if (cards.length === 3) break;
+      }
     }
     return cards;
-  }, [displayArticles]);
+  }, [displayArticles, heroItem]);
 
-  // Section 3: Left Stream 1 & 2 (Đồng bộ cố định, không bị xáo trộn khi mua gói)
+  // Lấy danh sách các bài tiếp theo sau Hero và Spotlight
+  const remainingStreamArticles = useMemo(() => {
+    const excludeIds = new Set();
+    if (heroItem) excludeIds.add(heroItem.id);
+    spotlightCards.forEach(c => c && excludeIds.add(c.id));
+    return displayArticles.filter(a => !excludeIds.has(a.id));
+  }, [displayArticles, heroItem, spotlightCards]);
+
+  // Section 3: Left Stream 1 & 2 (Sắp xếp theo thứ tự nhiệt xu hướng)
   const leftStreamPart1 = useMemo(() => {
-    return displayArticles.slice(4, 10);
-  }, [displayArticles]);
+    return remainingStreamArticles.slice(0, 6);
+  }, [remainingStreamArticles]);
 
   const leftStreamPart2 = useMemo(() => {
-    return displayArticles.slice(10, 16);
-  }, [displayArticles]);
+    return remainingStreamArticles.slice(6, 12);
+  }, [remainingStreamArticles]);
 
-  // Top read articles ranking 1-5 (Đồng bộ cố định)
+  // Top read articles: Sắp xếp theo mức độ đọc & điểm quan tâm
   const topReadArticles = useMemo(() => {
-    return displayArticles.slice(16, 21);
-  }, [displayArticles]);
+    return [...displayArticles]
+      .filter(a => !heroItem || a.id !== heroItem.id)
+      .sort((a, b) => {
+        const scoreA = (a.is_read ? 15 : 0) + (a.is_bookmarked ? 25 : 0) + (a._trendingScore || 0);
+        const scoreB = (b.is_read ? 15 : 0) + (b.is_bookmarked ? 25 : 0) + (b._trendingScore || 0);
+        return scoreB - scoreA;
+      })
+      .slice(0, 8);
+  }, [displayArticles, heroItem]);
 
   // Procurement In-Feed Spotlight (Tenders for Left Column - Hiển thị thêm nếu đã mua gói)
   const procInFeed = useMemo(() => {
@@ -1158,6 +1381,41 @@ export default function TrendingPage() {
                       />
                       <div className="trending-hero-badge-overlay">
                         <span className="trending-pulse-badge">🔥 TOP TRENDING #1</span>
+                        {heroItem._matchedTopic && (
+                          <span style={{
+                            background: 'rgba(234, 88, 12, 0.9)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(254, 215, 170, 0.6)',
+                            color: '#ffffff',
+                            fontSize: 11,
+                            fontWeight: 800,
+                            padding: '3px 9px',
+                            borderRadius: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}>
+                            <Zap size={11} style={{ fill: '#fbbf24', color: '#fbbf24' }} />
+                            #{heroItem._matchedTopic}
+                          </span>
+                        )}
+                        {heroItem._multiSourceCount > 1 && (
+                          <span style={{
+                            background: 'rgba(37, 99, 235, 0.88)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(191, 219, 254, 0.6)',
+                            color: '#ffffff',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '3px 9px',
+                            borderRadius: 6,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}>
+                            📰 {heroItem._multiSourceCount} nguồn tin
+                          </span>
+                        )}
                         {isUserMatch && (
                           <span style={{
                             background: 'rgba(15, 23, 42, 0.78)',
@@ -1359,6 +1617,33 @@ export default function TrendingPage() {
                   className={`trending-sub-card card standard-card ${isUserMatch ? 'article-user-matched' : ''}`}
                   onClick={() => handleItemClick(card)}
                 >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 800, padding: '2px 8px', borderRadius: 6,
+                      background: idx === 0 ? 'rgba(239, 68, 68, 0.12)' : idx === 1 ? 'rgba(249, 115, 22, 0.12)' : 'rgba(234, 179, 8, 0.12)',
+                      color: idx === 0 ? '#ef4444' : idx === 1 ? '#ea580c' : '#d97706',
+                      display: 'inline-flex', alignItems: 'center', gap: 4
+                    }}>
+                      <Flame size={11} />
+                      #{idx + 2} XU HƯỚNG
+                    </span>
+                    {card._matchedTopic && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 750, color: 'var(--brand-700)',
+                        background: 'rgba(59, 130, 246, 0.08)', padding: '2px 6px', borderRadius: 4
+                      }}>
+                        #{card._matchedTopic}
+                      </span>
+                    )}
+                    {card._multiSourceCount > 1 && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, color: '#2563eb',
+                        background: 'rgba(37, 99, 235, 0.08)', padding: '2px 5px', borderRadius: 4
+                      }}>
+                        ● {card._multiSourceCount} nguồn tin
+                      </span>
+                    )}
+                  </div>
                   <div className="sub-card-header">
                     <h3 className="sub-card-title">
                       {card.titleVi || card.title}

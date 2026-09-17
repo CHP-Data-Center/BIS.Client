@@ -36,4 +36,17 @@ export const statsService = {
     apiCache.set(cacheKey, data, 30000); // cache 30s
     return data; // TrendingTerm[]
   },
+
+  /** Chủ đề xu hướng nổi bật & mới nổi (n-gram, velocity, multi-source) */
+  async getTrendingTopics(params = {}, force = false) {
+    const cacheKey = getUserStatsKey(`stats:trending-topics:${JSON.stringify(params)}`);
+    if (!force) {
+      const cached = apiCache.get(cacheKey);
+      if (cached) return cached;
+    }
+    const { data } = await api.get('/stats/trending-topics', { params });
+    apiCache.set(cacheKey, data, 120000); // cache 2m
+    return data; // TrendingTopicsOut
+  },
 };
+
