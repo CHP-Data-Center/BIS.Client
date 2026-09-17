@@ -1249,7 +1249,7 @@ function ProjectDistributionMap() {
             }}
           >
             <span style={{ fontSize: 12, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-              🗺️ {t('dashboard.filterMapTitle')} <span className="mobile-filter-toggle-hint" style={{ fontSize: 10, opacity: 0.85, fontWeight: 600, whiteSpace: 'nowrap' }}>{t('dashboard.filterMapLatest')}</span>
+              🗺️ {t('dashboard.filterMapTitle')}
             </span>
             <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: 20, padding: '2px 8px', fontSize: 11, fontWeight: 700, color: 'white', whiteSpace: 'nowrap', flexShrink: 0 }}>
               {filteredItems.length}/{allItems.length}
