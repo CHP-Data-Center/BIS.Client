@@ -529,7 +529,7 @@ export default {
   'settings.digestTab': 'Smart Email Digest',
   'settings.digestSub': 'Automated news and project summaries delivered to your inbox',
   'settings.digestEnable': 'Enable daily email digest',
-  'settings.digestHour': 'Preferred delivery hour (0 – 23h)',
+  'settings.digestHour': 'Daily email delivery time',
   'settings.digestTimezone': 'Timezone',
   'settings.saveDigestBtn': 'Save Configuration',
   'settings.testDigestBtn': 'Send Test Email',

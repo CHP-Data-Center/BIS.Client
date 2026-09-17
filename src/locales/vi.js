@@ -529,7 +529,7 @@ export default {
   'settings.digestTab': 'Email Digest Thông Minh',
   'settings.digestSub': 'Tóm tắt tin tức tự động gửi về Email',
   'settings.digestEnable': 'Tự động gửi Digest hàng ngày',
-  'settings.digestHour': 'Giờ nhận email trong ngày (0 – 23h)',
+  'settings.digestHour': 'Khung giờ nhận email hàng ngày',
   'settings.digestTimezone': 'Múi giờ làm việc (Timezone)',
   'settings.saveDigestBtn': 'Lưu Cấu Hình',
   'settings.testDigestBtn': 'Gửi Thử Ngay',

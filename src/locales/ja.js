@@ -529,7 +529,7 @@ export default {
   'settings.digestTab': 'スマートメールダイジェスト',
   'settings.digestSub': 'ニュースや案件の要約をメールで自動受信',
   'settings.digestEnable': '毎日のニュース・案件要約メールを受信する',
-  'settings.digestHour': '配信時間 (0 – 23時)',
+  'settings.digestHour': '毎日の配信時間帯',
   'settings.digestTimezone': 'タイムゾーン',
   'settings.saveDigestBtn': '設定を保存',
   'settings.testDigestBtn': 'テスト送信',

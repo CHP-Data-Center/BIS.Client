@@ -475,14 +475,31 @@ export default function SettingsPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
                       <label className="form-label">{t('settings.digestHour')}</label>
-                      <input
-                        type="number" min={0} max={23}
+                      <select
                         className="form-input"
-                        value={digestHour}
-                        onChange={(e) => setDigestHour(e.target.value)}
-                        id="input-digest-hour"
-                        style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10 }}
-                      />
+                        value={Number(digestHour)}
+                        onChange={(e) => setDigestHour(Number(e.target.value))}
+                        id="select-digest-hour"
+                        style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10, lineHeight: '1.4' }}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const time = `${String(i).padStart(2, '0')}:00`;
+                          let hint = '';
+                          if (i === 8) hint = ' ⭐ (Khuyên dùng - Đầu ngày)';
+                          else if (i === 6) hint = ' (Sáng sớm)';
+                          else if (i === 7) hint = ' (Đầu giờ sáng)';
+                          else if (i === 9) hint = ' (Giờ hành chính)';
+                          else if (i === 12) hint = ' (Nghỉ trưa)';
+                          else if (i === 17) hint = ' (Tan tầm)';
+                          else if (i === 18) hint = ' (Cuối ngày)';
+                          else if (i === 20) hint = ' (Buổi tối)';
+                          return (
+                            <option key={i} value={i}>
+                              {time}{hint}
+                            </option>
+                          );
+                        })}
+                      </select>
                     </div>
 
                     <div>
