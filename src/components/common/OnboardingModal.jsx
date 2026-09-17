@@ -15,21 +15,21 @@ import { projectsService } from '../../services/projects';
 import { potentialService } from '../../services/potential';
 
 const ALL_REGIONS = [
-  { id: 'Toàn quốc', label: 'Toàn quốc', desc: 'Theo dõi toàn bộ dự án, ODA & tin tức khắp cả nước' },
-  { id: 'Hà Nội', label: 'Hà Nội', desc: 'Đầu tàu kinh tế & các dự án trọng điểm phía Bắc' },
-  { id: 'TP.HCM', label: 'TP. Hồ Chí Minh', desc: 'Trung tâm tài chính, thương mại & hạ tầng phía Nam' },
-  { id: 'Đà Nẵng', label: 'Đà Nẵng', desc: 'Đô thị thông minh & trung tâm kinh tế ven biển' },
-  { id: 'Miền Bắc', label: 'Miền Bắc', desc: 'Đồng bằng Sông Hồng & các tỉnh Trung du Bắc Bộ' },
-  { id: 'Miền Trung', label: 'Miền Trung', desc: 'Duyên hải Nam Trung Bộ & Vùng đất Tây Nguyên' },
-  { id: 'Miền Nam', label: 'Miền Nam', desc: 'Vùng Đông Nam Bộ & Đồng bằng Sông Cửu Long' },
-  { id: 'Hải Phòng', label: 'Hải Phòng', desc: 'Thành phố cảng biển quốc tế & công nghiệp phụ trợ' },
-  { id: 'Cần Thơ', label: 'Cần Thơ', desc: 'Đô thị hạt nhân Đồng bằng Sông Cửu Long' },
-  { id: 'Quảng Ninh', label: 'Quảng Ninh', desc: 'Vùng kinh tế biển, du lịch & công nghiệp năng lượng' },
-  { id: 'Bình Dương', label: 'Bình Dương', desc: 'Thủ phủ khu công nghiệp & chuỗi cung ứng thông minh' },
-  { id: 'Đồng Nai', label: 'Đồng Nai', desc: 'Cảng hàng không Quốc tế Long Thành & Logistics' },
-  { id: 'Bà Rịa - Vũng Tàu', label: 'Bà Rịa - Vũng Tàu', desc: 'Cụm cảng Cái Mép - Thị Vải & Năng lượng dầu khí' },
-  { id: 'Khánh Hòa', label: 'Khánh Hòa (Nha Trang)', desc: 'Vịnh Vân Phong, đô thị biển & dịch vụ cao cấp' },
-  { id: 'Lâm Đồng', label: 'Lâm Đồng (Đà Lạt)', desc: 'Nông nghiệp công nghệ cao & dự án cao tốc' },
+  { id: 'Toàn quốc', label: 'Toàn quốc', descKey: 'onboarding.regionHint.nationwide' },
+  { id: 'Hà Nội', label: 'Hà Nội', descKey: 'onboarding.regionHint.hanoi' },
+  { id: 'TP.HCM', label: 'TP. Hồ Chí Minh', descKey: 'onboarding.regionHint.hcm' },
+  { id: 'Đà Nẵng', label: 'Đà Nẵng', descKey: 'onboarding.regionHint.danang' },
+  { id: 'Miền Bắc', label: 'Miền Bắc', descKey: 'onboarding.regionHint.north' },
+  { id: 'Miền Trung', label: 'Miền Trung', descKey: 'onboarding.regionHint.central' },
+  { id: 'Miền Nam', label: 'Miền Nam', descKey: 'onboarding.regionHint.south' },
+  { id: 'Hải Phòng', label: 'Hải Phòng', descKey: 'onboarding.regionHint.haiphong' },
+  { id: 'Cần Thơ', label: 'Cần Thơ', descKey: 'onboarding.regionHint.cantho' },
+  { id: 'Quảng Ninh', label: 'Quảng Ninh', descKey: 'onboarding.regionHint.quangninh' },
+  { id: 'Bình Dương', label: 'Bình Dương', descKey: 'onboarding.regionHint.binhduong' },
+  { id: 'Đồng Nai', label: 'Đồng Nai', descKey: 'onboarding.regionHint.dongnai' },
+  { id: 'Bà Rịa - Vũng Tàu', label: 'Bà Rịa - Vũng Tàu', descKey: 'onboarding.regionHint.brvt' },
+  { id: 'Khánh Hòa', label: 'Khánh Hòa (Nha Trang)', descKey: 'onboarding.regionHint.khanhhoa' },
+  { id: 'Lâm Đồng', label: 'Lâm Đồng (Đà Lạt)', descKey: 'onboarding.regionHint.lamdong' },
 ];
 
 const CURATED_KEYWORD_TOPICS = [
@@ -76,13 +76,13 @@ const CURATED_KEYWORD_TOPICS = [
 ];
 
 const HOUR_PRESETS = [
-  { val: 6, label: '06:00', desc: 'Sáng sớm', icon: '🌅' },
-  { val: 7, label: '07:00', desc: 'Đầu giờ sáng', icon: '☕' },
-  { val: 8, label: '08:00', desc: 'Giờ làm việc', icon: '🕗', tag: 'Đề xuất' },
-  { val: 9, label: '09:00', desc: 'Hành chính', icon: '🕘' },
-  { val: 12, label: '12:00', desc: 'Nghỉ trưa', icon: '🕛' },
-  { val: 18, label: '18:00', desc: 'Tan tầm', icon: '🌆' },
-  { val: 20, label: '20:00', desc: 'Buổi tối', icon: '🌙' },
+  { val: 6, label: '06:00', descKey: 'onboarding.hourEarly', icon: '🌅' },
+  { val: 7, label: '07:00', descKey: 'onboarding.hourMorning', icon: '☕' },
+  { val: 8, label: '08:00', descKey: 'onboarding.hourWork', icon: '🕗', tag: 'Đề xuất' },
+  { val: 9, label: '09:00', descKey: 'onboarding.hourOffice', icon: '🕘' },
+  { val: 12, label: '12:00', descKey: 'onboarding.hourLunch', icon: '🕛' },
+  { val: 18, label: '18:00', descKey: 'onboarding.hourEvening', icon: '🌆' },
+  { val: 20, label: '20:00', descKey: 'onboarding.hourNight', icon: '🌙' },
 ];
 
 function SimpleConfetti() {
@@ -256,7 +256,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
 
   const filteredRegions = ALL_REGIONS.filter(r => 
     r.label.toLowerCase().includes(regionSearch.toLowerCase()) ||
-    r.desc.toLowerCase().includes(regionSearch.toLowerCase())
+    t(r.descKey).toLowerCase().includes(regionSearch.toLowerCase())
   );
 
   // Bốn ô BẮT BUỘC, khớp đúng bốn cột bắt buộc của file Excel: hai ô đầu để nhận diện
@@ -349,12 +349,12 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
           // Trùng tên với dự án đã theo dõi thì bỏ qua; lỗi khác phải nói ra, không
           // được nuốt — người dùng sẽ tin là đã lưu xong trong khi chưa.
           if (err.response?.status !== 409) {
-            loiTao.push(`${p.name}: ${err.response?.data?.detail || 'lỗi không rõ'}`);
+            loiTao.push(`${p.name}: ${err.response?.data?.detail || t('onboarding.unknownError')}`);
           }
         }
       }
       if (loiTao.length > 0) {
-        throw new Error(`Không tạo được ${loiTao.length} dự án — ${loiTao[0]}`);
+        throw new Error(t('onboarding.projectCreateFailed', { count: loiTao.length, first: loiTao[0] }));
       }
 
       // 3. Đánh dấu đã hoàn thành setup vào localStorage
@@ -372,7 +372,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
     } catch (err) {
       console.error('Error saving onboarding:', err);
       setSaveError(
-        err.response?.data?.detail || err.message || 'Không thể lưu cài đặt. Vui lòng thử lại.'
+        err.response?.data?.detail || err.message || t('onboarding.saveFailed')
       );
     } finally {
       setSaving(false);
@@ -670,7 +670,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                     <input
                       type="text"
                       className="form-input"
-                      placeholder="Lọc tỉnh thành..."
+                      placeholder={t('onboarding.regionFilterPlaceholder')}
                       value={regionSearch}
                       onChange={(e) => setRegionSearch(e.target.value)}
                       style={{ height: 32, paddingLeft: 26, fontSize: 11.5, borderRadius: 8 }}
@@ -682,7 +682,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                     <input
                       type="text"
                       className="form-input"
-                      placeholder="Hoặc gõ địa bàn khác..."
+                      placeholder={t('onboarding.customRegionInline')}
                       value={customRegion}
                       onChange={(e) => {
                         setCustomRegion(e.target.value);
@@ -710,7 +710,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                         }}
                         style={{ height: 32, padding: '0 8px', fontSize: 11, fontWeight: 700, borderRadius: 8 }}
                       >
-                        {useCustomRegion ? '✓ Đang chọn' : 'Chọn'}
+                        {useCustomRegion ? t('onboarding.selected') : t('onboarding.select')}
                       </button>
                     )}
                   </div>
@@ -733,7 +733,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                   justifyContent: 'space-between',
                   flexShrink: 0
                 }}>
-                  <span>📍 Đang chọn địa bàn tùy biến: <strong>{customRegion.trim()}</strong></span>
+                  <span>{t('onboarding.customRegionActive')} <strong>{customRegion.trim()}</strong></span>
                   <button
                     type="button"
                     onClick={() => {
@@ -742,7 +742,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                     }}
                     style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                   >
-                    Bỏ chọn
+                    {t('onboarding.unselect')}
                   </button>
                 </div>
               )}
@@ -800,7 +800,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                       </div>
 
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.3 }}>
-                        {reg.desc}
+                        {t(reg.descKey)}
                       </div>
                     </div>
                   );
@@ -1197,7 +1197,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                                   {preset.icon} {preset.label}
                                 </div>
                                 <div style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>
-                                  {preset.desc}
+                                  {t(preset.descKey)}
                                 </div>
                               </div>
                               {preset.tag && (
@@ -1223,10 +1223,10 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                         onChange={(e) => setTimezone(e.target.value)}
                         style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10, lineHeight: '1.4' }}
                       >
-                        <option value="Asia/Ho_Chi_Minh">Việt Nam (UTC+7)</option>
+                        <option value="Asia/Ho_Chi_Minh">{t('onboarding.tzVietnam')}</option>
                         <option value="Asia/Bangkok">Bangkok (UTC+7)</option>
                         <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
-                        <option value="UTC">UTC (Quốc tế)</option>
+                        <option value="UTC">{t('onboarding.tzUtc')}</option>
                       </select>
                     </div>
 
@@ -1238,7 +1238,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                       border: '1px solid var(--border)'
                     }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
-                        📬 Tích hợp nội dung vào Email Digest:
+                        {t('onboarding.digestContentTitle')}
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
@@ -1258,10 +1258,10 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontSize: 13 }}>📂 Dự án theo dõi</span>
+                            <span style={{ fontSize: 13 }}>{t('onboarding.digestProjects')}</span>
                             <input type="checkbox" checked={digestProjects} onChange={() => {}} style={{ cursor: 'pointer' }} />
                           </div>
-                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>Tiến độ các dự án bạn đã lưu</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>{t('onboarding.digestProjectsDesc')}</span>
                         </div>
 
                         {/* 2. Dự án tiềm năng */}
@@ -1280,10 +1280,10 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontSize: 13 }}>🚀 Dự án tiềm năng</span>
+                            <span style={{ fontSize: 13 }}>{t('onboarding.digestPotential')}</span>
                             <input type="checkbox" checked={digestPotential} onChange={() => {}} style={{ cursor: 'pointer' }} />
                           </div>
-                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>Cơ hội theo dõi theo lĩnh vực</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>{t('onboarding.digestPotentialDesc')}</span>
                         </div>
 
                         {/* 3. Trending */}
@@ -1302,10 +1302,10 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontSize: 13 }}>🔥 Điểm tin Trending</span>
+                            <span style={{ fontSize: 13 }}>{t('onboarding.digestTrending')}</span>
                             <input type="checkbox" checked={digestTrending} onChange={() => {}} style={{ cursor: 'pointer' }} />
                           </div>
-                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>Chủ đề nổi bật &amp; thảo luận nóng</span>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.25 }}>{t('onboarding.digestTrendingDesc')}</span>
                         </div>
                       </div>
                     </div>
@@ -1333,7 +1333,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                     <Sparkles size={14} />
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-secondary)', lineHeight: 1.35 }}>
-                    <strong style={{ color: 'var(--text-primary)' }}>Bản tin AI thông minh:</strong> Tự động tổng hợp Dự án theo dõi, Dự án tiềm năng, Xu hướng Trending &amp; Tin tức từ khóa gửi về email lúc <strong>{digestHour}:00</strong>.
+                    <strong style={{ color: 'var(--text-primary)' }}>{t('onboarding.aiDigestLabel')}</strong> {t('onboarding.aiDigestDesc', { hour: digestHour })}
                   </div>
                 </div>
               </div>
@@ -1393,12 +1393,12 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                   }}>
                     {digestEnabled ? (
                       <>
-                        🟢 Bật lúc {digestHour}:00 hàng ngày
+                        {t('onboarding.digestOnAt', { hour: digestHour })}
                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginTop: 2 }}>
-                          {[digestProjects && '📂 Dự án', digestPotential && '🚀 Tiềm năng', digestTrending && '🔥 Trending'].filter(Boolean).join(' · ') || 'Bộ lọc chuẩn'}
+                          {[digestProjects && t('onboarding.digestChipProjects'), digestPotential && t('onboarding.digestChipPotential'), digestTrending && t('onboarding.digestChipTrending')].filter(Boolean).join(' · ') || t('onboarding.digestStandardFilter')}
                         </div>
                       </>
-                    ) : '⚪ Đang tắt'}
+                    ) : t('onboarding.digestOff')}
                   </div>
                 </div>
 
@@ -1447,16 +1447,16 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 6, flexWrap: 'wrap'
                 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Newspaper size={12} style={{ color: '#3b82f6' }} /> Báo Chí Toàn Quốc
+                    <Newspaper size={12} style={{ color: '#3b82f6' }} /> {t('onboarding.featurePress')}
                   </span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Building size={12} style={{ color: '#f59e0b' }} /> Đấu Thầu GOV
+                    <Building size={12} style={{ color: '#f59e0b' }} /> {t('onboarding.featureGov')}
                   </span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Globe size={12} style={{ color: '#10b981' }} /> ODA World Bank & ADB
                   </span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Bot size={12} style={{ color: '#a855f7' }} /> Trợ Lý AI Gemini
+                    <Bot size={12} style={{ color: '#a855f7' }} /> {t('onboarding.featureAi')}
                   </span>
                 </div>
               </div>

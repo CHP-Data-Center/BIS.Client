@@ -423,11 +423,11 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
                     borderRadius: 'var(--radius-full)', fontSize: 10, fontWeight: 800,
                   }}>
                     <Zap size={9} /> {
-                      isPersonalUser ? 'NGƯỜI DÙNG CÁ NHÂN'
-                      : user?.role === 'super_admin' ? 'SUPER ADMIN'
-                      : user?.role === 'admin' ? 'ADMIN PHÂN VÙNG'
-                      : user?.role === 'staff' ? 'NHÂN VIÊN'
-                      : 'NGƯỜI DÙNG'
+                      isPersonalUser ? t('role.personal')
+                      : user?.role === 'super_admin' ? t('role.superAdmin')
+                      : user?.role === 'admin' ? t('role.regionAdmin')
+                      : user?.role === 'staff' ? t('role.staff')
+                      : t('role.user')
                     }
                   </div>
                 </div>

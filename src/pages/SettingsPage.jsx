@@ -80,20 +80,20 @@ export default function SettingsPage() {
   const handleChangePw = async (e) => {
     e.preventDefault();
     if (newPw !== newPw2) {
-      showMsg(setPwMsg, 'error', 'Mật khẩu mới không khớp.');
+      showMsg(setPwMsg, 'error', t('settings.pwMismatch'));
       return;
     }
     if (newPw.length < 8) {
-      showMsg(setPwMsg, 'error', 'Mật khẩu mới tối thiểu 8 ký tự.');
+      showMsg(setPwMsg, 'error', t('settings.pwTooShort'));
       return;
     }
     setPwLoading(true);
     try {
       await authService.changePassword(oldPw, newPw);
       setOldPw(''); setNewPw(''); setNewPw2('');
-      showMsg(setPwMsg, 'success', 'Đổi mật khẩu thành công!');
+      showMsg(setPwMsg, 'success', t('settings.pwChanged'));
     } catch (err) {
-      showMsg(setPwMsg, 'error', err.response?.data?.detail || 'Mật khẩu hiện tại không đúng.');
+      showMsg(setPwMsg, 'error', err.response?.data?.detail || t('settings.pwWrongCurrent'));
     } finally {
       setPwLoading(false);
     }
@@ -121,9 +121,9 @@ export default function SettingsPage() {
         localStorage.setItem(`bis_user_region_${userKey}`, finalRegion);
       }
       await refreshUser();
-      showMsg(setPrefMsg, 'success', 'Đã lưu cấu hình Phân Vùng & Email Digest thành công!');
+      showMsg(setPrefMsg, 'success', t('settings.prefSaved'));
     } catch (err) {
-      showMsg(setPrefMsg, 'error', err.response?.data?.detail || 'Không thể lưu cài đặt.');
+      showMsg(setPrefMsg, 'error', err.response?.data?.detail || t('settings.prefSaveFailed'));
     } finally {
       setPrefLoading(false);
     }
@@ -136,7 +136,7 @@ export default function SettingsPage() {
       const res = await settingsService.runDigestNow();
       setRunResult(res);
     } catch (err) {
-      showMsg(setPrefMsg, 'error', err.response?.data?.detail || 'Không thể gửi email digest.');
+      showMsg(setPrefMsg, 'error', err.response?.data?.detail || t('settings.digestSendFailed'));
     } finally {
       setRunLoading(false);
     }
@@ -333,8 +333,8 @@ export default function SettingsPage() {
                   <BellRing size={22} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>Phân Vùng & Email Digest</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Cá nhân hóa địa bàn & nhận báo cáo tự động</div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>{t('settings.regionDigestTitle')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('settings.regionDigestSub')}</div>
                 </div>
               </div>
 
@@ -354,7 +354,7 @@ export default function SettingsPage() {
               {/* Phân Vùng Selection */}
               <div>
                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MapPin size={14} style={{ color: 'var(--brand-500)' }} /> Phân Vùng Hoạt Động
+                  <MapPin size={14} style={{ color: 'var(--brand-500)' }} /> {t('settings.regionLabel')}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   <select
@@ -368,10 +368,10 @@ export default function SettingsPage() {
                     id="select-user-region"
                     style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10, lineHeight: '1.4' }}
                   >
-                    <option value="Toàn quốc">Toàn quốc (Mặc định)</option>
-                    <option value="Miền Bắc">Miền Bắc</option>
-                    <option value="Miền Trung">Miền Trung</option>
-                    <option value="Miền Nam">Miền Nam</option>
+                    <option value="Toàn quốc">{t('settings.regionNationwideDefault')}</option>
+                    <option value="Miền Bắc">{t('settings.regionNorth')}</option>
+                    <option value="Miền Trung">{t('settings.regionCentral')}</option>
+                    <option value="Miền Nam">{t('settings.regionSouth')}</option>
                     <option value="Hà Nội">Hà Nội</option>
                     <option value="TP.HCM">TP. Hồ Chí Minh</option>
                     <option value="Đà Nẵng">Đà Nẵng</option>
@@ -380,12 +380,12 @@ export default function SettingsPage() {
                     <option value="Quảng Ninh">Quảng Ninh</option>
                     <option value="Bình Dương">Bình Dương</option>
                     <option value="Đồng Nai">Đồng Nai</option>
-                    <option value="__custom__">✏️ Khác (Tự gõ bên cạnh)</option>
+                    <option value="__custom__">{t('settings.regionCustom')}</option>
                   </select>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Tên địa phương..."
+                    placeholder={t('settings.regionPlaceholder')}
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
                     id="input-user-region-custom"
@@ -435,7 +435,7 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>{t('settings.digestEnable')}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>Gửi báo cáo tổng hợp tự động về {user?.email}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{t('settings.digestSendTo', { email: user?.email || '' })}</div>
                   </div>
                 </div>
 
@@ -492,10 +492,10 @@ export default function SettingsPage() {
                         id="select-timezone"
                         style={{ minHeight: 40, height: 40, padding: '8px 12px', fontSize: 13, borderRadius: 10, lineHeight: '1.4' }}
                       >
-                        <option value="Asia/Ho_Chi_Minh">Việt Nam (UTC+7)</option>
+                        <option value="Asia/Ho_Chi_Minh">{t('onboarding.tzVietnam')}</option>
                         <option value="Asia/Bangkok">Bangkok (UTC+7)</option>
                         <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
-                        <option value="UTC">UTC (Quốc tế)</option>
+                        <option value="UTC">{t('onboarding.tzUtc')}</option>
                       </select>
                     </div>
                   </div>
@@ -508,7 +508,7 @@ export default function SettingsPage() {
                     padding: '12px 14px',
                   }}>
                     <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span>📬 Nội dung tích hợp vào Email Digest:</span>
+                      <span>{t('settings.digestContentTitle')}</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -530,7 +530,7 @@ export default function SettingsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           <span style={{ fontSize: 14 }}>📂</span>
                           <span style={{ fontSize: 12, fontWeight: digestProjects ? 700 : 500, color: digestProjects ? '#1d4ed8' : 'var(--text-secondary)' }}>
-                            Dự án theo dõi
+                            {t('settings.digestProjects')}
                           </span>
                         </div>
                         <input
@@ -559,7 +559,7 @@ export default function SettingsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           <span style={{ fontSize: 14 }}>🚀</span>
                           <span style={{ fontSize: 12, fontWeight: digestPotential ? 700 : 500, color: digestPotential ? '#047857' : 'var(--text-secondary)' }}>
-                            Dự án tiềm năng
+                            {t('settings.digestPotential')}
                           </span>
                         </div>
                         <input
@@ -588,7 +588,7 @@ export default function SettingsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           <span style={{ fontSize: 14 }}>🔥</span>
                           <span style={{ fontSize: 12, fontWeight: digestTrending ? 700 : 500, color: digestTrending ? '#c2410c' : 'var(--text-secondary)' }}>
-                            Xu hướng &amp; Trending
+                            {t('settings.digestTrending')}
                           </span>
                         </div>
                         <input
@@ -617,7 +617,7 @@ export default function SettingsPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                           <span style={{ fontSize: 14 }}>🏷️</span>
                           <span style={{ fontSize: 12, fontWeight: digestKeywords ? 700 : 500, color: digestKeywords ? '#4338ca' : 'var(--text-secondary)' }}>
-                            Từ khóa của bạn
+                            {t('settings.digestKeywords')}
                           </span>
                         </div>
                         <input
@@ -635,7 +635,7 @@ export default function SettingsPage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
                 <button className="btn btn-primary" onClick={handleSavePreferences} disabled={prefLoading} style={{ flex: 1, gap: 6, height: 44, justifyContent: 'center', fontWeight: 800 }} id="btn-save-digest">
                   {prefLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={15} />}
-                  Lưu Cấu Hình
+                  {t('settings.saveConfig')}
                 </button>
                 <button className="btn btn-secondary" onClick={handleRunDigest} disabled={runLoading} style={{ flex: 1, gap: 6, height: 44, justifyContent: 'center', fontWeight: 700 }} id="btn-run-digest">
                   {runLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Mail size={15} />}

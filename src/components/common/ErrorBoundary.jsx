@@ -137,7 +137,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
               marginBottom: '10px',
               letterSpacing: '-0.4px',
             }}>
-              Đã xảy ra lỗi hệ thống giao diện
+              {tUI('errorBoundary.title')}
             </h2>
 
             <p style={{
@@ -149,7 +149,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
               marginLeft: 'auto',
               marginRight: 'auto',
             }}>
-              Một phần của giao diện gặp sự cố khi xử lý dữ liệu. Bạn hãy thử <strong>{tUI('ui.tai-lai-trang')}</strong> {tUI('ui.hoac')} <strong>{tUI('ui.xoa-cache')}</strong>{tUI('ui.neu-su-co-tiep-dien-vui-long-gui')} <strong>{tUI('ui.bao-cao-su-co')}</strong> cho quản trị viên.
+              {tUI('errorBoundary.desc')}
             </p>
 
             {/* Main Action Buttons */}
@@ -198,7 +198,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
                       animation: isReloading ? 'spin 0.8s linear infinite' : 'none',
                     }}
                   />
-                  <span>{isReloading ? 'Đang tải lại...' : 'Tải lại trang'}</span>
+                  <span>{isReloading ? tUI('errorBoundary.reloading') : tUI('errorBoundary.reload')}</span>
                 </button>
 
                 {/* Button 2: Copy Error Report */}
@@ -234,7 +234,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
                   }}
                 >
                   {copied ? <Check size={16} color="#15803d" /> : <Bug size={16} style={{ color: '#ef4444' }} />}
-                  <span>{copied ? 'Đã sao chép báo cáo!' : 'Báo cáo sự cố'}</span>
+                  <span>{copied ? tUI('errorBoundary.reportCopied') : tUI('errorBoundary.report')}</span>
                 </button>
               </div>
 
@@ -261,7 +261,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
                 onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
               >
                 <Trash2 size={13} />
-                <span>{isClearingCache ? 'Đang xóa bộ nhớ đệm...' : 'Xóa bộ nhớ đệm & Tải lại (Troubleshoot)'}</span>
+                <span>{isClearingCache ? tUI('errorBoundary.clearingCache') : tUI('errorBoundary.clearCache')}</span>
               </button>
             </div>
 
@@ -283,7 +283,7 @@ Stack: ${this.state.errorInfo?.componentStack || 'No Component Stack'}`;
                   letterSpacing: '0.5px',
                 }}
               >
-                <span>{showDetails ? 'Ẩn chi tiết kỹ thuật' : 'Xem chi tiết kỹ thuật (Developer Info)'}</span>
+                <span>{showDetails ? tUI('errorBoundary.hideDetails') : tUI('errorBoundary.showDetails')}</span>
                 {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
 

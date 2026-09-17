@@ -51,7 +51,7 @@ function HighlightedText({ text, query }) {
 function SectionCard({ kind, title, total, toAll, onSelectTab, isGridView, children, t, query }) {
   const meta = SECTION_STYLE[kind];
   const Icon = meta.icon;
-  const resultsUnitStr = (t('search.resultsCount') && !t('search.resultsCount').includes('.')) ? t('search.resultsCount') : 'kết quả';
+  const resultsUnitStr = t('search.resultsCount');
 
   return (
     <div
@@ -104,7 +104,7 @@ function SectionCard({ kind, title, total, toAll, onSelectTab, isGridView, child
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}>
-              {kind === 'adb' && isGridView ? 'Dự án ADB' : kind === 'wb' && isGridView ? 'Dự án World Bank' : title}
+              {kind === 'adb' && isGridView ? t('search.adb') : kind === 'wb' && isGridView ? t('search.wb') : title}
             </h3>
             <span style={{
               fontSize: 11,
@@ -143,7 +143,7 @@ function SectionCard({ kind, title, total, toAll, onSelectTab, isGridView, child
               whiteSpace: 'nowrap',
             }}
           >
-            <span>{isGridView ? 'Xem riêng' : (t('search.viewAll') || 'Xem tất cả')}</span>
+            <span>{isGridView ? t('search.viewSeparately') : t('search.viewAll')}</span>
             <ChevronRight size={13} />
           </button>
         )}
@@ -151,7 +151,7 @@ function SectionCard({ kind, title, total, toAll, onSelectTab, isGridView, child
 
       {total === 0 ? (
         <div style={{ fontSize: 12.5, color: 'var(--text-muted)', padding: '24px 8px', textAlign: 'center', fontStyle: 'italic', flex: 1 }}>
-          {t('search.empty') || 'Không tìm thấy dữ liệu phù hợp trong danh mục này.'}
+          {t('search.emptySection')}
         </div>
       ) : (
         <div
@@ -364,10 +364,10 @@ export default function GlobalSearchPage() {
             </div>
             <div>
               <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                {t('search.title') || 'Tìm kiếm toàn cục'}
+                {t('search.title')}
               </h1>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                Tra cứu đồng thời trên 4 kho dữ liệu: Báo chí, Mua sắm công, World Bank & ADB
+                {t('search.subtitle')}
               </div>
             </div>
           </div>
@@ -382,7 +382,7 @@ export default function GlobalSearchPage() {
               padding: '6px 14px',
               borderRadius: 20,
             }}>
-              ✨ {totalResults} kết quả khớp từ khóa
+              ✨ {t('search.matchedBadge', { count: totalResults })}
             </div>
           )}
         </div>
@@ -394,7 +394,7 @@ export default function GlobalSearchPage() {
               type="text"
               value={queryInput}
               onChange={(e) => setQueryInput(e.target.value)}
-              placeholder="Nhập từ khóa tìm kiếm (ví dụ: công nghiệp, World Bank, thủy lợi)..."
+              placeholder={t('search.inputPlaceholder')}
               style={{
                 width: '100%',
                 height: 46,
@@ -429,7 +429,7 @@ export default function GlobalSearchPage() {
             }}
           >
             <Search size={16} />
-            <span>Tìm kiếm</span>
+            <span>{t('common.search')}</span>
           </button>
         </form>
       </div>
@@ -438,9 +438,9 @@ export default function GlobalSearchPage() {
       {q && !loading && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 16, marginBottom: 8 }}>
           {[
-            { id: 'all', label: 'Tất cả', count: totalResults, icon: Layers, color: '#9333ea', activeBg: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)' },
-            { id: 'press', label: t('search.press') || 'Báo Chí', count: data.press?.total || 0, icon: Newspaper, color: '#2563eb', activeBg: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)' },
-            { id: 'proc', label: t('search.proc') || 'Mua Sắm Công', count: data.proc?.total || 0, icon: ShoppingBag, color: '#9333ea', activeBg: 'linear-gradient(135deg, #9333ea 0%, #a855f7 100%)' },
+            { id: 'all', label: t('common.all'), count: totalResults, icon: Layers, color: '#9333ea', activeBg: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)' },
+            { id: 'press', label: t('search.pressShort'), count: data.press?.total || 0, icon: Newspaper, color: '#2563eb', activeBg: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)' },
+            { id: 'proc', label: t('search.proc'), count: data.proc?.total || 0, icon: ShoppingBag, color: '#9333ea', activeBg: 'linear-gradient(135deg, #9333ea 0%, #a855f7 100%)' },
             { id: 'wb', label: 'World Bank', count: data.wb?.total || 0, icon: Globe, color: '#059669', activeBg: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' },
             { id: 'adb', label: 'ADB', count: data.adb?.total || 0, icon: Building2, color: '#d97706', activeBg: 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)' },
           ].map((tab) => {
@@ -489,7 +489,7 @@ export default function GlobalSearchPage() {
 
       {/* Main Content Area */}
       {loading ? (
-        <ThemePageLoader message="Đang quét tìm kiếm trên 4 cơ sở dữ liệu..." minHeight="420px" />
+        <ThemePageLoader message={t('search.loading')} minHeight="420px" />
       ) : !q ? (
         <div style={{
           background: 'var(--bg-surface)',
@@ -501,10 +501,10 @@ export default function GlobalSearchPage() {
         }}>
           <Search size={40} style={{ color: 'var(--brand-500)', marginBottom: 12 }} />
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>
-            Vui lòng nhập từ khóa để bắt đầu tìm kiếm
+            {t('search.promptTitle')}
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 460, margin: '0 auto' }}>
-            Hệ thống sẽ đồng thời tìm kiếm trên Báo chí, Gói thầu Mua sắm công (TBMT & KHLCNT), Dự án World Bank & ADB.
+            {t('search.promptSub')}
           </div>
         </div>
       ) : totalResults === 0 ? (
@@ -517,10 +517,10 @@ export default function GlobalSearchPage() {
         }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
-            Không tìm thấy kết quả phù hợp cho từ khóa “{q}”
+            {t('search.noResultTitle', { query: q })}
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto 20px' }}>
-            Thử kiểm tra lại lỗi chính tả, sử dụng từ khóa ngắn hơn hoặc các thuật ngữ chung như "World Bank", "Thủy lợi", "Bưu chính".
+            {t('search.noResultSub')}
           </div>
         </div>
       ) : (
@@ -536,7 +536,7 @@ export default function GlobalSearchPage() {
           {(activeTab === 'all' || activeTab === 'press') && (
             <SectionCard
               kind="press"
-              title={t('search.press') || 'Báo Chí'}
+              title={t('search.press')}
               total={data.press?.total || 0}
               toAll={SECTION_STYLE.press.to(q)}
               onSelectTab={() => setActiveTab('press')}
@@ -552,7 +552,7 @@ export default function GlobalSearchPage() {
                   sub={a.source_name || a.published_at}
                   to={`/article/${a.id}`}
                   query={q}
-                  badgeText="Báo Chí"
+                  badgeText={t('search.pressShort')}
                   badgeColor="#3b82f6"
                   compact={activeTab === 'all'}
                 />
@@ -564,7 +564,7 @@ export default function GlobalSearchPage() {
           {(activeTab === 'all' || activeTab === 'proc') && (
             <SectionCard
               kind="proc"
-              title={t('search.proc') || 'Mua Sắm Công (TBMT / KHLCNT)'}
+              title={t('search.proc')}
               total={data.proc?.total || 0}
               toAll={SECTION_STYLE.proc.to(q)}
               onSelectTab={() => setActiveTab('proc')}
@@ -591,7 +591,7 @@ export default function GlobalSearchPage() {
           {(activeTab === 'all' || activeTab === 'wb') && (
             <SectionCard
               kind="wb"
-              title="Dự án World Bank (WB)"
+              title={t('search.wbSection')}
               total={data.wb?.total || 0}
               toAll={SECTION_STYLE.wb.to(q)}
               onSelectTab={() => setActiveTab('wb')}
@@ -618,7 +618,7 @@ export default function GlobalSearchPage() {
           {(activeTab === 'all' || activeTab === 'adb') && (
             <SectionCard
               kind="adb"
-              title="Dự án Ngân hàng Phát triển Châu Á (ADB)"
+              title={t('search.adbSection')}
               total={data.adb?.total || 0}
               toAll={SECTION_STYLE.adb.to(q)}
               onSelectTab={() => setActiveTab('adb')}
