@@ -745,8 +745,10 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
   const goc = thongTinDuAn(chon);
   // Mỗi dòng bảng duyệt: [nhãn, giá trị hiện tại, giá trị sau chỉnh sửa, đã đổi?]
   const dongDuyet = [
+    // Dòng này so với TÊN MẶC ĐỊNH sẽ gắn (tên dự án theo dõi), không so với tiêu đề gốc
+    // của mục tiềm năng — so kiểu cũ thì dòng luôn bị tô "đã đổi" dù người dùng không gõ gì.
     ['potential.reviewDisplayName', item.title || '—', form.display_name || goc.display_name,
-      (form.display_name || goc.display_name) !== (item.title || '')],
+      (form.display_name || '').trim() !== '' && (form.display_name || '').trim() !== goc.display_name],
     ['potential.fieldLocation', goc.province || '—', form.province || '—', form.province !== goc.province],
     ['potential.fieldSector', tenLinhVuc(goc.sector), tenLinhVuc(form.sector), form.sector !== goc.sector],
     ['potential.fieldStart', fmtNgay(goc.start_date), fmtNgay(form.start_date), form.start_date !== goc.start_date],
@@ -782,9 +784,6 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
       if (form.start_date !== goc.start_date) patch.start_date = form.start_date || null;
       if (form.end_date !== goc.end_date) patch.end_date = form.end_date || null;
       if (form.status !== goc.status) patch.status = form.status;
-      if (Object.keys(patch).length > 0) {
-        await projectsService.updateProject(chon.id, patch);
-      }
       const ten = (form.display_name || '').trim();
       const link = await projectsService.addPotentialLink(chon.id, {
         kind: item.kind,
@@ -793,6 +792,10 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
         // Link + tiêu đề gốc: mã của ODA/bài báo là id tuần tự, nạp lại nguồn là đổi.
         source_url: item.url || null,
         title_snapshot: item.title || null,
+        // Gửi KÈM thay vì PATCH riêng trước đó: tách làm hai lệnh thì lệnh gắn hỏng (mục đã
+        // gắn, ngoài gói dịch vụ, rớt mạng) là dự án đã bị sửa xong rồi, trong khi bảng
+        // duyệt vừa hứa "chưa phê duyệt thì không có thay đổi nào được ghi".
+        project_update: Object.keys(patch).length > 0 ? patch : null,
       });
       onLinked({ ...link, project_name: link.project_name || chon.name });
     } catch (e) {

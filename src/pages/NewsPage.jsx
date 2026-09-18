@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
 import { articlesService } from '../services/articles';
+import { potentialService } from '../services/potential';
 import { keywordsService } from '../services/keywords';
 import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
@@ -340,6 +341,9 @@ export default function NewsPage() {
   const [onlyMyKw, setOnlyMyKw]       = useState(false);
   const [selectedSourceId, setSelectedSourceId] = useState(searchParams.get('source_id') || '');
   const [availableSources, setAvailableSources] = useState([]);
+  // Lọc theo lĩnh vực hạ tầng (FR-05, Phụ lục B Thỏa thuận dịch vụ).
+  const [selectedSector, setSelectedSector] = useState(searchParams.get('sector') || '');
+  const [sectors, setSectors] = useState([]);
   const [loadingSources, setLoadingSources]     = useState(false);
   const [userKeywords, setUserKeywords]         = useState([]);
   const [kwExpanded, setKwExpanded]             = useState(false);
@@ -407,6 +411,7 @@ export default function NewsPage() {
       const from = overrideFilters && overrideFilters.from !== undefined ? overrideFilters.from : dateFrom;
       const to = overrideFilters && overrideFilters.to !== undefined ? overrideFilters.to : dateTo;
       const sid = overrideFilters && overrideFilters.sourceId !== undefined ? overrideFilters.sourceId : selectedSourceId;
+      const sec = overrideFilters && overrideFilters.sector !== undefined ? overrideFilters.sector : selectedSector;
 
       if (from && to && from > to) {
         setLoading(false);
@@ -441,6 +446,7 @@ export default function NewsPage() {
         if (q)              params.q           = q;
         if (srcConfig.type) params.source_type = srcConfig.type;
         if (sid)            params.source_id   = Number(sid);
+        if (sec)            params.sector      = sec;
         if (from)           params.date_from   = from;
         if (to)             params.date_to     = to;
         if (lang !== 'vi')  params.lang        = lang; // bài có bản dịch hiện EN/JA
@@ -458,7 +464,7 @@ export default function NewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw, selectedSourceId, lang]);
+  }, [search, sortBy, srcConfig, dateFrom, dateTo, onlyMyKw, selectedSourceId, selectedSector, lang]);
 
   const fetchBookmarks = useCallback(async () => {
     setLoadingBookmarks(true);
@@ -503,7 +509,7 @@ export default function NewsPage() {
   useEffect(() => {
     if (dateFrom && dateTo && dateFrom > dateTo) return;
     fetchArticles(page);
-  }, [source, search, page, sortBy, selectedSourceId, dateFrom, dateTo, onlyMyKw, lang, fetchArticles]);
+  }, [source, search, page, sortBy, selectedSourceId, selectedSector, dateFrom, dateTo, onlyMyKw, lang, fetchArticles]);
 
   // Bookmarks & background update event listener
   useEffect(() => {
@@ -573,6 +579,15 @@ export default function NewsPage() {
     handleApplyDateRange(f, t);
   };
 
+  // Danh sách lĩnh vực cho bộ lọc (dùng chung với Dự Án Tiềm Năng).
+  useEffect(() => {
+    let alive = true;
+    potentialService
+      .getSectors()
+      .then((ds) => { if (alive) setSectors(ds || []); })
+      .catch(() => { if (alive) setSectors([]); });
+    return () => { alive = false; };
+  }, []);
   const handleReset = () => {
     setSearchInput('');
     setSearch('');
@@ -580,11 +595,12 @@ export default function NewsPage() {
     setDateFrom('');
     setDateTo('');
     setSelectedSourceId('');
+    setSelectedSector('');
     setOnlyMyKw(false);
     setOnlyBookmarked(false);
     setPage(1);
     updateQueryParams('', '', '', '');
-    fetchArticles(1, '', true, { from: '', to: '', sourceId: '' });
+    fetchArticles(1, '', true, { from: '', to: '', sourceId: '', sector: '' });
   };
 
   const handlePageChange = (p) => {
@@ -893,6 +909,32 @@ export default function NewsPage() {
               <option value="">{t('news.allSources')}</option>
               {availableSources.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Dropdown Lĩnh vực (FR-05: lọc theo lĩnh vực hạ tầng) */}
+        {srcConfig.api === 'articles' && (
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>
+              {t('news.sector')}
+            </label>
+            <select
+              id="select-news-sector"
+              className="form-input"
+              style={{ minHeight: 38, padding: '6px 10px', fontSize: 12, lineHeight: 1.4 }}
+              value={selectedSector}
+              onChange={e => {
+                const val = e.target.value;
+                setSelectedSector(val);
+                setPage(1);
+                fetchArticles(1, search, true, { from: dateFrom, to: dateTo, sourceId: selectedSourceId, sector: val });
+              }}
+            >
+              <option value="">{t('news.allSectors')}</option>
+              {sectors.map(s => (
+                <option key={s.slug} value={s.slug}>{s.name}</option>
               ))}
             </select>
           </div>

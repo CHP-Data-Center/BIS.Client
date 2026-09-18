@@ -5,7 +5,7 @@ import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles, FolderKanban,
   CheckCircle2, AlertCircle, Loader2, Globe, Zap, Activity,
   Search, Check, X, Edit, CheckCircle, XCircle, Building2,
-  ChevronDown, Eye
+  ChevronDown, Eye, Pause, Play
 } from 'lucide-react';
 
 // Nhóm nguồn theo tên miền (cha–con). Lấy URL từ nhiều field có thể có.
@@ -604,6 +604,24 @@ export default function AdminPage() {
     }
   };
 
+  // Tạm ngưng / kích hoạt lại nguồn (FR-02 Phụ lục B: Admin thêm/xóa/TẠM NGƯNG nguồn).
+  // Máy chủ đã nhận `is_active` ở PUT /admin/sources/{id}; trước đây giao diện không có nút.
+  const handleToggleSourceActive = async (s) => {
+    const bat = s.is_active === false;
+    setActionLoading(true);
+    try {
+      const updated = await adminService.updateSource(s.id, { is_active: bat });
+      setSources(prev => prev.map(x => (x.id === s.id ? { ...x, ...updated } : x)));
+      showAlert('success', bat
+        ? `Đã kích hoạt lại nguồn "${s.name}". Nguồn được thu thập từ lượt kế tiếp.`
+        : `Đã tạm ngưng nguồn "${s.name}". Các lượt thu thập sau sẽ bỏ qua nguồn này.`);
+    } catch (err) {
+      showAlert('error', err?.response?.data?.detail || 'Không đổi được trạng thái nguồn.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDeleteSource = (s) => {
     setDeleteConfirm({
       type: 'source',
@@ -690,7 +708,9 @@ export default function AdminPage() {
     ...(isRegionalAdmin ? [{ id: 'myRegion', label: t('admin.myRegionTab'), icon: <Building2 size={16} /> }] : []),
     { id: 'filters',   label: t('admin.keywordsTab'), icon: <ShieldAlert size={16} />, badge: blacklist.length + whitelist.length },
     { id: 'suggest',   label: t('admin.suggestTab'),  icon: <Sparkles size={16} /> },
-    { id: 'digest',    label: t('admin.digestTab'),    icon: <Mail size={16} /> },
+    // Bản tin CHUNG toàn hệ thống: nội dung không theo phạm vi tổ chức và gửi tới danh
+    // sách email tự nhập -> chỉ super admin (khớp require_super_admin ở /admin/digest).
+    ...(isSuperAdmin ? [{ id: 'digest', label: t('admin.digestTab'), icon: <Mail size={16} /> }] : []),
   ];
 
   return (
@@ -1090,6 +1110,15 @@ export default function AdminPage() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <span style={{ fontSize: 16 }}>{isGov ? '📋' : '📰'}</span>
                                 {s.name}
+                                {s.is_active === false && (
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 20,
+                                    background: 'rgba(245, 158, 11, 0.14)', color: '#b45309',
+                                    border: '1px solid rgba(245, 158, 11, 0.3)', whiteSpace: 'nowrap',
+                                  }}>
+                                    TẠM NGƯNG
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td style={{ padding: '14px 20px' }}>
@@ -1112,6 +1141,29 @@ export default function AdminPage() {
                             </td>
                             <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                                {(() => {
+                                  // Nguồn dùng chung (không có người đề xuất) chỉ Super Admin được bật/tắt:
+                                  // tắt một nguồn như vậy là dừng thu thập cho TOÀN hệ thống.
+                                  const khongDuocDoi = !isSuperAdmin && !s.created_by_user_id;
+                                  return (
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  onClick={() => handleToggleSourceActive(s)}
+                                  disabled={actionLoading || khongDuocDoi}
+                                  style={{
+                                    color: khongDuocDoi ? 'var(--text-muted)' : (s.is_active === false ? '#059669' : '#b45309'),
+                                    padding: '6px 10px', cursor: khongDuocDoi ? 'not-allowed' : 'pointer',
+                                  }}
+                                  title={khongDuocDoi
+                                    ? 'Nguồn dùng chung — chỉ Super Admin được tạm ngưng'
+                                    : (s.is_active === false
+                                      ? 'Kích hoạt lại: nguồn được thu thập từ lượt kế tiếp'
+                                      : 'Tạm ngưng: các lượt thu thập sau bỏ qua nguồn này')}
+                                >
+                                  {s.is_active === false ? <><Play size={14} /> Kích hoạt</> : <><Pause size={14} /> Tạm ngưng</>}
+                                </button>
+                                  );
+                                })()}
                                 <button
                                   className="btn btn-ghost btn-sm"
                                   onClick={() => handleOpenEditSource(s)}

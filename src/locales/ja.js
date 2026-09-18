@@ -154,6 +154,8 @@ export default {
   'news.title': 'ニュース・市場動向',
   'news.source': '情報源:',
   'news.allSources': 'すべての情報源',
+  'news.sector': '分野',
+  'news.allSectors': 'すべての分野',
   'news.sort': '並び替え:',
   'news.sortNewest': '新着順',
   'news.sortMatch': '一致数順',
@@ -1516,5 +1518,9 @@ export default {
   'settings.digestTrending': 'トレンド',
   'settings.digestKeywords': 'あなたのキーワード',
   'settings.saveConfig': '設定を保存',
+  'auth.googleFailed': 'Google ログインに失敗しました。もう一度お試しください。',
+  'auth.googleCancelled': 'Google ログインが完了しませんでした。',
+  'auth.googlePopupBlocked': 'Google ログイン画面を開けませんでした。ポップアップブロックを解除して再度お試しください。',
+  'auth.googleScriptFailed': 'Google Sign-In を読み込めませんでした。ネットワークまたは広告ブロッカーを確認して再度お試しください。',
 };
 

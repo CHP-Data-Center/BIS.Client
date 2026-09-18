@@ -154,6 +154,8 @@ export default {
   'news.title': 'Tin Tức & Báo Cáo',
   'news.source': 'Nguồn báo chí:',
   'news.allSources': 'Tất cả nguồn',
+  'news.sector': 'Lĩnh vực',
+  'news.allSectors': 'Tất cả lĩnh vực',
   'news.sort': 'Sắp xếp:',
   'news.sortNewest': 'Mới nhất',
   'news.sortMatch': 'Khớp nhiều nhất',
@@ -1516,5 +1518,9 @@ export default {
   'settings.digestTrending': 'Xu hướng & Trending',
   'settings.digestKeywords': 'Từ khóa của bạn',
   'settings.saveConfig': 'Lưu Cấu Hình',
+  'auth.googleFailed': 'Đăng nhập Google thất bại. Hãy thử lại.',
+  'auth.googleCancelled': 'Đăng nhập Google không thành công.',
+  'auth.googlePopupBlocked': 'Không mở được cửa sổ đăng nhập Google. Hãy tắt trình chặn cửa sổ bật lên rồi thử lại.',
+  'auth.googleScriptFailed': 'Không tải được dịch vụ Google Sign-In. Kiểm tra kết nối mạng hoặc trình chặn quảng cáo rồi thử lại.',
 };
 

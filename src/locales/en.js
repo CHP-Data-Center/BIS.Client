@@ -154,6 +154,8 @@ export default {
   'news.title': 'News & Market Reports',
   'news.source': 'Press Source:',
   'news.allSources': 'All Sources',
+  'news.sector': 'Sector',
+  'news.allSectors': 'All sectors',
   'news.sort': 'Sort by:',
   'news.sortNewest': 'Newest',
   'news.sortMatch': 'Most matched',
@@ -1516,5 +1518,9 @@ export default {
   'settings.digestTrending': 'Trends',
   'settings.digestKeywords': 'Your keywords',
   'settings.saveConfig': 'Save settings',
+  'auth.googleFailed': 'Google sign-in failed. Please try again.',
+  'auth.googleCancelled': 'Google sign-in did not complete.',
+  'auth.googlePopupBlocked': 'The Google sign-in window could not open. Turn off your pop-up blocker and try again.',
+  'auth.googleScriptFailed': 'Google Sign-In could not be loaded. Check your network or ad blocker and try again.',
 };
 
