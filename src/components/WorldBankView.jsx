@@ -26,7 +26,7 @@ function safeParseDetails(s) {
 
 const CONFIG_MAP = {
   worldbank: {
-    title: 'World Bank Projects & Operations',
+    title: tUI('wb.pageTitle'),
     subtitle: tUI('ui.quan-ly-tim-kiem-va-tra-cuu-du-lieu-du-an-ngan-h'),
     icon: Globe,
     brandColor: '#10b981',
@@ -55,7 +55,7 @@ const CONFIG_MAP = {
     getUrl: (id) => worldBankProjectUrl(id),
   },
   adb: {
-    title: 'ADB Projects & Operations',
+    title: tUI('adb.pageTitle'),
     subtitle: tUI('ui.quan-ly-tim-kiem-va-tra-cuu-du-lieu-du-an-ngan-h-2'),
     icon: Building2,
     brandColor: '#f59e0b',

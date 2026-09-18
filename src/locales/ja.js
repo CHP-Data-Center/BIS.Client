@@ -1522,5 +1522,8 @@ export default {
   'auth.googleCancelled': 'Google ログインが完了しませんでした。',
   'auth.googlePopupBlocked': 'Google ログイン画面を開けませんでした。ポップアップブロックを解除して再度お試しください。',
   'auth.googleScriptFailed': 'Google Sign-In を読み込めませんでした。ネットワークまたは広告ブロッカーを確認して再度お試しください。',
+  'wb.pageTitle': '世界銀行のプロジェクトと業務',
+  'adb.pageTitle': 'ADB のプロジェクトと業務',
+  'potential.lookupMore': '最初の {count} 件のみ表示しています。絞り込むには続けて入力してください。',
 };
 

@@ -1522,5 +1522,8 @@ export default {
   'auth.googleCancelled': 'Đăng nhập Google không thành công.',
   'auth.googlePopupBlocked': 'Không mở được cửa sổ đăng nhập Google. Hãy tắt trình chặn cửa sổ bật lên rồi thử lại.',
   'auth.googleScriptFailed': 'Không tải được dịch vụ Google Sign-In. Kiểm tra kết nối mạng hoặc trình chặn quảng cáo rồi thử lại.',
+  'wb.pageTitle': 'Dự án & hoạt động World Bank',
+  'adb.pageTitle': 'Dự án & hoạt động ADB',
+  'potential.lookupMore': 'Chỉ hiện {count} dự án đầu — gõ thêm để thu hẹp kết quả.',
 };
 

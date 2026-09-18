@@ -1522,5 +1522,8 @@ export default {
   'auth.googleCancelled': 'Google sign-in did not complete.',
   'auth.googlePopupBlocked': 'The Google sign-in window could not open. Turn off your pop-up blocker and try again.',
   'auth.googleScriptFailed': 'Google Sign-In could not be loaded. Check your network or ad blocker and try again.',
+  'wb.pageTitle': 'World Bank Projects & Operations',
+  'adb.pageTitle': 'ADB Projects & Operations',
+  'potential.lookupMore': 'Showing the first {count} projects — type more to narrow the results.',
 };
 

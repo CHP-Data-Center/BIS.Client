@@ -215,6 +215,9 @@ export default function LoginPage() {
       setGoogleLoading(true);
       setLoginError('');
 
+      // Đặt VITE_GOOGLE_CLIENT_ID khi đổi dự án Google Cloud hoặc tách môi trường; giá trị
+      // dưới chỉ là mặc định của dự án hiện tại và PHẢI trùng GOOGLE_CLIENT_ID của backend
+      // (lệch nhau là mọi lần đăng nhập trả 401 "token không cấp cho ứng dụng này").
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '227924702568-q0kmobftaj5crfve5vu9tmr6kkl2vvec.apps.googleusercontent.com';
 
       await ensureGoogleScript();
@@ -231,32 +234,32 @@ export default function LoginPage() {
                   nav(target, { replace: true });
                 }
               } catch (err) {
-                setLoginError(err.response?.data?.detail || 'Đăng nhập Google thất bại. Hãy thử lại.');
+                setLoginError(err.response?.data?.detail || t('auth.googleFailed'));
               } finally {
                 setGoogleLoading(false);
               }
             } else {
               setGoogleLoading(false);
               if (tokenResponse?.error && tokenResponse.error !== 'popup_closed_by_user') {
-                setLoginError('Đăng nhập Google không thành công.');
+                setLoginError(t('auth.googleCancelled'));
               }
             }
           },
           error_callback: (err) => {
             setGoogleLoading(false);
             if (err?.type !== 'popup_closed') {
-              setLoginError('Không thể mở cửa sổ đăng nhập Google.');
+              setLoginError(t('auth.googlePopupBlocked'));
             }
           },
         });
         client.requestAccessToken({ prompt: 'select_account' });
       } else {
         setGoogleLoading(false);
-        setLoginError('Không tải được dịch vụ Google Sign-In. Kiểm tra kết nối mạng hoặc trình chặn quảng cáo rồi thử lại.');
+        setLoginError(t('auth.googleScriptFailed'));
       }
     } catch (err) {
       setGoogleLoading(false);
-      setLoginError('Lỗi Đăng nhập Google: ' + (err.message || err));
+      setLoginError(`${t('auth.googleFailed')} (${err.message || err})`);
     }
   };
 

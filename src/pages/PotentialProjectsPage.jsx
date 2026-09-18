@@ -698,6 +698,9 @@ const NHAN_TRANG_THAI = {
   closed: 'projects.statusClosed',
 };
 
+// Số dòng tối đa ô chọn dự án hiển thị một lần.
+const LOOKUP_LIMIT = 20;
+
 function thongTinDuAn(p) {
   return {
     display_name: p?.name || '',
@@ -725,7 +728,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
     setLoading(true);
     const hen = setTimeout(async () => {
       try {
-        const ds = await projectsService.lookupProjects(q, 20);
+        const ds = await projectsService.lookupProjects(q, LOOKUP_LIMIT);
         if (alive) setItems(ds || []);
       } catch {
         if (alive) setItems([]);
@@ -902,6 +905,13 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
                 );
               })}
             </div>
+            {/* Danh sách bị cắt ở LOOKUP_LIMIT dòng. Không nói ra thì người dùng gõ một từ
+                phổ biến ("cầu") sẽ tưởng hệ thống chỉ có bấy nhiêu dự án. */}
+            {items.length >= LOOKUP_LIMIT && (
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 6 }}>
+                {t('potential.lookupMore', { count: LOOKUP_LIMIT })}
+              </div>
+            )}
           </>
         )}
 
