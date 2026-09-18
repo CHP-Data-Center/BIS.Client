@@ -1415,66 +1415,68 @@ export default function PotentialProjectsPage() {
     trackingKeysRef.current.add(key);
     setTrackingKey(key);
 
-    if (currentlyTracked) {
-      // HỦY THEO DÕI
-      const matched = findMatchingProject(item);
-      if (matched?.id) {
-        try {
-          await projectsService.deleteProject(matched.id);
+    // MỘT chỗ dọn dẹp cho CẢ HAI nhánh. Trước đây chỉ nhánh "thêm theo dõi" mới xóa khóa
+    // khỏi ref, nên hủy theo dõi một mục rồi đổi ý là nút im lặng vĩnh viễn — không toast,
+    // không spinner, không lỗi — cho tới khi rời trang và quay lại.
+    try {
+      if (currentlyTracked) {
+        // HỦY THEO DÕI
+        const matched = findMatchingProject(item);
+        if (matched?.id) {
+          try {
+            await projectsService.deleteProject(matched.id);
+            setTrackedKeys((cur) => {
+              const next = new Set(cur);
+              next.delete(key);
+              return next;
+            });
+            setUserProjects((cur) => cur.filter((p) => p.id !== matched.id));
+            toast('success', `Đã hủy theo dõi dự án "${item.title.slice(0, 36)}…"`);
+          } catch (e) {
+            toast('error', e.response?.data?.detail || 'Không hủy được theo dõi.');
+          }
+        } else {
           setTrackedKeys((cur) => {
             const next = new Set(cur);
             next.delete(key);
             return next;
           });
-          setUserProjects((cur) => cur.filter((p) => p.id !== matched.id));
-          toast('success', `Đã hủy theo dõi dự án "${item.title.slice(0, 36)}…"`);
-        } catch (e) {
-          toast('error', e.response?.data?.detail || 'Không hủy được theo dõi.');
-        } finally {
-          setTrackingKey(null);
         }
       } else {
-        setTrackedKeys((cur) => {
-          const next = new Set(cur);
-          next.delete(key);
-          return next;
-        });
-        setTrackingKey(null);
-      }
-    } else {
-      // THÊM THEO DÕI
-      try {
-        const created = await projectsService.createProject({
-          name: item.title.slice(0, 255),
-          // KHÔNG gửi keyword_filter: backend tự rút vài từ khóa ngắn từ tên (AI nếu có,
-          // luật nếu không). Gửi nguyên tiêu đề như trước thì trang dự án tách theo dấu
-          // phẩy thành các thẻ dài dòng vô nghĩa.
-          investor: item.investor || undefined,
-          sector: item.sectors?.[0] || undefined,
-          // Gói thầu KHLCNT không có trường địa phương: để trống thì máy chủ tự suy tỉnh từ
-          // tiêu đề + chủ đầu tư ("..., tỉnh Vĩnh Long").
-          province: item.province || undefined,
-          // Link về gói thầu / dự án ODA / bài báo gốc — hiện ở thẻ dự án.
-          source_url: item.url || undefined,
-          // KHÔNG nhét mã vào ghi chú như trước: chuỗi "[ref:procurement:...]" hiện nguyên
-          // văn ở mục "Ghi chú" trên thẻ dự án.
-          origin_ref: key,
-        });
-        setTrackedKeys((cur) => new Set(cur).add(key));
-        setUserProjects((cur) => [created, ...cur]);
-        toast('success', `Đã thêm "${item.title.slice(0, 36)}…" vào danh sách theo dõi.`);
-      } catch (e) {
-        if (e.response?.status === 409) {
+        // THÊM THEO DÕI
+        try {
+          const created = await projectsService.createProject({
+            name: item.title.slice(0, 255),
+            // KHÔNG gửi keyword_filter: backend tự rút vài từ khóa ngắn từ tên (AI nếu có,
+            // luật nếu không). Gửi nguyên tiêu đề như trước thì trang dự án tách theo dấu
+            // phẩy thành các thẻ dài dòng vô nghĩa.
+            investor: item.investor || undefined,
+            sector: item.sectors?.[0] || undefined,
+            // Gói thầu KHLCNT không có trường địa phương: để trống thì máy chủ tự suy tỉnh từ
+            // tiêu đề + chủ đầu tư ("..., tỉnh Vĩnh Long").
+            province: item.province || undefined,
+            // Link về gói thầu / dự án ODA / bài báo gốc — hiện ở thẻ dự án.
+            source_url: item.url || undefined,
+            // KHÔNG nhét mã vào ghi chú như trước: chuỗi "[ref:procurement:...]" hiện nguyên
+            // văn ở mục "Ghi chú" trên thẻ dự án.
+            origin_ref: key,
+          });
           setTrackedKeys((cur) => new Set(cur).add(key));
-          await loadUserProjects(true);
-          toast('success', 'Dự án này đã có trong danh sách theo dõi của bạn.');
-        } else {
-          toast('error', e.response?.data?.detail || 'Không thêm được vào danh sách theo dõi.');
+          setUserProjects((cur) => [created, ...cur]);
+          toast('success', `Đã thêm "${item.title.slice(0, 36)}…" vào danh sách theo dõi.`);
+        } catch (e) {
+          if (e.response?.status === 409) {
+            setTrackedKeys((cur) => new Set(cur).add(key));
+            await loadUserProjects(true);
+            toast('success', 'Dự án này đã có trong danh sách theo dõi của bạn.');
+          } else {
+            toast('error', e.response?.data?.detail || 'Không thêm được vào danh sách theo dõi.');
+          }
         }
-      } finally {
-        trackingKeysRef.current.delete(key);
-        setTrackingKey(null);
       }
+    } finally {
+      trackingKeysRef.current.delete(key);
+      setTrackingKey(null);
     }
   };
 
