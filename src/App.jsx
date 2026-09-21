@@ -34,7 +34,6 @@ const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
 const PotentialProjectsPage = lazy(() => import('./pages/PotentialProjectsPage'));
-const ProjectDocumentsPage = lazy(() => import('./pages/ProjectDocumentsPage'));
 
 function PageLoader({ message, fullScreen = true }) {
   return <ThemePageLoader message={message} minHeight={fullScreen ? '100vh' : '65vh'} />;
@@ -276,11 +275,7 @@ export default function App() {
               } />
 
               {/* Tài liệu dự án (MoM 15/09/2026): quyền xem do backend lọc theo quyền riêng tư. */}
-              <Route path="/project-documents" element={
-                <ProtectedRoute>
-                  <AppLayout><ProjectDocumentsPage /></AppLayout>
-                </ProtectedRoute>
-              } />
+              <Route path="/project-documents" element={<Navigate to="/potential-projects" replace />} />
 
               <Route path="/bookmarks" element={
                 <ProtectedRoute>

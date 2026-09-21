@@ -231,16 +231,22 @@ export const projectsService = {
 
   /** Mọi liên kết "mục tiềm năng ↔ dự án theo dõi" của tài khoản (một lượt cho cả trang) */
   async getPotentialLinks() {
+    let localLinks = [];
+    try {
+      const raw = localStorage.getItem('bis_potential_links');
+      localLinks = raw ? JSON.parse(raw) : [];
+    } catch {
+      localLinks = [];
+    }
+
     try {
       const { data } = await api.get('/projects/potential-links');
-      return data; // PotentialLinkOut[]
-    } catch {
-      try {
-        const raw = localStorage.getItem('bis_potential_links');
-        return raw ? JSON.parse(raw) : [];
-      } catch {
-        return [];
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
       }
+      return localLinks;
+    } catch {
+      return localLinks;
     }
   },
 

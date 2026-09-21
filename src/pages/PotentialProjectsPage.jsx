@@ -7,7 +7,8 @@ import {
   Building2, Calendar, Coins, MapPin, Filter, RefreshCw, AlertCircle,
   ShoppingBag, Globe, Newspaper, Search, ArrowRight, BookmarkCheck,
   CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock, RotateCcw,
-  ChevronDown, Check, Link2, Unlink, FolderKanban, FileText, FileCheck, Send
+  ChevronDown, Check, Link2, Unlink, FolderKanban, FileText, FileCheck, Send,
+  User, Globe2, Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { potentialService, itemKey } from '../services/potential';
@@ -805,6 +806,203 @@ function thongTinDuAn(p) {
   };
 }
 
+
+// Cấu hình các tùy chọn lọc phạm vi tài liệu dự án
+const DOC_SCOPE_OPTIONS = [
+  {
+    id: 'all',
+    label: 'Tất cả tài liệu được xem',
+    icon: Globe,
+    color: '#6366f1',
+    bg: 'rgba(99, 102, 241, 0.1)',
+  },
+  {
+    id: 'mine',
+    label: 'Tài liệu của tôi',
+    icon: User,
+    color: '#0284c7',
+    bg: 'rgba(2, 132, 199, 0.1)',
+  },
+  {
+    id: 'only_me',
+    label: 'Chỉ mình tôi (Riêng tư)',
+    icon: Lock,
+    color: '#8b5cf6',
+    bg: 'rgba(139, 92, 246, 0.1)',
+  },
+  {
+    id: 'organization',
+    label: 'Nội bộ tổ chức',
+    icon: Building2,
+    color: '#2563eb',
+    bg: 'rgba(37, 99, 235, 0.1)',
+  },
+  {
+    id: 'public',
+    label: 'Công khai trên hệ thống',
+    icon: Globe2,
+    color: '#10b981',
+    bg: 'rgba(16, 185, 129, 0.1)',
+  },
+];
+
+function DocScopeDropdown({ value = 'all', onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const current = DOC_SCOPE_OPTIONS.find((opt) => opt.id === value) || DOC_SCOPE_OPTIONS[0];
+  const CurrentIcon = current.icon;
+  const isFiltered = value !== 'all';
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 7,
+          height: 34,
+          padding: '0 12px 0 10px',
+          borderRadius: 999,
+          fontSize: 12.5,
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'all 0.15s ease',
+          border: isFiltered ? `1.5px solid ${current.color}` : '1px solid var(--border)',
+          background: isFiltered ? current.bg : 'var(--bg-surface-2)',
+          color: isFiltered ? current.color : 'var(--text-secondary)',
+          boxShadow: isFiltered ? `0 2px 8px ${current.bg}` : 'none',
+        }}
+      >
+        <span
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: isFiltered ? 'rgba(255,255,255,0.85)' : 'var(--bg-surface)',
+            color: current.color,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          }}
+        >
+          <CurrentIcon size={12} />
+        </span>
+        <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {current.label}
+        </span>
+        <ChevronDown
+          size={13}
+          style={{
+            transition: 'transform 0.2s ease',
+            transform: open ? 'rotate(180deg)' : 'none',
+            opacity: 0.7,
+          }}
+        />
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            left: 0,
+            zIndex: 100,
+            minWidth: 230,
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 14,
+            padding: '6px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <div
+            style={{
+              padding: '6px 10px 4px',
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: 'var(--text-muted)',
+            }}
+          >
+            Phạm vi tài liệu
+          </div>
+          {DOC_SCOPE_OPTIONS.map((opt) => {
+            const isSelected = opt.id === value;
+            const OptIcon = opt.icon;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  onChange(opt.id);
+                  setOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 9,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: isSelected ? opt.bg : 'transparent',
+                  color: isSelected ? opt.color : 'var(--text-primary)',
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? 700 : 500,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) e.currentTarget.style.background = 'var(--bg-surface-2)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <span
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: opt.bg,
+                    color: opt.color,
+                  }}
+                >
+                  <OptIcon size={13} />
+                </span>
+                <span style={{ flex: 1 }}>{opt.label}</span>
+                {isSelected && <Check size={14} style={{ color: opt.color, strokeWidth: 2.5 }} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
   const { t } = useLang();
   const [q, setQ] = useState('');
@@ -1182,7 +1380,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
 export default function PotentialProjectsPage() {
   const { t } = useLang();
   const navigate = useNavigate();
-  const { hasSourceAccess } = useAuth();
+  const { hasSourceAccess, user } = useAuth();
 
   const canProc = hasSourceAccess('gov');
   const canAdb = hasSourceAccess('adb');
@@ -1264,6 +1462,7 @@ export default function PotentialProjectsPage() {
   });
   const [showDocModal, setShowDocModal] = useState(false);
   const [readingItem, setReadingItem] = useState(null);
+  const [docScope, setDocScope] = useState('all');
   const [msg, setMsg] = useState(null);
 
   // Tải danh sách hồ sơ tài liệu dự án tiềm năng
@@ -1645,18 +1844,20 @@ export default function PotentialProjectsPage() {
     let count = 0;
     if (filterSectors.length > 0) count++;
     if (kind) count++;
+    if (docScope && docScope !== 'all') count++;
     if (minAmount) count++;
     if (filterName.trim()) count++;
     if (filterLocation.trim()) count++;
     if (filterInvestor.trim()) count++;
     if (relatedOnly) count++;
     return count;
-  }, [filterSectors.length, kind, minAmount, filterName, filterLocation, filterInvestor, relatedOnly]);
+  }, [filterSectors.length, kind, docScope, minAmount, filterName, filterLocation, filterInvestor, relatedOnly]);
 
   // Đặt lại toàn bộ bộ lọc về trạng thái ban đầu
   const resetAllFilters = useCallback(() => {
     setFilterSectors([]);
     setKind('');
+    setDocScope('all');
     setMinAmount('');
     setFilterName('');
     setFilterLocation('');
@@ -1666,7 +1867,15 @@ export default function PotentialProjectsPage() {
   }, []);
 
   const applied = data.sectors_applied || [];
-  const totalPages = Math.max(1, Math.ceil((data.total || 0) / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil((kind === 'project_document' ? displayItems.length : (data.total || 0)) / PAGE_SIZE));
+
+  const paginatedItems = useMemo(() => {
+    if (kind === 'project_document') {
+      const start = (page - 1) * PAGE_SIZE;
+      return displayItems.slice(start, start + PAGE_SIZE);
+    }
+    return displayItems;
+  }, [displayItems, kind, page]);
 
   // Tạo danh sách trang hiển thị dạng số đẹp mắt
   const pageNumbers = useMemo(() => {
@@ -1912,28 +2121,43 @@ export default function PotentialProjectsPage() {
             </div>
           </div>
 
-          {/* Nút bật/tắt Lọc liên quan dự án đang theo dõi */}
-          <button
-            type="button"
-            onClick={() => {
-              setRelatedOnly((prev) => !prev);
-              setPage(1);
-            }}
-            title={relatedOnly ? 'Đang chỉ hiện tin liên quan dự án của bạn (Bấm để xem tất cả)' : 'Bấm để chỉ lọc tin liên quan dự án của bạn'}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '6px 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
-              cursor: 'pointer', transition: 'all 0.15s ease',
-              border: relatedOnly ? '1px solid #6366f1' : '1px solid var(--border)',
-              background: relatedOnly ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-surface-2)',
-              color: relatedOnly ? '#4f46e5' : 'var(--text-secondary)',
-              boxShadow: relatedOnly ? '0 2px 8px rgba(99, 102, 241, 0.25)' : 'none',
-            }}
-          >
-            <Sparkles size={13} style={{ color: relatedOnly ? '#4f46e5' : 'var(--text-muted)' }} />
-            <span>{t('potential.relatedOnly')}</span>
-            {relatedOnly && <Check size={13} style={{ strokeWidth: 3 }} />}
-          </button>
+          {/* Cụm công cụ lọc bổ trợ bên phải */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {/* Dropdown Lọc tài liệu theo quyền riêng tư cao cấp */}
+            <DocScopeDropdown
+              value={docScope}
+              onChange={(val) => {
+                setDocScope(val);
+                if (val !== 'all' && kind !== 'project_document') {
+                  setKind('project_document');
+                }
+                setPage(1);
+              }}
+            />
+
+            {/* Nút bật/tắt Lọc liên quan dự án đang theo dõi */}
+            <button
+              type="button"
+              onClick={() => {
+                setRelatedOnly((prev) => !prev);
+                setPage(1);
+              }}
+              title={relatedOnly ? 'Đang chỉ hiện tin liên quan dự án của bạn (Bấm để xem tất cả)' : 'Bấm để chỉ lọc tin liên quan dự án của bạn'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                height: 34, padding: '0 14px', borderRadius: 999, fontSize: 12.5, fontWeight: 700,
+                cursor: 'pointer', transition: 'all 0.15s ease',
+                border: relatedOnly ? '1.5px solid #6366f1' : '1px solid var(--border)',
+                background: relatedOnly ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-surface-2)',
+                color: relatedOnly ? '#4f46e5' : 'var(--text-secondary)',
+                boxShadow: relatedOnly ? '0 2px 8px rgba(99, 102, 241, 0.2)' : 'none',
+              }}
+            >
+              <Sparkles size={13} style={{ color: relatedOnly ? '#4f46e5' : 'var(--text-muted)' }} />
+              <span>{t('potential.relatedOnly')}</span>
+              {relatedOnly && <Check size={13} style={{ strokeWidth: 3 }} />}
+            </button>
+          </div>
 
           {/* Lọc giá tối thiểu & Presets (Chỉ hiện khi có quyền xem Đấu thầu công) */}
           {canProc && (
@@ -2095,7 +2319,7 @@ export default function PotentialProjectsPage() {
             pointerEvents: isPageFetching ? 'none' : 'auto',
             transition: 'all .15s ease',
           }}>
-            {displayItems.map((item) => {
+            {paginatedItems.map((item) => {
               const key = itemKey(item);
               const tracked = isItemTracked(item);
               return (
