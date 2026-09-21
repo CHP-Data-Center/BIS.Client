@@ -5,7 +5,7 @@ import { apiCache } from '../utils/apiCache';
 
 /** Khóa danh sách ổn định cho danh sách gộp nhiều nguồn.
  *  `ref` KHÔNG duy nhất một mình: dự án ODA id=1 và bài viết id=1 cùng cho ref="1". */
-export const itemKey = (it) => `${it.kind}:${it.ref}`;
+export const itemKey = (it) => `${it.kind || 'item'}:${it.ref || it.id}`;
 
 /** Nhãn hiển thị cho từng loại nguồn. */
 export const KIND_LABELS = {

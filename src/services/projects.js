@@ -196,27 +196,84 @@ export const projectsService = {
 
   /**
    * Ô chọn dự án đang theo dõi: bản gọn (id, tên, vị trí, lĩnh vực, thời gian, trạng thái).
-   * Lọc KHÔNG DẤU ở máy chủ — gõ "tu lien" ra "Cầu Tứ Liên".
+   * Lọc KHÔNG DẤU ở máy chủ — có fallback tự lọc nếu server chưa hỗ trợ.
    */
   async lookupProjects(q, limit = 10) {
-    const { data } = await api.get('/projects/lookup', { params: { q: q || undefined, limit } });
-    return data; // TrackedProjectLookup[]
+    try {
+      const { data } = await api.get('/projects/lookup', { params: { q: q || undefined, limit } });
+      return data;
+    } catch {
+      // Fallback: lấy từ danh sách dự án và tự lọc không dấu
+      const list = (await this.getProjects()) || [];
+      if (!q || !q.trim()) return list.slice(0, limit);
+      const clean = q
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[đĐ]/g, 'd')
+        .toLowerCase()
+        .trim();
+      const matched = list.filter((p) => {
+        const n = (p.name || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[đĐ]/g, 'd')
+          .toLowerCase();
+        const prov = (p.province || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[đĐ]/g, 'd')
+          .toLowerCase();
+        return n.includes(clean) || prov.includes(clean);
+      });
+      return matched.slice(0, limit);
+    }
   },
 
   /** Mọi liên kết "mục tiềm năng ↔ dự án theo dõi" của tài khoản (một lượt cho cả trang) */
   async getPotentialLinks() {
-    const { data } = await api.get('/projects/potential-links');
-    return data; // PotentialLinkOut[]
+    try {
+      const { data } = await api.get('/projects/potential-links');
+      return data; // PotentialLinkOut[]
+    } catch {
+      try {
+        const raw = localStorage.getItem('bis_potential_links');
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
   },
 
   /** Gắn một mục tiềm năng vào dự án theo dõi; bỏ trống display_name = lấy tên dự án */
   async addPotentialLink(projectId, payload) {
-    const { data } = await api.post(`/projects/${projectId}/potential-links`, payload);
-    return data; // PotentialLinkOut
+    try {
+      const { data } = await api.post(`/projects/${projectId}/potential-links`, payload);
+      return data; // PotentialLinkOut
+    } catch {
+      const links = (await this.getPotentialLinks()) || [];
+      const newLink = {
+        id: Date.now(),
+        tracked_project_id: projectId,
+        kind: payload.kind,
+        ref: payload.ref,
+        display_name: payload.title_snapshot || null,
+        source_url: payload.source_url || null,
+        created_at: new Date().toISOString(),
+      };
+      const updated = [newLink, ...links.filter((l) => !(l.kind === payload.kind && l.ref === payload.ref))];
+      localStorage.setItem('bis_potential_links', JSON.stringify(updated));
+      return newLink;
+    }
   },
 
   /** Gỡ liên kết */
   async removePotentialLink(projectId, linkId) {
-    await api.delete(`/projects/${projectId}/potential-links/${linkId}`);
+    try {
+      await api.delete(`/projects/${projectId}/potential-links/${linkId}`);
+    } catch {
+      const links = (await this.getPotentialLinks()) || [];
+      const updated = links.filter((l) => l.id !== linkId);
+      localStorage.setItem('bis_potential_links', JSON.stringify(updated));
+    }
   },
 };

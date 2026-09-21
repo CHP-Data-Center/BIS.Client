@@ -1554,19 +1554,20 @@ export default function AdminPage() {
                   <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{tUI('ui.tu-dong-cap-quyen-jwt')}</span>
                 </div>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      <th style={{ padding: '12px 20px' }}>{tUI('ui.ho-amp-ten')}</th>
-                      <th style={{ padding: '12px 20px' }}>Email</th>
-                      <th style={{ padding: '12px 20px' }}>{tUI('ui.vai-tro')}</th>
-                      <th style={{ padding: '12px 20px' }}>{tUI('ui.goi-du-lieu-amp-han-dung')}</th>
-                      <th style={{ padding: '12px 20px' }}>{tUI('ui.theme-ui-so-huu')}</th>
-                      <th style={{ padding: '12px 20px' }}>{tUI('ui.trang-thai')}</th>
-                      <th style={{ padding: '12px 20px' }}>{tUI('ui.ngay-tao')}</th>
-                      <th style={{ padding: '12px 20px', textAlign: 'right' }}>{tUI('ui.hanh-dong')}</th>
-                    </tr>
-                  </thead>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 1080 }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                        <th style={{ padding: '12px 20px' }}>{tUI('ui.ho-amp-ten')}</th>
+                        <th style={{ padding: '12px 20px' }}>Email</th>
+                        <th style={{ padding: '12px 20px' }}>{tUI('ui.vai-tro')}</th>
+                        <th style={{ padding: '12px 20px' }}>{tUI('ui.goi-du-lieu-amp-han-dung')}</th>
+                        <th style={{ padding: '12px 20px' }}>{tUI('ui.theme-ui-so-huu')}</th>
+                        <th style={{ padding: '12px 20px' }}>{tUI('ui.trang-thai')}</th>
+                        <th style={{ padding: '12px 20px' }}>{tUI('ui.ngay-tao')}</th>
+                        <th style={{ padding: '12px 20px', textAlign: 'right' }}>{tUI('ui.hanh-dong')}</th>
+                      </tr>
+                    </thead>
                   <tbody>
                     {users.map(u => {
                       const isAdminRole = u.role === 'admin';
@@ -1594,59 +1595,61 @@ export default function AdminPage() {
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px', color: 'var(--text-secondary)' }}>{u.email}</td>
-                          <td style={{ padding: '14px 20px' }}>
+                          <td style={{ padding: '14px 20px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{u.email}</td>
+                          <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <span style={{
                                 fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20, width: 'fit-content',
                                 background: u.role === 'super_admin' ? '#fef3c7' : u.role === 'admin' ? '#eff6ff' : u.role === 'staff' ? '#f0fdf4' : '#f1f5f9',
                                 color: u.role === 'super_admin' ? '#92400e' : u.role === 'admin' ? '#1d4ed8' : u.role === 'staff' ? '#166534' : '#475569',
                                 border: `1px solid ${u.role === 'super_admin' ? '#fde68a' : u.role === 'admin' ? '#bfdbfe' : u.role === 'staff' ? '#bbf7d0' : '#e2e8f0'}`,
+                                display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                               }}>
                                 {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : u.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
                               </span>
-                              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                 {u.organization_id ? `🏢 ${organizations.find(o => o.id === u.organization_id)?.name || u.region || 'Tổ chức'}` : `📍 ${u.region || 'Toàn quốc'}`}
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px' }}>
+                          <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                              <span style={{ fontSize: 11, fontWeight: 800, color: u.role === 'super_admin' || u.active_package === 'full' ? '#059669' : u.active_package === 'enterprise' || u.role === 'admin' ? '#9333ea' : u.active_package === 'combo2' || u.active_package === 'single' ? '#2563eb' : '#64748b' }}>
+                              <span style={{ fontSize: 11, fontWeight: 800, color: u.role === 'super_admin' || u.active_package === 'full' ? '#059669' : u.active_package === 'enterprise' || u.role === 'admin' ? '#9333ea' : u.active_package === 'combo2' || u.active_package === 'single' ? '#2563eb' : '#64748b', whiteSpace: 'nowrap' }}>
                                 {u.role === 'super_admin' ? '👑 FULL DATA (SUPER ADMIN)' : u.active_package === 'enterprise' || u.role === 'admin' ? `🏢 Gói Enterprise (Max ${u.max_users || 10} User)` : u.active_package === 'full' ? '👑 Full Data Pack' : u.active_package === 'single' ? `🎯 Gói 1 Nguồn (${({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[(u.selected_sources || ['adb'])[0]] || '1 Nguồn'})` : u.active_package === 'combo2' ? `⚡ Combo 2 (${(u.selected_sources || ['adb', 'worldbank']).map(k => ({ adb: 'ADB', worldbank: 'WB', gov: 'Đấu Thầu' })[k] || k).join('+')})` : '📰 Báo Chí Miễn Phí'}
-                                {u.has_ai && <span style={{ marginLeft: 6, color: '#9333ea', background: '#f3e8ff', padding: '1px 6px', borderRadius: 8, fontSize: 9.5, border: '1px solid #e9d5ff' }}>🤖 AI</span>}
+                                {u.has_ai && <span style={{ marginLeft: 6, color: '#9333ea', background: '#f3e8ff', padding: '1px 6px', borderRadius: 8, fontSize: 9.5, border: '1px solid #e9d5ff', whiteSpace: 'nowrap' }}>🤖 AI</span>}
                               </span>
-                              <span style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                              <span style={{ fontSize: 10.5, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                                 📅 {u.active_package === 'free' || u.role === 'super_admin' ? 'Vĩnh viễn' : (u.package_expiration || 'Vĩnh viễn')}
                               </span>
                             </div>
                           </td>
                           <td style={{ padding: '14px 20px' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 180 }}>
-                              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569' }}>{tUI('ui.mac-dinh')}</span>
+                              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569', whiteSpace: 'nowrap' }}>{tUI('ui.mac-dinh')}</span>
                               {(u.purchased_themes || []).map(tKey => (
-                                <span key={tKey} style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                                <span key={tKey} style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
                                   {tKey === 'classic' ? 'Win98' : tKey === 'sapphire' ? 'Sapphire' : tKey === 'luxury' ? 'Luxury' : tKey === 'anime' ? 'Anime 🌸' : tKey}
                                 </span>
                               ))}
-                              {u.role === 'super_admin' && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#b45309', background: '#fffbeb', padding: '1px 6px', borderRadius: 6, border: '1px solid #fde68a' }}>👑 All Themes</span>}
+                              {u.role === 'super_admin' && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#b45309', background: '#fffbeb', padding: '1px 6px', borderRadius: 6, border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>👑 All Themes</span>}
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px' }}>
+                          <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
                             <span style={{
                               fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
                               background: isActive ? '#ecfdf5' : '#fef2f2',
                               color: isActive ? '#047857' : '#b91c1c',
                               border: `1px solid ${isActive ? '#a7f3d0' : '#fca5a5'}`,
+                              display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                             }}>
                               {isActive ? '🟢 HOẠT ĐỘNG' : '🔴 ĐÃ KHÓA'}
                             </span>
                           </td>
-                          <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12 }}>
+                          <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
                             {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '-'}
                           </td>
-                          <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                          <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                               <button
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => setViewingUser(u)}
@@ -1678,6 +1681,7 @@ export default function AdminPage() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
@@ -2416,11 +2420,12 @@ export default function AdminPage() {
                 background: viewingUser.role === 'super_admin' ? '#fef3c7' : viewingUser.role === 'admin' ? '#eff6ff' : viewingUser.role === 'staff' ? '#f0fdf4' : '#f1f5f9',
                 color: viewingUser.role === 'super_admin' ? '#92400e' : viewingUser.role === 'admin' ? '#1d4ed8' : viewingUser.role === 'staff' ? '#166534' : '#475569',
                 border: `1px solid ${viewingUser.role === 'super_admin' ? '#fde68a' : viewingUser.role === 'admin' ? '#bfdbfe' : viewingUser.role === 'staff' ? '#bbf7d0' : '#e2e8f0'}`,
+                whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
                 {viewingUser.role === 'super_admin' ? '👑 SUPER ADMIN' : viewingUser.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : viewingUser.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
               </span>
 
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>
                 {viewingUser.organization_id ? `🏢 ${organizations.find(o => o.id === viewingUser.organization_id)?.name || viewingUser.region || 'Tổ chức'}` : `📍 ${viewingUser.region || 'Toàn quốc'}`}
               </span>
 
@@ -2429,6 +2434,7 @@ export default function AdminPage() {
                 background: viewingUser.is_active !== false ? '#ecfdf5' : '#fef2f2',
                 color: viewingUser.is_active !== false ? '#047857' : '#b91c1c',
                 border: `1px solid ${viewingUser.is_active !== false ? '#a7f3d0' : '#fca5a5'}`,
+                whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
                 {viewingUser.is_active !== false ? '🟢 HOẠT ĐỘNG' : '🔴 ĐÃ KHÓA'}
               </span>

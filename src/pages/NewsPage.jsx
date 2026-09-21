@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import {
   Search, Filter, ChevronRight, ChevronDown, ChevronUp, Bookmark, BookmarkCheck,
   RotateCcw, ChevronLeft, Loader2, Building2, Globe, ShoppingBag,
-  Newspaper, FileText, X, LayoutGrid, List, Cpu, ExternalLink, Tag
+  Newspaper, FileText, X, LayoutGrid, List, Cpu, ExternalLink, Tag, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
@@ -14,6 +14,9 @@ import { odaService } from '../services/oda';
 import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
 import WorldBankView from '../components/WorldBankView';
+import PressPostModal from '../components/PressPostModal';
+import PressPostDetailModal from '../components/PressPostDetailModal';
+import { projectDocumentsService } from '../services/projectDocuments';
 import { getSourceStyle } from '../utils/sourceStyle';
 import { tUI } from '../locales';
 
@@ -70,7 +73,7 @@ function CompactSkeleton() {
   );
 }
 
-function CompactNewsRow({ article, index }) {
+function CompactNewsRow({ article, index, onOpenPost }) {
   const nav = useNavigate();
   const { lang, t } = useLang();
   const [bookmarked, setBookmarked] = useState(article.is_bookmarked || false);
@@ -88,6 +91,12 @@ function CompactNewsRow({ article, index }) {
   const excerptText = article.excerptVi || article.excerpt;
 
   const handleClick = () => {
+    if (article.is_user_post) {
+      if (onOpenPost) {
+        onOpenPost(article);
+        return;
+      }
+    }
     const isWbOrAdb = article.source === 'worldbank' || article.source === 'adb' || article.source_type === 'worldbank' || article.source_type === 'adb' || article.local_key === 'saved_worldbank_projects' || article.local_key === 'saved_adb_projects';
     if (isWbOrAdb) {
       const targetId = article.original_id || article.project_code || article.id;
@@ -148,15 +157,15 @@ function CompactNewsRow({ article, index }) {
         <span
           className="news-source-tag"
           style={{
-            background: src.bg,
-            color: src.color,
-            border: `1px solid ${src.border}`,
+            background: article.is_user_post ? 'rgba(37, 99, 235, 0.12)' : src.bg,
+            color: article.is_user_post ? '#2563eb' : src.color,
+            border: `1px solid ${article.is_user_post ? 'rgba(37, 99, 235, 0.3)' : src.border}`,
             fontSize: 10,
             padding: '2px 7px',
             width: 'fit-content'
           }}
         >
-          {src.icon} {src.name}
+          {article.is_user_post ? `👤 ${article.authorName || 'Người dùng'}` : `${src.icon} ${src.name}`}
         </span>
         {publishedDate && (
           <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
@@ -330,6 +339,24 @@ export default function NewsPage() {
   const handleToggleViewMode = (mode) => {
     setViewMode(mode);
     localStorage.setItem('bis_news_view_mode', mode);
+  };
+
+  // Quản lý Đăng bài Báo chí nội bộ & Quyền riêng tư
+  const [userPosts, setUserPosts] = useState(() => {
+    try {
+      const p = projectDocumentsService.getPosts();
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showPressModal, setShowPressModal] = useState(false);
+  const [readingUserPost, setReadingUserPost] = useState(null);
+  const [toastMsg, setToastMsg] = useState(null);
+
+  const toast = (type, text) => {
+    setToastMsg({ type, text });
+    setTimeout(() => setToastMsg(null), 4000);
   };
 
   // Filters
@@ -608,9 +635,38 @@ export default function NewsPage() {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Lọc và chuẩn hóa bài đăng báo chí của người dùng để hiển thị trên đầu danh sách
+  const filteredUserArticles = useMemo(() => {
+    if (srcConfig.api !== 'articles' || onlyBookmarked || page !== 1) return [];
+    const cleanQ = (search || '').toLowerCase().trim();
+    return (Array.isArray(userPosts) ? userPosts : [])
+      .filter((p) => {
+        if (!cleanQ) return true;
+        const titleMatch = (p.title || p.projectName || '').toLowerCase().includes(cleanQ);
+        const summaryMatch = (p.summary || '').toLowerCase().includes(cleanQ);
+        const authorMatch = (p.authorName || '').toLowerCase().includes(cleanQ);
+        return titleMatch || summaryMatch || authorMatch;
+      })
+      .map((p) => ({
+        ...p,
+        id: p.id,
+        title: p.title || p.projectName,
+        titleVi: p.title || p.projectName,
+        excerpt: p.summary,
+        excerptVi: p.summary,
+        published_at: p.date || p.createdAt,
+        source: 'press',
+        source_type: 'press',
+        is_user_post: true,
+        authorName: p.authorName,
+        privacy: p.privacy,
+        files: p.files,
+      }));
+  }, [userPosts, srcConfig.api, onlyBookmarked, page, search]);
+
   // Dữ liệu bài viết và tổng số bài tương ứng với chế độ lọc
-  const displayedArticles = onlyBookmarked ? bookmarkedArticles : articles;
-  const effectiveTotal = onlyBookmarked ? bookmarkedArticles.length : total;
+  const displayedArticles = onlyBookmarked ? bookmarkedArticles : [...filteredUserArticles, ...articles];
+  const effectiveTotal = onlyBookmarked ? bookmarkedArticles.length : total + filteredUserArticles.length;
   const isPageLoading = onlyBookmarked ? loadingBookmarks : loading;
   const bookmarkedCount = bookmarkedArticles.length;
 
@@ -1084,6 +1140,29 @@ export default function NewsPage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {srcConfig.api === 'articles' && (
+                <button
+                  type="button"
+                  onClick={() => setShowPressModal(true)}
+                  className="btn btn-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 14px',
+                    fontSize: 12.5,
+                    fontWeight: 800,
+                    borderRadius: 8,
+                    background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Newspaper size={14} />
+                  <span>Đăng bài báo chí</span>
+                </button>
+              )}
+
               {/* View Mode Switcher: Lưới thẻ vs Dòng tinh gọn */}
               <div style={{
                 display: 'inline-flex', alignItems: 'center',
@@ -1198,7 +1277,14 @@ export default function NewsPage() {
                       )}
                     </div>
                   )
-                  : displayedArticles.map((a, i) => <CompactNewsRow key={a.id} article={a} index={i} />)
+                  : displayedArticles.map((a, i) => (
+                      <CompactNewsRow
+                        key={a.id}
+                        article={a}
+                        index={i}
+                        onOpenPost={setReadingUserPost}
+                      />
+                    ))
               }
             </div>
           ) : (
@@ -1224,7 +1310,14 @@ export default function NewsPage() {
                       )}
                     </div>
                   )
-                  : displayedArticles.map((a, i) => <NewsCard key={a.id} article={a} index={i} />)
+                  : displayedArticles.map((a, i) => (
+                      <NewsCard
+                        key={a.id}
+                        article={a}
+                        index={i}
+                        onOpenPost={setReadingUserPost}
+                      />
+                    ))
               }
             </div>
           )}
@@ -1239,6 +1332,40 @@ export default function NewsPage() {
           )}
         </div>
       </div>
+
+      {/* Thông báo toast */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 9999,
+          padding: '12px 20px', borderRadius: 12, fontSize: 13.5, fontWeight: 700,
+          background: toastMsg.type === 'success' ? '#059669' : '#dc2626', color: '#fff',
+          boxShadow: '0 10px 30px rgba(0,0,0,.22)', maxWidth: 440,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          {toastMsg.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          <span>{toastMsg.text}</span>
+        </div>
+      )}
+
+      {/* Modal Đăng bài Báo chí với Quyền riêng tư & Tên người dùng */}
+      {showPressModal && (
+        <PressPostModal
+          open={showPressModal}
+          onClose={() => setShowPressModal(false)}
+          onPostCreated={(newPost) => {
+            setUserPosts((prev) => [newPost, ...prev.filter((p) => p.id !== newPost.id)]);
+            toast('success', `Đã xuất bản bài báo chí "${newPost.title || newPost.projectName}" thành công!`);
+          }}
+        />
+      )}
+
+      {/* Modal Xem chi tiết bài báo chí nội bộ của người dùng & tải file đính kèm */}
+      {readingUserPost && (
+        <PressPostDetailModal
+          post={readingUserPost}
+          onClose={() => setReadingUserPost(null)}
+        />
+      )}
     </div>
   );
 }

@@ -7,11 +7,14 @@ import {
   Building2, Calendar, Coins, MapPin, Filter, RefreshCw, AlertCircle,
   ShoppingBag, Globe, Newspaper, Search, ArrowRight, BookmarkCheck,
   CheckCircle2, Sparkles, SlidersHorizontal, Trash2, Lock, RotateCcw,
-  ChevronDown, Check, Link2, Unlink, FolderKanban
+  ChevronDown, Check, Link2, Unlink, FolderKanban, FileText, FileCheck, Send
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { potentialService, itemKey } from '../services/potential';
 import { projectsService } from '../services/projects';
+import { projectDocumentsService } from '../services/projectDocuments';
+import ProjectDocumentPostModal from '../components/ProjectDocumentPostModal';
+import PressPostDetailModal from '../components/PressPostDetailModal';
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -129,13 +132,32 @@ function PotentialSkeletonCard() {
 }
 
 /** Một dự án tiềm năng với hỗ trợ bật/tắt theo dõi (Follow/Unfollow). */
-function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, onUnlink, linking }) {
+/** Một dự án tiềm năng hoặc bài đăng báo chí dự án với hỗ trợ bật/tắt theo dõi và xem tài liệu. */
+function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, onUnlink, linking, onOpenPressPost }) {
   const { t } = useLang();
   const navigate = useNavigate();
   const [isHoveredTrack, setIsHoveredTrack] = useState(false);
 
-  // Badge nguồn chuẩn xác cho từng loại (World Bank, ADB, Đấu thầu công, Báo chí)
+  // Badge nguồn chuẩn xác cho từng loại (Tài liệu dự án, Báo chí nội bộ, World Bank, ADB, Đấu thầu công, Tin tức ngoài)
   const getBadgeConfig = () => {
+    if (item.is_project_document || item.kind === 'project_document') {
+      return {
+        bg: 'rgba(5, 150, 105, 0.12)',
+        fg: '#059669',
+        border: 'rgba(5, 150, 105, 0.3)',
+        icon: FileCheck,
+        label: `📁 Tài liệu: ${item.creatorName || 'Người dùng'}`,
+      };
+    }
+    if (item.is_user_post || item.kind === 'user_article') {
+      return {
+        bg: 'rgba(37, 99, 235, 0.12)',
+        fg: '#2563eb',
+        border: 'rgba(37, 99, 235, 0.28)',
+        icon: Newspaper,
+        label: `📰 Báo chí: ${item.authorName || 'Tác giả'}`,
+      };
+    }
     if (item.kind === 'procurement') {
       return {
         bg: 'rgba(59, 130, 246, 0.12)',
@@ -199,6 +221,20 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
           {badgeCfg.label}
         </span>
 
+        {item.privacy && (
+          <span
+            className="potential-stage-tag"
+            style={{
+              background: item.privacy === 'only_me' ? 'rgba(139, 92, 246, 0.1)' : item.privacy === 'organization' ? 'rgba(37, 99, 235, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+              color: item.privacy === 'only_me' ? '#7c3aed' : item.privacy === 'organization' ? '#2563eb' : '#059669',
+              borderColor: item.privacy === 'only_me' ? 'rgba(139, 92, 246, 0.25)' : item.privacy === 'organization' ? 'rgba(37, 99, 235, 0.25)' : 'rgba(16, 185, 129, 0.25)',
+              fontWeight: 800,
+            }}
+          >
+            {item.privacy === 'only_me' ? '🔒 Chỉ mình tôi' : item.privacy === 'organization' ? '🏢 Tổ chức' : '🌐 Công khai'}
+          </span>
+        )}
+
         {item.stage && (
           <span className="potential-stage-tag">
             {item.stage}
@@ -217,17 +253,17 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
           </span>
         )}
 
-        {item.published_at && (
+        {(item.published_at || item.summaryDate || item.date) && (
           <span className="potential-date-tag">
-            {fmtDate(item.published_at)}
+            {fmtDate(item.published_at || item.summaryDate || item.date)}
           </span>
         )}
       </div>
 
       {/* Title — đã gắn vào dự án theo dõi thì hiện TÊN DỰ ÁN, giữ tiêu đề gốc ngay dưới để
           người dùng vẫn đối chiếu được với nguồn. */}
-      <h3 className="potential-card-title" title={item.title}>
-        {link?.display_name || item.title}
+      <h3 className="potential-card-title" title={item.title || item.projectName}>
+        {link?.display_name || item.title || item.projectName}
       </h3>
       {link?.display_name && link.display_name !== item.title && (
         <div
@@ -253,6 +289,20 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             <Sparkles size={11} />
             <span>{t('potential.relatedProject')}: {item.related_projects.join(', ')}</span>
           </span>
+        </div>
+      )}
+
+      {/* Tóm tắt văn bản / bài báo chí nếu có */}
+      {item.summary && (
+        <div
+          style={{
+            fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5,
+            background: 'var(--bg-surface-2)', padding: '8px 12px', borderRadius: 8,
+            border: '1px solid var(--border)', marginTop: 4, marginBottom: 6,
+            display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}
+        >
+          {item.summary}
         </div>
       )}
 
@@ -302,10 +352,22 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         )}
       </div>
 
+      {/* Danh sách file đính kèm nếu có */}
+      {item.files?.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+            background: 'rgba(5, 150, 105, 0.1)', color: '#059669', border: '1px solid rgba(5, 150, 105, 0.25)',
+          }}>
+            📎 {item.files.length} tài liệu đính kèm ({item.files.map((f) => f.type?.toUpperCase() || 'DOC').join(', ')})
+          </span>
+        </div>
+      )}
+
       {/* Sector pills */}
-      {item.sector_names?.length > 0 && (
+      {(item.sector_names?.length > 0 || item.sector) && (
         <div className="potential-sector-tags">
-          {item.sector_names.map((s) => (
+          {(item.sector_names || [item.sector]).filter(Boolean).map((s) => (
             <span key={s} className="potential-tag-pill">
               {s}
             </span>
@@ -313,7 +375,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         </div>
       )}
 
-      {/* Footer buttons - Căn thẳng hàng 1 dòng duy nhất, tên nguồn dài tự động có dấu ... */}
+      {/* Footer buttons - Căn thẳng hàng 1 dòng duy nhất */}
       <div className="potential-card-actions">
         {tracked ? (
           <button
@@ -366,7 +428,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             type="button"
             onClick={() => onLink(item)}
             disabled={linking}
-            title={t('potential.linkProjectHint')}
+            title="Liên kết dự án theo dõi, trích xuất tài liệu & đăng bài"
             className="potential-action-btn view-source"
           >
             <Link2 size={13} style={{ flex: 'none' }} />
@@ -374,7 +436,38 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
           </button>
         )}
 
-        {openInApp ? (
+        {/* Nút Xem bài viết / Hồ sơ tài liệu / Xem nguồn */}
+        {item.is_project_document || item.kind === 'project_document' ? (
+          <button
+            type="button"
+            onClick={() => onOpenPressPost(item)}
+            className="potential-action-btn view-source"
+            style={{
+              background: 'rgba(5, 150, 105, 0.08)',
+              borderColor: 'rgba(5, 150, 105, 0.4)',
+              color: '#059669',
+              fontWeight: 800,
+            }}
+          >
+            <FileCheck size={13} style={{ flex: 'none' }} />
+            <span>Xem hồ sơ tài liệu (.DOCX, .PDF)</span>
+          </button>
+        ) : (item.is_user_post || item.kind === 'user_article') ? (
+          <button
+            type="button"
+            onClick={() => onOpenPressPost(item)}
+            className="potential-action-btn view-source"
+            style={{
+              background: 'rgba(37, 99, 235, 0.08)',
+              borderColor: 'var(--brand-400)',
+              color: 'var(--brand-600)',
+              fontWeight: 800,
+            }}
+          >
+            <Newspaper size={13} style={{ flex: 'none' }} />
+            <span>Đọc bài báo chí</span>
+          </button>
+        ) : openInApp ? (
           <button
             type="button"
             onClick={() => navigate(openInApp)}
@@ -1160,7 +1253,33 @@ export default function PotentialProjectsPage() {
   const [trackingKey, setTrackingKey] = useState(null);
   const [trackedKeys, setTrackedKeys] = useState(() => new Set());
   const [userProjects, setUserProjects] = useState(() => projectsService.getCachedProjects() || []);
+  const [userDocs, setUserDocs] = useState(() => {
+    try {
+      const d = projectDocumentsService.getDocuments() || [];
+      const p = projectDocumentsService.getPosts() || [];
+      return [...(Array.isArray(d) ? d : []), ...(Array.isArray(p) ? p : [])];
+    } catch {
+      return [];
+    }
+  });
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [readingItem, setReadingItem] = useState(null);
   const [msg, setMsg] = useState(null);
+
+  // Tải danh sách hồ sơ tài liệu dự án tiềm năng
+  const loadUserDocs = useCallback(() => {
+    try {
+      const docs = projectDocumentsService.getDocuments() || [];
+      const posts = projectDocumentsService.getPosts() || [];
+      setUserDocs([...(Array.isArray(docs) ? docs : []), ...(Array.isArray(posts) ? posts : [])]);
+    } catch {
+      setUserDocs([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUserDocs();
+  }, [loadUserDocs]);
 
   // Liên kết "mục tiềm năng ↔ dự án đang theo dõi": nạp MỘT lượt cho cả trang.
   const [links, setLinks] = useState([]);
@@ -1480,10 +1599,46 @@ export default function PotentialProjectsPage() {
     }
   };
 
-  // Dữ liệu đã được server phân loại và lọc theo lĩnh vực, nguồn, giá trị, tên, vị trí, chủ đầu tư
+  // Dữ liệu đã được server phân loại và lọc theo lĩnh vực, nguồn, giá trị, tên, vị trí, chủ đầu tư, kèm hồ sơ tài liệu & bài đăng báo chí
   const displayItems = useMemo(() => {
-    return data.items || [];
-  }, [data.items]);
+    const cleanName = normalizeText(filterName);
+    const cleanLoc = normalizeText(filterLocation);
+    const cleanInv = normalizeText(filterInvestor);
+
+    // Lọc hồ sơ tài liệu dự án tiềm năng (.DOCX, .PDF)
+    const filteredUserDocs = (Array.isArray(userDocs) ? userDocs : []).filter((d) => {
+      if (kind && kind !== 'project_document') return false;
+
+      if (filterSectors.length > 0) {
+        const secNorm = normalizeText(d.sector);
+        const match = filterSectors.some((s) => secNorm.includes(normalizeText(s)));
+        if (!match) return false;
+      }
+
+      if (cleanName) {
+        const titleNorm = normalizeText(d.title || d.projectName);
+        if (!titleNorm.includes(cleanName)) return false;
+      }
+
+      if (cleanLoc) {
+        const provNorm = normalizeText(d.province);
+        if (!provNorm.includes(cleanLoc)) return false;
+      }
+
+      if (cleanInv) {
+        const creatorNorm = normalizeText(d.creatorName);
+        if (!creatorNorm.includes(cleanInv)) return false;
+      }
+
+      return true;
+    });
+
+    if (kind === 'project_document') {
+      return filteredUserDocs;
+    }
+
+    return [...filteredUserDocs, ...(data.items || [])];
+  }, [data.items, userDocs, kind, filterSectors, filterName, filterLocation, filterInvestor]);
 
   // Đếm số lượng tiêu chí lọc đang được áp dụng
   const activeFiltersCount = useMemo(() => {
@@ -1578,6 +1733,24 @@ export default function PotentialProjectsPage() {
 
         {/* Cụm nút hành động trên Header */}
         <div className="potential-hero-actions">
+          {/* Nút 1: Form Tài liệu & Biên bản dự án tiềm năng (.DOCX, .PDF) */}
+          <button
+            type="button"
+            onClick={() => setShowDocModal(true)}
+            className="potential-banner-btn-primary"
+            style={{
+              background: 'linear-gradient(135deg, #059669, #10b981)',
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+              border: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <FileCheck size={17} />
+            <span>📁 Tài liệu & Biên bản (.DOCX, .PDF)</span>
+          </button>
+
           <button
             type="button"
             onClick={() => navigate('/projects')}
@@ -1706,6 +1879,7 @@ export default function PotentialProjectsPage() {
             <div className="potential-kind-pills">
               {[
                 { id: '', label: t('potential.kindAll'), icon: SlidersHorizontal, allowed: true },
+                { id: 'project_document', label: 'Tài liệu & Biên bản', icon: FileCheck, allowed: true },
                 { id: 'procurement', label: t('potential.kindProcurement'), icon: ShoppingBag, allowed: canProc, pkgName: 'Đấu Thầu Công' },
                 { id: 'adb', label: 'Dự án ADB', icon: Building2, allowed: canAdb, pkgName: 'Dự Án ADB' },
                 { id: 'worldbank', label: 'World Bank', icon: Globe, allowed: canWb, pkgName: 'World Bank' },
@@ -1935,6 +2109,7 @@ export default function PotentialProjectsPage() {
                   linking={linkBusyKey === key}
                   onLink={setLinkingItem}
                   onUnlink={handleUnlink}
+                  onOpenPressPost={setReadingItem}
                 />
               );
             })}
@@ -1957,12 +2132,12 @@ export default function PotentialProjectsPage() {
               {pageNumbers.map((pNum, idx) => {
                 if (pNum === '...') {
                   return (
-                    <span key={`dots-${idx}`} className="potential-page-dots">
-                      …
+                    <span key={`ellipsis-${idx}`} className="potential-page-ellipsis">
+                      ...
                     </span>
                   );
                 }
-                const isActive = pNum === page;
+                const isActive = page === pNum;
                 return (
                   <button
                     key={pNum}
@@ -1994,17 +2169,35 @@ export default function PotentialProjectsPage() {
         </div>
       )}
 
-      {linkingItem && (
-        <ProjectLinkModal
-          item={linkingItem}
-          sectors={sectors}
-          onClose={() => setLinkingItem(null)}
-          onLinked={(link) => {
-            setLinks((cur) => [link, ...cur.filter((x) => x.id !== link.id)]);
+      {/* 1. Modal Form Tài liệu, Biên bản & Đăng bài dự án tiềm năng (.DOCX, .PDF) */}
+      {(showDocModal || linkingItem) && (
+        <ProjectDocumentPostModal
+          open={Boolean(showDocModal || linkingItem)}
+          onClose={() => {
+            setShowDocModal(false);
             setLinkingItem(null);
-            setMsg({ type: 'success', text: t('potential.linked', { name: link.project_name || link.display_name }) });
-            setTimeout(() => setMsg(null), 4000);
           }}
+          potentialItem={linkingItem}
+          onPostCreated={(newPost) => {
+            setUserDocs((prev) => [newPost, ...prev.filter((d) => d.id !== newPost.id)]);
+            toast('success', `Đã phê duyệt và đăng bài "${newPost.title || newPost.projectName}" thành công!`);
+          }}
+          onDocumentSaved={(newDoc) => {
+            setUserDocs((prev) => [newDoc, ...prev.filter((d) => d.id !== newDoc.id)]);
+            toast('success', `Đã lưu hồ sơ tài liệu "${newDoc.projectName || newDoc.title}" thành công!`);
+          }}
+          onProjectUpdated={(updatedProject) => {
+            loadUserProjects(true);
+            toast('success', `Đã cập nhật dự án theo dõi "${updatedProject.name}"!`);
+          }}
+        />
+      )}
+
+      {/* 2. Modal Xem chi tiết hồ sơ tài liệu dự án */}
+      {readingItem && (
+        <PressPostDetailModal
+          post={readingItem}
+          onClose={() => setReadingItem(null)}
         />
       )}
 

@@ -46,7 +46,7 @@ function highlightText(text, query) {
   }
 }
 
-export default function NewsCard({ article, index = 0 }) {
+export default function NewsCard({ article, index = 0, onOpenPost }) {
   const nav = useNavigate();
   const { lang, t } = useLang();
   const [searchParams] = useSearchParams();
@@ -117,9 +117,6 @@ export default function NewsCard({ article, index = 0 }) {
         setBookmarked(false);
       } else {
         if (article.is_local_project && article.local_key) {
-          // Thẻ ODA / gói thầu có id dạng chuỗi ("adb-12", "proc-IB…") nên không lưu được
-          // qua API bookmark bài báo. Trước đây nhánh này chỉ đổi biểu tượng, tải lại
-          // trang là mất — ghi vào đúng kho localStorage mà trang Đã Lưu đọc.
           const raw = localStorage.getItem(article.local_key);
           const list = raw ? JSON.parse(raw) : [];
           if (!list.some((p) => p.id === article.original_id)) {
@@ -149,8 +146,12 @@ export default function NewsCard({ article, index = 0 }) {
   };
 
   const handleClick = () => {
-    // Mỗi loại có trang chi tiết riêng: đưa ADB sang trang World Bank sẽ mở nhầm dự án
-    // của ngân hàng khác, còn gói thầu vào /article luôn ra "Không tìm thấy bài viết".
+    if (article.is_user_post) {
+      if (onOpenPost) {
+        onOpenPost(article);
+        return;
+      }
+    }
     const loai = article.source_type || article.source
       || { saved_worldbank_projects: 'worldbank', saved_adb_projects: 'adb', saved_procurement_items: 'gov' }[article.local_key];
     const targetId = article.original_id || article.project_code || article.id;
@@ -205,13 +206,25 @@ export default function NewsCard({ article, index = 0 }) {
       <div className="news-card-body" style={{ padding: '12px 14px 8px 14px', gap: 6, flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div className="news-card-meta" style={{ gap: 6, marginBottom: 2 }}>
           <span className="news-source-tag" style={{
-            background: src.bg,
-            color: src.color,
-            border: `1px solid ${src.border}`,
+            background: article.is_user_post ? 'rgba(37, 99, 235, 0.12)' : src.bg,
+            color: article.is_user_post ? '#2563eb' : src.color,
+            border: `1px solid ${article.is_user_post ? 'rgba(37, 99, 235, 0.3)' : src.border}`,
           }}>
-            <span style={{ fontSize: 10 }}>{src.icon}</span>
-            <span>{src.name}</span>
+            <span style={{ fontSize: 10 }}>{article.is_user_post ? '👤' : src.icon}</span>
+            <span>{article.is_user_post ? (article.authorName || 'Người dùng') : src.name}</span>
           </span>
+
+          {article.is_user_post && article.privacy && (
+            <span style={{
+              fontSize: 10, fontWeight: 700,
+              padding: '2px 7px', borderRadius: 6,
+              background: article.privacy === 'only_me' ? 'rgba(139, 92, 246, 0.12)' : article.privacy === 'organization' ? 'rgba(37, 99, 235, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+              color: article.privacy === 'only_me' ? '#7c3aed' : article.privacy === 'organization' ? '#2563eb' : '#059669',
+              border: `1px solid ${article.privacy === 'only_me' ? 'rgba(139, 92, 246, 0.3)' : article.privacy === 'organization' ? 'rgba(37, 99, 235, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+            }}>
+              {article.privacy === 'only_me' ? '🔒 Chỉ mình tôi' : article.privacy === 'organization' ? '🏢 Tổ chức' : '🌐 Công khai'}
+            </span>
+          )}
 
           {article.amount && (
             <span style={{
@@ -435,7 +448,7 @@ export default function NewsCard({ article, index = 0 }) {
           >
             {bookmarked ? <BookmarkCheck size={18} style={{ color: 'var(--brand-600)' }} /> : <Bookmark size={18} />}
           </button>
-          {article.url && (
+          {!article.is_user_post && article.url && (
             <a
               href={article.url}
               target="_blank"

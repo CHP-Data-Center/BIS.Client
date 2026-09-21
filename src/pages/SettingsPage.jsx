@@ -9,7 +9,6 @@ import {
   KeyRound, BellRing, CheckCircle2, AlertCircle, Loader2,
   Mail, Sparkles, ShieldCheck, Lock, Palette, MapPin, Check
 } from 'lucide-react';
-import AdminDigestConfig from '../components/AdminDigestConfig';
 import { getUserTheme, setUserTheme, isThemeUnlocked } from '../utils/theme';
 import basicBg from '../assets/theme_basic_bg.png';
 import classicBg from '../assets/theme_classic_bg.png';
@@ -682,9 +681,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-
-      {/* ── Admin: Cấu hình Bản Tin Chung ── */}
-      {isAdmin && <AdminDigestConfig />}
 
       {/* ── 3rd Section: Persistent UI/UX Theme Selection ── */}
       <div className="card settings-card" style={{
