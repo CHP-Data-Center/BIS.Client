@@ -16,11 +16,13 @@ import NewsCard from '../components/NewsCard';
 import WorldBankView from '../components/WorldBankView';
 import PressPostModal from '../components/PressPostModal';
 import PressPostDetailModal from '../components/PressPostDetailModal';
-import { projectDocumentsService } from '../services/projectDocuments';
+import { projectDocumentsService, documentToItem } from '../services/projectDocuments';
 import { getSourceStyle } from '../utils/sourceStyle';
 import { tUI } from '../locales';
 
 const PAGE_SIZE = 12;
+// Số bài người dùng đăng (mới nhất) chen lên đầu trang 1 của bảng tin báo chí.
+const USER_POSTS_ON_TOP = 6;
 
 // Ánh xạ URL param -> nguồn. api: 'articles' (tin bài) | 'oda' (ADB/WB) | 'proc' (đấu thầu).
 // ADB/WB nằm ở bảng oda_projects, đấu thầu ở procurement_items — KHÔNG phải /articles.
@@ -108,7 +110,9 @@ function CompactNewsRow({ article, index, onOpenPost }) {
 
   const handleBookmark = async (e) => {
     e.stopPropagation();
-    if (bkLoading) return;
+    // Bài người dùng đăng (tài liệu dự án) không phải bài crawl: id của nó là id tài liệu,
+    // đem gọi API bookmark bài viết là lưu nhầm sang bài báo trùng số id.
+    if (bkLoading || article.is_user_post) return;
     setBkLoading(true);
     try {
       if (bookmarked) {
@@ -226,7 +230,7 @@ function CompactNewsRow({ article, index, onOpenPost }) {
 
       {/* Action buttons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
-        <button
+        {!article.is_user_post && (<button
           onClick={handleBookmark}
           disabled={bkLoading}
           style={{
@@ -238,9 +242,9 @@ function CompactNewsRow({ article, index, onOpenPost }) {
           title={bookmarked ? 'Bỏ lưu' : 'Lưu bài viết'}
         >
           {bookmarked ? <BookmarkCheck size={16} fill="#f59e0b" /> : <Bookmark size={16} />}
-        </button>
+        </button>)}
 
-        {article.url && (
+        {!article.is_user_post && article.url && (
           <a
             href={article.url}
             target="_blank"
@@ -341,15 +345,10 @@ export default function NewsPage() {
     localStorage.setItem('bis_news_view_mode', mode);
   };
 
-  // Quản lý Đăng bài Báo chí nội bộ & Quyền riêng tư
-  const [userPosts, setUserPosts] = useState(() => {
-    try {
-      const p = projectDocumentsService.getPosts();
-      return Array.isArray(p) ? p : [];
-    } catch {
-      return [];
-    }
-  });
+  // Bài người dùng đăng (tài liệu dự án kèm quyền riêng tư) — lưu ở MÁY CHỦ, máy chủ lọc quyền
+  // xem; chỉ chen vài bài mới nhất lên đầu trang 1 của tab Báo chí.
+  const [userPosts, setUserPosts] = useState([]);
+  const [userPostsReload, setUserPostsReload] = useState(0);
   const [showPressModal, setShowPressModal] = useState(false);
   const [readingUserPost, setReadingUserPost] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
@@ -635,34 +634,43 @@ export default function NewsPage() {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Lọc và chuẩn hóa bài đăng báo chí của người dùng để hiển thị trên đầu danh sách
+  const showUserPosts = srcConfig.api === 'articles' && !onlyBookmarked && page === 1;
+
+  useEffect(() => {
+    if (!showUserPosts) {
+      setUserPosts([]);
+      return undefined;
+    }
+    let alive = true;
+    const hen = setTimeout(async () => {
+      try {
+        const res = await projectDocumentsService.list({ q: (search || '').trim(), size: USER_POSTS_ON_TOP });
+        if (alive) setUserPosts((res.items || []).map(documentToItem));
+      } catch {
+        // Lỗi phụ: bảng tin báo chí vẫn hiện bình thường khi không lấy được bài người dùng đăng.
+        if (alive) setUserPosts([]);
+      }
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(hen);
+    };
+  }, [showUserPosts, search, userPostsReload]);
+
+  // Chuẩn hóa bài người dùng đăng về dạng thẻ bài báo để hiển thị trên đầu danh sách
   const filteredUserArticles = useMemo(() => {
-    if (srcConfig.api !== 'articles' || onlyBookmarked || page !== 1) return [];
-    const cleanQ = (search || '').toLowerCase().trim();
-    return (Array.isArray(userPosts) ? userPosts : [])
-      .filter((p) => {
-        if (!cleanQ) return true;
-        const titleMatch = (p.title || p.projectName || '').toLowerCase().includes(cleanQ);
-        const summaryMatch = (p.summary || '').toLowerCase().includes(cleanQ);
-        const authorMatch = (p.authorName || '').toLowerCase().includes(cleanQ);
-        return titleMatch || summaryMatch || authorMatch;
-      })
-      .map((p) => ({
-        ...p,
-        id: p.id,
-        title: p.title || p.projectName,
-        titleVi: p.title || p.projectName,
-        excerpt: p.summary,
-        excerptVi: p.summary,
-        published_at: p.date || p.createdAt,
-        source: 'press',
-        source_type: 'press',
-        is_user_post: true,
-        authorName: p.authorName,
-        privacy: p.privacy,
-        files: p.files,
-      }));
-  }, [userPosts, srcConfig.api, onlyBookmarked, page, search]);
+    if (!showUserPosts) return [];
+    return userPosts.map((p) => ({
+      ...p,
+      titleVi: p.title,
+      excerpt: p.summary,
+      excerptVi: p.summary,
+      published_at: p.date || p.createdAt,
+      source: 'press',
+      source_type: 'press',
+      is_user_post: true,
+    }));
+  }, [userPosts, showUserPosts]);
 
   // Dữ liệu bài viết và tổng số bài tương ứng với chế độ lọc
   const displayedArticles = onlyBookmarked ? bookmarkedArticles : [...filteredUserArticles, ...articles];
@@ -1279,7 +1287,7 @@ export default function NewsPage() {
                   )
                   : displayedArticles.map((a, i) => (
                       <CompactNewsRow
-                        key={a.id}
+                        key={a.is_user_post ? `doc-${a.id}` : a.id}
                         article={a}
                         index={i}
                         onOpenPost={setReadingUserPost}
@@ -1312,7 +1320,7 @@ export default function NewsPage() {
                   )
                   : displayedArticles.map((a, i) => (
                       <NewsCard
-                        key={a.id}
+                        key={a.is_user_post ? `doc-${a.id}` : a.id}
                         article={a}
                         index={i}
                         onOpenPost={setReadingUserPost}
@@ -1352,9 +1360,9 @@ export default function NewsPage() {
         <PressPostModal
           open={showPressModal}
           onClose={() => setShowPressModal(false)}
-          onPostCreated={(newPost) => {
-            setUserPosts((prev) => [newPost, ...prev.filter((p) => p.id !== newPost.id)]);
-            toast('success', `Đã xuất bản bài báo chí "${newPost.title || newPost.projectName}" thành công!`);
+          onPostCreated={(doc) => {
+            setUserPostsReload((n) => n + 1);
+            toast('success', `Đã xuất bản bài báo chí "${doc.project_name}" thành công!`);
           }}
         />
       )}
@@ -1363,7 +1371,12 @@ export default function NewsPage() {
       {readingUserPost && (
         <PressPostDetailModal
           post={readingUserPost}
+          variant="press"
           onClose={() => setReadingUserPost(null)}
+          onDeleted={(doc) => {
+            setUserPostsReload((n) => n + 1);
+            toast('success', `Đã xóa bài "${doc.title}".`);
+          }}
         />
       )}
     </div>

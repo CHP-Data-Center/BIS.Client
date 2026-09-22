@@ -229,57 +229,26 @@ export const projectsService = {
     }
   },
 
-  /** Mọi liên kết "mục tiềm năng ↔ dự án theo dõi" của tài khoản (một lượt cho cả trang) */
-  async getPotentialLinks() {
-    let localLinks = [];
-    try {
-      const raw = localStorage.getItem('bis_potential_links');
-      localLinks = raw ? JSON.parse(raw) : [];
-    } catch {
-      localLinks = [];
-    }
+  // Liên kết "mục tiềm năng ↔ dự án theo dõi" CHỈ lưu ở máy chủ. Không lùi về localStorage
+  // khi API lỗi: làm vậy thì giao diện báo "đã gắn" trong khi máy chủ không có gì — tải lại
+  // trang, đổi máy hay người khác xem đều không thấy, còn lỗi thật (403 ngoài gói, 409 đã
+  // gắn, 422 dữ liệu sai) bị nuốt mất. Lỗi phải hiện ra cho người dùng.
 
-    try {
-      const { data } = await api.get('/projects/potential-links');
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      }
-      return localLinks;
-    } catch {
-      return localLinks;
-    }
+  /** Mọi liên kết của tài khoản (một lượt cho cả trang) */
+  async getPotentialLinks() {
+    const { data } = await api.get('/projects/potential-links');
+    return data; // PotentialLinkOut[]
   },
 
-  /** Gắn một mục tiềm năng vào dự án theo dõi; bỏ trống display_name = lấy tên dự án */
+  /** Gắn một mục tiềm năng vào dự án theo dõi; bỏ trống display_name = lấy tên dự án.
+   *  `project_update` (tùy chọn) được lưu CÙNG lệnh gắn — gắn hỏng thì dự án không bị sửa. */
   async addPotentialLink(projectId, payload) {
-    try {
-      const { data } = await api.post(`/projects/${projectId}/potential-links`, payload);
-      return data; // PotentialLinkOut
-    } catch {
-      const links = (await this.getPotentialLinks()) || [];
-      const newLink = {
-        id: Date.now(),
-        tracked_project_id: projectId,
-        kind: payload.kind,
-        ref: payload.ref,
-        display_name: payload.title_snapshot || null,
-        source_url: payload.source_url || null,
-        created_at: new Date().toISOString(),
-      };
-      const updated = [newLink, ...links.filter((l) => !(l.kind === payload.kind && l.ref === payload.ref))];
-      localStorage.setItem('bis_potential_links', JSON.stringify(updated));
-      return newLink;
-    }
+    const { data } = await api.post(`/projects/${projectId}/potential-links`, payload);
+    return data; // PotentialLinkOut
   },
 
   /** Gỡ liên kết */
   async removePotentialLink(projectId, linkId) {
-    try {
-      await api.delete(`/projects/${projectId}/potential-links/${linkId}`);
-    } catch {
-      const links = (await this.getPotentialLinks()) || [];
-      const updated = links.filter((l) => l.id !== linkId);
-      localStorage.setItem('bis_potential_links', JSON.stringify(updated));
-    }
+    await api.delete(`/projects/${projectId}/potential-links/${linkId}`);
   },
 };

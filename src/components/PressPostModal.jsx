@@ -1,5 +1,7 @@
 // src/components/PressPostModal.jsx
-// Quản lý riêng chức năng ĐĂNG BÀI BÁO CHÍ với Tên người dùng & Quyền riêng tư (Only me, Organization, Public)
+// Đăng bài báo chí kèm tài liệu (.DOCX/.PDF), tên người đăng và quyền riêng tư
+// (Only me / Organization / Public). Lưu ở máy chủ (/project-documents) — cùng kho với tài
+// liệu dự án nên bài đăng ở trang Báo chí và trang Dự án tiềm năng là một.
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -9,7 +11,9 @@ import {
 } from 'lucide-react';
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { projectDocumentsService } from '../services/projectDocuments';
+import {
+  projectDocumentsService, documentFileProblem, todayVN, apiErrorMessage, DOCUMENT_ACCEPT,
+} from '../services/projectDocuments';
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -20,10 +24,10 @@ function fmtDate(iso) {
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-// Cấu hình quyền riêng tư
+// Cấu hình quyền riêng tư — `id` trùng giá trị `visibility` của máy chủ.
 const PRIVACY_OPTIONS = [
   {
-    id: 'only_me',
+    id: 'private',
     label: 'Only me (Chỉ mình tôi)',
     desc: 'Chỉ tài khoản của bạn mới nhìn thấy bài báo chí này',
     icon: Lock,
@@ -54,23 +58,24 @@ const PRIVACY_OPTIONS = [
 export default function PressPostModal({
   open,
   onClose,
-  initialData = null,
   onPostCreated = () => {},
 }) {
   const { t } = useLang();
   const { user } = useAuth();
-  const authorName = user?.name || user?.full_name || user?.username || user?.email || 'Người dùng BIS';
+  const authorName = user?.display_name || user?.name || user?.email || 'Người dùng BIS';
+  // Máy chủ từ chối quyền "Tổ chức" với tài khoản chưa thuộc tổ chức nào.
+  const hasOrg = Boolean(user?.organization_id);
 
   // Thông tin bài đăng báo chí
-  const [title, setTitle] = useState(initialData?.title || initialData?.projectName || '');
-  const [province, setProvince] = useState(initialData?.province || '');
-  const [sector, setSector] = useState(initialData?.sector || 'Hạ tầng & Xây dựng');
-  const [summary, setSummary] = useState(initialData?.summary || '');
-  const [date, setDate] = useState(initialData?.date || (() => new Date().toISOString().split('T')[0]));
-  const [summaryDate, setSummaryDate] = useState(initialData?.summaryDate || (() => new Date().toISOString().split('T')[0]));
-  const [privacy, setPrivacy] = useState(initialData?.privacy || 'organization');
+  const [title, setTitle] = useState('');
+  const [province, setProvince] = useState('');
+  const [summary, setSummary] = useState('');
+  // Ngày ghi trong văn bản: chỉ điền khi trích được hoặc người dùng tự nhập.
+  const [date, setDate] = useState('');
+  const [summaryDate, setSummaryDate] = useState(() => todayVN());
+  const [privacy, setPrivacy] = useState(hasOrg ? 'organization' : 'private');
 
-  // File tài liệu/ảnh đính kèm
+  // Tài liệu đính kèm: đúng một file .DOCX/.PDF (máy chủ lưu file gốc để tải lại)
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [extracting, setExtracting] = useState(false);
   const [extractionMsg, setExtractionMsg] = useState(null);
@@ -82,34 +87,33 @@ export default function PressPostModal({
 
   const fileInputRef = useRef(null);
 
-  // Upload file DOCX, PDF hoặc hình ảnh
+  const showError = (text, ms = 6000) => {
+    setErrorMsg(text);
+    setTimeout(() => setErrorMsg(null), ms);
+  };
+
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const valid = files.filter((f) => {
-      const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
-      return ['.docx', '.pdf', '.doc', '.png', '.jpg', '.jpeg', '.webp'].includes(ext);
-    });
-
-    if (valid.length < files.length) {
-      setErrorMsg('Hỗ trợ đính kèm tài liệu (.DOCX, .PDF) và hình ảnh (.PNG, .JPG)');
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
-
-    setAttachedFiles((prev) => [...prev, ...valid]);
+    const list = Array.from(e.target.files || []);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (list.length === 0) return;
+    const loi = documentFileProblem(list[0]);
+    if (loi) {
+      showError(loi);
+      return;
+    }
+    setAttachedFiles([list[0]]);
   };
 
-  const removeFile = (idx) => {
-    setAttachedFiles((prev) => prev.filter((_, i) => i !== idx));
+  const removeFile = () => {
+    setAttachedFiles([]);
   };
 
-  // Trích xuất thông tin tự động từ file
+  // Trích xuất thông tin từ nội dung file (máy chủ đọc DOCX/PDF, tóm tắt bằng AI nếu có)
   const handleExtract = async () => {
-    if (attachedFiles.length === 0) {
-      setErrorMsg('Vui lòng đính kèm ít nhất 1 file tài liệu (.DOCX hoặc .PDF) để trích xuất');
-      setTimeout(() => setErrorMsg(null), 4000);
+    const file = attachedFiles[0];
+    const loi = documentFileProblem(file);
+    if (loi) {
+      showError(loi);
       return;
     }
 
@@ -118,23 +122,24 @@ export default function PressPostModal({
     setErrorMsg(null);
 
     try {
-      const primaryFile = attachedFiles[0];
-      const extracted = await projectDocumentsService.extractFromFile(primaryFile);
-
-      if (extracted.projectName) setTitle(extracted.projectName);
-      if (extracted.province) setProvince(extracted.province);
-      if (extracted.summary) setSummary(extracted.summary);
-      if (extracted.date) setDate(extracted.date);
-      if (extracted.summaryDate) setSummaryDate(extracted.summaryDate);
+      const res = await projectDocumentsService.extract(file);
+      if (!res.char_count) {
+        showError(res.note || 'Không đọc được chữ trong file. Vui lòng nhập thông tin thủ công.', 8000);
+        return;
+      }
+      if (res.project_name) setTitle(res.project_name);
+      if (res.location) setProvince(res.location);
+      if (res.summary) setSummary(res.summary);
+      if (res.doc_date) setDate(res.doc_date);
+      if (res.summary_date) setSummaryDate(res.summary_date);
 
       setExtractionMsg({
         type: 'success',
-        text: `Đã trích xuất thông tin từ "${primaryFile.name}" thành công!`,
+        text: `Đã trích xuất thông tin từ "${file.name}"${res.source === 'ai' ? ' (tóm tắt bằng AI)' : ''}. ${res.note || ''}`.trim(),
       });
-      setTimeout(() => setExtractionMsg(null), 5000);
+      setTimeout(() => setExtractionMsg(null), 8000);
     } catch (err) {
-      setErrorMsg(err.message || 'Không thể trích xuất thông tin từ file này.');
-      setTimeout(() => setErrorMsg(null), 4000);
+      showError(apiErrorMessage(err, 'Không thể trích xuất thông tin từ file này.'));
     } finally {
       setExtracting(false);
     }
@@ -143,49 +148,46 @@ export default function PressPostModal({
   // Mở modal duyệt bài trước khi xuất bản
   const handleRequestApproval = (e) => {
     e.preventDefault();
+    const loiFile = documentFileProblem(attachedFiles[0]);
+    if (loiFile) {
+      showError(loiFile);
+      return;
+    }
     if (!title.trim()) {
-      setErrorMsg('Tiêu đề bài báo chí / Tên dự án không được để trống');
-      setTimeout(() => setErrorMsg(null), 3500);
+      showError('Tiêu đề bài báo chí / Tên dự án không được để trống');
       return;
     }
     if (!summary.trim()) {
-      setErrorMsg('Vui lòng nhập tóm tắt nội dung bài báo chí');
-      setTimeout(() => setErrorMsg(null), 3500);
+      showError('Vui lòng nhập tóm tắt nội dung bài báo chí');
+      return;
+    }
+    if (privacy === 'organization' && !hasOrg) {
+      showError('Tài khoản chưa thuộc tổ chức nào — chọn "Chỉ mình tôi" hoặc "Công khai".');
       return;
     }
     setShowApprovalModal(true);
   };
 
-  // Xác nhận phê duyệt & Đăng bài báo chí
+  // Xác nhận phê duyệt: máy chủ lưu thông tin + file gốc + quyền riêng tư
   const handleConfirmPublish = async () => {
     setPublishing(true);
     setErrorMsg(null);
     try {
-      const postPayload = {
-        title: title.trim(),
-        projectName: title.trim(),
-        province: province.trim() || 'Toàn quốc',
-        sector: sector.trim() || 'Hạ tầng & Xây dựng',
+      const doc = await projectDocumentsService.create(attachedFiles[0], {
+        project_name: title.trim(),
+        location: province.trim() || null,
         summary: summary.trim(),
-        date: date,
-        summaryDate: summaryDate,
-        privacy: privacy,
-        authorName: authorName,
-        files: attachedFiles.map((f) => ({
-          name: f.name,
-          size: f.size,
-          type: f.name.endsWith('.docx') ? 'docx' : f.name.endsWith('.pdf') ? 'pdf' : 'image',
-        })),
-        stage: 'Đã xuất bản',
-      };
-
-      const createdPost = projectDocumentsService.createPost(postPayload);
+        doc_date: date || null,
+        summary_date: summaryDate || null,
+        visibility: privacy,
+      });
       setShowApprovalModal(false);
-      onPostCreated(createdPost);
+      onPostCreated(doc);
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || 'Có lỗi xảy ra khi đăng bài.');
-      setTimeout(() => setErrorMsg(null), 4000);
+      // Đóng bảng duyệt để thông báo lỗi (nằm trong khung chính) không bị che.
+      setShowApprovalModal(false);
+      showError(apiErrorMessage(err, 'Không đăng được bài. Vui lòng thử lại.'), 8000);
     } finally {
       setPublishing(false);
     }
@@ -193,10 +195,11 @@ export default function PressPostModal({
 
   if (!open) return null;
 
-  const currentPrivacy = PRIVACY_OPTIONS.find((p) => p.id === privacy) || PRIVACY_OPTIONS[1];
+  const currentPrivacy = PRIVACY_OPTIONS.find((p) => p.id === privacy) || PRIVACY_OPTIONS[0];
 
   const modalContent = (
-    <div className="potential-modal-backdrop" onClick={onClose}>
+    // Đang trích xuất / đăng thì không đóng khi bấm ra ngoài: request vẫn chạy tiếp.
+    <div className="potential-modal-backdrop" onClick={extracting || publishing ? undefined : onClose}>
       <div
         className="card"
         onClick={(e) => e.stopPropagation()}
@@ -316,22 +319,29 @@ export default function PressPostModal({
             <span>Quyền riêng tư bài viết (Privacy) *</span>
           </span>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          <div role="radiogroup" aria-label="Quyền riêng tư" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
             {PRIVACY_OPTIONS.map((opt) => {
               const active = privacy === opt.id;
+              // Máy chủ từ chối "Tổ chức" khi tài khoản chưa thuộc tổ chức nào.
+              const disabled = opt.id === 'organization' && !hasOrg;
               const OptIcon = opt.icon;
               return (
                 <button
                   key={opt.id}
                   type="button"
+                  role="radio"
+                  aria-checked={active}
+                  disabled={disabled}
+                  title={disabled ? 'Tài khoản chưa thuộc tổ chức nào' : undefined}
                   onClick={() => setPrivacy(opt.id)}
                   style={{
+                    opacity: disabled ? 0.5 : 1,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
                     padding: '12px 14px',
                     borderRadius: 12,
-                    cursor: 'pointer',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
                     textAlign: 'left',
                     background: active ? opt.bg : 'var(--bg-surface)',
                     border: active ? `2px solid ${opt.color}` : '1px solid var(--border)',
@@ -352,7 +362,7 @@ export default function PressPostModal({
                     </span>
                   </div>
                   <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                    {opt.desc}
+                    {disabled ? 'Tài khoản của bạn chưa thuộc tổ chức nào.' : opt.desc}
                   </p>
                 </button>
               );
@@ -375,7 +385,7 @@ export default function PressPostModal({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Paperclip size={15} style={{ color: 'var(--brand-500)' }} />
-              <span>Đính kèm tài liệu (.DOCX, .PDF) hoặc trích xuất</span>
+              <span>Tài liệu đính kèm (.DOCX, .PDF) * & trích xuất</span>
             </span>
 
             {attachedFiles.length > 0 && (
@@ -412,16 +422,15 @@ export default function PressPostModal({
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept=".docx,.pdf,.doc,.png,.jpg,.jpeg,.webp"
-              multiple
+              accept={DOCUMENT_ACCEPT}
               style={{ display: 'none' }}
             />
             <Upload size={20} style={{ color: 'var(--brand-500)', margin: '0 auto 4px' }} />
             <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Nhấp để tải lên tài liệu báo chí / hình ảnh liên quan
+              Nhấp để tải lên tài liệu dự án, biên bản liên quan
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-              Hỗ trợ định dạng .DOCX, .PDF, .PNG, .JPG (tối đa trích xuất thông tin tự động)
+              Hỗ trợ định dạng .DOCX, .PDF — một file, tối đa 15 MB. File gốc được lưu kèm bài đăng.
             </div>
           </div>
 
@@ -443,7 +452,7 @@ export default function PressPostModal({
                   </span>
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                    onClick={(e) => { e.stopPropagation(); removeFile(); }}
                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
                   >
                     <X size={13} />
@@ -463,6 +472,7 @@ export default function PressPostModal({
                 type="text"
                 className="form-input"
                 value={title}
+                maxLength={255}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="VD: Khởi công xây dựng tuyến cao tốc kết nối vùng kinh tế trọng điểm..."
                 style={{ fontSize: 12.5 }}
@@ -476,6 +486,7 @@ export default function PressPostModal({
                 type="text"
                 className="form-input"
                 value={province}
+                maxLength={255}
                 onChange={(e) => setProvince(e.target.value)}
                 placeholder="VD: Hà Nội, TP.HCM, Vĩnh Long..."
                 style={{ fontSize: 12.5 }}
@@ -483,19 +494,7 @@ export default function PressPostModal({
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Lĩnh vực</label>
-              <input
-                type="text"
-                className="form-input"
-                value={sector}
-                onChange={(e) => setSector(e.target.value)}
-                placeholder="VD: Giao thông vận tải, Cấp thoát nước..."
-                style={{ fontSize: 12.5 }}
-              />
-            </div>
-
-            <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Ngày sự kiện / bài báo</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>Ngày văn bản / bài báo</label>
               <input
                 type="date"
                 className="form-input"
@@ -524,6 +523,7 @@ export default function PressPostModal({
                 className="form-input"
                 rows={4}
                 value={summary}
+                maxLength={5000}
                 onChange={(e) => setSummary(e.target.value)}
                 placeholder="Nội dung truyền thông, tóm tắt diễn biến, thông số kỹ thuật hoặc biên bản cuộc họp..."
                 style={{ fontSize: 12.5, resize: 'vertical' }}
@@ -575,7 +575,9 @@ export default function PressPostModal({
       {/* MODAL PHÊ DUYỆT BÀI ĐĂNG TRƯỚC KHI XUẤT BẢN */}
       {showApprovalModal && (
         <div
-          onClick={() => setShowApprovalModal(false)}
+          // stopPropagation: lớp phủ nằm TRONG backdrop của form — để sự kiện nổi lên là đóng luôn
+          // cả form, mất file và mọi thứ đã nhập.
+          onClick={(e) => { e.stopPropagation(); if (!publishing) setShowApprovalModal(false); }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.7)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 16,
@@ -626,9 +628,8 @@ export default function PressPostModal({
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span>📍 <strong>Vị trí:</strong> {province || 'Toàn quốc'}</span>
-                <span>🏷️ <strong>Lĩnh vực:</strong> {sector}</span>
-                <span>📅 <strong>Ngày bài báo:</strong> {fmtDate(date)}</span>
+                <span>📍 <strong>Vị trí:</strong> {province.trim() || '—'}</span>
+                <span>📅 <strong>Ngày văn bản:</strong> {fmtDate(date)}</span>
                 <span>⏱️ <strong>Ngày tóm tắt:</strong> {fmtDate(summaryDate)}</span>
               </div>
 
@@ -642,7 +643,7 @@ export default function PressPostModal({
                       background: currentPrivacy.bg, color: currentPrivacy.color, border: `1px solid ${currentPrivacy.border}`,
                     }}
                   >
-                    {privacy === 'only_me' ? '🔒 Chỉ mình tôi' : privacy === 'organization' ? '🏢 Nội bộ tổ chức' : '🌐 Công khai'}
+                    {privacy === 'private' ? '🔒 Chỉ mình tôi' : privacy === 'organization' ? '🏢 Nội bộ tổ chức' : '🌐 Công khai'}
                   </span>
                 </div>
               </div>

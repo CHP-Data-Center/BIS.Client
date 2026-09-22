@@ -96,7 +96,9 @@ export default function NewsCard({ article, index = 0, onOpenPost }) {
 
   const handleBookmark = async (e) => {
     e.stopPropagation();
-    if (bkLoading) return;
+    // Bài người dùng đăng (tài liệu dự án) không phải bài crawl: id của nó là id tài liệu,
+    // đem gọi API bookmark bài viết là lưu nhầm sang bài báo trùng số id.
+    if (bkLoading || article.is_user_post) return;
     setBkLoading(true);
     try {
       if (bookmarked) {
@@ -218,11 +220,11 @@ export default function NewsCard({ article, index = 0, onOpenPost }) {
             <span style={{
               fontSize: 10, fontWeight: 700,
               padding: '2px 7px', borderRadius: 6,
-              background: article.privacy === 'only_me' ? 'rgba(139, 92, 246, 0.12)' : article.privacy === 'organization' ? 'rgba(37, 99, 235, 0.12)' : 'rgba(16, 185, 129, 0.12)',
-              color: article.privacy === 'only_me' ? '#7c3aed' : article.privacy === 'organization' ? '#2563eb' : '#059669',
-              border: `1px solid ${article.privacy === 'only_me' ? 'rgba(139, 92, 246, 0.3)' : article.privacy === 'organization' ? 'rgba(37, 99, 235, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+              background: article.privacy === 'private' ? 'rgba(139, 92, 246, 0.12)' : article.privacy === 'organization' ? 'rgba(37, 99, 235, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+              color: article.privacy === 'private' ? '#7c3aed' : article.privacy === 'organization' ? '#2563eb' : '#059669',
+              border: `1px solid ${article.privacy === 'private' ? 'rgba(139, 92, 246, 0.3)' : article.privacy === 'organization' ? 'rgba(37, 99, 235, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
             }}>
-              {article.privacy === 'only_me' ? '🔒 Chỉ mình tôi' : article.privacy === 'organization' ? '🏢 Tổ chức' : '🌐 Công khai'}
+              {article.privacy === 'private' ? '🔒 Chỉ mình tôi' : article.privacy === 'organization' ? '🏢 Tổ chức' : '🌐 Công khai'}
             </span>
           )}
 
@@ -426,7 +428,7 @@ export default function NewsCard({ article, index = 0, onOpenPost }) {
           {publishedDate || 'N/A'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button
+          {!article.is_user_post && (<button
             onClick={handleBookmark}
             id={`btn-bookmark-${article.id}`}
             title={bookmarked ? 'Bỏ lưu' : 'Lưu lại'}
@@ -447,7 +449,7 @@ export default function NewsCard({ article, index = 0, onOpenPost }) {
             }}
           >
             {bookmarked ? <BookmarkCheck size={18} style={{ color: 'var(--brand-600)' }} /> : <Bookmark size={18} />}
-          </button>
+          </button>)}
           {!article.is_user_post && article.url && (
             <a
               href={article.url}

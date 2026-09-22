@@ -89,6 +89,14 @@ class ApiCache {
    * @param {string} key
    */
   clear(key) {
+    // Gọi KHÔNG có key (AuthContext lúc đăng nhập / đăng xuất / token hỏng) nghĩa là "xóa hết".
+    // Trước đây nhánh này chỉ xóa khóa "undefined": cache của tài khoản trước (dự án theo dõi,
+    // danh sách tiềm năng theo phạm vi tổ chức) còn nguyên 5 phút trong localStorage và hiện
+    // ra cho tài khoản đăng nhập sau trên cùng trình duyệt.
+    if (key === undefined || key === null) {
+      this.clearAll();
+      return;
+    }
     this.cache.delete(key);
     try {
       localStorage.removeItem(STORAGE_PREFIX + key);

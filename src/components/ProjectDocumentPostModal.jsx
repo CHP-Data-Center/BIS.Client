@@ -11,7 +11,9 @@ import {
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { projectsService } from '../services/projects';
-import { projectDocumentsService, recordApproval } from '../services/projectDocuments';
+import {
+  projectDocumentsService, documentFileProblem, todayVN, apiErrorMessage, DOCUMENT_ACCEPT,
+} from '../services/projectDocuments';
 
 // Chuẩn hóa chuỗi tiếng Việt không dấu
 function normalizeText(text) {
@@ -43,10 +45,10 @@ const STATUS_CONFIG = {
   closed: { label: 'Đã đóng / Tạm dừng', bg: 'rgba(100, 116, 139, 0.12)', fg: '#475569', border: 'rgba(100, 116, 139, 0.3)' },
 };
 
-// Cấu hình quyền riêng tư
+// Cấu hình quyền riêng tư — khóa trùng giá trị `visibility` của máy chủ.
 const PRIVACY_CONFIG = {
-  only_me: {
-    id: 'only_me',
+  private: {
+    id: 'private',
     label: 'Only me (Chỉ mình tôi)',
     desc: 'Chỉ tài khoản của bạn mới nhìn thấy bài đăng và tài liệu này',
     icon: Lock,
@@ -74,19 +76,33 @@ const PRIVACY_CONFIG = {
   },
 };
 
+// Giá trị gốc của dự án đang theo dõi, cùng dạng với form chỉnh sửa (lĩnh vực là SLUG — máy
+// chủ chỉ nhận slug, gửi tên hiển thị là bị trả 400 "Lĩnh vực không hợp lệ").
+function thongTinGoc(p) {
+  return {
+    name: p?.name || '',
+    province: p?.province || '',
+    sector: p?.sector || '',
+    startDate: p?.start_date || '',
+    endDate: p?.end_date || '',
+    status: p?.status || 'watching',
+  };
+}
+
 export default function ProjectDocumentPostModal({
   open,
   onClose,
   initialProject = null,
-  potentialItem = null,
+  sectors = [],
   onPostCreated = () => {},
   onProjectUpdated = () => {},
-  onDocumentSaved = () => {},
 }) {
   const { t } = useLang();
   const { user } = useAuth();
 
-  const authorName = user?.name || user?.full_name || user?.username || user?.email || 'Người dùng BIS';
+  const authorName = user?.display_name || user?.name || user?.email || 'Người dùng BIS';
+  // Máy chủ từ chối quyền "Tổ chức" với tài khoản chưa thuộc tổ chức nào.
+  const hasOrg = Boolean(user?.organization_id);
 
   // --- Danh sách dự án theo dõi và bộ lọc ---
   const [userProjects, setUserProjects] = useState([]);
@@ -96,18 +112,12 @@ export default function ProjectDocumentPostModal({
 
   // --- Chỉnh sửa thông tin dự án ---
   const [isEditingInfo, setIsEditingInfo] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    province: '',
-    sector: '',
-    startDate: '',
-    endDate: '',
-    status: 'watching',
-  });
+  const [editForm, setEditForm] = useState(() => thongTinGoc(null));
   const [savingEdit, setSavingEdit] = useState(false);
   const [showEditApprovalModal, setShowEditApprovalModal] = useState(false);
 
   // --- Form Tài liệu DOCX/PDF & Trích xuất ---
+  // Một file cho mỗi tài liệu: máy chủ lưu đúng một file gốc để tải lại.
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [extracting, setExtracting] = useState(false);
   const [extractionMsg, setExtractionMsg] = useState(null);
@@ -116,16 +126,25 @@ export default function ProjectDocumentPostModal({
   const [docProjectName, setDocProjectName] = useState('');
   const [docProvince, setDocProvince] = useState('');
   const [docSummary, setDocSummary] = useState('');
-  const [docDate, setDocDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [docSummaryDate, setDocSummaryDate] = useState(() => new Date().toISOString().split('T')[0]);
+  // Ngày ghi trong văn bản: để trống cho tới khi trích được hoặc người dùng tự nhập — điền
+  // sẵn "hôm nay" là khai sai ngày của biên bản.
+  const [docDate, setDocDate] = useState('');
+  const [docSummaryDate, setDocSummaryDate] = useState(() => todayVN());
 
   // --- Đăng bài & Quyền riêng tư ---
-  const [privacy, setPrivacy] = useState('organization');
+  const [privacy, setPrivacy] = useState(hasOrg ? 'organization' : 'private');
   const [showPublishApprovalModal, setShowPublishApprovalModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   const fileInputRef = useRef(null);
+
+  const showError = (text, ms = 6000) => {
+    setErrorMsg(text);
+    setTimeout(() => setErrorMsg(null), ms);
+  };
+
+  const tenLinhVuc = (slug) => sectors.find((s) => s.slug === slug)?.name || slug || '';
 
   // Tải danh sách dự án người dùng đang theo dõi
   useEffect(() => {
@@ -136,17 +155,7 @@ export default function ProjectDocumentPostModal({
         const list = await projectsService.getProjects();
         if (alive) {
           setUserProjects(list || []);
-          if (initialProject) {
-            setSelectedProject(initialProject);
-          } else if (potentialItem && list?.length > 0) {
-            // Tự động tìm dự án theo dõi khớp với potentialItem nếu có
-            const potNorm = normalizeText(potentialItem.title);
-            const found = list.find((p) => {
-              const pNorm = normalizeText(p.name);
-              return pNorm && potNorm && (potNorm.includes(pNorm) || pNorm.includes(potNorm));
-            });
-            if (found) setSelectedProject(found);
-          }
+          if (initialProject) setSelectedProject(initialProject);
         }
       } catch (err) {
         console.warn('Lỗi lấy danh sách dự án theo dõi:', err);
@@ -155,34 +164,24 @@ export default function ProjectDocumentPostModal({
       }
     })();
     return () => { alive = false; };
-  }, [initialProject, potentialItem]);
+  }, [initialProject]);
+
+  // Tên / vị trí đã TỰ ĐIỀN từ dự án chọn trước: đổi sang dự án khác (hoặc vừa sửa tên dự án)
+  // thì điền lại, trừ khi người dùng đã tự gõ hoặc đã trích từ file giá trị khác.
+  const tuDienRef = useRef({ name: '', province: '' });
 
   // Đồng bộ form chỉnh sửa khi chọn dự án
   useEffect(() => {
     if (selectedProject) {
-      setEditForm({
-        name: selectedProject.name || '',
-        province: selectedProject.province || '',
-        sector: selectedProject.sector_name || selectedProject.sector || '',
-        startDate: selectedProject.start_date || '',
-        endDate: selectedProject.end_date || '',
-        status: selectedProject.status || 'watching',
-      });
-      // Nếu chưa có tên dự án trong form tài liệu, lấy từ dự án đã chọn
-      if (!docProjectName) setDocProjectName(selectedProject.name || '');
-      if (!docProvince) setDocProvince(selectedProject.province || '');
+      setEditForm(thongTinGoc(selectedProject));
+      const truoc = tuDienRef.current;
+      const ten = selectedProject.name || '';
+      const tinh = selectedProject.province || '';
+      setDocProjectName((cur) => (!cur || cur === truoc.name ? ten : cur));
+      setDocProvince((cur) => (!cur || cur === truoc.province ? tinh : cur));
+      tuDienRef.current = { name: ten, province: tinh };
     }
   }, [selectedProject]);
-
-  // Khởi tạo tên dự án từ potential item nếu có
-  useEffect(() => {
-    if (potentialItem && !docProjectName) {
-      setDocProjectName(potentialItem.title || '');
-      if (potentialItem.province && !docProvince) {
-        setDocProvince(potentialItem.province);
-      }
-    }
-  }, [potentialItem]);
 
   // Danh sách dự án lọc theo từ khóa tìm kiếm
   const filteredProjects = useMemo(() => {
@@ -196,35 +195,37 @@ export default function ProjectDocumentPostModal({
     });
   }, [userProjects, projectSearch]);
 
-  // Xử lý upload file DOCX/PDF
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    // Chỉ nhận .docx, .pdf, .doc
-    const valid = files.filter((f) => {
-      const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
-      return ['.docx', '.pdf', '.doc'].includes(ext);
-    });
-
-    if (valid.length < files.length) {
-      setErrorMsg('Hệ thống chỉ hỗ trợ tài liệu dự án định dạng .DOCX và .PDF');
-      setTimeout(() => setErrorMsg(null), 4000);
+  // Nhận file từ ô chọn hoặc kéo thả: kiểm định dạng/dung lượng TRƯỚC khi tải lên.
+  const chonFile = (files) => {
+    const list = Array.from(files || []);
+    if (list.length === 0) return;
+    const file = list[0];
+    const loi = documentFileProblem(file);
+    if (loi) {
+      showError(loi);
+      return;
     }
+    if (list.length > 1) {
+      showError(`Mỗi tài liệu đăng kèm một file — đã giữ "${file.name}".`);
+    }
+    setAttachedFiles([file]);
+  };
 
-    setAttachedFiles((prev) => [...prev, ...valid]);
+  const handleFileChange = (e) => {
+    chonFile(e.target.files);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const removeFile = (index) => {
-    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = () => {
+    setAttachedFiles([]);
   };
 
-  // Trích xuất thông tin tự động từ file đầu tiên
+  // Trích xuất thông tin từ nội dung file (máy chủ đọc DOCX/PDF, tóm tắt bằng AI nếu có)
   const handleExtract = async () => {
-    if (attachedFiles.length === 0) {
-      setErrorMsg('Vui lòng tải lên ít nhất 1 file tài liệu (.DOCX hoặc .PDF) để trích xuất');
-      setTimeout(() => setErrorMsg(null), 4000);
+    const file = attachedFiles[0];
+    const loi = documentFileProblem(file);
+    if (loi) {
+      showError(loi);
       return;
     }
 
@@ -233,23 +234,25 @@ export default function ProjectDocumentPostModal({
     setErrorMsg(null);
 
     try {
-      const primaryFile = attachedFiles[0];
-      const extracted = await projectDocumentsService.extractFromFile(primaryFile);
-
-      if (extracted.projectName) setDocProjectName(extracted.projectName);
-      if (extracted.province) setDocProvince(extracted.province);
-      if (extracted.summary) setDocSummary(extracted.summary);
-      if (extracted.date) setDocDate(extracted.date);
-      if (extracted.summaryDate) setDocSummaryDate(extracted.summaryDate);
+      const res = await projectDocumentsService.extract(file);
+      if (!res.char_count) {
+        // PDF scan ảnh: không có chữ để trích — nói thẳng thay vì điền đoán.
+        showError(res.note || 'Không đọc được chữ trong file. Vui lòng nhập thông tin thủ công.', 8000);
+        return;
+      }
+      if (res.project_name) setDocProjectName(res.project_name);
+      if (res.location) setDocProvince(res.location);
+      if (res.summary) setDocSummary(res.summary);
+      if (res.doc_date) setDocDate(res.doc_date);
+      if (res.summary_date) setDocSummaryDate(res.summary_date);
 
       setExtractionMsg({
         type: 'success',
-        text: `Đã trích xuất thành công thông tin từ "${primaryFile.name}"! Bạn có thể kiểm tra và chỉnh sửa bên dưới.`,
+        text: `Đã trích xuất thông tin từ "${file.name}"${res.source === 'ai' ? ' (tóm tắt bằng AI)' : ''}. ${res.note || ''}`.trim(),
       });
-      setTimeout(() => setExtractionMsg(null), 5000);
+      setTimeout(() => setExtractionMsg(null), 8000);
     } catch (err) {
-      setErrorMsg(err.message || 'Không thể trích xuất thông tin từ tài liệu này.');
-      setTimeout(() => setErrorMsg(null), 4000);
+      showError(apiErrorMessage(err, 'Không thể trích xuất thông tin từ tài liệu này.'));
     } finally {
       setExtracting(false);
     }
@@ -259,50 +262,51 @@ export default function ProjectDocumentPostModal({
   const handleRequestEditApproval = (e) => {
     e.preventDefault();
     if (!editForm.name.trim()) {
-      setErrorMsg('Tên dự án không được để trống');
-      setTimeout(() => setErrorMsg(null), 3000);
+      showError('Tên dự án không được để trống');
+      return;
+    }
+    if (editForm.startDate && editForm.endDate && editForm.endDate < editForm.startDate) {
+      showError('Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.');
       return;
     }
     setShowEditApprovalModal(true);
   };
 
+  // Mỗi dòng bảng duyệt chỉnh sửa: [nhãn, giá trị hiện tại, giá trị sau chỉnh sửa, đã đổi?]
+  const gocDuAn = thongTinGoc(selectedProject);
+  const nhanTrangThai = (st) => STATUS_CONFIG[st]?.label || st || '—';
+  const dongDuyetSua = [
+    ['Tên dự án', gocDuAn.name || '—', editForm.name.trim() || '—', editForm.name.trim() !== gocDuAn.name],
+    ['Vị trí', gocDuAn.province || '—', editForm.province.trim() || '—', editForm.province.trim() !== gocDuAn.province],
+    ['Lĩnh vực', selectedProject?.sector_name || tenLinhVuc(gocDuAn.sector) || '—', tenLinhVuc(editForm.sector) || '—', editForm.sector !== gocDuAn.sector],
+    ['Ngày bắt đầu', fmtDate(gocDuAn.startDate), fmtDate(editForm.startDate), editForm.startDate !== gocDuAn.startDate],
+    ['Ngày kết thúc', fmtDate(gocDuAn.endDate), fmtDate(editForm.endDate), editForm.endDate !== gocDuAn.endDate],
+    ['Trạng thái', nhanTrangThai(gocDuAn.status), nhanTrangThai(editForm.status), editForm.status !== gocDuAn.status],
+  ];
+
   // Xác nhận phê duyệt chỉnh sửa thông tin
   const handleConfirmEdit = async () => {
     if (!selectedProject?.id) return;
+    // Chỉ gửi trường THẬT SỰ đổi; ô để trống = xóa giá trị (null). Gửi `undefined` như
+    // trước thì người dùng không bao giờ xóa được vị trí hay ngày.
+    const patch = {};
+    const ten = editForm.name.trim();
+    const tinh = editForm.province.trim();
+    if (ten !== gocDuAn.name) patch.name = ten;
+    if (tinh !== gocDuAn.province) patch.province = tinh || null;
+    if (editForm.sector !== gocDuAn.sector) patch.sector = editForm.sector || null;
+    if (editForm.startDate !== gocDuAn.startDate) patch.start_date = editForm.startDate || null;
+    if (editForm.endDate !== gocDuAn.endDate) patch.end_date = editForm.endDate || null;
+    if (editForm.status !== gocDuAn.status) patch.status = editForm.status;
+    if (Object.keys(patch).length === 0) {
+      setShowEditApprovalModal(false);
+      setIsEditingInfo(false);
+      return;
+    }
+
     setSavingEdit(true);
     try {
-      const patch = {
-        name: editForm.name.trim(),
-        province: editForm.province.trim() || undefined,
-        sector: editForm.sector.trim() || undefined,
-        status: editForm.status,
-        start_date: editForm.startDate || undefined,
-        end_date: editForm.endDate || undefined,
-      };
-
       const updated = await projectsService.updateProject(selectedProject.id, patch);
-
-      // Ghi nhận lịch sử phê duyệt
-      recordApproval({
-        type: 'project_edit',
-        targetId: selectedProject.id,
-        title: updated.name,
-        approverName: authorName,
-        details: {
-          before: {
-            name: selectedProject.name,
-            province: selectedProject.province,
-            sector: selectedProject.sector_name || selectedProject.sector,
-            status: selectedProject.status,
-          },
-          after: {
-            name: updated.name,
-            province: updated.province,
-            sector: updated.sector_name || updated.sector,
-            status: updated.status,
-          },
-        },
-      });
 
       setSelectedProject(updated);
       setUserProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
@@ -313,81 +317,59 @@ export default function ProjectDocumentPostModal({
       setExtractionMsg({ type: 'success', text: 'Nội dung chỉnh sửa đã được phê duyệt và lưu chính thức!' });
       setTimeout(() => setExtractionMsg(null), 4000);
     } catch (err) {
-      setErrorMsg(err.response?.data?.detail || 'Không thể lưu thay đổi.');
-      setTimeout(() => setErrorMsg(null), 4000);
+      // Đóng bảng duyệt để thông báo lỗi (nằm trong khung chính) không bị che.
+      setShowEditApprovalModal(false);
+      showError(apiErrorMessage(err, 'Không thể lưu thay đổi.'));
     } finally {
       setSavingEdit(false);
     }
   };
 
+  const finalTitle = docProjectName.trim() || selectedProject?.name || '';
+
   // Mở modal duyệt bài trước khi đăng
   const handleRequestPublishApproval = () => {
-    const finalTitle = docProjectName.trim() || selectedProject?.name || potentialItem?.title;
+    const loiFile = documentFileProblem(attachedFiles[0]);
+    if (loiFile) {
+      showError(loiFile);
+      return;
+    }
     if (!finalTitle) {
-      setErrorMsg('Vui lòng nhập Tên dự án hoặc chọn một dự án theo dõi trước khi đăng bài');
-      setTimeout(() => setErrorMsg(null), 4000);
+      showError('Vui lòng nhập Tên dự án hoặc chọn một dự án theo dõi trước khi đăng bài');
       return;
     }
     if (!docSummary.trim()) {
-      setErrorMsg('Vui lòng nhập hoặc trích xuất tóm tắt nội dung tài liệu trước khi đăng bài');
-      setTimeout(() => setErrorMsg(null), 4000);
+      showError('Vui lòng nhập hoặc trích xuất tóm tắt nội dung tài liệu trước khi đăng bài');
+      return;
+    }
+    if (privacy === 'organization' && !hasOrg) {
+      showError('Tài khoản chưa thuộc tổ chức nào — chọn "Chỉ mình tôi" hoặc "Công khai".');
       return;
     }
     setShowPublishApprovalModal(true);
   };
 
-  // Xác nhận phê duyệt & Đăng bài dưới dạng báo chí
+  // Xác nhận phê duyệt: máy chủ lưu thông tin + file gốc + quyền riêng tư
   const handleConfirmPublish = async () => {
     setPublishing(true);
     setErrorMsg(null);
     try {
-      const finalTitle = docProjectName.trim() || selectedProject?.name || potentialItem?.title;
-      const finalProvince = docProvince.trim() || selectedProject?.province || potentialItem?.province || '';
-      const finalSector = selectedProject?.sector_name || selectedProject?.sector || potentialItem?.sectors?.[0] || 'Hạ tầng & Xây dựng';
-
-      const postPayload = {
-        title: finalTitle,
-        projectName: finalTitle,
-        projectId: selectedProject?.id || null,
-        potentialRef: potentialItem ? `${potentialItem.kind}:${potentialItem.ref}` : null,
-        province: finalProvince,
-        sector: finalSector,
+      const doc = await projectDocumentsService.create(attachedFiles[0], {
+        project_name: finalTitle,
+        location: docProvince.trim() || null,
         summary: docSummary.trim(),
-        date: docDate,
-        summaryDate: docSummaryDate,
-        privacy: privacy,
-        authorName: authorName,
-        files: attachedFiles.map((f) => ({
-          name: f.name,
-          size: f.size,
-          type: f.name.endsWith('.docx') ? 'docx' : 'pdf',
-        })),
-        stage: selectedProject?.status || 'active',
-      };
-
-      const createdPost = await projectDocumentsService.createPost(postPayload);
-
-      // Nếu có liên kết với potential item và có dự án theo dõi, gắn liên kết luôn
-      if (potentialItem && selectedProject?.id) {
-        try {
-          await projectsService.addPotentialLink(selectedProject.id, {
-            kind: potentialItem.kind,
-            ref: String(potentialItem.ref),
-            source_url: potentialItem.url || null,
-            title_snapshot: potentialItem.title || null,
-          });
-        } catch {
-          // Bỏ qua nếu đã gắn rồi
-        }
-      }
+        doc_date: docDate || null,
+        summary_date: docSummaryDate || null,
+        visibility: privacy,
+        tracked_project_id: selectedProject?.id || null,
+      });
 
       setShowPublishApprovalModal(false);
-      if (typeof onPostCreated === 'function') onPostCreated(createdPost);
-      if (typeof onDocumentSaved === 'function') onDocumentSaved(createdPost);
+      onPostCreated(doc);
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || 'Có lỗi xảy ra khi đăng bài.');
-      setTimeout(() => setErrorMsg(null), 4000);
+      setShowPublishApprovalModal(false);
+      showError(apiErrorMessage(err, 'Không đăng được tài liệu. Vui lòng thử lại.'), 8000);
     } finally {
       setPublishing(false);
     }
@@ -398,7 +380,8 @@ export default function ProjectDocumentPostModal({
   const currentStatusCfg = STATUS_CONFIG[selectedProject?.status] || STATUS_CONFIG.watching;
 
   const modalContent = (
-    <div className="potential-modal-backdrop" onClick={onClose}>
+    // Đang trích xuất / lưu / đăng thì không đóng khi bấm ra ngoài: request vẫn chạy tiếp.
+    <div className="potential-modal-backdrop" onClick={extracting || savingEdit || publishing ? undefined : onClose}>
       <div
         className="card"
         onClick={(e) => e.stopPropagation()}
@@ -700,14 +683,22 @@ export default function ProjectDocumentPostModal({
                   </div>
                   <div>
                     <label className="form-label" style={{ fontSize: 11.5 }}>Lĩnh vực</label>
-                    <input
-                      type="text"
-                      className="form-input"
+                    <select
+                      className="form-select"
                       value={editForm.sector}
                       onChange={(e) => setEditForm({ ...editForm, sector: e.target.value })}
-                      placeholder="VD: Giao thông, Cấp thoát nước..."
                       style={{ fontSize: 12.5 }}
-                    />
+                    >
+                      <option value="">— Chưa xác định —</option>
+                      {editForm.sector && !sectors.some((s) => s.slug === editForm.sector) && (
+                        <option value={editForm.sector}>
+                          {selectedProject?.sector_name || editForm.sector}
+                        </option>
+                      )}
+                      {sectors.map((s) => (
+                        <option key={s.slug} value={s.slug}>{s.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="form-label" style={{ fontSize: 11.5 }}>Ngày bắt đầu</label>
@@ -827,18 +818,14 @@ export default function ProjectDocumentPostModal({
             onDrop={(e) => {
               e.preventDefault();
               e.currentTarget.style.borderColor = 'var(--border)';
-              if (e.dataTransfer.files?.length) {
-                const f = Array.from(e.dataTransfer.files);
-                setAttachedFiles((prev) => [...prev, ...f]);
-              }
+              if (e.dataTransfer.files?.length) chonFile(e.dataTransfer.files);
             }}
           >
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept=".docx,.pdf,.doc"
-              multiple
+              accept={DOCUMENT_ACCEPT}
               style={{ display: 'none' }}
             />
             <Upload size={22} style={{ color: 'var(--brand-500)', margin: '0 auto 6px' }} />
@@ -846,7 +833,7 @@ export default function ProjectDocumentPostModal({
               Nhấp để chọn hoặc kéo thả tài liệu dự án, biên bản vào đây
             </div>
             <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
-              Hỗ trợ định dạng <strong>.DOCX</strong>, <strong>.PDF</strong> (Biên bản họp, quyết định phê duyệt, hồ sơ thiết kế...)
+              Hỗ trợ định dạng <strong>.DOCX</strong>, <strong>.PDF</strong> (Biên bản họp, quyết định phê duyệt, hồ sơ thiết kế...) — một file, tối đa 15 MB
             </div>
           </div>
 
@@ -858,7 +845,7 @@ export default function ProjectDocumentPostModal({
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {attachedFiles.map((file, idx) => {
-                  const isDocx = file.name.endsWith('.docx') || file.name.endsWith('.doc');
+                  const isDocx = file.name.toLowerCase().endsWith('.docx');
                   return (
                     <div
                       key={idx}
@@ -878,7 +865,7 @@ export default function ProjectDocumentPostModal({
                       </span>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                        onClick={(e) => { e.stopPropagation(); removeFile(); }}
                         style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
                         title="Xóa file này"
                       >
@@ -901,6 +888,7 @@ export default function ProjectDocumentPostModal({
                 type="text"
                 className="form-input"
                 value={docProjectName}
+                maxLength={255}
                 onChange={(e) => setDocProjectName(e.target.value)}
                 placeholder="Tên dự án theo tài liệu trích xuất..."
                 style={{ fontSize: 12.5 }}
@@ -913,6 +901,7 @@ export default function ProjectDocumentPostModal({
                 type="text"
                 className="form-input"
                 value={docProvince}
+                maxLength={255}
                 onChange={(e) => setDocProvince(e.target.value)}
                 placeholder="Địa phương thực hiện..."
                 style={{ fontSize: 12.5 }}
@@ -949,6 +938,7 @@ export default function ProjectDocumentPostModal({
                 className="form-input"
                 rows={3}
                 value={docSummary}
+                maxLength={5000}
                 onChange={(e) => setDocSummary(e.target.value)}
                 placeholder="Nội dung chính hoặc thông tin tóm tắt sau khi phân tích tài liệu..."
                 style={{ fontSize: 12.5, resize: 'vertical' }}
@@ -979,20 +969,30 @@ export default function ProjectDocumentPostModal({
           </p>
 
           {/* Lựa chọn 3 cấp độ quyền riêng tư */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          <div role="radiogroup" aria-label="Quyền riêng tư" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
             {Object.values(PRIVACY_CONFIG).map((p) => {
               const active = privacy === p.id;
+              // Máy chủ từ chối "Tổ chức" khi tài khoản chưa thuộc tổ chức nào.
+              const disabled = p.id === 'organization' && !hasOrg;
               const Icon = p.icon;
+              const chon = () => { if (!disabled) setPrivacy(p.id); };
               return (
                 <div
                   key={p.id}
-                  onClick={() => setPrivacy(p.id)}
+                  role="radio"
+                  aria-checked={active}
+                  aria-disabled={disabled}
+                  tabIndex={disabled ? -1 : 0}
+                  onClick={chon}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); chon(); } }}
+                  title={disabled ? 'Tài khoản chưa thuộc tổ chức nào' : undefined}
                   style={{
                     padding: '12px 14px',
                     borderRadius: 12,
                     border: `1.5px solid ${active ? p.color : 'var(--border)'}`,
                     background: active ? p.bg : 'var(--bg-surface)',
-                    cursor: 'pointer',
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    opacity: disabled ? 0.5 : 1,
                     transition: 'all 0.15s ease',
                     display: 'flex',
                     flexDirection: 'column',
@@ -1007,7 +1007,7 @@ export default function ProjectDocumentPostModal({
                     {active && <CheckCircle2 size={15} style={{ color: p.color }} />}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                    {p.desc}
+                    {disabled ? 'Tài khoản của bạn chưa thuộc tổ chức nào.' : p.desc}
                   </div>
                 </div>
               );
@@ -1059,7 +1059,9 @@ export default function ProjectDocumentPostModal({
          ───────────────────────────────────────────────────────────────── */}
       {showEditApprovalModal && (
         <div
-          onClick={() => setShowEditApprovalModal(false)}
+          // stopPropagation: lớp phủ nằm TRONG backdrop của form — để sự kiện nổi lên là đóng luôn
+          // cả form, mất file và mọi thứ đã nhập.
+          onClick={(e) => { e.stopPropagation(); if (!savingEdit) setShowEditApprovalModal(false); }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.65)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 16,
@@ -1086,41 +1088,32 @@ export default function ProjectDocumentPostModal({
               Vui lòng kiểm tra và phê duyệt các thông tin thay đổi trước khi hệ thống lưu chính thức:
             </p>
 
-            {/* Bảng so sánh trước và sau */}
+            {/* Bảng so sánh trước và sau — dòng tô màu là dòng có thay đổi */}
             <div style={{
               background: 'var(--bg-surface-2)', borderRadius: 10, padding: 12,
-              border: '1px solid var(--border)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 8,
+              border: '1px solid var(--border)', fontSize: 12, overflowX: 'auto',
             }}>
-              <div>
-                <strong style={{ color: 'var(--text-muted)' }}>Tên dự án:</strong>{' '}
-                <span style={{ color: editForm.name !== selectedProject?.name ? 'var(--brand-600)' : 'inherit', fontWeight: 700 }}>
-                  {editForm.name}
-                </span>
-              </div>
-              <div>
-                <strong style={{ color: 'var(--text-muted)' }}>Vị trí:</strong>{' '}
-                <span>{selectedProject?.province || '—'}</span> →{' '}
-                <span style={{ color: '#059669', fontWeight: 700 }}>{editForm.province || 'Toàn quốc'}</span>
-              </div>
-              <div>
-                <strong style={{ color: 'var(--text-muted)' }}>Lĩnh vực:</strong>{' '}
-                <span>{selectedProject?.sector_name || selectedProject?.sector || '—'}</span> →{' '}
-                <span style={{ color: '#f59e0b', fontWeight: 700 }}>{editForm.sector || 'Hạ tầng'}</span>
-              </div>
-              <div>
-                <strong style={{ color: 'var(--text-muted)' }}>Thời gian:</strong>{' '}
-                <span style={{ fontWeight: 700 }}>
-                  {editForm.startDate ? fmtDate(editForm.startDate) : '—'} → {editForm.endDate ? fmtDate(editForm.endDate) : '—'}
-                </span>
-              </div>
-              <div>
-                <strong style={{ color: 'var(--text-muted)' }}>Trạng thái mới:</strong>{' '}
-                <span style={{ fontWeight: 800, color: STATUS_CONFIG[editForm.status]?.fg }}>
-                  {STATUS_CONFIG[editForm.status]?.label}
-                </span>
-              </div>
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
-                Người phê duyệt: <strong>{authorName}</strong> | Ngày: {new Date().toLocaleDateString('vi-VN')}
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ textAlign: 'left', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>Thông tin</th>
+                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>Hiện tại</th>
+                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>Sau chỉnh sửa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dongDuyetSua.map(([nhan, truoc, sau, doi]) => (
+                    <tr key={nhan} style={{ background: doi ? 'rgba(234, 179, 8, 0.14)' : 'transparent' }}>
+                      <td style={{ padding: '5px 6px', fontWeight: 700, borderTop: '1px solid var(--border)' }}>{nhan}</td>
+                      <td style={{ padding: '5px 6px', color: 'var(--text-secondary)', borderTop: '1px solid var(--border)' }}>{truoc}</td>
+                      <td style={{ padding: '5px 6px', fontWeight: doi ? 800 : 400, borderTop: '1px solid var(--border)' }}>{sau}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: 6, paddingTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                Người phê duyệt: <strong>{authorName}</strong> | Ngày: {fmtDate(todayVN())}
+                {!dongDuyetSua.some((d) => d[3]) && ' | Không có thay đổi nào.'}
               </div>
             </div>
 
@@ -1153,7 +1146,7 @@ export default function ProjectDocumentPostModal({
          ───────────────────────────────────────────────────────────────── */}
       {showPublishApprovalModal && (
         <div
-          onClick={() => setShowPublishApprovalModal(false)}
+          onClick={(e) => { e.stopPropagation(); if (!publishing) setShowPublishApprovalModal(false); }}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.7)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 16,
@@ -1217,23 +1210,24 @@ export default function ProjectDocumentPostModal({
                   {PRIVACY_CONFIG[privacy].label}
                 </span>
 
-                <span style={{ fontSize: 11.5, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                  📅 Ngày: {fmtDate(docSummaryDate)}
-                </span>
               </div>
 
               {/* Tên dự án */}
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TÊN DỰ ÁN:</div>
                 <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', marginTop: 2 }}>
-                  {docProjectName || selectedProject?.name || potentialItem?.title}
+                  {finalTitle}
                 </div>
               </div>
 
-              {/* Vị trí & Lĩnh vực */}
-              <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span>📍 <strong>Vị trí:</strong> {docProvince || selectedProject?.province || 'Toàn quốc'}</span>
-                <span>🏷️ <strong>Lĩnh vực:</strong> {selectedProject?.sector_name || selectedProject?.sector || 'Hạ tầng'}</span>
+              {/* Vị trí, ngày văn bản, ngày tóm tắt, dự án theo dõi */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', fontSize: 12, color: 'var(--text-secondary)' }}>
+                <span>📍 <strong>Vị trí:</strong> {docProvince.trim() || '—'}</span>
+                <span>📅 <strong>Ngày văn bản:</strong> {fmtDate(docDate)}</span>
+                <span>🗓️ <strong>Ngày tóm tắt:</strong> {fmtDate(docSummaryDate)}</span>
+                {selectedProject && (
+                  <span>📌 <strong>Dự án theo dõi:</strong> {selectedProject.name}</span>
+                )}
               </div>
 
               {/* Tóm tắt nội dung */}
