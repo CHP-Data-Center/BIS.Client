@@ -152,13 +152,18 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 'min(580px, 94vw)', background: 'var(--bg-surface)',
-          borderRadius: 20, padding: 24, border: '1px solid var(--border)',
+          borderRadius: 20, border: '1px solid var(--border)',
           boxShadow: '0 20px 50px rgba(0,0,0,0.3)', display: 'flex',
-          flexDirection: 'column', gap: 16, maxHeight: '90vh', overflowY: 'auto',
+          flexDirection: 'column', maxHeight: '90vh', overflow: 'hidden',
           overscrollBehavior: 'contain',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Modal Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 24px 14px', borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+          flexShrink: 0,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Pencil size={18} style={{ color: 'var(--brand-600)' }} />
             <h4 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: 'var(--text-primary)' }}>
@@ -177,16 +182,23 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
           </button>
         </div>
 
-        {err && (
-          <div style={{
-            padding: '8px 12px', borderRadius: 8, background: '#fef2f2',
-            border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5, fontWeight: 600,
-          }}>
-            {err}
-          </div>
-        )}
-
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden', margin: 0 }}>
+          {/* Scrollable Body */}
+          <div
+            className="custom-modal-scroll"
+            style={{
+              padding: '18px 24px', overflowY: 'auto', overscrollBehavior: 'contain',
+              flex: 1, display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            {err && (
+              <div style={{
+                padding: '8px 12px', borderRadius: 8, background: '#fef2f2',
+                border: '1px solid #fecaca', color: '#b91c1c', fontSize: 12.5, fontWeight: 600,
+              }}>
+                {err}
+              </div>
+            )}
           <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 4, color: 'var(--text-primary)' }}>
               Tên dự án <span style={{ color: '#ef4444' }}>*</span>
@@ -386,12 +398,19 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+          </div>
+
+          {/* Pinned Modal Footer */}
+          <div style={{
+            display: 'flex', justifyContent: 'flex-end', gap: 8,
+            padding: '12px 24px', borderTop: '1px solid var(--border-subtle, #f1f5f9)',
+            background: 'var(--bg-surface-2)', flexShrink: 0,
+          }}>
             <button
               type="button" onClick={onClose}
               style={{
                 padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)',
-                background: 'var(--bg-surface-2)', color: 'var(--text-primary)',
+                background: 'var(--bg-surface)', color: 'var(--text-primary)',
                 fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
               }}
             >
@@ -1454,62 +1473,82 @@ export default function ProjectImportModal({ open, onClose, onImported }) {
         style={{
           width: isWide ? 'min(1150px, 96vw)' : 'min(980px, 95vw)',
           maxWidth: isWide ? 1150 : 980,
-          maxHeight: '92vh',
-          overflowY: 'auto',
+          maxHeight: '90vh',
+          overflow: 'hidden',
           overscrollBehavior: 'contain',
           background: 'var(--bg-surface)',
           borderRadius: 24,
-          padding: 26,
           border: '1px solid var(--border)',
           boxShadow: '0 25px 60px rgba(0,0,0,.35)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 18,
           margin: 'auto',
           transition: 'all 0.2s ease',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>
-            {tab === 'excel' ? t('projects.importTitle') : t('projects.profileTitle')}
-          </h3>
-          <button
-            type="button" onClick={onClose} aria-label={t('common.cancel')}
-            style={{
-              marginLeft: 'auto', border: 'none', background: 'var(--bg-surface-2)',
-              borderRadius: 10, width: 32, height: 32, cursor: 'pointer', flex: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <X size={17} />
-          </button>
-        </div>
-
+        {/* Pinned Header with Tabs */}
         <div style={{
-          display: 'flex', gap: 6, padding: 4, borderRadius: 12,
-          background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+          padding: '20px 26px 14px',
+          borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
         }}>
-          {TABS.map((x) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>
+              {tab === 'excel' ? t('projects.importTitle') : t('projects.profileTitle')}
+            </h3>
             <button
-              key={x.id} type="button" onClick={() => setTab(x.id)}
+              type="button" onClick={onClose} aria-label={t('common.cancel')}
               style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                padding: '9px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                fontSize: 13, fontWeight: 800,
-                background: tab === x.id ? 'var(--bg-surface)' : 'transparent',
-                color: tab === x.id ? 'var(--brand-700)' : 'var(--text-muted)',
-                boxShadow: tab === x.id ? '0 1px 4px rgba(0,0,0,.08)' : 'none',
+                marginLeft: 'auto', border: 'none', background: 'var(--bg-surface-2)',
+                borderRadius: 10, width: 32, height: 32, cursor: 'pointer', flex: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-muted)',
               }}
             >
-              {x.icon} {x.label}
+              <X size={17} />
             </button>
-          ))}
+          </div>
+
+          <div style={{
+            display: 'flex', gap: 6, padding: 4, borderRadius: 12,
+            background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+          }}>
+            {TABS.map((x) => (
+              <button
+                key={x.id} type="button" onClick={() => setTab(x.id)}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                  padding: '9px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                  fontSize: 13, fontWeight: 800,
+                  background: tab === x.id ? 'var(--bg-surface)' : 'transparent',
+                  color: tab === x.id ? 'var(--brand-700)' : 'var(--text-muted)',
+                  boxShadow: tab === x.id ? '0 1px 4px rgba(0,0,0,.08)' : 'none',
+                }}
+              >
+                {x.icon} {x.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {tab === 'excel'
-          ? <ExcelTab onDone={onImported} onStepChange={setExcelStep} />
-          : <ProfileTab onDone={onImported} />}
+        {/* Scrollable Tab Content */}
+        <div
+          className="custom-modal-scroll"
+          style={{
+            padding: '20px 26px',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
+          {tab === 'excel'
+            ? <ExcelTab onDone={onImported} onStepChange={setExcelStep} />
+            : <ProfileTab onDone={onImported} />}
+        </div>
       </div>
     </div>,
     document.body

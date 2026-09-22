@@ -636,7 +636,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
           }}
         >
           <div
-            className="custom-modal-scroll"
+            role="dialog"
             style={{
               width: '100%', maxWidth: 680, maxHeight: '88vh',
               background: 'var(--bg-surface)', border: '1px solid var(--border)',
@@ -688,7 +688,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
             </div>
 
             {/* Modal Body */}
-            <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="custom-modal-scroll" style={{ padding: '20px 24px', overflowY: 'auto', overscrollBehavior: 'contain', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Badges */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{

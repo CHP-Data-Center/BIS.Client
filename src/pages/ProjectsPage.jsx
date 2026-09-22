@@ -5,7 +5,7 @@ import {
   FolderKanban, Plus, Trash2, Calendar, Filter,
   Sparkles, Loader2, Layers, ChevronRight, ChevronLeft,
   UploadCloud, Building2, ShoppingBag, Newspaper, Search, FileSpreadsheet, Download,
-  LayoutGrid, List, Maximize2, Pencil, Globe, ExternalLink
+  LayoutGrid, List, Maximize2, Pencil, Globe, ExternalLink, X
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { projectsService } from '../services/projects';
@@ -1488,26 +1488,70 @@ export default function ProjectsPage() {
           onClick={() => setShowCreateModal(false)}
         >
           <div
+            role="dialog"
+            aria-label={t('projects.modalTitle')}
             style={{
               width: '100%',
-              maxWidth: 560,
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              overscrollBehavior: 'contain',
+              maxWidth: 580,
+              maxHeight: '90vh',
               background: 'var(--bg-surface)',
               borderRadius: 24,
-              padding: 28,
               border: '1px solid var(--border)',
               boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
               margin: 'auto',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px' }}>
-              ➕ {t('projects.modalTitle')}
-            </h3>
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '22px 28px 18px',
+              borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+              flexShrink: 0,
+            }}>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                ➕ {t('projects.modalTitle')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                aria-label={t('common.cancel')}
+                style={{
+                  border: 'none',
+                  background: 'var(--bg-surface-2)',
+                  borderRadius: 10,
+                  width: 32,
+                  height: 32,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <X size={17} />
+              </button>
+            </div>
 
-            <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <form onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden', margin: 0 }}>
+              {/* Scrollable Form Body */}
+              <div
+                className="custom-modal-scroll"
+                style={{
+                  padding: '20px 28px',
+                  overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
+                }}
+              >
               <div>
                 <label className="form-label">{t('projects.nameLabel')} *</label>
                 <input
@@ -1699,12 +1743,24 @@ export default function ProjectsPage() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
+              </div>
+
+              {/* Pinned Modal Footer */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                gap: 10,
+                padding: '14px 28px',
+                borderTop: '1px solid var(--border-subtle, #f1f5f9)',
+                background: 'var(--bg-surface-2)',
+                flexShrink: 0,
+              }}>
                 <button
                   type="button"
                   className="btn"
                   onClick={() => setShowCreateModal(false)}
-                  style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                  style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                 >
                   {t('common.cancel')}
                 </button>

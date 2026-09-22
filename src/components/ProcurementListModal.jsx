@@ -258,9 +258,11 @@ export default function ProcurementListModal({
 
         {/* Tender List Body */}
         <div
+          className="custom-modal-scroll"
           style={{
             padding: '20px 28px',
             overflowY: 'auto',
+            overscrollBehavior: 'contain',
             flex: 1,
             display: 'flex',
             flexDirection: 'column',

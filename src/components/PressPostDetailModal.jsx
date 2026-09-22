@@ -63,17 +63,16 @@ export default function PressPostDetailModal({ post, onClose }) {
   const modalContent = (
     <div className="potential-modal-backdrop" onClick={onClose}>
       <div
-        className="potential-modal-content card"
+        className="card"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
         style={{
           width: '100%',
           maxWidth: 680,
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px 28px',
-          gap: 18,
-          overflowY: 'auto',
+          overflow: 'hidden',
           borderRadius: 20,
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.5)',
           background: 'var(--bg-surface)',
@@ -81,7 +80,11 @@ export default function PressPostDetailModal({ post, onClose }) {
         }}
       >
         {/* Header với Tác giả / Người tạo & Quyền riêng tư */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14,
+          padding: '20px 26px 16px', borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+          flexShrink: 0,
+        }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               {isDoc ? (
@@ -181,28 +184,42 @@ export default function PressPostDetailModal({ post, onClose }) {
           </button>
         </div>
 
-        {/* Thông tin dự án đi kèm */}
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: '8px 20px',
-          padding: '12px 16px', borderRadius: 12,
-          background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
-          fontSize: 12.5,
-        }}>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>📍 Vị trí: </span>
-            <strong style={{ color: 'var(--text-primary)' }}>{post.province || 'Toàn quốc'}</strong>
-          </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)' }}>🏷️ Lĩnh vực: </span>
-            <strong style={{ color: 'var(--text-primary)' }}>{post.sector || 'Hạ tầng chung'}</strong>
-          </div>
-          {post.date && (
+        {/* Scrollable Body */}
+        <div
+          className="custom-modal-scroll"
+          style={{
+            padding: '20px 26px',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 18,
+            minHeight: 0,
+          }}
+        >
+          {/* Thông tin dự án đi kèm */}
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: '8px 20px',
+            padding: '12px 16px', borderRadius: 12,
+            background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
+            fontSize: 12.5,
+          }}>
             <div>
-              <span style={{ color: 'var(--text-muted)' }}>📅 Ngày văn bản: </span>
-              <strong style={{ color: 'var(--text-primary)' }}>{fmtDate(post.date)}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>📍 Vị trí: </span>
+              <strong style={{ color: 'var(--text-primary)' }}>{post.province || 'Toàn quốc'}</strong>
             </div>
-          )}
-        </div>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>🏷️ Lĩnh vực: </span>
+              <strong style={{ color: 'var(--text-primary)' }}>{post.sector || 'Hạ tầng chung'}</strong>
+            </div>
+            {post.date && (
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>📅 Ngày văn bản: </span>
+                <strong style={{ color: 'var(--text-primary)' }}>{fmtDate(post.date)}</strong>
+              </div>
+            )}
+          </div>
 
         {/* Nội dung tóm tắt bài báo chí */}
         <div>
@@ -273,8 +290,14 @@ export default function PressPostDetailModal({ post, onClose }) {
           </div>
         )}
 
-        {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+        </div>
+
+        {/* Pinned Footer */}
+        <div style={{
+          display: 'flex', justifyContent: 'flex-end',
+          padding: '14px 26px', borderTop: '1px solid var(--border-subtle, #f1f5f9)',
+          background: 'var(--bg-surface-2)', flexShrink: 0,
+        }}>
           <button
             type="button"
             className="btn btn-primary"

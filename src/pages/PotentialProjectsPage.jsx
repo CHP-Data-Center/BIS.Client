@@ -557,7 +557,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
           </button>
         </div>
 
-        <div className="potential-modal-sectors-list">
+        <div className="potential-modal-sectors-list custom-modal-scroll">
           {sectors.map((s) => {
             const on = picked.includes(s.slug);
             return (
@@ -1122,7 +1122,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
         aria-modal="true"
         style={{
           width: '100%', maxWidth: 600, maxHeight: '88vh', display: 'flex', flexDirection: 'column',
-          background: 'var(--bg-surface)', borderRadius: 14, padding: 18, gap: 12,
+          background: 'var(--bg-surface)', borderRadius: 14, padding: 18, gap: 12, overflow: 'hidden',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -1160,7 +1160,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
               />
             </div>
 
-            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 120 }}>
+            <div className="custom-modal-scroll" style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 120 }}>
               {loading && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 12.5, padding: 8 }}>
                   <Loader2 size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> {t('common.loading')}
@@ -1207,7 +1207,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
         )}
 
         {buoc === 'edit' && chon && (
-          <div style={{ overflowY: 'auto', minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+          <div className="custom-modal-scroll" style={{ overflowY: 'auto', minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
             <label style={{ gridColumn: '1 / -1' }}>
               <span style={nhan}>{t('potential.reviewDisplayName')}</span>
               <input
@@ -1286,7 +1286,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
         )}
 
         {buoc === 'review' && chon && (
-          <div style={{ overflowY: 'auto', minHeight: 0 }}>
+          <div className="custom-modal-scroll" style={{ overflowY: 'auto', minHeight: 0 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
               <thead>
                 <tr style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>

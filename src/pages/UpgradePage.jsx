@@ -1161,12 +1161,12 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
             animation: 'backdropFadeIn 0.2s ease-out',
           }}
         >
-          <div className="custom-modal-scroll" style={{
+          <div role="dialog" style={{
             background: 'var(--bg-surface)', border: '1px solid var(--border)',
-            borderRadius: 24, maxWidth: 480, width: '100%', padding: 32,
+            borderRadius: 24, maxWidth: 480, width: '100%',
             boxShadow: '0 25px 65px -15px rgba(0, 0, 0, 0.45)', position: 'relative',
             animation: 'modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-            maxHeight: '90vh', overflowY: 'auto',
+            maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
           }}>
             <button
               type="button"
@@ -1175,12 +1175,14 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                 position: 'absolute', top: 18, right: 18, border: 'none',
                 background: 'var(--bg-surface-2)', borderRadius: '50%', width: 34, height: 34,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text-muted)', transition: 'all 0.2s ease',
+                color: 'var(--text-muted)', transition: 'all 0.2s ease', zIndex: 2,
               }}
               title={tUI('ui.dong-bam-esc')}
             >
               <X size={18} />
             </button>
+
+            <div className="custom-modal-scroll" style={{ padding: 32, overflowY: 'auto', flex: 1, minHeight: 0 }}>
 
             {!upgradeSubmitted ? (
               <div>
@@ -1286,6 +1288,7 @@ const getCalculatedExpiration = (cycle = 'monthly') => {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>,
         document.body

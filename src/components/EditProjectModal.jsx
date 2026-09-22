@@ -164,22 +164,27 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
         style={{
           width: 'min(720px, 95vw)',
           maxWidth: 720,
-          maxHeight: '92vh',
-          overflowY: 'auto',
-          overscrollBehavior: 'contain',
+          maxHeight: '90vh',
           background: 'var(--bg-surface)',
           borderRadius: 24,
-          padding: 26,
           border: '1px solid var(--border)',
           boxShadow: '0 25px 60px rgba(0,0,0,.35)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 18,
+          overflow: 'hidden',
           margin: 'auto',
         }}
       >
         {/* Modal Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '22px 26px 18px',
+          borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+          flexShrink: 0,
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
@@ -225,23 +230,36 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           </button>
         </div>
 
-        {error && (
+        {/* Form wrapping body and footer */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden', margin: 0 }}>
+          {/* Scrollable Form Body */}
           <div
+            className="custom-modal-scroll"
             style={{
-              padding: '10px 14px',
-              borderRadius: 10,
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#b91c1c',
-              fontSize: 12.5,
-              fontWeight: 600,
+              padding: '20px 26px',
+              overflowY: 'auto',
+              overscrollBehavior: 'contain',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
             }}
           >
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {error && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  color: '#b91c1c',
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                }}
+              >
+                {error}
+              </div>
+            )}
           {/* Tên dự án */}
           <div>
             <label className="form-label" style={{ display: 'block', marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -638,8 +656,19 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
             />
           </div>
 
-          {/* Nút hành động */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+          </div>
+
+          {/* Pinned Modal Footer */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 10,
+            padding: '14px 26px',
+            borderTop: '1px solid var(--border-subtle, #f1f5f9)',
+            background: 'var(--bg-surface-2)',
+            flexShrink: 0,
+          }}>
             <button
               type="button"
               onClick={onClose}
@@ -648,7 +677,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                 padding: '9px 16px',
                 borderRadius: 10,
                 border: '1px solid var(--border)',
-                background: 'var(--bg-surface-2)',
+                background: 'var(--bg-surface)',
                 color: 'var(--text-primary)',
                 fontWeight: 700,
                 fontSize: 13,

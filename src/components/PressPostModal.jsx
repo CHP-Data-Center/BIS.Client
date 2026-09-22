@@ -198,17 +198,16 @@ export default function PressPostModal({
   const modalContent = (
     <div className="potential-modal-backdrop" onClick={onClose}>
       <div
-        className="potential-modal-content card"
+        className="card"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
         style={{
           width: '100%',
           maxWidth: 760,
-          maxHeight: '92vh',
+          maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px 28px',
-          gap: 20,
-          overflowY: 'auto',
+          overflow: 'hidden',
           borderRadius: 20,
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.45)',
           background: 'var(--bg-surface)',
@@ -216,7 +215,11 @@ export default function PressPostModal({
         }}
       >
         {/* Header Modal */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14,
+          padding: '20px 28px 16px', borderBottom: '1px solid var(--border-subtle, #f1f5f9)',
+          flexShrink: 0,
+        }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span
@@ -259,6 +262,20 @@ export default function PressPostModal({
           </button>
         </div>
 
+        {/* Scrollable Body */}
+        <div
+          className="custom-modal-scroll"
+          style={{
+            padding: '20px 28px',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20,
+            minHeight: 0,
+          }}
+        >
         {/* Thông báo lỗi / thành công */}
         {errorMsg && (
           <div style={{
@@ -516,8 +533,14 @@ export default function PressPostModal({
           </div>
         </div>
 
+        </div>
+
         {/* Footer actions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 28px', borderTop: '1px solid var(--border-subtle, #f1f5f9)',
+          background: 'var(--bg-surface-2)', flexShrink: 0,
+        }}>
           <button
             type="button"
             className="btn"

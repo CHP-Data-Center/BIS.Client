@@ -2508,6 +2508,7 @@ ul, ol { list-style: none; }
 .custom-modal-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--border-subtle, rgba(148, 163, 184, 0.4)) transparent;
+  overscroll-behavior: contain;
 }
 .custom-modal-scroll::-webkit-scrollbar {
   width: 6px;
@@ -2515,7 +2516,7 @@ ul, ol { list-style: none; }
 }
 .custom-modal-scroll::-webkit-scrollbar-track {
   background: transparent;
-  margin: 6px 0;
+  margin: 8px 0;
 }
 .custom-modal-scroll::-webkit-scrollbar-thumb {
   background: var(--border-subtle, rgba(148, 163, 184, 0.4));
@@ -2524,6 +2525,12 @@ ul, ol { list-style: none; }
 .custom-modal-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted, #94a3b8);
 }
+
+/* Modal dialog scroll containment: ensure rounded corners are always preserved and scrollbars don't bleed out */
+[role="dialog"] {
+  overflow: hidden;
+}
+
 
 
 /* --- Typography Scale --- */
@@ -9210,7 +9217,7 @@ html, body {
   max-width: 540px;
   margin: auto;
   max-height: 85vh;
-  overflow-y: auto;
+  overflow: hidden;
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
