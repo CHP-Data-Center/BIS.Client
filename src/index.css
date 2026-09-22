@@ -10253,5 +10253,90 @@ html, body {
   }
 }
 
+/* Project Sidebar Card Uniform Styling */
+.project-sidebar-card {
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  background: var(--bg-surface-2);
+  border: 1.5px solid var(--border);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  position: relative;
+  user-select: none;
+}
+
+.project-sidebar-card:hover {
+  background: var(--bg-surface);
+  border-color: var(--brand-300, #93c5fd);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.project-sidebar-card.selected {
+  background: var(--brand-50, #eff6ff);
+  border-color: var(--brand-500, #3b82f6);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.14);
+}
+
+[data-theme="dark"] .project-sidebar-card {
+  background: var(--bg-surface-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .project-sidebar-card:hover {
+  background: var(--bg-surface);
+  border-color: var(--brand-500);
+}
+
+[data-theme="dark"] .project-sidebar-card.selected {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: var(--brand-400);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2);
+}
+
+.project-card-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  opacity: 0.65;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-card-action-btn:hover {
+  opacity: 1;
+  color: var(--brand-600);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.project-card-action-btn.delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.project-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.project-sidebar-card.selected .project-card-footer {
+  border-top-color: rgba(59, 130, 246, 0.18);
+}
+
+
 
 

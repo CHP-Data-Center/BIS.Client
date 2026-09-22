@@ -650,131 +650,186 @@ export default function ProjectsPage() {
                 const isSelected = p.id === selectedProjectId;
                 const sm = summary[p.id];
                 const st = STATUS_META[p.status || 'watching'] || STATUS_META.watching;
+                const articleCount = (isSelected && timelineData ? (timelineData.total ?? timelineData.items?.length) : (sm?.total_articles ?? 0)) || 0;
+                const newArticlesCount = sm?.new_articles || 0;
+                const tenderCount = isSelected && currentTendersCount > 0 ? currentTendersCount : (sm?.procurement_matches || 0);
+
                 return (
                   <div
                     key={p.id}
                     onClick={() => setSelectedProjectId(p.id)}
-                    style={{
-                      padding: '12px 16px', borderRadius: 14, cursor: 'pointer',
-                      background: isSelected ? 'var(--brand-50)' : 'var(--bg-surface-2)',
-                      border: `1.5px solid ${isSelected ? 'var(--brand-400)' : 'transparent'}`,
-                      transition: 'all 0.15s ease',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    }}
+                    className={`project-sidebar-card ${isSelected ? 'selected' : ''}`}
                   >
-                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                      <div style={{
-                        fontSize: 14, fontWeight: 800,
-                        color: isSelected ? 'var(--brand-700)' : 'var(--text-primary)',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        lineHeight: 1.35,
-                      }}>
+                    {/* Header: Tiêu đề + Các nút thao tác ở góc trên cùng bên phải */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                      <div
+                        style={{
+                          fontSize: 13.5,
+                          fontWeight: 800,
+                          color: isSelected ? 'var(--brand-700)' : 'var(--text-primary)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          lineHeight: 1.35,
+                          flex: 1,
+                        }}
+                      >
                         {p.name}
                       </div>
 
-                      {/* Nhãn: trạng thái · lĩnh vực · nguồn gốc */}
-                      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 5 }}>
-                        <span style={{
-                          fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 5,
-                          background: st.bg, color: st.fg,
-                        }}>
-                          {t(st.key)}
-                        </span>
-                        {p.sector_name && (
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
-                            background: 'var(--bg-surface)', color: 'var(--text-secondary)',
-                            border: '1px solid var(--border)',
-                          }}>
-                            {p.sector_name}
-                          </span>
-                        )}
-                        {p.origin && p.origin !== 'manual' && (
-                          <span style={{
-                            fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
-                            background: 'var(--bg-surface)', color: 'var(--text-muted)',
-                            border: '1px solid var(--border)',
-                          }}>
-                            {t(p.origin === 'excel' ? 'projects.originExcel' : 'projects.originProfile')}
-                          </span>
-                        )}
-                      </div>
-
-                      {p.investor && (
-                        <div style={{
-                          fontSize: 11, color: 'var(--text-muted)', marginTop: 4,
-                          display: 'flex', alignItems: 'center', gap: 5,
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}>
-                          <Building2 size={11} style={{ flex: 'none' }} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.investor}</span>
-                          {p.investor_url && (
-                            <span title={`Website: ${p.investor_url}`} style={{ color: 'var(--brand-600)', flex: 'none', display: 'inline-flex' }}>
-                              <Globe size={11} />
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Thống kê bài viết và gói thầu tìm thấy — đồng bộ chính xác với số hiển thị */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, fontSize: 11.5, fontWeight: 700, flexWrap: 'wrap' }}>
-                        <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Newspaper size={12} style={{ color: 'var(--brand-600)' }} />
-                          {(isSelected && timelineData ? (timelineData.total ?? timelineData.items?.length) : (sm?.total_articles ?? 0)) || 0} bài viết
-                          {sm?.new_articles > 0 && (
-                            <span style={{
-                              fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 10,
-                              background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0',
-                            }}>
-                              +{sm.new_articles} mới
-                            </span>
-                          )}
-                        </span>
-                        {(sm?.procurement_matches > 0 || (isSelected && currentTendersCount > 0)) && (
-                          <span style={{ color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <ShoppingBag size={12} /> {isSelected && currentTendersCount > 0 ? currentTendersCount : sm.procurement_matches} gói thầu
-                          </span>
-                        )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, marginTop: -2 }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingProject(p);
+                          }}
+                          title="Chỉnh sửa dự án"
+                          className="project-card-action-btn"
+                        >
+                          <Pencil size={13.5} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingProject(p);
+                          }}
+                          title={t('common.delete')}
+                          className="project-card-action-btn delete"
+                        >
+                          <Trash2 size={13.5} />
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', flexShrink: 0 }}>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingProject(p);
-                        }}
-                        title="Chỉnh sửa dự án"
+
+                    {/* Nhãn: trạng thái · lĩnh vực · nguồn gốc */}
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span
                         style={{
-                          background: 'transparent', border: 'none', color: 'var(--brand-600, #2563eb)',
-                          cursor: 'pointer', padding: 6, borderRadius: 8, opacity: 0.75,
-                          transition: 'opacity 0.15s',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          padding: '2px 7px',
+                          borderRadius: 5,
+                          background: st.bg,
+                          color: st.fg,
+                          display: 'inline-flex',
+                          alignItems: 'center',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '0.75'}
                       >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeletingProject(p);
-                        }}
-                        title={t('common.delete')}
+                        {t(st.key)}
+                      </span>
+                      {p.sector_name && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: 5,
+                            background: 'var(--bg-surface)',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {p.sector_name}
+                        </span>
+                      )}
+                      {p.origin && p.origin !== 'manual' && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: 5,
+                            background: 'var(--bg-surface)',
+                            color: 'var(--text-muted)',
+                            border: '1px solid var(--border)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          {t(p.origin === 'excel' ? 'projects.originExcel' : 'projects.originProfile')}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Chủ đầu tư — luôn hiển thị để mọi card có cấu trúc hàng đồng đều */}
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: p.investor ? 'var(--text-secondary)' : 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <Building2 size={11.5} style={{ flexShrink: 0, opacity: p.investor ? 0.8 : 0.45 }} />
+                      <span
                         style={{
-                          background: 'transparent', border: 'none', color: '#ef4444',
-                          cursor: 'pointer', padding: 6, borderRadius: 8, opacity: 0.7,
-                          transition: 'opacity 0.15s',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontStyle: p.investor ? 'normal' : 'italic',
+                          flex: 1,
+                          opacity: p.investor ? 1 : 0.75,
                         }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
                       >
-                        <Trash2 size={15} />
-                      </button>
+                        {p.investor || 'Chưa cập nhật CĐT'}
+                      </span>
+                      {p.investor_url && (
+                        <span
+                          title={`Website: ${p.investor_url}`}
+                          style={{ color: 'var(--brand-600)', flexShrink: 0, display: 'inline-flex' }}
+                        >
+                          <Globe size={11} />
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Footer thống kê đồng bộ: Bài viết bên trái, Gói thầu bên phải — luôn hiện cả 2 để đồng đều */}
+                    <div className="project-card-footer">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        <Newspaper size={12} style={{ color: 'var(--brand-600)', flexShrink: 0 }} />
+                        <span>{articleCount} bài viết</span>
+                        {newArticlesCount > 0 && (
+                          <span
+                            style={{
+                              fontSize: 9.5,
+                              fontWeight: 800,
+                              padding: '1px 5px',
+                              borderRadius: 8,
+                              background: '#ecfdf5',
+                              color: '#047857',
+                              border: '1px solid #a7f3d0',
+                              lineHeight: 1.2,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            +{newArticlesCount} mới
+                          </span>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          whiteSpace: 'nowrap',
+                          color: tenderCount > 0 ? '#1d4ed8' : 'var(--text-muted)',
+                          opacity: tenderCount > 0 ? 1 : 0.65,
+                        }}
+                      >
+                        <ShoppingBag size={12} style={{ color: tenderCount > 0 ? '#2563eb' : 'var(--text-muted)', flexShrink: 0 }} />
+                        <span>{tenderCount} gói thầu</span>
+                      </div>
                     </div>
                   </div>
                 );
