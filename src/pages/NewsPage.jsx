@@ -15,7 +15,6 @@ import { adaptOdaToCard, adaptProcToCard } from '../adapters/oda';
 import NewsCard from '../components/NewsCard';
 import WorldBankView from '../components/WorldBankView';
 import PressPostModal from '../components/PressPostModal';
-import PressPostDetailModal from '../components/PressPostDetailModal';
 import { projectDocumentsService, documentToItem } from '../services/projectDocuments';
 import { getSourceStyle } from '../utils/sourceStyle';
 import { tUI } from '../locales';
@@ -350,7 +349,6 @@ export default function NewsPage() {
   const [userPosts, setUserPosts] = useState([]);
   const [userPostsReload, setUserPostsReload] = useState(0);
   const [showPressModal, setShowPressModal] = useState(false);
-  const [readingUserPost, setReadingUserPost] = useState(null);
   const [toastMsg, setToastMsg] = useState(null);
 
   const toast = (type, text) => {
@@ -1290,7 +1288,7 @@ export default function NewsPage() {
                         key={a.is_user_post ? `doc-${a.id}` : a.id}
                         article={a}
                         index={i}
-                        onOpenPost={setReadingUserPost}
+                        onOpenPost={(post) => nav(`/project-documents/${post.id}`)}
                       />
                     ))
               }
@@ -1323,7 +1321,7 @@ export default function NewsPage() {
                         key={a.is_user_post ? `doc-${a.id}` : a.id}
                         article={a}
                         index={i}
-                        onOpenPost={setReadingUserPost}
+                        onOpenPost={(post) => nav(`/project-documents/${post.id}`)}
                       />
                     ))
               }
@@ -1367,18 +1365,6 @@ export default function NewsPage() {
         />
       )}
 
-      {/* Modal Xem chi tiết bài báo chí nội bộ của người dùng & tải file đính kèm */}
-      {readingUserPost && (
-        <PressPostDetailModal
-          post={readingUserPost}
-          variant="press"
-          onClose={() => setReadingUserPost(null)}
-          onDeleted={(doc) => {
-            setUserPostsReload((n) => n + 1);
-            toast('success', `Đã xóa bài "${doc.title}".`);
-          }}
-        />
-      )}
     </div>
   );
 }

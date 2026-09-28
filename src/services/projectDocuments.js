@@ -56,7 +56,8 @@ export function documentToItem(doc) {
     kind: 'project_document',
     ref: String(doc.id),
     is_project_document: true,
-    title: doc.project_name,
+    // Tiêu đề hiển thị là TIÊU ĐỀ BÀI (nếu đã soạn), tên dự án là dòng phụ.
+    title: doc.article_title || doc.project_name,
     province: doc.location,
     date: doc.doc_date,
     summaryDate: doc.summary_date,
@@ -98,6 +99,13 @@ export const projectDocumentsService = {
     return data; // { items, total, page, size }
   },
 
+  /** Một tài liệu (trang đọc bài). 404 nếu không có quyền xem — máy chủ không phân biệt
+   *  "không tồn tại" với "không được xem" để khỏi lộ tài liệu riêng tư của người khác. */
+  async get(id) {
+    const { data } = await api.get(`/project-documents/${id}`);
+    return data;
+  },
+
   async update(id, patch) {
     const { data } = await api.patch(`/project-documents/${id}`, patch);
     return data;
@@ -107,8 +115,29 @@ export const projectDocumentsService = {
     await api.delete(`/project-documents/${id}`);
   },
 
-  /** Tải file gốc về máy (cần token nên không mở link trực tiếp được). */
+  /** Tải file gốc về máy.
+   *
+   *  Ưu tiên link ký hạn ngắn do máy chủ cấp sau khi đã kiểm quyền (ADR-006): trình duyệt tải
+   *  thẳng từ Google Cloud Storage, không chiếm băng thông backend. Máy chủ chưa bật GCS (hoặc
+   *  không ký được) trả url rỗng -> tải qua backend như trước. */
   async download(doc) {
+    try {
+      const { data } = await api.get(`/project-documents/${doc.id}/file-url`);
+      if (data?.url) {
+        const a = document.createElement('a');
+        a.href = data.url;
+        a.rel = 'noopener';
+        // Tên file do máy chủ gắn sẵn trong link (response-content-disposition); thuộc tính
+        // download không áp dụng cho link khác origin nên chỉ là dự phòng.
+        a.download = data.filename || doc.filename || 'tai-lieu';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+    } catch {
+      // Máy chủ cũ chưa có endpoint này: rơi xuống đường tải qua backend bên dưới.
+    }
     const resp = await api.get(`/project-documents/${doc.id}/file`, {
       responseType: 'blob',
       timeout: 120000,

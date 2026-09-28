@@ -70,6 +70,9 @@ export default function PressPostModal({
   const [title, setTitle] = useState('');
   const [province, setProvince] = useState('');
   const [summary, setSummary] = useState('');
+  // Bài tin soạn từ tài liệu (xem ProjectDocumentPostModal): nội dung theo đoạn + nhãn nguồn.
+  const [articleBody, setArticleBody] = useState('');
+  const [articleSource, setArticleSource] = useState(null);
   // Ngày ghi trong văn bản: chỉ điền khi trích được hoặc người dùng tự nhập.
   const [date, setDate] = useState('');
   const [summaryDate, setSummaryDate] = useState(() => todayVN());
@@ -127,11 +130,15 @@ export default function PressPostModal({
         showError(res.note || 'Không đọc được chữ trong file. Vui lòng nhập thông tin thủ công.', 8000);
         return;
       }
-      if (res.project_name) setTitle(res.project_name);
+      if (res.article_title || res.project_name) setTitle(res.article_title || res.project_name);
       if (res.location) setProvince(res.location);
       if (res.summary) setSummary(res.summary);
       if (res.doc_date) setDate(res.doc_date);
       if (res.summary_date) setSummaryDate(res.summary_date);
+      if (res.article_body) {
+        setArticleBody(res.article_body);
+        setArticleSource(res.source === 'ai' ? 'ai' : 'rules');
+      }
 
       setExtractionMsg({
         type: 'success',
@@ -177,6 +184,9 @@ export default function PressPostModal({
         project_name: title.trim(),
         location: province.trim() || null,
         summary: summary.trim(),
+        article_title: title.trim(),
+        article_body: articleBody.trim() || null,
+        article_source: articleBody.trim() ? articleSource || 'manual' : null,
         doc_date: date || null,
         summary_date: summaryDate || null,
         visibility: privacy,
@@ -512,6 +522,29 @@ export default function PressPostModal({
                 value={summaryDate}
                 onChange={(e) => setSummaryDate(e.target.value)}
                 style={{ fontSize: 12.5 }}
+              />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label" style={{ fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span>Nội dung bài viết (hiển thị dạng bài tin)</span>
+                {articleSource === 'ai' && (
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
+                    background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed',
+                  }}>
+                    ✨ AI soạn từ tài liệu — đọc lại trước khi đăng
+                  </span>
+                )}
+              </label>
+              <textarea
+                className="form-input"
+                rows={8}
+                value={articleBody}
+                maxLength={20000}
+                onChange={(e) => { setArticleBody(e.target.value); setArticleSource('manual'); }}
+                placeholder="Bấm 'Trích xuất vào bài báo' để máy soạn bài từ tài liệu, rồi sửa lại. Cách đoạn bằng một dòng trống."
+                style={{ fontSize: 12.5, resize: 'vertical', lineHeight: 1.6 }}
               />
             </div>
 

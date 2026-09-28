@@ -126,6 +126,11 @@ export default function ProjectDocumentPostModal({
   const [docProjectName, setDocProjectName] = useState('');
   const [docProvince, setDocProvince] = useState('');
   const [docSummary, setDocSummary] = useState('');
+  // Bài tin soạn từ tài liệu: tiêu đề kiểu báo chí + nội dung theo đoạn. `articleSource` cho
+  // người đọc biết chữ này ở đâu ra (ai | rules | manual) — sửa tay thì thành manual.
+  const [articleTitle, setArticleTitle] = useState('');
+  const [articleBody, setArticleBody] = useState('');
+  const [articleSource, setArticleSource] = useState(null);
   // Ngày ghi trong văn bản: để trống cho tới khi trích được hoặc người dùng tự nhập — điền
   // sẵn "hôm nay" là khai sai ngày của biên bản.
   const [docDate, setDocDate] = useState('');
@@ -245,6 +250,11 @@ export default function ProjectDocumentPostModal({
       if (res.summary) setDocSummary(res.summary);
       if (res.doc_date) setDocDate(res.doc_date);
       if (res.summary_date) setDocSummaryDate(res.summary_date);
+      if (res.article_title) setArticleTitle(res.article_title);
+      if (res.article_body) {
+        setArticleBody(res.article_body);
+        setArticleSource(res.source === 'ai' ? 'ai' : 'rules');
+      }
 
       setExtractionMsg({
         type: 'success',
@@ -358,6 +368,9 @@ export default function ProjectDocumentPostModal({
         project_name: finalTitle,
         location: docProvince.trim() || null,
         summary: docSummary.trim(),
+        article_title: articleTitle.trim() || null,
+        article_body: articleBody.trim() || null,
+        article_source: articleBody.trim() ? articleSource || 'manual' : null,
         doc_date: docDate || null,
         summary_date: docSummaryDate || null,
         visibility: privacy,
@@ -944,6 +957,55 @@ export default function ProjectDocumentPostModal({
                 style={{ fontSize: 12.5, resize: 'vertical' }}
               />
             </div>
+
+            {/* Bài tin: tài liệu được trình bày dưới dạng bài báo để người khác đọc nhanh */}
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label" style={{ fontSize: 11.5 }}>Tiêu đề bài viết</label>
+              <input
+                type="text"
+                className="form-input"
+                value={articleTitle}
+                maxLength={255}
+                onChange={(e) => { setArticleTitle(e.target.value); setArticleSource('manual'); }}
+                placeholder="Tiêu đề kiểu báo chí; để trống thì lấy tên dự án"
+                style={{ fontSize: 12.5 }}
+              />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="form-label" style={{ fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span>Nội dung bài viết (hiển thị dạng bài tin)</span>
+                {articleSource === 'ai' && (
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
+                    background: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed',
+                  }}>
+                    ✨ AI soạn từ tài liệu — đọc lại trước khi đăng
+                  </span>
+                )}
+                {articleSource === 'rules' && (
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
+                    background: 'rgba(100, 116, 139, 0.14)', color: '#475569',
+                  }}>
+                    Trích nguyên văn từ tài liệu
+                  </span>
+                )}
+              </label>
+              <textarea
+                className="form-input"
+                rows={8}
+                value={articleBody}
+                maxLength={20000}
+                onChange={(e) => { setArticleBody(e.target.value); setArticleSource('manual'); }}
+                placeholder="Bấm 'Trích xuất thông tin từ tài liệu' để máy soạn bài, rồi sửa lại. Cách đoạn bằng một dòng trống."
+                style={{ fontSize: 12.5, resize: 'vertical', lineHeight: 1.6 }}
+              />
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                Bài hiển thị ở trang Báo chí và Dự án tiềm năng theo đúng quyền riêng tư bên dưới;
+                file gốc luôn đính kèm để đối chiếu.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1230,6 +1292,15 @@ export default function ProjectDocumentPostModal({
                 )}
               </div>
 
+              {articleTitle.trim() && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TIÊU ĐỀ BÀI VIẾT:</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
+                    {articleTitle.trim()}
+                  </div>
+                </div>
+              )}
+
               {/* Tóm tắt nội dung */}
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>NỘI DUNG TÓM TẮT:</div>
@@ -1241,6 +1312,21 @@ export default function ProjectDocumentPostModal({
                   {docSummary}
                 </div>
               </div>
+
+              {articleBody.trim() && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>
+                    BÀI VIẾT ({articleBody.trim().split(/\n\s*\n/).filter(Boolean).length} đoạn):
+                  </div>
+                  <div style={{
+                    fontSize: 12.5, color: 'var(--text-primary)', lineHeight: 1.6, marginTop: 4,
+                    background: 'var(--bg-surface)', padding: 10, borderRadius: 8, border: '1px solid var(--border)',
+                    whiteSpace: 'pre-line', maxHeight: 160, overflowY: 'auto',
+                  }}>
+                    {articleBody.trim()}
+                  </div>
+                </div>
+              )}
 
               {/* File đính kèm */}
               {attachedFiles.length > 0 && (

@@ -15,7 +15,6 @@ import { potentialService, itemKey } from '../services/potential';
 import { projectsService } from '../services/projects';
 import { projectDocumentsService, documentToItem } from '../services/projectDocuments';
 import ProjectDocumentPostModal from '../components/ProjectDocumentPostModal';
-import PressPostDetailModal from '../components/PressPostDetailModal';
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -454,7 +453,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             }}
           >
             <FileCheck size={13} style={{ flex: 'none' }} />
-            <span>Xem hồ sơ tài liệu (.DOCX, .PDF)</span>
+            <span>Đọc bài & tải tài liệu</span>
           </button>
         ) : (item.is_user_post || item.kind === 'user_article') ? (
           <button
@@ -1474,7 +1473,6 @@ export default function PotentialProjectsPage() {
   const [docsReload, setDocsReload] = useState(0);
   const docsReqRef = useRef(0);
   const [showDocModal, setShowDocModal] = useState(false);
-  const [readingItem, setReadingItem] = useState(null);
   const [docScope, setDocScope] = useState('all');
   const [msg, setMsg] = useState(null);
 
@@ -2372,7 +2370,7 @@ export default function PotentialProjectsPage() {
                   linking={linkBusyKey === key}
                   onLink={setLinkingItem}
                   onUnlink={handleUnlink}
-                  onOpenPressPost={setReadingItem}
+                  onOpenPressPost={(it) => navigate(`/project-documents/${it.id}`)}
                 />
               );
             })}
@@ -2466,18 +2464,6 @@ export default function PotentialProjectsPage() {
           onProjectUpdated={(updatedProject) => {
             loadUserProjects(true);
             toast('success', `Đã cập nhật dự án theo dõi "${updatedProject.name}"!`);
-          }}
-        />
-      )}
-
-      {/* 3. Xem chi tiết hồ sơ tài liệu dự án */}
-      {readingItem && (
-        <PressPostDetailModal
-          post={readingItem}
-          onClose={() => setReadingItem(null)}
-          onDeleted={(doc) => {
-            setDocsReload((n) => n + 1);
-            toast('success', `Đã xóa tài liệu "${doc.title}".`);
           }}
         />
       )}

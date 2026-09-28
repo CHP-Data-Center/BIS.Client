@@ -34,6 +34,7 @@ const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'));
 
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
 const PotentialProjectsPage = lazy(() => import('./pages/PotentialProjectsPage'));
+const ProjectDocumentArticlePage = lazy(() => import('./pages/ProjectDocumentArticlePage'));
 
 function PageLoader({ message, fullScreen = true }) {
   return <ThemePageLoader message={message} minHeight={fullScreen ? '100vh' : '65vh'} />;
@@ -274,8 +275,15 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
-              {/* Tài liệu dự án (MoM 15/09/2026): quyền xem do backend lọc theo quyền riêng tư. */}
+              {/* Tài liệu dự án (MoM 15/09/2026): quyền xem do backend lọc theo quyền riêng tư.
+                  Danh sách nằm trong trang Dự án tiềm năng; mỗi tài liệu có trang đọc riêng
+                  dạng bài tin. */}
               <Route path="/project-documents" element={<Navigate to="/potential-projects" replace />} />
+              <Route path="/project-documents/:id" element={
+                <ProtectedRoute>
+                  <AppLayout><ProjectDocumentArticlePage /></AppLayout>
+                </ProtectedRoute>
+              } />
 
               <Route path="/bookmarks" element={
                 <ProtectedRoute>
