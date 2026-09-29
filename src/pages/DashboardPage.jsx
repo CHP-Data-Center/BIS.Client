@@ -1158,7 +1158,7 @@ function ProjectDistributionMap() {
       }}>
         <div style={{ borderRadius: 16, overflow: 'hidden' }}>
           <MapContainer
-            center={[15, 107]}
+            center={[15.5, 108.5]}
             zoom={4}
             minZoom={2.5}
             worldCopyJump={true}
@@ -1168,9 +1168,10 @@ function ProjectDistributionMap() {
             attributionControl={false}
           >
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              maxZoom={19}
+              url="https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi"
+              subdomains={['0', '1', '2', '3']}
+              attribution="&copy; Google Maps"
+              maxZoom={20}
             />
             <MapFlyTo
               items={filteredItems}
