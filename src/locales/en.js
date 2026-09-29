@@ -1516,7 +1516,7 @@ export default {
   'settings.digestProjects': 'Tracked projects',
   'settings.digestPotential': 'Potential projects',
   'settings.digestTrending': 'Trends',
-  'settings.digestKeywords': 'Your keywords',
+  'settings.digestProcurement': 'Public bidding',
   'settings.saveConfig': 'Save settings',
   'auth.googleFailed': 'Google sign-in failed. Please try again.',
   'auth.googleCancelled': 'Google sign-in did not complete.',

@@ -37,7 +37,7 @@ export default function SettingsPage() {
   const [digestProjects, setDigestProjects] = useState(true);
   const [digestPotential, setDigestPotential] = useState(true);
   const [digestTrending, setDigestTrending] = useState(true);
-  const [digestKeywords, setDigestKeywords] = useState(true);
+  const [digestProcurement, setDigestProcurement] = useState(true);
   const [bellRinging, setBellRinging] = useState(false);
   const [prefLoading, setPrefLoading] = useState(false);
   const [prefMsg, setPrefMsg] = useState(null);
@@ -61,7 +61,13 @@ export default function SettingsPage() {
         if (typeof user.permissions.digest_projects === 'boolean') setDigestProjects(user.permissions.digest_projects);
         if (typeof user.permissions.digest_potential === 'boolean') setDigestPotential(user.permissions.digest_potential);
         if (typeof user.permissions.digest_trending === 'boolean') setDigestTrending(user.permissions.digest_trending);
-        if (typeof user.permissions.digest_keywords === 'boolean') setDigestKeywords(user.permissions.digest_keywords);
+        // Ô thứ 4 đổi từ "Từ khóa của bạn" sang "Đấu thầu công". Đọc khóa cũ làm mặc định
+        // để ai từng TẮT ô đó không bị bật lại sau khi cập nhật.
+        if (typeof user.permissions.digest_procurement === 'boolean') {
+          setDigestProcurement(user.permissions.digest_procurement);
+        } else if (typeof user.permissions.digest_keywords === 'boolean') {
+          setDigestProcurement(user.permissions.digest_keywords);
+        }
       }
     }
   }, [user]);
@@ -113,7 +119,7 @@ export default function SettingsPage() {
           digest_projects: digestProjects,
           digest_potential: digestPotential,
           digest_trending: digestTrending,
-          digest_keywords: digestKeywords,
+          digest_procurement: digestProcurement,
         },
       });
       const userKey = user?.email || user?.id;
@@ -617,9 +623,9 @@ export default function SettingsPage() {
                         />
                       </div>
 
-                      {/* 4. Từ khóa cá nhân */}
+                      {/* 4. Đấu thầu công (TBMT) */}
                       <div
-                        onClick={() => setDigestKeywords(prev => !prev)}
+                        onClick={() => setDigestProcurement(prev => !prev)}
                         style={{
                           padding: '8px 10px',
                           borderRadius: 8,
@@ -627,20 +633,20 @@ export default function SettingsPage() {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          background: digestKeywords ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-surface)',
-                          border: digestKeywords ? '1.5px solid #6366f1' : '1px solid var(--border)',
+                          background: digestProcurement ? 'rgba(5, 150, 105, 0.08)' : 'var(--bg-surface)',
+                          border: digestProcurement ? '1.5px solid #059669' : '1px solid var(--border)',
                           transition: 'all 0.15s ease',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                          <span style={{ fontSize: 14 }}>🏷️</span>
-                          <span style={{ fontSize: 12, fontWeight: digestKeywords ? 700 : 500, color: digestKeywords ? '#4338ca' : 'var(--text-secondary)' }}>
-                            {t('settings.digestKeywords')}
+                          <span style={{ fontSize: 14 }}>📋</span>
+                          <span style={{ fontSize: 12, fontWeight: digestProcurement ? 700 : 500, color: digestProcurement ? '#065f46' : 'var(--text-secondary)' }}>
+                            {t('settings.digestProcurement')}
                           </span>
                         </div>
                         <input
                           type="checkbox"
-                          checked={digestKeywords}
+                          checked={digestProcurement}
                           onChange={() => {}}
                           style={{ cursor: 'pointer' }}
                         />

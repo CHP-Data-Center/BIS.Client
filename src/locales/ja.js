@@ -1516,7 +1516,7 @@ export default {
   'settings.digestProjects': '追跡中のプロジェクト',
   'settings.digestPotential': '有望プロジェクト',
   'settings.digestTrending': 'トレンド',
-  'settings.digestKeywords': 'あなたのキーワード',
+  'settings.digestProcurement': '公共入札',
   'settings.saveConfig': '設定を保存',
   'auth.googleFailed': 'Google ログインに失敗しました。もう一度お試しください。',
   'auth.googleCancelled': 'Google ログインが完了しませんでした。',
