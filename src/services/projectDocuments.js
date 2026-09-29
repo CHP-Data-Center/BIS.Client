@@ -10,15 +10,16 @@ import api from './api';
 // multipart: để trình duyệt tự đặt Content-Type kèm boundary (xem services/projects.js).
 const UPLOAD_CONFIG = {
   headers: { 'Content-Type': undefined },
-  // Đọc PDF/DOCX và tóm tắt bằng AI lâu hơn request thường.
-  timeout: 120000,
+  // Đọc PDF/DOCX và tóm tắt bằng AI lâu hơn request thường; file tài liệu scan có thể
+  // vài chục MB nên còn phải cộng thời gian TẢI LÊN trên đường truyền chậm.
+  timeout: 600000,
 };
 
 /** Định dạng máy chủ nhận (app/services/project_document_service.py: ALLOWED_TYPES). */
 export const DOCUMENT_EXTENSIONS = ['.docx', '.pdf'];
 export const DOCUMENT_ACCEPT = DOCUMENT_EXTENSIONS.join(',');
 /** Giới hạn dung lượng của máy chủ (MAX_DOCUMENT_BYTES) — kiểm trước để khỏi tải lên vô ích. */
-export const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024;
+export const MAX_DOCUMENT_BYTES = 100 * 1024 * 1024;
 
 /** Lý do file không đăng được, hoặc null nếu hợp lệ. */
 export function documentFileProblem(file) {
@@ -28,7 +29,8 @@ export function documentFileProblem(file) {
     return `"${file.name}" không đúng định dạng. Hệ thống nhận .DOCX và .PDF (không nhận .DOC — hãy lưu lại dưới dạng .DOCX).`;
   }
   if (file.size > MAX_DOCUMENT_BYTES) {
-    return `"${file.name}" quá lớn (${(file.size / 1024 / 1024).toFixed(1)} MB). Giới hạn 15 MB.`;
+    const tranMB = Math.round(MAX_DOCUMENT_BYTES / 1024 / 1024);
+    return `"${file.name}" quá lớn (${(file.size / 1024 / 1024).toFixed(1)} MB). Giới hạn ${tranMB} MB.`;
   }
   return null;
 }
@@ -42,7 +44,9 @@ export function todayVN() {
 /** Thông điệp lỗi đọc được từ phản hồi API. */
 export function apiErrorMessage(err, fallback) {
   // 413 do proxy (nginx) trả kèm trang HTML, không có `detail`.
-  if (err?.response?.status === 413) return 'File quá lớn, máy chủ từ chối nhận. Giới hạn 15 MB.';
+  if (err?.response?.status === 413) {
+    return `File quá lớn, máy chủ từ chối nhận. Giới hạn ${Math.round(MAX_DOCUMENT_BYTES / 1024 / 1024)} MB.`;
+  }
   const detail = err?.response?.data?.detail;
   if (typeof detail === 'string' && detail) return detail;
   if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg;
