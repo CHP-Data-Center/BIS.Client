@@ -9,6 +9,7 @@ import {
   Paperclip, Trash2, AlertCircle, Sparkles, FolderKanban,
 } from 'lucide-react';
 import { projectDocumentsService, documentToItem, apiErrorMessage } from '../services/projectDocuments';
+import { useLang } from '../context/LanguageContext';
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -16,22 +17,17 @@ function fmtDate(iso) {
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString();
 }
 
 const PRIVACY = {
-  private: { label: 'Chỉ mình tôi', icon: Lock, color: '#7c3aed', bg: 'rgba(139, 92, 246, 0.12)' },
-  organization: { label: 'Nội bộ tổ chức', icon: Building2, color: '#2563eb', bg: 'rgba(37, 99, 235, 0.12)' },
-  public: { label: 'Công khai', icon: Globe2, color: '#059669', bg: 'rgba(16, 185, 129, 0.12)' },
-};
-
-const NGUON_BAI = {
-  ai: 'Bài do AI soạn từ tài liệu, người đăng đã duyệt',
-  rules: 'Nội dung trích nguyên văn từ tài liệu',
-  manual: 'Bài do người đăng tự viết',
+  private: { key: 'potential.privacyOnlyMe', label: 'Chỉ mình tôi', icon: Lock, color: '#7c3aed', bg: 'rgba(139, 92, 246, 0.12)' },
+  organization: { key: 'potential.privacyOrg', label: 'Nội bộ tổ chức', icon: Building2, color: '#2563eb', bg: 'rgba(37, 99, 235, 0.12)' },
+  public: { key: 'potential.privacyPublic', label: 'Công khai', icon: Globe2, color: '#059669', bg: 'rgba(16, 185, 129, 0.12)' },
 };
 
 export default function ProjectDocumentArticlePage() {
+  const { t } = useLang();
   const { id } = useParams();
   const navigate = useNavigate();
   const [doc, setDoc] = useState(null);
@@ -83,7 +79,7 @@ export default function ProjectDocumentArticlePage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 40, color: 'var(--text-muted)' }}>
         <Loader2 size={18} className="spin" />
-        <span>Đang tải bài viết…</span>
+        <span>{t('documents.loadingArticle')}</span>
       </div>
     );
   }
@@ -94,7 +90,7 @@ export default function ProjectDocumentArticlePage() {
         <div className="empty-icon">🔒</div>
         <div className="empty-title">{err}</div>
         <button type="button" className="btn btn-primary" style={{ marginTop: 14 }} onClick={() => navigate('/potential-projects')}>
-          Về danh sách tài liệu
+          {t('documents.backToList')}
         </button>
       </div>
     );
@@ -113,7 +109,7 @@ export default function ProjectDocumentArticlePage() {
         className="btn"
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, marginBottom: 16 }}
       >
-        <ArrowLeft size={14} /> Quay lại
+        <ArrowLeft size={14} /> {t('common.back')}
       </button>
 
       {err && (
@@ -134,19 +130,19 @@ export default function ProjectDocumentArticlePage() {
             background: 'rgba(5, 150, 105, 0.1)', color: '#059669', fontSize: 11.5, fontWeight: 800,
             border: '1px solid rgba(5, 150, 105, 0.25)',
           }}>
-            <FileText size={13} /> Tài liệu dự án
+            <FileText size={13} /> {t('documents.articleTag')}
           </span>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999,
             background: privCfg.bg, color: privCfg.color, fontSize: 11.5, fontWeight: 800,
           }}>
-            <PrivIcon size={12} /> {privCfg.label}
+            <PrivIcon size={12} /> {t(privCfg.key)}
           </span>
           <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Calendar size={12} /> {fmtDate(doc.date || doc.summaryDate || doc.createdAt)}
           </span>
           <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-            👤 {doc.is_owner ? 'Bạn đăng' : `Người đăng: ${doc.authorName || 'Người dùng BIS'}`}
+            👤 {doc.is_owner ? t('documents.postedByYou') : t('documents.postedBy', { name: doc.authorName || 'BIS User' })}
           </span>
         </div>
 
@@ -155,7 +151,7 @@ export default function ProjectDocumentArticlePage() {
         </h1>
         {doc.article_title && doc.article_title !== doc.project_name && (
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10 }}>
-            Dự án: <strong style={{ color: 'var(--text-secondary)' }}>{doc.project_name}</strong>
+            {t('nav.projects')}: <strong style={{ color: 'var(--text-secondary)' }}>{doc.project_name}</strong>
           </div>
         )}
 
@@ -164,11 +160,11 @@ export default function ProjectDocumentArticlePage() {
           padding: '10px 14px', borderRadius: 12, background: 'var(--bg-surface-2)', border: '1px solid var(--border)',
           margin: '12px 0 18px',
         }}>
-          <span><MapPin size={12} style={{ display: 'inline', marginRight: 4 }} />{doc.location || 'Chưa rõ vị trí'}</span>
-          <span>📅 Ngày văn bản: <strong>{fmtDate(doc.doc_date)}</strong></span>
-          <span>🗓️ Ngày tóm tắt: <strong>{fmtDate(doc.summary_date)}</strong></span>
+          <span><MapPin size={12} style={{ display: 'inline', marginRight: 4 }} />{doc.location || t('documents.unknownLocation')}</span>
+          <span>📅 <strong>{t('documents.docDate', { date: fmtDate(doc.doc_date) })}</strong></span>
+          <span>🗓️ <strong>{t('documents.summaryDate', { date: fmtDate(doc.summary_date) })}</strong></span>
           {doc.tracked_project_name && (
-            <span><FolderKanban size={12} style={{ display: 'inline', marginRight: 4 }} />Dự án theo dõi: <strong>{doc.tracked_project_name}</strong></span>
+            <span><FolderKanban size={12} style={{ display: 'inline', marginRight: 4 }} /><strong>{t('documents.trackedProject', { name: doc.tracked_project_name })}</strong></span>
           )}
         </div>
 
@@ -206,7 +202,7 @@ export default function ProjectDocumentArticlePage() {
           </div>
         ) : (
           <p style={{ fontSize: 13.5, color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            Tài liệu này chưa có nội dung bài viết — tải file gốc bên dưới để xem đầy đủ.
+            {t('documents.noArticleContent')}
           </p>
         )}
 
@@ -215,14 +211,14 @@ export default function ProjectDocumentArticlePage() {
             marginTop: 18, fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6,
           }}>
             <Sparkles size={12} />
-            <span>{NGUON_BAI[doc.article_source] || NGUON_BAI.manual}. Bản gốc là file đính kèm bên dưới.</span>
+            <span>{doc.article_source === 'ai' ? t('documents.sourceAi') : doc.article_source === 'rules' ? t('documents.sourceRules') : t('documents.sourceManual')}</span>
           </div>
         )}
 
         {doc.filename && (
           <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
             <h4 style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Paperclip size={15} style={{ color: '#059669' }} /> Tài liệu gốc
+              <Paperclip size={15} style={{ color: '#059669' }} /> {t('documents.originalDoc')}
             </h4>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
@@ -254,7 +250,7 @@ export default function ProjectDocumentArticlePage() {
                 }}
               >
                 {downloading ? <Loader2 size={13} className="spin" /> : <Download size={13} />}
-                <span>{downloading ? 'Đang tải...' : 'Tải về'}</span>
+                <span>{downloading ? t('documents.downloading') : t('documents.download')}</span>
               </button>
             </div>
           </div>
@@ -274,7 +270,7 @@ export default function ProjectDocumentArticlePage() {
               }}
             >
               {deleting ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />}
-              <span>Xóa tài liệu</span>
+              <span>{t('documents.deleteDoc')}</span>
             </button>
           </div>
         )}

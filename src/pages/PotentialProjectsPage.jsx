@@ -46,10 +46,10 @@ const KIND_CONFIG = {
 };
 
 const AMOUNT_PRESETS = [
-  { label: '> 10 Tỷ', value: 10000000000 },
-  { label: '> 50 Tỷ', value: 50000000000 },
-  { label: '> 100 Tỷ', value: 100000000000 },
-  { label: '> 500 Tỷ', value: 500000000000 },
+  { key: 'potential.amount_10b', value: 10000000000 },
+  { key: 'potential.amount_50b', value: 50000000000 },
+  { key: 'potential.amount_100b', value: 100000000000 },
+  { key: 'potential.amount_500b', value: 500000000000 },
 ];
 
 /** Chuẩn hóa chuỗi tiếng Việt không dấu để so khớp dự án đã theo dõi */
@@ -74,6 +74,8 @@ function fmtDate(iso) {
 
 /** Chip lĩnh vực — bấm để bật/tắt bộ lọc. */
 function SectorChip({ sector, active, onToggle }) {
+  const { tCategory, tSector } = useLang();
+  const label = tCategory(sector.name) || tSector(sector.slug) || sector.name;
   return (
     <button
       type="button"
@@ -81,7 +83,7 @@ function SectorChip({ sector, active, onToggle }) {
       aria-pressed={active}
       className={`potential-sector-chip ${active ? 'active' : ''}`}
     >
-      <span>{sector.name}</span>
+      <span>{label}</span>
       <span className="potential-sector-count">
         {sector.total}
       </span>
@@ -146,7 +148,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         fg: '#059669',
         border: 'rgba(5, 150, 105, 0.3)',
         icon: FileCheck,
-        label: `📁 Tài liệu: ${item.is_owner ? 'Bạn' : (item.authorName || 'Người dùng')}`,
+        label: item.is_owner ? t('potential.badgeDocOwner') : t('potential.badgeDocAuthor', { name: item.authorName || 'User' }),
       };
     }
     if (item.is_user_post || item.kind === 'user_article') {
@@ -155,7 +157,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         fg: '#2563eb',
         border: 'rgba(37, 99, 235, 0.28)',
         icon: Newspaper,
-        label: `📰 Báo chí: ${item.authorName || 'Tác giả'}`,
+        label: t('potential.badgePressAuthor', { name: item.authorName || 'Author' }),
       };
     }
     if (item.kind === 'procurement') {
@@ -182,7 +184,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         fg: '#d97706',
         border: 'rgba(245, 158, 11, 0.28)',
         icon: Building2,
-        label: 'Dự án ADB',
+        label: t('potential.kindAdb'),
       };
     }
     if (item.kind === 'oda') {
@@ -191,7 +193,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         fg: '#059669',
         border: 'rgba(16, 185, 129, 0.28)',
         icon: Globe,
-        label: 'Dự án ODA',
+        label: t('potential.kindOda'),
       };
     }
     return {
@@ -232,7 +234,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
               fontWeight: 800,
             }}
           >
-            {item.privacy === 'private' ? '🔒 Chỉ mình tôi' : item.privacy === 'organization' ? '🏢 Tổ chức' : '🌐 Công khai'}
+            {item.privacy === 'private' ? t('potential.privacyOnlyMe') : item.privacy === 'organization' ? t('potential.privacyOrg') : t('potential.privacyPublic')}
           </span>
         )}
 
@@ -398,7 +400,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             onMouseEnter={() => setIsHoveredTrack(true)}
             onMouseLeave={() => setIsHoveredTrack(false)}
             disabled={tracking}
-            title="Bấm để hủy theo dõi dự án này"
+            title={t('potential.untrackHint')}
             className={`potential-action-btn tracked ${isHoveredTrack ? 'danger-hover' : ''}`}
           >
             {tracking ? (
@@ -408,7 +410,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             ) : (
               <BookmarkCheck size={14} />
             )}
-            <span>{isHoveredTrack ? 'Hủy theo dõi' : t('potential.tracked')}</span>
+            <span>{isHoveredTrack ? t('potential.untrackHover') : t('potential.tracked')}</span>
           </button>
         ) : (
           <button
@@ -464,7 +466,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             }}
           >
             <FileCheck size={13} style={{ flex: 'none' }} />
-            <span>Đọc bài & tải tài liệu</span>
+            <span>{t('potential.readDoc')}</span>
           </button>
         ) : (item.is_user_post || item.kind === 'user_article') ? (
           <button
@@ -479,7 +481,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
             }}
           >
             <Newspaper size={13} style={{ flex: 'none' }} />
-            <span>Đọc bài báo chí</span>
+            <span>{t('potential.readPress')}</span>
           </button>
         ) : openInApp ? (
           <button
@@ -514,7 +516,7 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
 
 /** Modal chọn lĩnh vực theo dõi — Dùng React Portal để căn chính giữa 100% màn hình */
 function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) {
-  const { t } = useLang();
+  const { t, tCategory, tSector } = useLang();
   const [picked, setPicked] = useState(watched);
 
   useEffect(() => { setPicked(watched); }, [watched, open]);
@@ -573,6 +575,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
         <div className="potential-modal-sectors-list custom-modal-scroll">
           {sectors.map((s) => {
             const on = picked.includes(s.slug);
+            const sName = tCategory(s.name) || tSector(s.slug) || s.name;
             return (
               <label
                 key={s.slug}
@@ -583,7 +586,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
                   style={{ width: 18, height: 18, accentColor: 'var(--brand-500)', cursor: 'pointer' }}
                 />
                 <span className="potential-modal-sector-name">
-                  {s.name}
+                  {sName}
                 </span>
                 <span className="potential-modal-sector-count">
                   {t('potential.sectorCount', { count: s.total })}
@@ -657,9 +660,11 @@ function PotentialDropdown({
   value,
   onChange,
   options = [],
-  allLabel = 'Tất cả',
+  allLabel,
   accentColor = 'var(--brand-500)',
 }) {
+  const { t } = useLang();
+  const defaultAllLabel = allLabel || t('common.all') || 'Tất cả';
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const ref = useRef(null);
@@ -683,7 +688,7 @@ function PotentialDropdown({
   }, [options, search]);
 
   const handleSelect = (val) => {
-    onChange(val === allLabel ? '' : val);
+    onChange(val === defaultAllLabel ? '' : val);
     setOpen(false);
     setSearch('');
   };
@@ -711,7 +716,7 @@ function PotentialDropdown({
             role="button"
             className="potential-dropdown-clear"
             onClick={handleClear}
-            title="Xóa lựa chọn"
+            title={t('potential.dropdownClear')}
           >
             <X size={14} />
           </span>
@@ -729,7 +734,7 @@ function PotentialDropdown({
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Gõ tìm nhanh trong danh sách..."
+              placeholder={t('potential.dropdownSearchPlaceholder')}
               className="potential-dropdown-search-input"
             />
             {search && (
@@ -749,7 +754,7 @@ function PotentialDropdown({
               className={`potential-dropdown-item ${!value ? 'selected' : ''}`}
               onClick={() => handleSelect('')}
             >
-              <span>{allLabel}</span>
+              <span>{defaultAllLabel}</span>
               {!value && <Check size={14} className="potential-dropdown-check" />}
             </button>
 
@@ -774,7 +779,7 @@ function PotentialDropdown({
                 className="potential-dropdown-item custom-search-item"
                 onClick={() => handleSelect(search.trim())}
               >
-                <span>🔍 Chọn tìm theo "{search.trim()}"</span>
+                <span>{t('potential.dropdownSelectCustom', { query: search.trim() })}</span>
               </button>
             )}
           </div>
@@ -824,35 +829,40 @@ function thongTinDuAn(p) {
 const DOC_SCOPE_OPTIONS = [
   {
     id: 'all',
-    label: 'Tất cả tài liệu được xem',
+    labelKey: 'potential.docScopeAll',
+    defaultLabel: 'Tất cả tài liệu được xem',
     icon: Globe,
     color: '#6366f1',
     bg: 'rgba(99, 102, 241, 0.1)',
   },
   {
     id: 'mine',
-    label: 'Tài liệu của tôi',
+    labelKey: 'potential.docScopeMine',
+    defaultLabel: 'Tài liệu của tôi',
     icon: User,
     color: '#0284c7',
     bg: 'rgba(2, 132, 199, 0.1)',
   },
   {
     id: 'private',
-    label: 'Chỉ mình tôi (Riêng tư)',
+    labelKey: 'potential.docScopePrivate',
+    defaultLabel: 'Chỉ mình tôi (Riêng tư)',
     icon: Lock,
     color: '#8b5cf6',
     bg: 'rgba(139, 92, 246, 0.1)',
   },
   {
     id: 'organization',
-    label: 'Nội bộ tổ chức',
+    labelKey: 'potential.docScopeOrg',
+    defaultLabel: 'Nội bộ tổ chức',
     icon: Building2,
     color: '#2563eb',
     bg: 'rgba(37, 99, 235, 0.1)',
   },
   {
     id: 'public',
-    label: 'Công khai trên hệ thống',
+    labelKey: 'potential.docScopePublic',
+    defaultLabel: 'Công khai trên hệ thống',
     icon: Globe2,
     color: '#10b981',
     bg: 'rgba(16, 185, 129, 0.1)',
@@ -872,6 +882,7 @@ const DOC_SCOPE_PARAMS = {
 const DOCS_IN_ALL_TAB = 4;
 
 function DocScopeDropdown({ value = 'all', onChange }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -890,6 +901,7 @@ function DocScopeDropdown({ value = 'all', onChange }) {
   const current = DOC_SCOPE_OPTIONS.find((opt) => opt.id === value) || DOC_SCOPE_OPTIONS[0];
   const CurrentIcon = current.icon;
   const isFiltered = value !== 'all';
+  const currentLabel = t(current.labelKey) || current.defaultLabel;
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
@@ -929,7 +941,7 @@ function DocScopeDropdown({ value = 'all', onChange }) {
           <CurrentIcon size={12} />
         </span>
         <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {current.label}
+          {currentLabel}
         </span>
         <ChevronDown
           size={13}
@@ -967,11 +979,12 @@ function DocScopeDropdown({ value = 'all', onChange }) {
               color: 'var(--text-muted)',
             }}
           >
-            Phạm vi tài liệu
+            {t('potential.docScopeTitle')}
           </div>
           {DOC_SCOPE_OPTIONS.map((opt) => {
             const isSelected = opt.id === value;
             const OptIcon = opt.icon;
+            const optLabel = t(opt.labelKey) || opt.defaultLabel;
             return (
               <button
                 key={opt.id}
@@ -1017,7 +1030,7 @@ function DocScopeDropdown({ value = 'all', onChange }) {
                 >
                   <OptIcon size={13} />
                 </span>
-                <span style={{ flex: 1 }}>{opt.label}</span>
+                <span style={{ flex: 1 }}>{optLabel}</span>
                 {isSelected && <Check size={14} style={{ color: opt.color, strokeWidth: 2.5 }} />}
               </button>
             );
@@ -1993,7 +2006,7 @@ export default function PotentialProjectsPage() {
             }}
           >
             <FileCheck size={17} />
-            <span>📁 Tài liệu & Biên bản (.DOCX, .PDF)</span>
+            <span>{t('potential.docBtn')}</span>
           </button>
 
           <button
@@ -2002,7 +2015,7 @@ export default function PotentialProjectsPage() {
             className="potential-banner-btn-secondary"
           >
             <BookmarkCheck size={16} />
-            <span>Dự án theo dõi ({userProjects.length})</span>
+            <span>{t('potential.trackedBtn', { count: userProjects.length })}</span>
             <ArrowRight size={14} style={{ opacity: 0.8 }} />
           </button>
 
@@ -2098,7 +2111,7 @@ export default function PotentialProjectsPage() {
             value={filterLocation}
             onChange={(val) => { setFilterLocation(val); setPage(1); }}
             options={availableProvinces}
-            allLabel="Tất cả vị trí"
+            allLabel={t('potential.filterLocationAll')}
             accentColor="#10b981"
           />
 
@@ -2109,7 +2122,7 @@ export default function PotentialProjectsPage() {
             value={filterInvestor}
             onChange={(val) => { setFilterInvestor(val); setPage(1); }}
             options={availableInvestors}
-            allLabel="Tất cả chủ đầu tư"
+            allLabel={t('potential.filterInvestorAll')}
             accentColor="#f59e0b"
           />
         </div>
@@ -2119,15 +2132,15 @@ export default function PotentialProjectsPage() {
           {/* Nút lọc nguồn */}
           <div className="potential-kind-group">
             <span className="potential-subrow-label">
-              Nguồn dữ liệu:
+              {t('potential.dataSource')}
             </span>
             <div className="potential-kind-pills">
               {[
                 { id: '', label: t('potential.kindAll'), icon: SlidersHorizontal, allowed: true },
-                { id: 'project_document', label: 'Tài liệu & Biên bản', icon: FileCheck, allowed: true },
+                { id: 'project_document', label: t('potential.kindDoc'), icon: FileCheck, allowed: true },
                 { id: 'procurement', label: t('potential.kindProcurement'), icon: ShoppingBag, allowed: canProc, pkgName: 'Đấu Thầu Công' },
-                { id: 'adb', label: 'Dự án ADB', icon: Building2, allowed: canAdb, pkgName: 'Dự Án ADB' },
-                { id: 'worldbank', label: 'World Bank', icon: Globe, allowed: canWb, pkgName: 'World Bank' },
+                { id: 'adb', label: t('potential.kindAdb'), icon: Building2, allowed: canAdb, pkgName: 'Dự Án ADB' },
+                { id: 'worldbank', label: t('potential.kindWb'), icon: Globe, allowed: canWb, pkgName: 'World Bank' },
                 { id: 'article', label: t('potential.kindArticle'), icon: Newspaper, allowed: true },
               ].map((k) => {
                 const active = kind === k.id;
@@ -2209,7 +2222,7 @@ export default function PotentialProjectsPage() {
                     onClick={() => { setMinAmount(String(p.value)); setPage(1); }}
                     className={`potential-preset-chip ${String(minAmount) === String(p.value) ? 'active' : ''}`}
                   >
-                    {p.label}
+                    {t(p.key)}
                   </button>
                 ))}
               </div>
@@ -2225,7 +2238,7 @@ export default function PotentialProjectsPage() {
                   onClick={() => { setMinAmount(''); setPage(1); }}
                   className="potential-amount-clear"
                 >
-                  Xóa
+                  {t('potential.clearFilterBtn')}
                 </button>
               )}
             </div>
@@ -2238,7 +2251,7 @@ export default function PotentialProjectsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--brand-600)', fontSize: 13.5, fontWeight: 700 }}>
             <Loader2 size={16} className="spin" style={{ color: 'var(--brand-500)' }} />
-            <span>Đang lọc và cập nhật danh sách dự án tiềm năng...</span>
+            <span>{t('potential.loadingList')}</span>
           </div>
           <div style={{
             display: 'grid', gap: 18,
@@ -2262,7 +2275,7 @@ export default function PotentialProjectsPage() {
               cursor: 'pointer',
             }}
           >
-            Thử lại
+            {t('common.retry') || 'Thử lại'}
           </button>
         </div>
       ) : displayItems.length === 0 ? (
@@ -2270,12 +2283,12 @@ export default function PotentialProjectsPage() {
           <div className="empty-icon">{laTabTaiLieu ? '📁' : relatedOnly ? '🔍' : '🎯'}</div>
           <div className="empty-title">
             {laTabTaiLieu
-              ? 'Chưa có tài liệu nào bạn được xem khớp bộ lọc'
+              ? t('potential.emptyDoc')
               : relatedOnly ? (t('potential.emptyRelated') || 'Không tìm thấy tin liên quan đến các dự án bạn đang theo dõi') : t('potential.empty')}
           </div>
           <div className="empty-sub">
             {laTabTaiLieu
-              ? 'Bấm "Tài liệu & Biên bản (.DOCX, .PDF)" ở đầu trang để đăng tài liệu, biên bản dự án.'
+              ? t('potential.emptyDocSub')
               : relatedOnly ? (t('potential.emptyRelatedSub') || 'Hệ thống đối chiếu theo Tên, Chủ đầu tư, Lĩnh vực và Địa phương của các dự án bạn đã khai báo.') : t('potential.emptySub')}
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -2290,7 +2303,7 @@ export default function PotentialProjectsPage() {
                   boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
                 }}
               >
-                <span>Xem tất cả tin tiềm năng</span>
+                <span>{t('potential.viewAllPotential')}</span>
               </button>
             )}
             {activeFiltersCount > 0 && (
@@ -2322,7 +2335,7 @@ export default function PotentialProjectsPage() {
               backdropFilter: 'blur(10px)', animation: 'fadeIn .15s ease-out',
             }}>
               <Loader2 size={16} className="spin" style={{ color: 'var(--brand-500)' }} />
-              <span>Đang lọc dữ liệu...</span>
+              <span>{t('potential.filteringData')}</span>
             </div>
           )}
 
@@ -2336,15 +2349,14 @@ export default function PotentialProjectsPage() {
               </span>
               {(filterName || filterLocation || filterInvestor) && (
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  (Khớp {listTotal} kết quả)
+                  {t('potential.matchCount', { count: listTotal })}
                 </span>
               )}
               {/* Tài liệu không có lĩnh vực / chủ đầu tư / giá trị: nói rõ thay vì để chip vẫn
                   sáng mà danh sách không đổi. */}
               {laTabTaiLieu && (filterSectors.length > 0 || filterInvestor.trim() || minAmount || relatedOnly) && (
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Tài liệu chỉ lọc theo tên, vị trí, từ khóa và quyền riêng tư — bộ lọc lĩnh vực, chủ đầu tư,
-                  giá trị và liên quan dự án không áp dụng.
+                  {t('potential.docFilterNote')}
                 </span>
               )}
             </div>
@@ -2396,7 +2408,7 @@ export default function PotentialProjectsPage() {
                   window.scrollTo({ top: 350, behavior: 'smooth' });
                 }}
                 className="potential-page-arrow-btn"
-                title="Trang trước"
+                title={t('potential.prevPage')}
               >
                 ←
               </button>
@@ -2432,7 +2444,7 @@ export default function PotentialProjectsPage() {
                   window.scrollTo({ top: 350, behavior: 'smooth' });
                 }}
                 className="potential-page-arrow-btn"
-                title="Trang sau"
+                title={t('potential.nextPage')}
               >
                 →
               </button>

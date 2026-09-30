@@ -414,7 +414,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
                 fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
               }}
             >
-              Hủy
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -424,7 +424,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
                 fontWeight: 800, fontSize: 12.5, cursor: 'pointer',
               }}
             >
-              Lưu thay đổi
+              {t('projects.saveChanges')}
             </button>
           </div>
         </form>
@@ -436,7 +436,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
 
 /** Tab 1 — Excel: 2 bước (Bước 1: Tải file -> Bước 2: Kiểm tra, chỉnh sửa và xác nhận nhập). */
 function ExcelTab({ onDone, onStepChange }) {
-  const { t } = useLang();
+  const { t, tCategory, tSector } = useLang();
   const [tpl, setTpl] = useState(null);
   const [sectors, setSectors] = useState([]);
   const [file, setFile] = useState(null);
@@ -629,7 +629,7 @@ function ExcelTab({ onDone, onStepChange }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>
-                Quy cách các cột dữ liệu theo dõi:
+                {t('projects.colSpecTitle')}
               </span>
               <button
                 type="button"
@@ -644,10 +644,10 @@ function ExcelTab({ onDone, onStepChange }) {
                   fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
-                title="Tải file mẫu Excel (.xlsx) có sẵn dữ liệu mẫu thực tế"
+                title={t('projects.downloadSampleTitle')}
               >
                 {downloadingTpl ? <Loader2 size={13} style={{ animation: 'spin 0.7s linear infinite' }} /> : <FileSpreadsheet size={14} />}
-                Tải file Excel mẫu (.xlsx)
+                {t('projects.downloadSampleFileBtn')}
               </button>
             </div>
 
@@ -656,7 +656,7 @@ function ExcelTab({ onDone, onStepChange }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 360 }}>
                   <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                     <tr>
-                      {['Cột', t('projects.nameLabel'), t('projects.note')].map((h, i) => (
+                      {[t('projects.colHeaderCol'), t('projects.nameLabel'), t('projects.note')].map((h, i) => (
                         <th key={i} style={{
                           textAlign: 'left', padding: '8px 10px', fontSize: 11,
                           letterSpacing: '.05em', textTransform: 'uppercase',
@@ -673,7 +673,9 @@ function ExcelTab({ onDone, onStepChange }) {
                           {c.column}
                         </td>
                         <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)' }}>
-                          <strong style={{ color: 'var(--text-primary)' }}>{c.header}</strong>
+                          <strong style={{ color: 'var(--text-primary)' }}>
+                            {t(`projects.col_${c.column.toLowerCase()}_header`, { defaultValue: c.header })}
+                          </strong>
                           {c.required && (
                             <span style={{
                               marginLeft: 6, fontSize: 9.5, fontWeight: 800, padding: '1px 5px',
@@ -684,7 +686,7 @@ function ExcelTab({ onDone, onStepChange }) {
                           )}
                         </td>
                         <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: 11.5 }}>
-                          {c.description}
+                          {t(`projects.col_${c.column.toLowerCase()}_desc`, { defaultValue: c.description })}
                         </td>
                       </tr>
                     ))}
@@ -721,10 +723,10 @@ function ExcelTab({ onDone, onStepChange }) {
               }}
             >
               {busy ? <Loader2 size={16} className="spin" /> : <Eye size={16} />}
-              Kiểm tra & Xem trước dữ liệu
+              {t('projects.previewBtn')}
             </button>
             <div style={{ fontSize: 11.5, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
-              Hệ thống sẽ quét đối chiếu và hiển thị danh sách để bạn kiểm tra, chỉnh sửa từng trường trước khi lưu.
+              {t('projects.previewHint')}
             </div>
           </div>
         </div>
@@ -748,29 +750,29 @@ function ExcelTab({ onDone, onStepChange }) {
               fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
             }}
           >
-            <ArrowLeft size={14} /> Chọn file khác
+            <ArrowLeft size={14} /> {t('projects.chooseOtherFile')}
           </button>
           <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            File: <strong style={{ color: 'var(--text-primary)' }}>{file?.name}</strong>
+            {t('projects.fileLabel')} <strong style={{ color: 'var(--text-primary)' }}>{file?.name}</strong>
           </span>
         </div>
 
         {/* Thống kê nhanh */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 6, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)' }}>
-            Tổng: {countTotal}
+            {t('projects.countTotal', { count: countTotal })}
           </span>
           <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 6, background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' }}>
-            Hợp lệ: {countValid}
+            {t('projects.countValid', { count: countValid })}
           </span>
           {countDup > 0 && (
             <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 6, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
-              Trùng: {countDup}
+              {t('projects.countDup', { count: countDup })}
             </span>
           )}
           {countErr > 0 && (
             <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 6, background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-              Lỗi: {countErr}
+              {t('projects.countErr', { count: countErr })}
             </span>
           )}
         </div>
@@ -803,20 +805,19 @@ function ExcelTab({ onDone, onStepChange }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: mau.chu, fontWeight: 800, fontSize: 14 }}>
               {coTaoMoi ? <Check size={18} /> : <AlertTriangle size={18} />}
               {coTaoMoi
-                ? 'Đã nhập thành công vào danh sách theo dõi!'
-                : 'Không có dự án nào được thêm vào danh sách theo dõi.'}
+                ? t('projects.importSuccessMsg')
+                : t('projects.importNoneAdded')}
             </div>
             <div style={{ display: 'flex', gap: 16, fontSize: 13, color: mau.so, flexWrap: 'wrap' }}>
-              <span>Đã tạo mới: <strong>{importResult.row_created}</strong></span>
-              <span>Đã bỏ qua (trùng): <strong>{importResult.row_skipped}</strong></span>
+              <span>{t('projects.createdCount', { count: importResult.row_created })}</span>
+              <span>{t('projects.skippedCount', { count: importResult.row_skipped })}</span>
               {importResult.row_failed > 0 && (
-                <span style={{ color: '#b91c1c' }}>Lỗi: <strong>{importResult.row_failed}</strong></span>
+                <span style={{ color: '#b91c1c' }}>{t('projects.failedCount', { count: importResult.row_failed })}</span>
               )}
             </div>
             {!coTaoMoi && (
               <div style={{ fontSize: 12.5, color: mau.so, lineHeight: 1.5 }}>
-                Mọi dòng đã chọn đều trùng với dự án đang theo dõi hoặc còn lỗi. Hãy sửa
-                các dòng được đánh dấu rồi nhập lại.
+                {t('projects.importWarningSub')}
               </div>
             )}
           </div>
@@ -832,10 +833,10 @@ function ExcelTab({ onDone, onStepChange }) {
         {/* Bộ lọc tab */}
         <div style={{ display: 'flex', gap: 4 }}>
           {[
-            { id: 'all', label: `Tất cả (${countTotal})` },
-            { id: 'valid', label: `Hợp lệ (${countValid})` },
-            { id: 'duplicate', label: `Trùng lặp (${countDup})` },
-            { id: 'error', label: `Lỗi (${countErr})` },
+            { id: 'all', label: t('projects.tabAllCount', { count: countTotal }) },
+            { id: 'valid', label: t('projects.tabValidCount', { count: countValid }) },
+            { id: 'duplicate', label: t('projects.tabDupCount', { count: countDup }) },
+            { id: 'error', label: t('projects.tabErrCount', { count: countErr }) },
           ].map((tabItem) => (
             <button
               key={tabItem.id}
@@ -860,7 +861,7 @@ function ExcelTab({ onDone, onStepChange }) {
             <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Tìm dự án, chủ đầu tư..."
+              placeholder={t('projects.searchRowsPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -882,11 +883,11 @@ function ExcelTab({ onDone, onStepChange }) {
             }}
           >
             <CheckSquare size={13} style={{ color: 'var(--brand-600)' }} />
-            Chọn / Bỏ chọn lọc
+            {t('projects.toggleSelectFiltered')}
           </button>
 
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-700)' }}>
-            Đã chọn: {selectedIndices.size}/{countTotal}
+            {t('projects.selectedCount', { selected: selectedIndices.size, total: countTotal })}
           </span>
         </div>
       </div>
@@ -911,34 +912,34 @@ function ExcelTab({ onDone, onStepChange }) {
                 />
               </th>
               <th style={{ width: 44, padding: '8px 8px', borderBottom: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-muted)' }}>
-                Dòng
+                {t('projects.thRow')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 180, color: 'var(--text-primary)' }}>
-                Tên dự án
+                {t('projects.thName')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 140, color: 'var(--text-muted)' }}>
-                Chủ đầu tư
+                {t('projects.thInvestor')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 130, color: 'var(--text-muted)' }}>
-                {t('projects.colInvestorUrl') || 'Website CĐT'}
+                {t('projects.thWebsite')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 90, color: 'var(--text-muted)' }}>
-                Lĩnh vực
+                {t('projects.thSector')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 90, color: 'var(--text-muted)' }}>
-                Địa phương
+                {t('projects.thProvince')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 110, color: 'var(--text-muted)' }}>
-                Từ khóa
+                {t('projects.thKeywords')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', minWidth: 120, color: 'var(--text-muted)' }}>
-                Thông tin khác
+                {t('projects.thOtherInfo')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'left', width: 85, color: 'var(--text-muted)' }}>
-                Trạng thái
+                {t('projects.thStatus')}
               </th>
               <th style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', textAlign: 'center', width: 70, color: 'var(--text-muted)' }}>
-                Thao tác
+                {t('projects.thActions')}
               </th>
             </tr>
           </thead>
@@ -946,7 +947,7 @@ function ExcelTab({ onDone, onStepChange }) {
             {filteredRows.length === 0 ? (
               <tr>
                 <td colSpan={11} style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-                  Không có dòng dữ liệu nào phù hợp với bộ lọc hiện tại.
+                  {t('projects.noMatchingRows')}
                 </td>
               </tr>
             ) : (
@@ -997,7 +998,7 @@ function ExcelTab({ onDone, onStepChange }) {
                               fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 4,
                               background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a',
                             }}>
-                              Đã có trong hệ thống
+                              {t('projects.alreadyInSystem')}
                             </span>
                           )}
                           {hasErr && (
@@ -1043,7 +1044,7 @@ function ExcelTab({ onDone, onStepChange }) {
                           background: 'var(--bg-surface-2)', color: 'var(--text-secondary)',
                           border: '1px solid var(--border)',
                         }}>
-                          {r.sector_name || r.sector}
+                          {tCategory(r.sector_name) || tSector(r.sector) || r.sector_name || r.sector}
                         </span>
                       ) : (
                         <span style={{ color: 'var(--text-muted)' }}>—</span>
@@ -1056,7 +1057,7 @@ function ExcelTab({ onDone, onStepChange }) {
                       {r.keyword_filter ? (
                         <span>{r.keyword_filter}</span>
                       ) : (
-                        <em style={{ color: 'var(--text-muted)' }}>Tự động rút</em>
+                        <em style={{ color: 'var(--text-muted)' }}>{t('projects.autoExtract')}</em>
                       )}
                     </td>
                     <td style={{ padding: '8px 10px', fontSize: 11 }}>
@@ -1099,7 +1100,7 @@ function ExcelTab({ onDone, onStepChange }) {
                         <button
                           type="button"
                           onClick={() => setEditingRow(r)}
-                          title="Sửa thông tin dòng"
+                          title={t('projects.editRowTooltip')}
                           style={{
                             border: 'none', background: 'transparent', cursor: 'pointer',
                             padding: 4, borderRadius: 6, color: 'var(--brand-600)',
@@ -1110,7 +1111,7 @@ function ExcelTab({ onDone, onStepChange }) {
                         <button
                           type="button"
                           onClick={() => handleRowDelete(r._uid)}
-                          title="Xóa dòng khỏi danh sách xem trước"
+                          title={t('projects.deleteRowTooltip')}
                           style={{
                             border: 'none', background: 'transparent', cursor: 'pointer',
                             padding: 4, borderRadius: 6, color: '#ef4444',
@@ -1141,7 +1142,7 @@ function ExcelTab({ onDone, onStepChange }) {
             fontSize: 13, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          <ArrowLeft size={16} /> Quay lại
+          <ArrowLeft size={16} /> {t('projects.backBtn')}
         </button>
 
         <button
@@ -1159,7 +1160,7 @@ function ExcelTab({ onDone, onStepChange }) {
           }}
         >
           {busy ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
-          Xác nhận nhập {selectedIndices.size} dự án đã chọn
+          {t('projects.confirmImportBtn', { count: selectedIndices.size })}
         </button>
       </div>
 

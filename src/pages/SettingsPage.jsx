@@ -192,14 +192,14 @@ export default function SettingsPage() {
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 900, color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
-              {user?.name || user?.email}
+              {(user?.name === 'Quản trị Tối cao' || user?.name === 'Super Admin') ? t('role.superAdmin') : (user?.name || user?.email)}
               {isAdmin ? (
                 <span style={{
                   fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
                   background: 'linear-gradient(135deg, #f59e0b, #ec4899)', color: 'white',
                   letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(245,158,11,0.3)',
                 }}>
-                  👑 ADMIN
+                  👑 {t('role.superAdminShort')}
                 </span>
               ) : (
                 <span style={{
@@ -207,14 +207,14 @@ export default function SettingsPage() {
                   background: 'rgba(255,255,255,0.15)', color: '#93c5fd',
                   letterSpacing: '0.5px',
                 }}>
-                  👤 USER
+                  👤 {t('role.userShort')}
                 </span>
               )}
             </div>
             <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
               <span>✉️ {user?.email}</span>
               <span>•</span>
-              <span>📍 {userRegion}</span>
+              <span>📍 {userRegion === 'Toàn quốc' ? t('common.nationwide') : userRegion}</span>
               <span>•</span>
               <span style={{ color: '#4ade80', fontWeight: 600 }}>{tUI('ui.da-xac-thuc-jwt')}</span>
             </div>
@@ -490,14 +490,14 @@ export default function SettingsPage() {
                         {Array.from({ length: 24 }, (_, i) => {
                           const time = `${String(i).padStart(2, '0')}:00`;
                           let hint = '';
-                          if (i === 8) hint = ' ⭐ (Khuyên dùng - Đầu ngày)';
-                          else if (i === 6) hint = ' (Sáng sớm)';
-                          else if (i === 7) hint = ' (Đầu giờ sáng)';
-                          else if (i === 9) hint = ' (Giờ hành chính)';
-                          else if (i === 12) hint = ' (Nghỉ trưa)';
-                          else if (i === 17) hint = ' (Tan tầm)';
-                          else if (i === 18) hint = ' (Cuối ngày)';
-                          else if (i === 20) hint = ' (Buổi tối)';
+                          if (i === 8) hint = t('settings.hourMorningPrime');
+                          else if (i === 6) hint = t('settings.hourEarly');
+                          else if (i === 7) hint = t('settings.hourWorkStart');
+                          else if (i === 9) hint = t('settings.hourOffice');
+                          else if (i === 12) hint = t('settings.hourNoon');
+                          else if (i === 17) hint = t('settings.hourAfternoonEnd');
+                          else if (i === 18) hint = t('settings.hourEveningStart');
+                          else if (i === 20) hint = t('settings.hourNight');
                           return (
                             <option key={i} value={i}>
                               {time}{hint}
@@ -676,10 +676,10 @@ export default function SettingsPage() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 13, color: '#166534' }}>
                     <Sparkles size={16} style={{ color: '#10b981' }} />
-                    <span>Đã gửi email thử nghiệm thành công!</span>
+                    <span>{t('settings.testDigestSuccessTitle')}</span>
                   </div>
                   <div style={{ fontSize: 12, color: '#15803d' }}>
-                    Bản tin ({runResult.total_items || 0} mục) đã được gửi về <strong>{user?.email}</strong>. Vui lòng kiểm tra Hộp thư đến hoặc mục Spam/Quảng cáo.
+                    {t('settings.testDigestSuccessDesc', { count: runResult.total_items || 0, email: user?.email })}
                   </div>
                 </div>
               )}

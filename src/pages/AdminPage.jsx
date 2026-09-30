@@ -353,7 +353,7 @@ export default function AdminPage() {
     const myMaxUsers = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10);
     const currentRegionalUsers = users.filter(u => u.role !== 'super_admin' && (isSuperAdmin || u.region === userRegion));
     if (isRegionalAdmin && currentRegionalUsers.length >= myMaxUsers) {
-      showAlert('error', `⚠️ Bạn đã đạt giới hạn tối đa ${myMaxUsers} tài khoản thành viên của Gói Enterprise Phân Vùng. Vui lòng liên hệ Super Admin để nâng cấp mua thêm slot!`);
+      showAlert('error', `⚠️ Bạn đã đạt giới hạn tối đa ${myMaxUsers} tài khoản thành viên của Gói Enterprise Tổ Chức. Vui lòng liên hệ Super Admin để nâng cấp mua thêm slot!`);
       return;
     }
 
@@ -1009,7 +1009,7 @@ export default function AdminPage() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59, 130, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-600, #2563eb)' }}>
                     <Plus size={16} />
                   </div>
-                  {isSuperAdmin ? t('admin.addSource') : `${tUI('ui.de-xuat-nguon-crawl-moi')} (${userRegion || tUI('ui.phan-vung')})`}
+                  {isSuperAdmin ? t('admin.addSource') : `${tUI('ui.de-xuat-nguon-crawl-moi')} (${userRegion || tUI('ui.to-chuc')})`}
                 </div>
 
                 <form onSubmit={handleCreateSource} className="responsive-grid-form" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
@@ -1296,7 +1296,7 @@ export default function AdminPage() {
                       </div>
                       <div>
                         <div style={{ fontWeight: 800, fontSize: 14.5, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span>🏢 Admin Phân Vùng: {userRegion} (Gói Enterprise)</span>
+                          <span>🏢 {t('ui.admin-phan-vung')}: {userRegion === 'Toàn quốc' ? t('common.nationwide') : userRegion} ({t('upgrade.tableEnterprise')})</span>
                           {extraSlotCount > 0 && !isCancelled && (
                             <span style={{ fontSize: 11, fontWeight: 700, background: '#f3e8ff', color: '#9333ea', padding: '2px 8px', borderRadius: 12, border: '1px solid rgba(147,51,234,0.3)' }}>
                               ⚡ Mua thêm +{extraSlotCount} Slot User
@@ -1349,7 +1349,7 @@ export default function AdminPage() {
                             type: 'cancel_extra_slots',
                             title: tUI('ui.huy-gia-han-mua-them-slot-user'),
                             message: `Bạn có chắc chắn muốn hủy tự động gia hạn gói mua thêm slot (+50.000đ/tháng/10 user)? Bạn vẫn tiếp tục được sử dụng đầy đủ ${myMaxUsers} User cho tới hết ngày ${slotExpDate || 'hạn thanh toán hiện tại'}.`,
-                            itemName: `Phân vùng: ${userRegion}`,
+                            itemName: t('admin.orgNameItem', { name: userRegion }),
                             itemSub: `Hạn ngạch hiện tại: ${myMaxUsers} User (Vẫn giữ nguyên sử dụng tới hết ${slotExpDate || 'hạn dùng'})`,
                             confirmText: 'Xác Nhận Hủy Gia Hạn',
                           })}
@@ -1517,7 +1517,7 @@ export default function AdminPage() {
                         }}
                       >
                         {organizations.length > 0 && (
-                          <optgroup label="🏢 Tổ chức / Phân vùng chính thức">
+                          <optgroup label={t('admin.officialOrganizations')}>
                             {organizations.map(o => (
                               <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {o.name}</option>
                             ))}
@@ -1605,10 +1605,10 @@ export default function AdminPage() {
                                 border: `1px solid ${u.role === 'super_admin' ? '#fde68a' : u.role === 'admin' ? '#bfdbfe' : u.role === 'staff' ? '#bbf7d0' : '#e2e8f0'}`,
                                 display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                               }}>
-                                {u.role === 'super_admin' ? '👑 SUPER ADMIN' : u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : u.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
+                                {u.role === 'super_admin' ? ('👑 ' + t('role.superAdminShort')) : u.role === 'admin' ? ('🔰 ' + t('role.regionAdmin')) : u.role === 'staff' ? ('🧑‍💼 ' + t('role.staff')) : ('👤 ' + t('role.user'))}
                               </span>
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                {u.organization_id ? `🏢 ${organizations.find(o => o.id === u.organization_id)?.name || u.region || 'Tổ chức'}` : `📍 ${u.region || 'Toàn quốc'}`}
+                                {u.organization_id ? `🏢 ${organizations.find(o => o.id === u.organization_id)?.name || u.region || tUI('ui.to-chuc')}` : `📍 ${u.region === 'Toàn quốc' || !u.region ? t('common.nationwide') : u.region}`}
                               </span>
                             </div>
                           </td>
@@ -2001,7 +2001,7 @@ export default function AdminPage() {
                     }}
                   >
                     {organizations.length > 0 && (
-                      <optgroup label="🏢 Tổ chức / Phân vùng chính thức">
+                      <optgroup label={t('admin.officialOrganizations')}>
                         {organizations.map(o => (
                           <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {o.name}</option>
                         ))}
@@ -2218,7 +2218,7 @@ export default function AdminPage() {
                     {(editingUser.active_package === 'enterprise' || editingUser.role === 'admin') && (
                       <div style={{ gridColumn: 'span 2', background: 'rgba(147, 51, 234, 0.08)', padding: 12, borderRadius: 12, border: '1px solid rgba(147, 51, 234, 0.25)' }}>
                         <label className="form-label" style={{ fontWeight: 800, color: '#9333ea', marginBottom: 6, display: 'block' }}>
-                          👥 Hạn Ngạch Số Lượng User Tối Đa Của Phân Vùng (Nâng Cấp Thêm Slot User):
+                          {t('admin.orgUserQuota')}
                         </label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <input
@@ -2422,11 +2422,11 @@ export default function AdminPage() {
                 border: `1px solid ${viewingUser.role === 'super_admin' ? '#fde68a' : viewingUser.role === 'admin' ? '#bfdbfe' : viewingUser.role === 'staff' ? '#bbf7d0' : '#e2e8f0'}`,
                 whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
-                {viewingUser.role === 'super_admin' ? '👑 SUPER ADMIN' : viewingUser.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : viewingUser.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
+                {viewingUser.role === 'super_admin' ? ('👑 ' + t('role.superAdminShort')) : viewingUser.role === 'admin' ? ('🔰 ' + t('role.regionAdmin')) : viewingUser.role === 'staff' ? ('🧑‍💼 ' + t('role.staff')) : ('👤 ' + t('role.user'))}
               </span>
 
               <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>
-                {viewingUser.organization_id ? `🏢 ${organizations.find(o => o.id === viewingUser.organization_id)?.name || viewingUser.region || 'Tổ chức'}` : `📍 ${viewingUser.region || 'Toàn quốc'}`}
+                {viewingUser.organization_id ? `🏢 ${organizations.find(o => o.id === viewingUser.organization_id)?.name || viewingUser.region || tUI('ui.to-chuc')}` : `📍 ${viewingUser.region === 'Toàn quốc' || !viewingUser.region ? t('common.nationwide') : viewingUser.region}`}
               </span>
 
               <span style={{
@@ -2436,7 +2436,7 @@ export default function AdminPage() {
                 border: `1px solid ${viewingUser.is_active !== false ? '#a7f3d0' : '#fca5a5'}`,
                 whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
-                {viewingUser.is_active !== false ? '🟢 HOẠT ĐỘNG' : '🔴 ĐÃ KHÓA'}
+                {viewingUser.is_active !== false ? ('🟢 ' + t('common.active')) : ('🔴 ' + t('common.locked'))}
               </span>
             </div>
 

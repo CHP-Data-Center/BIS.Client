@@ -353,7 +353,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                         background: u.role === 'admin' ? '#ede9fe' : u.role === 'staff' ? '#f0fdf4' : '#f1f5f9',
                         color: u.role === 'admin' ? '#6d28d9' : u.role === 'staff' ? '#166534' : '#475569',
                         whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>
-                        {u.role === 'admin' ? '🔰 ADMIN PHÂN VÙNG' : u.role === 'staff' ? '🧑‍💼 NHÂN VIÊN' : '👤 NGƯỜI DÙNG'}
+                        {u.role === 'admin' ? ('🔰 ' + tUI('role.regionAdmin')) : u.role === 'staff' ? ('🧑‍💼 ' + tUI('role.staff')) : ('👤 ' + tUI('role.user'))}
                       </span>
                     </div>
                   );
@@ -370,7 +370,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                 {/* ── 1. Quản trị viên hiện có ── */}
                 <div style={{ marginBottom: 18 }}>
                   <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    <ShieldCheck size={14} style={{ color: '#6d28d9' }} /> Quản trị viên hiện có ({orgUsers.filter(u => u.role === 'admin').length})
+                    <ShieldCheck size={14} style={{ color: '#6d28d9' }} /> {tUI('admin.currentAdmins')} ({orgUsers.filter(u => u.role === 'admin').length})
                   </div>
 
                   {orgUsers.filter(u => u.role === 'admin').length === 0 ? (

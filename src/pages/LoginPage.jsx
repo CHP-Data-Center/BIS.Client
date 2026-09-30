@@ -111,7 +111,7 @@ export default function LoginPage() {
       setShowResetModal(true);
     }
     if (params.get('session_expired') === '1') {
-      setLoginError('Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.');
+      setLoginError(t('auth.sessionExpired'));
     } else {
       setLoginError('');
     }
@@ -146,7 +146,7 @@ export default function LoginPage() {
         setResetNewPw('');
       }, 2500);
     } catch (err) {
-      setResetMsg({ type: 'error', text: err.response?.data?.detail || 'Token đặt lại không hợp lệ hoặc đã hết hạn.' });
+      setResetMsg({ type: 'error', text: err.response?.data?.detail || t('auth.resetTokenInvalid') });
     } finally {
       setResetLoading(false);
     }
@@ -172,15 +172,15 @@ export default function LoginPage() {
     let hasError = false;
 
     if (!trimmedEmail) {
-      setFieldErrors(prev => ({ ...prev, email: 'Vui lòng nhập email công việc' }));
+      setFieldErrors(prev => ({ ...prev, email: t('auth.errorEmailRequired') }));
       hasError = true;
     } else if (!/\S+@\S+\.\S+/.test(trimmedEmail)) {
-      setFieldErrors(prev => ({ ...prev, email: 'Email không đúng định dạng' }));
+      setFieldErrors(prev => ({ ...prev, email: t('auth.errorEmailInvalid') }));
       hasError = true;
     }
 
     if (!password) {
-      setFieldErrors(prev => ({ ...prev, password: 'Vui lòng nhập mật khẩu' }));
+      setFieldErrors(prev => ({ ...prev, password: t('auth.errorPasswordRequired') }));
       hasError = true;
     }
 
@@ -424,7 +424,7 @@ export default function LoginPage() {
                 onClick={() => setShowPw(s => !s)}
                 id="btn-toggle-password"
                 className="btn-toggle-pw"
-                title={showPw ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                title={showPw ? t('auth.hidePassword') : t('auth.showPassword')}
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -492,7 +492,7 @@ export default function LoginPage() {
                 id="btn-demo-superadmin"
                 className="btn-demo-acc"
               >
-                👑 Super Admin: superadmin@ckjvn.vn
+                👑 {t('role.superAdmin')}: superadmin@ckjvn.vn
               </button>
               <button
                 type="button"
@@ -503,7 +503,7 @@ export default function LoginPage() {
                 id="btn-demo-admin"
                 className="btn-demo-acc"
               >
-                ⚡ Admin Doanh Nghiệp: admin@ckjvn.vn
+                ⚡ {t('auth.demoEnterpriseAdmin')}: admin@ckjvn.vn
               </button>
               <button
                 type="button"
@@ -514,7 +514,7 @@ export default function LoginPage() {
                 id="btn-demo-user"
                 className="btn-demo-acc"
               >
-                👤 User Cá Nhân: personal@ckjvn.vn
+                👤 {t('auth.demoPersonalUser')}: personal@ckjvn.vn
               </button>
             </div>
           </div>
@@ -592,7 +592,7 @@ export default function LoginPage() {
                 textAlign: 'center', marginTop: 12,
               }}>
                 <CheckCircle2 size={32} style={{ margin: '0 auto 8px', color: '#16a34a' }} />
-                Yêu cầu đã được ghi nhận. Nếu email tồn tại trong hệ thống, link hướng dẫn sẽ được gửi đến hòm thư của bạn.
+                {t('auth.resetNoticeSuccess')}
               </div>
             ) : (
               <form onSubmit={handleSendForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 12 }}>
@@ -613,7 +613,7 @@ export default function LoginPage() {
                   disabled={forgotLoading}
                   style={{ marginTop: 8 }}
                 >
-                  {forgotLoading ? <><Loader2 size={16} className="spin" /> {tUI('ui.dang-gui')}</> : 'Gửi link khôi phục'}
+                  {forgotLoading ? <><Loader2 size={16} className="spin" /> {tUI('ui.dang-gui')}</> : t('auth.sendResetLinkBtn')}
                 </button>
               </form>
             )}
@@ -728,7 +728,7 @@ export default function LoginPage() {
                 disabled={resetLoading}
                 style={{ marginTop: 8 }}
               >
-                {resetLoading ? <><Loader2 size={16} className="spin" /> {tUI('ui.dang-xu-ly')}</> : 'Cập nhật mật khẩu mới'}
+                {resetLoading ? <><Loader2 size={16} className="spin" /> {tUI('ui.dang-xu-ly')}</> : t('auth.updatePasswordBtn')}
               </button>
             </form>
           </div>

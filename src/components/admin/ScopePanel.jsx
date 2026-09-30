@@ -27,7 +27,7 @@ function TagInput({ label, icon, values, onChange, placeholder }) {
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
         />
         <button type="button" className="btn btn-secondary btn-sm" onClick={add} style={{ gap: 4, flexShrink: 0 }}>
-          <Plus size={14} /> Thêm
+          <Plus size={14} /> {tUI('common.add')}
         </button>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -112,9 +112,9 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       };
       if (orgId) await orgService.setOrgScopeSuper(orgId, payload);
       else await orgService.setMyScope(payload);
-      onMessage?.('success', 'Đã lưu phạm vi dữ liệu phân vùng thành công.');
+      onMessage?.('success', tUI('admin.scopeSaveSuccess'));
     } catch (e) {
-      onMessage?.('error', e.response?.data?.detail || 'Lưu phạm vi thất bại.');
+      onMessage?.('error', e.response?.data?.detail || tUI('admin.scopeSaveError'));
     } finally {
       setSaving(false);
     }
@@ -155,7 +155,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 16, padding: 24 }}>
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0, marginBottom: 20, lineHeight: 1.5 }}>
-        Cấu hình dữ liệu phân vùng cho phép Admin phân vùng chọn **Loại bài** (Báo chí, ADB, World Bank, Đấu thầu), **Loại từ khóa**, **Từ khóa** và **Quốc gia**.
+        {tUI('admin.scopeConfigDesc')}
         <br />
         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.de-trong-mot-muc-khong-gioi-han-theo-muc-do-nguo')}</span>
       </p>
@@ -215,15 +215,15 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
         onChange={v => setScope(s => ({ ...s, categories: v }))} placeholder={tUI('ui.vd-giao-thong-cau-duong-sat-oda-dau-thau')} />
 
       {/* 4. Quốc gia */}
-      <TagInput label="Quốc gia (dự án ODA & Tin tức)" icon={<Globe size={14} />} values={scope.countries}
+      <TagInput label={tUI('admin.scopeCountries')} icon={<Globe size={14} />} values={scope.countries}
         onChange={v => setScope(s => ({ ...s, countries: v }))} placeholder="VD: Vietnam, Thailand, Philippines…" />
 
       {/* 5. Từ khóa chi tiết */}
-      <TagInput label="Từ khóa chi tiết" icon={<Tag size={14} />} values={scope.keywords}
+      <TagInput label={tUI('admin.scopeKeywords')} icon={<Tag size={14} />} values={scope.keywords}
         onChange={v => setScope(s => ({ ...s, keywords: v }))} placeholder={tUI('ui.vd-cao-toc-dau-thau-tin-dung-khoan-vay')} />
 
       <button className="btn btn-primary" onClick={save} disabled={saving} style={{ gap: 8, marginTop: 12, width: '100%', justifyContent: 'center' }}>
-        {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />} Lưu cấu hình phạm vi dữ liệu phân vùng
+        {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />} {tUI('admin.saveScopeBtn')}
       </button>
     </div>
   );

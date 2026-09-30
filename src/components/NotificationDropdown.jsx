@@ -84,7 +84,7 @@ export default function NotificationDropdown() {
                 : lang === 'ja'
                 ? `承認待ちソースが ${pending.length} 件あります`
                 : `${pending.length} sources pending review`,
-              desc: `${pending[0]?.name || 'Nguồn tin'} (${pending[0]?.region || 'Chưa phân vùng'})`,
+              desc: `${pending[0]?.name || (lang === 'ja' ? '情報源' : lang === 'en' ? 'News source' : 'Nguồn tin')} (${pending[0]?.region || (lang === 'ja' ? '未割当' : lang === 'en' ? 'Unassigned' : 'Chưa phân loại')})`,
               time: lang === 'vi' ? 'Cần xử lý' : lang === 'ja' ? '要対応' : 'Action needed',
               link: '/admin',
               isUrgent: true,

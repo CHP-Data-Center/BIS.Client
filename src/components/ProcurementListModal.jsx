@@ -6,6 +6,7 @@ import {
   X, ShoppingBag, Search, ExternalLink, Copy, Check,
   Building2, Calendar, ArrowRight, ShieldCheck, FileText
 } from 'lucide-react';
+import { useLang } from '../context/LanguageContext';
 
 export default function ProcurementListModal({
   open,
@@ -14,6 +15,7 @@ export default function ProcurementListModal({
   investorName,
   tenders = [],
 }) {
+  const { t } = useLang();
   const nav = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -86,7 +88,7 @@ export default function ProcurementListModal({
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Danh sách toàn bộ gói thầu khớp chủ đầu tư"
+        aria-label={t('procurement.modalTitle', { count: tenders.length })}
         style={{
           width: 'min(1000px, 95vw)',
           maxHeight: '88vh',
@@ -140,7 +142,7 @@ export default function ProcurementListModal({
                   lineHeight: 1.3,
                 }}
               >
-                Toàn bộ gói thầu khớp ({tenders.length})
+                {t('procurement.modalTitle', { count: tenders.length })}
               </h2>
               <span
                 style={{
@@ -153,7 +155,7 @@ export default function ProcurementListModal({
                   border: '1px solid #bfdbfe',
                 }}
               >
-                Đấu thầu Quốc gia (e-GP)
+                {t('procurement.egpBadge')}
               </span>
             </div>
             {investorName && (
@@ -168,7 +170,7 @@ export default function ProcurementListModal({
                 }}
               >
                 <Building2 size={13} style={{ flexShrink: 0, color: '#2563eb' }} />
-                <span>Chủ đầu tư / Bên mời thầu: <strong>{investorName}</strong></span>
+                <span>{t('procurement.investorLabel', { name: investorName })}</span>
               </div>
             )}
           </div>
@@ -176,7 +178,7 @@ export default function ProcurementListModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Đóng popup"
+            aria-label={t('common.close')}
             style={{
               width: 38,
               height: 38,
@@ -231,7 +233,7 @@ export default function ProcurementListModal({
             />
             <input
               type="search"
-              placeholder="Tìm theo mã gói thầu, tên gói thầu, đơn vị..."
+              placeholder={t('procurement.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -252,7 +254,7 @@ export default function ProcurementListModal({
           </div>
 
           <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-secondary, #64748b)' }}>
-            Hiển thị <span style={{ color: '#2563eb' }}>{filteredTenders.length}</span> / {tenders.length} gói thầu
+            {t('projects.showing')} <span style={{ color: '#2563eb' }}>{filteredTenders.length}</span> / {tenders.length} {t('projects.thPackage')}
           </div>
         </div>
 
@@ -273,11 +275,8 @@ export default function ProcurementListModal({
             <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted, #94a3b8)' }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>🔍</div>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary, #0f172a)' }}>
-                Không tìm thấy gói thầu nào khớp từ khóa
+                {t('projects.noMatchingTimeline')}
               </div>
-              <p style={{ fontSize: 13, marginTop: 4 }}>
-                Thử nhập mã số TBMT, KHLCNT hoặc rút ngắn từ khóa tìm kiếm.
-              </p>
               {searchTerm && (
                 <button
                   type="button"
@@ -294,7 +293,7 @@ export default function ProcurementListModal({
                     color: '#2563eb',
                   }}
                 >
-                  Xóa bộ lọc
+                  {t('potential.clearFilterBtn')}
                 </button>
               )}
             </div>
@@ -366,7 +365,7 @@ export default function ProcurementListModal({
                         <button
                           type="button"
                           onClick={(e) => handleCopy(e, t.id)}
-                          title="Sao chép mã gói thầu"
+                          title={copiedId === t.id ? t('procurement.copiedCode') : t('procurement.copyCode')}
                           style={{
                             border: 'none',
                             background: 'transparent',
@@ -443,7 +442,7 @@ export default function ProcurementListModal({
                           boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
                         }}
                       >
-                        Chi tiết <ArrowRight size={13} />
+                        {t('common.details')} <ArrowRight size={13} />
                       </button>
                     </div>
                   </div>

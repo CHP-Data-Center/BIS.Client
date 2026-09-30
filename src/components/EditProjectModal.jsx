@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
  *   án của người khác thì endpoint người dùng trả 403.
  */
 export default function EditProjectModal({ project, sectors = [], onClose, onSaved, onSave }) {
-  const { t } = useLang();
+  const { t, tCategory, tSector } = useLang();
   const [name, setName] = useState('');
   const [keywordFilter, setKeywordFilter] = useState('');
   const [investor, setInvestor] = useState('');
@@ -160,7 +160,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
       <div
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-label="Chỉnh sửa dự án theo dõi"
+        aria-label={t('projects.editModalTitle')}
         style={{
           width: 'min(720px, 95vw)',
           maxWidth: 720,
@@ -202,17 +202,17 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: 17.5, fontWeight: 900, color: 'var(--text-primary)' }}>
-                Chỉnh sửa dự án theo dõi
+                {t('projects.editModalTitle')}
               </h3>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                Cập nhật thông tin chủ đầu tư, vị trí, lĩnh vực, hạng mục công việc và các chi tiết liên quan
+                {t('projects.editModalSub')}
               </div>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Đóng"
+            aria-label={t('common.close')}
             style={{
               border: 'none',
               background: 'var(--bg-surface-2)',
@@ -263,7 +263,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           {/* Tên dự án */}
           <div>
             <label className="form-label" style={{ display: 'block', marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Tên dự án <span style={{ color: '#ef4444' }}>*</span>
+              {t('projects.nameLabel')} <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <input
               type="text"
@@ -271,7 +271,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
               className="form-input"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nhập tên dự án..."
+              placeholder={t('projects.nameLabel')}
               style={{
                 width: '100%',
                 padding: '9px 12px',
@@ -288,7 +288,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           {/* Từ khóa theo dõi */}
           <div>
             <label className="form-label" style={{ display: 'block', marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-              Từ khóa theo dõi (phân tách bằng dấu phẩy)
+              {t('projects.keywordsLabel')}
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
@@ -313,29 +313,22 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                 type="button"
                 onClick={suggestKeywords}
                 disabled={suggesting || !name.trim()}
-                title="Rút từ khóa tự động bằng AI"
+                title={t('projects.keywordsHint')}
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  flex: 'none',
-                  padding: '0 12px',
-                  borderRadius: 10,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  border: '1px solid var(--brand-400, #60a5fa)',
-                  background: 'var(--brand-50, #eff6ff)',
+                  display: 'inline-flex', alignItems: 'center', gap: 6, flex: 'none',
+                  padding: '0 12px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                  border: '1px solid var(--brand-400, #60a5fa)', background: 'var(--brand-50, #eff6ff)',
                   color: 'var(--brand-700, #1d4ed8)',
                   cursor: suggesting || !name.trim() ? 'default' : 'pointer',
                   opacity: suggesting || !name.trim() ? 0.55 : 1,
                 }}
               >
                 {suggesting ? <Loader2 size={13} className="spin" /> : <Sparkles size={13} />}
-                Gợi ý từ khóa
+                {t('projects.suggestKeywords')}
               </button>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              Từ khóa dùng để quét các bài báo và tin tức liên quan đến dự án này.
+              {t('projects.keywordsHint')}
             </div>
           </div>
 
@@ -343,7 +336,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-                <Building2 size={13} style={{ color: 'var(--brand-600)' }} /> Tên Chủ đầu tư / Bên mời thầu
+                <Building2 size={13} style={{ color: 'var(--brand-600)' }} /> {t('projects.fieldInvestor').replace(':', '')}
               </label>
               <input
                 type="text"
@@ -369,7 +362,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
 
             <div>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-                <MapPin size={13} style={{ color: 'var(--brand-600)' }} /> Vị trí / Địa phương
+                <MapPin size={13} style={{ color: 'var(--brand-600)' }} /> {t('projects.fieldLocation').replace(':', '')}
               </label>
               <input
                 type="text"
@@ -397,7 +390,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           {/* Website chủ đầu tư — hệ thống crawl trang tin trên đó */}
           <div>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-              <Globe size={13} style={{ color: 'var(--brand-600)' }} /> Website chủ đầu tư
+              <Globe size={13} style={{ color: 'var(--brand-600)' }} /> {t('projects.investorWebsite')}
             </label>
             <input
               type="text"
@@ -426,7 +419,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
             <div>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-                <Layers size={13} style={{ color: 'var(--brand-600)' }} /> Lĩnh vực
+                <Layers size={13} style={{ color: 'var(--brand-600)' }} /> {t('projects.fieldSector').replace(':', '')}
               </label>
               <select
                 className="form-input"
@@ -443,10 +436,10 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                   boxSizing: 'border-box',
                 }}
               >
-                <option value="">— Chọn lĩnh vực —</option>
+                <option value="">{t('projects.selectSectorPlaceholder')}</option>
                 {sectors.map((s) => (
                   <option key={s.slug} value={s.slug}>
-                    {s.name}
+                    {tCategory(s.name) || tSector(s.slug) || s.name}
                   </option>
                 ))}
               </select>
@@ -454,7 +447,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
 
             <div>
               <label className="form-label" style={{ display: 'block', marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-                Trạng thái theo dõi
+                {t('projects.fieldStatus').replace(':', '')}
               </label>
               <select
                 className="form-input"
@@ -483,7 +476,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           {/* 4. Hạng mục công việc */}
           <div>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-              <Briefcase size={13} style={{ color: 'var(--brand-600)' }} /> Hạng mục công việc / Gói thầu quan tâm
+              <Briefcase size={13} style={{ color: 'var(--brand-600)' }} /> {t('projects.fieldWorkItems').replace(':', '')}
             </label>
             <textarea
               className="form-input"
@@ -515,13 +508,13 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
             display: 'flex', flexDirection: 'column', gap: 12
           }}>
             <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <DollarSign size={14} style={{ color: 'var(--brand-600)' }} /> Các thông tin liên quan khác của dự án
+              <DollarSign size={14} style={{ color: 'var(--brand-600)' }} /> {t('projects.thOtherInfo')}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
               <div>
                 <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4, color: 'var(--text-secondary)' }}>
-                  Tổng mức đầu tư / Quy mô vốn
+                  {t('projects.fieldTotalInvestment').replace(':', '')}
                 </label>
                 <input
                   type="text"
@@ -543,7 +536,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
 
               <div>
                 <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4, color: 'var(--text-secondary)' }}>
-                  Nguồn vốn
+                  {t('projects.fieldCapitalSource').replace(':', '')}
                 </label>
                 <input
                   type="text"
@@ -565,7 +558,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
 
               <div>
                 <label style={{ display: 'block', fontSize: 11.5, fontWeight: 700, marginBottom: 4, color: 'var(--text-secondary)' }}>
-                  Tiến độ / Giai đoạn dự án
+                  {t('projects.fieldProgress').replace(':', '')}
                 </label>
                 <input
                   type="text"
@@ -634,7 +627,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
           {/* Ghi chú & thông tin khác */}
           <div>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5, fontSize: 12.5, fontWeight: 700, color: 'var(--text-primary)' }}>
-              <FileText size={13} style={{ color: 'var(--brand-600)' }} /> Ghi chú nội bộ & thông tin bổ sung
+              <FileText size={13} style={{ color: 'var(--brand-600)' }} /> {t('projects.fieldNote').replace(':', '')}
             </label>
             <textarea
               className="form-input"
@@ -684,7 +677,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                 cursor: 'pointer',
               }}
             >
-              Hủy
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -705,7 +698,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
               }}
             >
               {loading ? <Loader2 size={15} className="spin" /> : <Save size={15} />}
-              Lưu thay đổi
+              {t('projects.saveChanges')}
             </button>
           </div>
         </form>

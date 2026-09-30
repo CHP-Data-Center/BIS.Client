@@ -22,22 +22,22 @@ import { tUI } from '../locales';
 const laLinkAnToan = (u) => typeof u === 'string' && /^https?:\/\//i.test(u);
 
 // Mã mục gốc "<kind>:<ref>" → trang chi tiết NGAY TRONG ứng dụng, nếu loại đó có trang riêng.
-const trangNoiBoCuaNguon = (originRef) => {
+const trangNoiBoCuaNguon = (originRef, t = (k) => k) => {
   const i = (originRef || '').indexOf(':');
   if (i < 0) return null;
   const kind = originRef.slice(0, i);
   const ref = encodeURIComponent(originRef.slice(i + 1));
-  if (kind === 'procurement') return { to: `/procurement/${ref}`, label: 'Xem chi tiết gói thầu' };
-  if (kind === 'article') return { to: `/article/${ref}`, label: 'Xem bài báo' };
+  if (kind === 'procurement') return { to: `/procurement/${ref}`, label: t('projects.viewTenderDetail') || 'Xem chi tiết gói thầu' };
+  if (kind === 'article') return { to: `/article/${ref}`, label: t('projects.viewArticle') || 'Xem bài báo' };
   return null;
 };
 
-const nhanLinkNguon = (originRef) => {
+const nhanLinkNguon = (originRef, t = (k) => k) => {
   const kind = (originRef || '').split(':')[0];
-  if (kind === 'procurement') return 'Mở trên Hệ thống mạng đấu thầu quốc gia';
-  if (kind === 'oda') return 'Mở trang dự án ODA';
-  if (kind === 'article') return 'Mở bài báo gốc';
-  return 'Mở liên kết nguồn';
+  if (kind === 'procurement') return t('projects.openEgp') || 'Mở trên Hệ thống mạng đấu thầu quốc gia';
+  if (kind === 'oda') return t('projects.openOda') || 'Mở trang dự án ODA';
+  if (kind === 'article') return t('projects.openArticle') || 'Mở bài báo gốc';
+  return t('projects.openSource') || 'Mở liên kết nguồn';
 };
 
 // Dự án tạo theo lối cũ mang chuỗi "[ref:procurement:...]" trong ghi chú. Máy chủ đã tách nó
@@ -67,7 +67,7 @@ const STATUS_META = {
 };
 
 export default function ProjectsPage() {
-  const { t } = useLang();
+  const { t, tCategory, tSector } = useLang();
   const nav = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -488,10 +488,10 @@ export default function ProjectsPage() {
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-            title="Tải file Excel mẫu chuẩn (.xlsx) để lập danh sách theo dõi"
+            title={t('projects.downloadSampleTitle')}
           >
             {downloadingSample ? <Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} /> : <FileSpreadsheet size={16} />}
-            Tải mẫu Excel
+            {t('projects.downloadSampleBtn')}
           </button>
 
           <button
@@ -508,10 +508,10 @@ export default function ProjectsPage() {
             }}
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-            title="Xuất toàn bộ danh sách dự án đang theo dõi ra file Excel"
+            title={t('projects.exportExcelTitle')}
           >
             {exportingExcel ? <Loader2 size={16} style={{ animation: 'spin 0.7s linear infinite' }} /> : <Download size={16} />}
-            Xuất Excel
+            {t('projects.exportExcelBtn')}
           </button>
 
           <button
@@ -609,7 +609,7 @@ export default function ProjectsPage() {
                 >
                   <option value="">{t('projects.allSectors')}</option>
                   {sectors.map((s) => (
-                    <option key={s.slug} value={s.slug}>{s.name}</option>
+                    <option key={s.slug} value={s.slug}>{tCategory(s.name) || tSector(s.slug) || s.name}</option>
                   ))}
                 </select>
               </div>
@@ -643,7 +643,7 @@ export default function ProjectsPage() {
             >
               {visibleProjects.length === 0 && (
                 <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12.5 }}>
-                  Không có dự án nào khớp bộ lọc.
+                  {t('projects.noMatchingRows') || 'Không có dự án nào khớp bộ lọc.'}
                 </div>
               )}
               {visibleProjects.map((p) => {
@@ -685,7 +685,7 @@ export default function ProjectsPage() {
                             e.stopPropagation();
                             setEditingProject(p);
                           }}
-                          title="Chỉnh sửa dự án"
+                          title={t('projects.editProjectTitle')}
                           className="project-card-action-btn"
                         >
                           <Pencil size={13.5} />
@@ -734,7 +734,7 @@ export default function ProjectsPage() {
                             alignItems: 'center',
                           }}
                         >
-                          {p.sector_name}
+                          {tCategory(p.sector_name) || tSector(p.sector_slug) || p.sector_name}
                         </span>
                       )}
                       {p.origin && p.origin !== 'manual' && (
@@ -780,7 +780,7 @@ export default function ProjectsPage() {
                           opacity: p.investor ? 1 : 0.75,
                         }}
                       >
-                        {p.investor || 'Chưa cập nhật CĐT'}
+                        {p.investor || t('projects.noInvestorUpdated')}
                       </span>
                       {p.investor_url && (
                         <span
@@ -796,7 +796,7 @@ export default function ProjectsPage() {
                     <div className="project-card-footer">
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                         <Newspaper size={12} style={{ color: 'var(--brand-600)', flexShrink: 0 }} />
-                        <span>{articleCount} bài viết</span>
+                        <span>{t('projects.articleCount', { count: articleCount })}</span>
                         {newArticlesCount > 0 && (
                           <span
                             style={{
@@ -812,7 +812,7 @@ export default function ProjectsPage() {
                               alignItems: 'center',
                             }}
                           >
-                            +{newArticlesCount} mới
+                            {t('projects.newArticlesCount', { count: newArticlesCount })}
                           </span>
                         )}
                       </div>
@@ -828,7 +828,7 @@ export default function ProjectsPage() {
                         }}
                       >
                         <ShoppingBag size={12} style={{ color: tenderCount > 0 ? '#2563eb' : 'var(--text-muted)', flexShrink: 0 }} />
-                        <span>{tenderCount} gói thầu</span>
+                        <span>{t('projects.tenderCount', { count: tenderCount })}</span>
                       </div>
                     </div>
                   </div>
@@ -913,9 +913,9 @@ export default function ProjectsPage() {
                         fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
                         transition: 'all 0.15s ease',
                       }}
-                      title="Chỉnh sửa thông tin dự án"
+                      title={t('projects.editProjectTitle')}
                     >
-                      <Pencil size={14} /> Chỉnh sửa
+                      <Pencil size={14} /> {t('projects.editBtn')}
                     </button>
 
                     {timelineData && (
@@ -924,7 +924,7 @@ export default function ProjectsPage() {
                         background: 'var(--bg-surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)',
                         flexShrink: 0,
                       }}>
-                        {newsArticlesCount} bài viết {currentTendersCount > 0 ? `· ${currentTendersCount} gói thầu` : ''}
+                        {t('projects.articleCount', { count: newsArticlesCount })} {currentTendersCount > 0 ? `· ${t('projects.tenderCount', { count: currentTendersCount })}` : ''}
                       </div>
                     )}
                   </div>
@@ -945,7 +945,7 @@ export default function ProjectsPage() {
                   {/* Chủ đầu tư: Tự do co giãn chiếm trọn khoảng trống bên phải, không bị ép xuống dòng sớm */}
                   <div style={{ flex: '1 1 340px', minWidth: 'min(300px, 100%)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      Chủ đầu tư:
+                      {t('projects.fieldInvestor')}
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: 1.45 }}>
                       {selectedProject.investor || '—'}
@@ -958,14 +958,14 @@ export default function ProjectsPage() {
                         style={{ ...LINK_STYLE, display: 'flex' }}
                         title="Hệ thống đang theo dõi trang tin trên website này"
                       >
-                        🌐 Website chủ đầu tư ↗
+                        {t('projects.investorWebsite')}
                       </a>
                     )}
                   </div>
 
                   <div style={{ flex: '0 0 auto', minWidth: 90 }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      Vị trí:
+                      {t('projects.fieldLocation')}
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                       {selectedProject.province || '—'}
@@ -974,16 +974,16 @@ export default function ProjectsPage() {
 
                   <div style={{ flex: '0 0 auto', minWidth: 90 }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      Lĩnh vực:
+                      {t('projects.fieldSector')}
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {selectedProject.sector_name || selectedProject.sector || '—'}
+                      {tCategory(selectedProject.sector_name) || tSector(selectedProject.sector) || selectedProject.sector_name || selectedProject.sector || '—'}
                     </span>
                   </div>
 
                   <div style={{ flex: '0 0 auto', minWidth: 100 }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      Trạng thái:
+                      {t('projects.fieldStatus')}
                     </span>
                     <span style={{
                       display: 'inline-block',
@@ -1012,7 +1012,7 @@ export default function ProjectsPage() {
                   {selectedProject.total_investment && (
                     <div style={{ flex: '0 0 auto', minWidth: 120 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                        Tổng mức đầu tư:
+                        {t('projects.fieldTotalInvestment')}
                       </span>
                       <span style={{ fontWeight: 700, color: '#047857' }}>
                         💰 {selectedProject.total_investment}
@@ -1023,7 +1023,7 @@ export default function ProjectsPage() {
                   {selectedProject.capital_source && (
                     <div style={{ flex: '0 0 auto', minWidth: 120 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                        Nguồn vốn:
+                        {t('projects.fieldCapitalSource')}
                       </span>
                       <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
                         🏛️ {selectedProject.capital_source}
@@ -1034,7 +1034,7 @@ export default function ProjectsPage() {
                   {selectedProject.progress && (
                     <div style={{ flex: '0 0 auto', minWidth: 110 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                        Tiến độ:
+                        {t('projects.fieldProgress')}
                       </span>
                       <span style={{ fontWeight: 700, color: '#1d4ed8' }}>
                         ⏱️ {selectedProject.progress}
@@ -1042,20 +1042,20 @@ export default function ProjectsPage() {
                     </div>
                   )}
 
-                  {(trangNoiBoCuaNguon(selectedProject.origin_ref) || laLinkAnToan(selectedProject.source_url)) && (
+                  {(trangNoiBoCuaNguon(selectedProject.origin_ref, t) || laLinkAnToan(selectedProject.source_url)) && (
                     <div style={{ width: '100%', flex: '1 1 100%', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 2 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                        Nguồn gốc:
+                        {t('projects.fieldOrigin')}
                       </span>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 18px', alignItems: 'center' }}>
-                        {trangNoiBoCuaNguon(selectedProject.origin_ref) && (
-                          <Link to={trangNoiBoCuaNguon(selectedProject.origin_ref).to} style={LINK_STYLE}>
-                            📄 {trangNoiBoCuaNguon(selectedProject.origin_ref).label}
+                        {trangNoiBoCuaNguon(selectedProject.origin_ref, t) && (
+                          <Link to={trangNoiBoCuaNguon(selectedProject.origin_ref, t).to} style={LINK_STYLE}>
+                            📄 {trangNoiBoCuaNguon(selectedProject.origin_ref, t).label}
                           </Link>
                         )}
                         {laLinkAnToan(selectedProject.source_url) && (
                           <a href={selectedProject.source_url} target="_blank" rel="noopener noreferrer" style={LINK_STYLE}>
-                            🔗 {nhanLinkNguon(selectedProject.origin_ref)} ↗
+                            🔗 {nhanLinkNguon(selectedProject.origin_ref, t)} ↗
                           </a>
                         )}
                       </div>
@@ -1065,7 +1065,7 @@ export default function ProjectsPage() {
                   {selectedProject.work_items && (
                     <div style={{ width: '100%', flex: '1 1 100%', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 2 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                        Hạng mục công việc / Gói thầu quan tâm:
+                        {t('projects.fieldWorkItems')}
                       </span>
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.45 }}>
                         📋 {selectedProject.work_items}
@@ -1076,7 +1076,7 @@ export default function ProjectsPage() {
                   {lamSachGhiChu(selectedProject.note) && (
                     <div style={{ width: '100%', flex: '1 1 100%', borderTop: selectedProject.work_items ? 'none' : '1px dashed var(--border-subtle)', paddingTop: selectedProject.work_items ? 0 : 10, marginTop: selectedProject.work_items ? 0 : 2 }}>
                       <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                        Ghi chú:
+                        {t('projects.fieldNote')}
                       </span>
                       <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
                         📝 {lamSachGhiChu(selectedProject.note)}
@@ -1130,7 +1130,7 @@ export default function ProjectsPage() {
                           transition: 'all 0.15s ease',
                         }}
                       >
-                        Tất cả ({rawCombinedItems.length})
+                        {t('projects.timelineTabAll', { count: rawCombinedItems.length })}
                       </button>
 
                       <button
@@ -1144,7 +1144,7 @@ export default function ProjectsPage() {
                           transition: 'all 0.15s ease',
                         }}
                       >
-                        📰 Báo chí ({newsArticlesCount})
+                        {t('projects.timelineTabNews', { count: newsArticlesCount })}
                       </button>
 
                       <button
@@ -1158,7 +1158,7 @@ export default function ProjectsPage() {
                           transition: 'all 0.15s ease',
                         }}
                       >
-                        🏛️ {currentTendersCount > 0 ? 'Gói thầu khớp CĐT' : 'Mua sắm công'} ({govArticlesCount})
+                        {currentTendersCount > 0 ? t('projects.timelineTabGovMatched', { count: govArticlesCount }) : t('projects.timelineTabGovAll', { count: govArticlesCount })}
                       </button>
                     </div>
 
@@ -1172,7 +1172,7 @@ export default function ProjectsPage() {
                         }} />
                         <input
                           type="search"
-                          placeholder="Lọc bài viết, gói thầu..."
+                          placeholder={t('projects.filterTimelinePlaceholder')}
                           value={timelineSearch}
                           onChange={(e) => { setTimelineSearch(e.target.value); setTimelinePage(1); }}
                           style={{
@@ -1194,7 +1194,7 @@ export default function ProjectsPage() {
                             setTimelineViewMode('card');
                             localStorage.setItem('bis_project_timeline_view_mode', 'card');
                           }}
-                          title="Xem dạng thẻ"
+                          title={t('projects.viewCardMode')}
                           style={{
                             background: timelineViewMode === 'card' ? 'var(--brand-50, rgba(37,99,235,0.12))' : 'transparent',
                             border: 'none', borderRadius: 6, padding: '4px 7px', cursor: 'pointer',
@@ -1210,7 +1210,7 @@ export default function ProjectsPage() {
                             setTimelineViewMode('compact');
                             localStorage.setItem('bis_project_timeline_view_mode', 'compact');
                           }}
-                          title="Xem dòng tinh gọn"
+                          title={t('projects.viewCompactMode')}
                           style={{
                             background: timelineViewMode === 'compact' ? 'var(--brand-50, rgba(37,99,235,0.12))' : 'transparent',
                             border: 'none', borderRadius: 6, padding: '4px 7px', cursor: 'pointer',
@@ -1232,9 +1232,9 @@ export default function ProjectsPage() {
                           color: 'var(--text-secondary)', cursor: 'pointer',
                         }}
                       >
-                        <option value="10">10 bài/trang</option>
-                        <option value="20">20 bài/trang</option>
-                        <option value="50">50 bài/trang</option>
+                        <option value="10">{t('projects.pageSize10')}</option>
+                        <option value="20">{t('projects.pageSize20')}</option>
+                        <option value="50">{t('projects.pageSize50')}</option>
                       </select>
                     </div>
                   </div>
@@ -1251,7 +1251,7 @@ export default function ProjectsPage() {
                       <div style={{ fontSize: 13, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <ShoppingBag size={16} style={{ color: '#2563eb', flexShrink: 0 }} />
                         <span>
-                          Đang hiển thị <strong>{govArticlesCount}</strong> gói thầu khớp chủ đầu tư: <strong>{selectedProject?.investor || selectedProject?.name}</strong>
+                          {t('projects.showingMatchedGovBanner', { count: govArticlesCount, investor: selectedProject?.investor || selectedProject?.name })}
                         </span>
                       </div>
                       <button
@@ -1266,7 +1266,7 @@ export default function ProjectsPage() {
                         onMouseEnter={e => e.currentTarget.style.background = '#dbeafe'}
                         onMouseLeave={e => e.currentTarget.style.background = '#eff6ff'}
                       >
-                        <Maximize2 size={13} /> Mở rộng toàn màn hình ({currentTendersCount})
+                        <Maximize2 size={13} /> {t('projects.expandFullscreen', { count: currentTendersCount })}
                       </button>
                     </div>
                   )}
@@ -1275,7 +1275,7 @@ export default function ProjectsPage() {
                   {totalFilteredTimeline === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       <div style={{ fontSize: 24, marginBottom: 6 }}>🔍</div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>Không tìm thấy bài viết nào khớp bộ lọc.</div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{t('projects.noMatchingTimeline')}</div>
                       <button
                         type="button"
                         onClick={() => { setTimelineFilterType('all'); setTimelineSearch(''); }}
@@ -1284,7 +1284,7 @@ export default function ProjectsPage() {
                           background: 'var(--brand-50)', color: 'var(--brand-600)', fontSize: 12, fontWeight: 700, cursor: 'pointer'
                         }}
                       >
-                        Đặt lại bộ lọc
+                        {t('projects.resetFilter')}
                       </button>
                     </div>
                   ) : timelineViewMode === 'compact' ? (
@@ -1319,18 +1319,19 @@ export default function ProjectsPage() {
                                 background: isProc ? '#eff6ff' : (art.source_type === 'gov' ? '#dcfce7' : '#dbeafe'),
                                 color: isProc ? '#1d4ed8' : (art.source_type === 'gov' ? '#15803d' : '#1d4ed8'),
                               }}>
-                                {isProc ? '🏛️ e-GP' : (art.source_name || (art.source_type === 'gov' ? 'Mua sắm công' : 'Báo chí'))}
+                                {isProc ? '🏛️ e-GP' : (art.source_name || (art.source_type === 'gov' ? t('nav.procGroup') : t('nav.press')))}
                               </span>
                               {isProc && (
                                 <span style={{
                                   fontSize: 10.5, fontWeight: 800, padding: '1px 6px', borderRadius: 4,
                                   background: '#f1f5f9', color: '#1e40af', fontFamily: 'monospace', flexShrink: 0,
+                                  whiteSpace: 'nowrap'
                                 }}>
                                   {art.id}
                                 </span>
                               )}
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
-                                {art.published_at ? (art.published_at.includes('-') ? art.published_at.slice(0, 10) : new Date(art.published_at).toLocaleDateString('vi-VN')) : ''}
+                                {art.published_at ? (art.published_at.includes('-') ? art.published_at.slice(0, 10) : new Date(art.published_at).toLocaleDateString()) : ''}
                               </span>
                               <div style={{
                                 fontSize: 13, fontWeight: 700, color: 'var(--text-primary)',
@@ -1376,7 +1377,7 @@ export default function ProjectsPage() {
                                 color: '#1d4ed8', flexShrink: 0, border: '1px solid #bfdbfe', gap: 4,
                               }}>
                                 <ShoppingBag size={22} />
-                                <span style={{ fontSize: 9.5, fontWeight: 800 }}>GÓI THẦU</span>
+                                <span style={{ fontSize: 9.5, fontWeight: 800 }}>{(t('projects.thPackage') || 'GÓI THẦU').toUpperCase()}</span>
                               </div>
                             ) : art.image_url ? (
                               <img
@@ -1394,7 +1395,7 @@ export default function ProjectsPage() {
                                   background: isProc ? '#eff6ff' : (art.source_type === 'gov' ? '#dcfce7' : '#dbeafe'),
                                   color: isProc ? '#1d4ed8' : (art.source_type === 'gov' ? '#15803d' : '#1d4ed8'),
                                 }}>
-                                  {isProc ? '🏛️ Đấu thầu Quốc gia (e-GP)' : (art.source_name || (art.source_type === 'gov' ? 'Mua sắm công' : 'Báo chí'))}
+                                  {isProc ? `🏛️ ${t('procurement.egpBadge')}` : (art.source_name || (art.source_type === 'gov' ? t('nav.procGroup') : t('nav.press')))}
                                 </span>
                                 {isProc && (
                                   <span style={{
@@ -1406,7 +1407,7 @@ export default function ProjectsPage() {
                                   </span>
                                 )}
                                 <span style={{ fontSize: 11.5, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <Calendar size={11} /> {art.published_at ? (art.published_at.includes('-') ? art.published_at.slice(0, 16) : new Date(art.published_at).toLocaleDateString('vi-VN')) : 'Mới cập nhật'}
+                                  <Calendar size={11} /> {art.published_at ? (art.published_at.includes('-') ? art.published_at.slice(0, 16) : new Date(art.published_at).toLocaleDateString()) : (t('common.info'))}
                                 </span>
                               </div>
 
@@ -1439,7 +1440,7 @@ export default function ProjectsPage() {
                       borderTop: '1px solid var(--border-subtle)',
                     }}>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                        Hiển thị <strong>{(validTimelinePage - 1) * timelinePageSize + 1}–{Math.min(validTimelinePage * timelinePageSize, totalFilteredTimeline)}</strong> trên <strong>{totalFilteredTimeline}</strong> bài viết
+                        {t('projects.showing')} <strong>{(validTimelinePage - 1) * timelinePageSize + 1}–{Math.min(validTimelinePage * timelinePageSize, totalFilteredTimeline)}</strong> {t('projects.ofTotal')} <strong>{totalFilteredTimeline}</strong> {t('projects.articlesFound')}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1455,7 +1456,7 @@ export default function ProjectsPage() {
                             display: 'flex', alignItems: 'center', gap: 4,
                           }}
                         >
-                          <ChevronLeft size={13} /> Trước
+                          <ChevronLeft size={13} /> {t('common.previous')}
                         </button>
 
                         {Array.from({ length: totalTimelinePages }, (_, i) => i + 1)
@@ -1500,7 +1501,7 @@ export default function ProjectsPage() {
                             display: 'flex', alignItems: 'center', gap: 4,
                           }}
                         >
-                          Sau <ChevronRight size={13} />
+                          {t('common.next')} <ChevronRight size={13} />
                         </button>
                       </div>
                     </div>
@@ -1686,9 +1687,9 @@ export default function ProjectsPage() {
                     value={sector}
                     onChange={(e) => setSector(e.target.value)}
                   >
-                    <option value="">— Chưa chọn —</option>
+                    <option value="">{t('projects.selectSectorPlaceholder')}</option>
                     {sectors.map((s) => (
-                      <option key={s.slug} value={s.slug}>{s.name}</option>
+                      <option key={s.slug} value={s.slug}>{tCategory(s.name) || tSector(s.slug) || s.name}</option>
                     ))}
                   </select>
                 </div>
@@ -1718,7 +1719,7 @@ export default function ProjectsPage() {
               </div>
 
               <div>
-                <label className="form-label">Hạng mục công việc / Gói thầu quan tâm</label>
+                <label className="form-label">{t('projects.fieldWorkItems')}</label>
                 <textarea
                   rows={2}
                   className="form-input"
@@ -1731,7 +1732,7 @@ export default function ProjectsPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: 11.5 }}>Tổng mức đầu tư</label>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>{t('projects.fieldTotalInvestment')}</label>
                   <input
                     type="text"
                     className="form-input"
@@ -1742,7 +1743,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: 11.5 }}>Nguồn vốn</label>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>{t('projects.fieldCapitalSource')}</label>
                   <input
                     type="text"
                     className="form-input"
@@ -1753,7 +1754,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: 11.5 }}>Tiến độ</label>
+                  <label className="form-label" style={{ fontSize: 11.5 }}>{t('projects.fieldProgress')}</label>
                   <input
                     type="text"
                     className="form-input"
@@ -1787,7 +1788,7 @@ export default function ProjectsPage() {
               </div>
 
               <div>
-                <label className="form-label">Ghi chú</label>
+                <label className="form-label">{t('projects.fieldNote')}</label>
                 <textarea
                   rows={2}
                   className="form-input"

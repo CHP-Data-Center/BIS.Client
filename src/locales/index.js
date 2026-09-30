@@ -63,6 +63,14 @@ export const TRANSLATIONS = {
     finance: { vi: 'Tài chính', en: 'Finance', ja: '金融' },
     environment: { vi: 'Môi trường', en: 'Environment', ja: '環境' },
     tech: { vi: 'Công nghệ số', en: 'Digital & ICT', ja: 'デジタル・ICT' },
+    cau: { vi: 'Cầu', en: 'Bridge', ja: '橋梁' },
+    'duong-bo': { vi: 'Đường bộ', en: 'Roads & Highways', ja: '道路・高速道路' },
+    'duong-sat': { vi: 'Đường sắt', en: 'Railways & Metro', ja: '鉄道・地下鉄' },
+    'cang-bien': { vi: 'Cảng biển', en: 'Seaports & Maritime', ja: '港湾・海運' },
+    'hang-khong': { vi: 'Hàng không', en: 'Aviation & Airports', ja: '航空・空港' },
+    'nang-luong': { vi: 'Năng lượng', en: 'Energy & Power', ja: 'エネルギー・電力' },
+    'cap-thoat-nuoc': { vi: 'Cấp thoát nước', en: 'Water & Drainage', ja: '上下水道・治水' },
+    'ha-tang-do-thi': { vi: 'Hạ tầng đô thị', en: 'Urban Infrastructure', ja: '都市インフラ' },
   },
   statuses: {
     active: { vi: 'Đang triển khai', en: 'Active', ja: '実施中' },
@@ -85,6 +93,8 @@ export const TRANSLATIONS = {
     'môi trường': { vi: 'Môi trường', en: 'Environment', ja: '環境' },
     'y tế': { vi: 'Y tế', en: 'Healthcare', ja: '医療・ヘルスケア' },
     'giáo dục': { vi: 'Giáo dục', en: 'Education', ja: '教育' },
+    'cấp thoát nước': { vi: 'Cấp thoát nước', en: 'Water & Drainage', ja: '上下水道・治水' },
+    'hạ tầng đô thị': { vi: 'Hạ tầng đô thị', en: 'Urban Infrastructure', ja: '都市インフラ' },
   }
 };
 

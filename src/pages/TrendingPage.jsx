@@ -1156,19 +1156,19 @@ export default function TrendingPage() {
   ];
 
   const infraTabs = [
-    'Tất cả',
-    'Cao tốc & Cầu',
-    'Xây dựng & Hạ tầng',
-    'Giao thông & Cảng',
-    'Năng lượng & KCN',
+    t('trending.infraTabAll'),
+    t('trending.infraTabExpressway'),
+    t('trending.infraTabConstruction'),
+    t('trending.infraTabTransport'),
+    t('trending.infraTabEnergy'),
   ];
 
   const macroTabs = [
-    'Tất cả',
-    'Chính sách vĩ mô',
-    'Tài chính & Ngân hàng',
-    'Thương mại quốc tế',
-    'Đầu tư công',
+    t('trending.macroTabAll'),
+    t('trending.macroTabPolicy'),
+    t('trending.macroTabFinance'),
+    t('trending.macroTabTrade'),
+    t('trending.macroTabPublicInvestment'),
   ];
 
   const procTabs = [
