@@ -365,6 +365,17 @@ function PotentialCard({ item, onToggleTrack, tracking, tracked, link, onLink, o
         </div>
       )}
 
+      {/* Từ khóa máy gắn — cùng cơ chế thẻ của tin crawl */}
+      {item.matched_keywords?.length > 0 && (
+        <div className="potential-sector-tags">
+          {item.matched_keywords.slice(0, 4).map((kw) => (
+            <span key={kw} className="potential-tag-pill">
+              #{kw}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Sector pills */}
       {(item.sector_names?.length > 0 || item.sector) && (
         <div className="potential-sector-tags">
@@ -1853,7 +1864,7 @@ export default function PotentialProjectsPage() {
   };
 
   // Dữ liệu đã được server phân loại và lọc theo lĩnh vực, nguồn, giá trị, tên, vị trí, chủ đầu
-  // tư; tài liệu & biên bản do /project-documents trả (đã lọc quyền xem, tên, vị trí, quyền riêng tư).
+  // tư; tài liệu & biên bản do /project-documents trả (đã lọc quyền xem, tên, vị trí, từ khóa, quyền riêng tư).
   const docItems = useMemo(
     () => (docsPage.mode === docsMode ? (docsPage.items || []) : []).map(documentToItem),
     [docsPage, docsMode],
@@ -2332,7 +2343,7 @@ export default function PotentialProjectsPage() {
                   sáng mà danh sách không đổi. */}
               {laTabTaiLieu && (filterSectors.length > 0 || filterInvestor.trim() || minAmount || relatedOnly) && (
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  Tài liệu chỉ lọc theo tên, vị trí và quyền riêng tư — bộ lọc lĩnh vực, chủ đầu tư,
+                  Tài liệu chỉ lọc theo tên, vị trí, từ khóa và quyền riêng tư — bộ lọc lĩnh vực, chủ đầu tư,
                   giá trị và liên quan dự án không áp dụng.
                 </span>
               )}

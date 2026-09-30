@@ -172,6 +172,26 @@ export default function ProjectDocumentArticlePage() {
           )}
         </div>
 
+        {doc.matched_keywords?.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '0 0 16px' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>🏷️ Từ khóa khớp:</span>
+            {doc.matched_keywords.map((kw) => (
+              <button
+                key={kw}
+                type="button"
+                onClick={() => navigate(`/news/all?q=${encodeURIComponent(kw)}`)}
+                style={{
+                  fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999, cursor: 'pointer',
+                  background: 'var(--brand-50, rgba(21, 155, 76, 0.1))', color: 'var(--brand-600, #0E7A39)',
+                  border: '1px solid rgba(21, 155, 76, 0.25)',
+                }}
+              >
+                {kw}
+              </button>
+            ))}
+          </div>
+        )}
+
         {doc.summary && (
           <p style={{ margin: '0 0 18px', fontSize: 15.5, lineHeight: 1.65, fontWeight: 600, color: 'var(--text-primary)' }}>
             {doc.summary}

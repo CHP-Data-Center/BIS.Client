@@ -73,6 +73,8 @@ export default function PressPostModal({
   // Bài tin soạn từ tài liệu (xem ProjectDocumentPostModal): nội dung theo đoạn + nhãn nguồn.
   const [articleBody, setArticleBody] = useState('');
   const [articleSource, setArticleSource] = useState(null);
+  // Thẻ từ khóa máy chủ khớp được từ văn bản file — chỉ để xem trước.
+  const [matchedKeywords, setMatchedKeywords] = useState([]);
   // Ngày ghi trong văn bản: chỉ điền khi trích được hoặc người dùng tự nhập.
   const [date, setDate] = useState('');
   const [summaryDate, setSummaryDate] = useState(() => todayVN());
@@ -135,6 +137,7 @@ export default function PressPostModal({
       if (res.summary) setSummary(res.summary);
       if (res.doc_date) setDate(res.doc_date);
       if (res.summary_date) setSummaryDate(res.summary_date);
+      if (res.matched_keywords?.length) setMatchedKeywords(res.matched_keywords);
       if (res.article_body) {
         setArticleBody(res.article_body);
         setArticleSource(res.source === 'ai' ? 'ai' : 'rules');
@@ -665,6 +668,28 @@ export default function PressPostModal({
                 <span>📅 <strong>Ngày văn bản:</strong> {fmtDate(date)}</span>
                 <span>⏱️ <strong>Ngày tóm tắt:</strong> {fmtDate(summaryDate)}</span>
               </div>
+
+
+              {matchedKeywords.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TỪ KHÓA MÁY GẮN:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 5 }}>
+                    {matchedKeywords.map((kw) => (
+                      <span key={kw} style={{
+                        fontSize: 11.5, fontWeight: 700, padding: '2px 9px', borderRadius: 999,
+                        background: 'rgba(21, 155, 76, 0.1)', color: '#0E7A39',
+                        border: '1px solid rgba(21, 155, 76, 0.25)',
+                      }}>
+                        #{kw}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Khớp với bộ từ khóa của hệ thống, giống cách gắn thẻ cho tin tức. Thẻ được
+                    gắn lại theo nội dung cuối cùng khi đăng.
+                  </div>
+                </div>
+              )}
 
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>QUYỀN RIÊNG TƯ:</div>
