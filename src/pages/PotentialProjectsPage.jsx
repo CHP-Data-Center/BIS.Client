@@ -1417,7 +1417,7 @@ function ProjectLinkModal({ item, sectors = [], onClose, onLinked }) {
 }
 
 export default function PotentialProjectsPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const { hasSourceAccess, user } = useAuth();
 

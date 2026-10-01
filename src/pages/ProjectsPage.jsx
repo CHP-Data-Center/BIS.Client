@@ -67,7 +67,7 @@ const STATUS_META = {
 };
 
 export default function ProjectsPage() {
-  const { t, tCategory, tSector } = useLang();
+  const { t, lang, tCategory, tSector } = useLang();
   const nav = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
