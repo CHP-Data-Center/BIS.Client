@@ -61,14 +61,17 @@ export const articlesService = {
     return data; // ArticleCard
   },
 
-  /** Lấy danh sách bookmark của user */
-  async getBookmarks(force = false) {
-    const cacheKey = 'articles:bookmarks';
+  /** Lấy danh sách bookmark của user (hỗ trợ lang) */
+  async getBookmarks(force = false, lang = null) {
+    const activeLang = lang || (typeof localStorage !== 'undefined' ? localStorage.getItem('bis_lang') : null);
+    const cacheKey = `articles:bookmarks:${activeLang || 'vi'}`;
     if (!force) {
       const cached = apiCache.get(cacheKey);
       if (cached) return cached;
     }
-    const { data } = await api.get('/articles/bookmarks');
+    const params = {};
+    if (activeLang) params.lang = activeLang;
+    const { data } = await api.get('/articles/bookmarks', { params });
     apiCache.set(cacheKey, data, 5000); // cache 5s
     return data; // BookmarkOut[]
   },

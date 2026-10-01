@@ -45,13 +45,15 @@ function formatRelativeTime(dateStr, lang = 'vi') {
 
 /** Một mục (bài báo / dự án ODA / gói thầu) có khớp từ khóa nổi bật đang lọc không.
  *  `q` đã lowercase + trim. Dùng chung cho mọi nguồn để bộ lọc áp nhất quán. */
-function khopTuKhoaNoiBat(item, q) {
+function khopTuKhoaNoiBat(item, q, qDisplay) {
   const text = [
     item.title, item.titleVi, item.excerpt, item.excerptVi, item.ai_summary,
     item.project_name, item.sector, item.procuring_entity, item.country,
     ...(item.matched_keywords || []),
   ].filter(Boolean).join(' ').toLowerCase();
-  return text.includes(q);
+  if (q && text.includes(q)) return true;
+  if (qDisplay && text.includes(qDisplay.toLowerCase().trim())) return true;
+  return false;
 }
 
 // ── Filter Business articles by selected subtab ──
@@ -296,7 +298,7 @@ function TrendingMagazineSkeleton() {
 const TrendingPageSkeleton = TrendingMagazineSkeleton;
 
 // ── Trending Marquee Strip (Tương tự Dashboard, có highlight từ khóa đã lưu của người dùng) ──
-function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeTag, onClearTag }) {
+function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeTag, activeTagDisplay, onClearTag }) {
   const { t } = useLang();
 
   const displayKeywords = (keywords && keywords.length > 0) ? keywords : [
@@ -343,24 +345,27 @@ function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeT
         </div>
         <span className="hot-badge">{t('badge.live')}</span>
 
-        {displayKeywords.slice(0, 1).map((kw, i) => (
-          <span
-            key={i}
-            className="top-kw-pill"
-            style={{ cursor: 'pointer' }}
-            onClick={() => onSelectKeyword(kw.term)}
-            title={`Top #1 thị trường: ${kw.term}`}
-          >
-            <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.4))' }} />
-            <span>{kw.term}</span>
-            <span className="top-kw-count">{kw.count}</span>
-          </span>
-        ))}
+        {displayKeywords.slice(0, 1).map((kw, i) => {
+          const displayLabel = kw.display_term || kw.term;
+          return (
+            <span
+              key={i}
+              className="top-kw-pill"
+              style={{ cursor: 'pointer' }}
+              onClick={() => onSelectKeyword(kw)}
+              title={`${t('trending.topMarket')} ${displayLabel}`}
+            >
+              <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.4))' }} />
+              <span>{displayLabel}</span>
+              <span className="top-kw-count">{kw.count}</span>
+            </span>
+          );
+        })}
 
         {userMatchedCount > 0 && (
-          <span className="user-matched-summary-pill" title={tUI('ui.cac-tu-khoa-ban-da-luu-dang-nam-trong-top-xu-huo')}>
+          <span className="user-matched-summary-pill" title={t('trending.userMatchedTooltip')}>
             <Star size={13} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
-            <span>{userMatchedCount} từ khóa của bạn đang nổi bật</span>
+            <span>{t('trending.userMatchedSummary', { count: userMatchedCount })}</span>
           </span>
         )}
 
@@ -374,11 +379,11 @@ function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeT
                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4
               }}
             >
-              <span>Đang lọc: #{activeTag}</span>
+              <span>{t('trending.filteringTagShort', { tag: activeTagDisplay || activeTag })}</span>
               <X size={12} />
             </button>
           ) : (
-            '↔ Di chuột để dừng · Click từ khóa để lọc bài'
+            t('dashboard.trendingHint')
           )}
         </span>
       </div>
@@ -389,15 +394,16 @@ function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeT
             const originalRank = (i % displayKeywords.length) + 1;
             const isTop3 = originalRank <= 3;
             const isMyKw = isUserKeyword(kw.term);
-            const isActive = activeTag && activeTag.toLowerCase() === kw.term.toLowerCase();
+            const displayLabel = kw.display_term || kw.term;
+            const isActive = activeTag && (activeTag.toLowerCase() === kw.term.toLowerCase() || (kw.display_term && activeTag.toLowerCase() === kw.display_term.toLowerCase()));
 
             return (
               <span
                 key={i}
                 className={`trending-keyword-chip ${originalRank === 1 ? 'rank-1' : originalRank === 2 ? 'rank-2' : originalRank === 3 ? 'rank-3' : ''} ${isMyKw ? 'user-matched-chip' : ''}`}
                 style={isActive ? { borderColor: '#2563eb', background: 'var(--brand-50)', color: 'var(--brand-700)', fontWeight: 800 } : {}}
-                onClick={() => onSelectKeyword(kw.term)}
-                title={isMyKw ? `★ Từ khóa bạn theo dõi: "${kw.term}" (${kw.count})` : `Hạng #${originalRank}: ${kw.term} (${kw.count})`}
+                onClick={() => onSelectKeyword(kw)}
+                title={isMyKw ? `★ ${displayLabel} (${kw.count})` : `#${originalRank}: ${displayLabel} (${kw.count})`}
               >
                 {isMyKw ? (
                   <Star size={12} style={{ color: '#d97706', fill: '#f59e0b', flexShrink: 0 }} />
@@ -407,7 +413,7 @@ function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeT
                   <Award size={13} style={{ color: '#ea580c', fill: '#f97316', flexShrink: 0 }} />
                 ) : null}
 
-                <span className="chip-term-text">{kw.term}</span>
+                <span className="chip-term-text">{displayLabel}</span>
                 <span className="chip-count-tag">{kw.count}</span>
               </span>
             );
@@ -463,9 +469,10 @@ export default function TrendingPage() {
 
   // State từ khóa đã lưu của người dùng & từ khóa xu hướng thị trường
   const [userKeywords, setUserKeywords] = useState(() => apiCache.get(`keywords:all:${lang}`) || []);
-  const [trendingKeywords, setTrendingKeywords] = useState(() => apiCache.get('trending:keywords_strip') || []);
+  const [trendingKeywords, setTrendingKeywords] = useState(() => apiCache.get(`trending:keywords_strip:${lang}`) || apiCache.get('trending:keywords_strip') || []);
   const [trendingTopicsData, setTrendingTopicsData] = useState(() => apiCache.get('trending:topics_data') || null);
   const [activeTrendingTag, setActiveTrendingTag] = useState(null);
+  const [activeTrendingTagDisplay, setActiveTrendingTagDisplay] = useState(null);
 
   // Set các term của userKeywords (lowercase, trimmed)
   const userKeywordTerms = useMemo(() => {
@@ -790,10 +797,11 @@ export default function TrendingPage() {
         }
       }).catch(err => console.warn('Keywords error:', err));
 
-    const fetchTrendingKws = statsService.getTrending(30, force)
+    const fetchTrendingKws = statsService.getTrending(30, force, lang)
       .then(res => {
         if (Array.isArray(res) && res.length > 0) {
           setTrendingKeywords(res);
+          apiCache.set(`trending:keywords_strip:${lang}`, res, 300000);
           apiCache.set('trending:keywords_strip', res, 300000);
         }
       }).catch(err => console.warn('Trending keywords error:', err));
@@ -903,21 +911,20 @@ export default function TrendingPage() {
     let list = articles;
     if (activeTrendingTag) {
       const q = activeTrendingTag.toLowerCase().trim();
-      const filtered = list.filter(item => {
-        const text = `${item.title || ''} ${item.titleVi || ''} ${item.excerpt || ''} ${item.excerptVi || ''} ${(item.matched_keywords || []).join(' ')}`.toLowerCase();
-        return text.includes(q);
-      });
+      const qDisplay = activeTrendingTagDisplay ? activeTrendingTagDisplay.toLowerCase().trim() : null;
+      const filtered = list.filter(item => khopTuKhoaNoiBat(item, q, qDisplay));
       if (filtered.length > 0) return filtered;
     }
     return list;
-  }, [articles, activeTrendingTag]);
+  }, [articles, activeTrendingTag, activeTrendingTagDisplay]);
 
   // Combined pool of all items based on active source filter (Gộp đầy đủ dữ liệu theo gói đã mua)
   const filteredArticles = useMemo(() => {
     // Từ khóa nổi bật phải áp cho MỌI nguồn: lọc mỗi bài báo còn ODA/gói thầu bỏ qua thì
     // trang vẫn đầy mục không liên quan trong lúc băng thông báo nói đang lọc.
     const q = activeTrendingTag ? activeTrendingTag.toLowerCase().trim() : null;
-    const locTheoThe = (ds) => (q ? ds.filter(item => khopTuKhoaNoiBat(item, q)) : ds);
+    const qDisplay = activeTrendingTagDisplay ? activeTrendingTagDisplay.toLowerCase().trim() : null;
+    const locTheoThe = (ds) => (q ? ds.filter(item => khopTuKhoaNoiBat(item, q, qDisplay)) : ds);
 
     if (activeSourceFilter === 'press') return displayArticles;
     if (activeSourceFilter === 'adb') return locTheoThe(adbProjects.map(adaptOda));
@@ -1246,6 +1253,7 @@ export default function TrendingPage() {
             onClick={() => {
               setActiveSourceFilter('all');
               setActiveTrendingTag(null);
+              setActiveTrendingTagDisplay(null);
             }}
           >
             🔥 {t('trending.allSources')}
@@ -1255,6 +1263,7 @@ export default function TrendingPage() {
             onClick={() => {
               setActiveSourceFilter('press');
               setActiveTrendingTag(null);
+              setActiveTrendingTagDisplay(null);
             }}
           >
             📰 {t('trending.pressOnly')} ({articles.length})
@@ -1300,14 +1309,22 @@ export default function TrendingPage() {
         keywords={trendingKeywords}
         userKeywords={userKeywords}
         activeTag={activeTrendingTag}
-        onSelectKeyword={(term) => {
+        activeTagDisplay={activeTrendingTagDisplay}
+        onSelectKeyword={(kwItem) => {
+          const term = typeof kwItem === 'object' ? kwItem.term : kwItem;
+          const display = typeof kwItem === 'object' ? (kwItem.display_term || kwItem.term) : kwItem;
           if (activeTrendingTag === term) {
             setActiveTrendingTag(null);
+            setActiveTrendingTagDisplay(null);
           } else {
             setActiveTrendingTag(term);
+            setActiveTrendingTagDisplay(display);
           }
         }}
-        onClearTag={() => setActiveTrendingTag(null)}
+        onClearTag={() => {
+          setActiveTrendingTag(null);
+          setActiveTrendingTagDisplay(null);
+        }}
       />
 
       {/* Banner thông báo lọc theo từ khóa nổi bật khi click chip */}
@@ -1321,17 +1338,20 @@ export default function TrendingPage() {
             <Zap size={15} style={{ color: '#f59e0b' }} />
             <span>
               {filteredArticles.length === 0
-                ? <>{tUI('ui.khong-co-muc-nao-khop-tu-khoa-noi-bat')} <strong>#{activeTrendingTag}</strong></>
-                : <>{tUI('ui.dang-loc-bai-viet-theo-tu-khoa-noi-bat')} <strong>#{activeTrendingTag}</strong> ({filteredArticles.length} mục)</>}
+                ? t('trending.filterTagNone', { tag: activeTrendingTagDisplay || activeTrendingTag })
+                : t('trending.filterTagActive', { tag: activeTrendingTagDisplay || activeTrendingTag, count: filteredArticles.length })}
             </span>
             {isUserKeyword(activeTrendingTag) && (
               <span className="user-matched-tag-chip" style={{ fontSize: 11, padding: '2px 8px' }}>
-                ⭐ Trùng với danh mục bạn theo dõi!
+                {t('trending.filterTagMatchedUser')}
               </span>
             )}
           </span>
           <button
-            onClick={() => setActiveTrendingTag(null)}
+            onClick={() => {
+              setActiveTrendingTag(null);
+              setActiveTrendingTagDisplay(null);
+            }}
             style={{
               background: 'var(--bg-surface)', border: '1px solid var(--border)',
               padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
@@ -1339,7 +1359,7 @@ export default function TrendingPage() {
             }}
           >
             <X size={13} />
-            <span>{tUI('ui.bo-loc')}</span>
+            <span>{t('trending.clearFilter')}</span>
           </button>
         </div>
       )}
@@ -1351,9 +1371,9 @@ export default function TrendingPage() {
            chưa lọc (người dùng sẽ tưởng từ khóa này có rất nhiều bài). */
         <div className="empty-state" style={{ minHeight: '40vh' }}>
           <div className="empty-icon">🔍</div>
-          <div className="empty-title">Không có mục nào khớp #{activeTrendingTag}</div>
+          <div className="empty-title">{t('trending.emptyFilterTitle', { tag: activeTrendingTagDisplay || activeTrendingTag })}</div>
           <div className="empty-sub">
-            Hãy chọn từ khóa khác trên dải tin nổi bật, hoặc bấm “Bỏ lọc” để xem lại toàn bộ.
+            {t('trending.emptyFilterSub')}
           </div>
         </div>
       ) : activeSourceFilter === 'all' ? (

@@ -451,7 +451,7 @@ export default function LoginPage() {
 
           {loginError && (
             <div className="login-error-alert">
-              ⚠️ {loginError}
+              ⚠️ {tUI(loginError, loginError)}
             </div>
           )}
 

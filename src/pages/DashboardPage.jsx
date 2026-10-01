@@ -111,18 +111,21 @@ function TrendingStrip({ keywords, onSelectKeyword }) {
         </div>
         <span className="hot-badge">{t('badge.live')}</span>
 
-        {keywords.slice(0, 1).map((kw, i) => (
-          <span
-            key={i}
-            className="top-kw-pill"
-            style={{ cursor: onSelectKeyword ? 'pointer' : 'default' }}
-            onClick={() => onSelectKeyword && onSelectKeyword(kw.term)}
-          >
-            <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.4))' }} />
-            <span>{kw.term}</span>
-            <span className="top-kw-count">{kw.count}</span>
-          </span>
-        ))}
+        {keywords.slice(0, 1).map((kw, i) => {
+          const displayLabel = kw.display_term || kw.term;
+          return (
+            <span
+              key={i}
+              className="top-kw-pill"
+              style={{ cursor: onSelectKeyword ? 'pointer' : 'default' }}
+              onClick={() => onSelectKeyword && onSelectKeyword(displayLabel)}
+            >
+              <Crown size={14} style={{ color: '#d97706', fill: '#f59e0b', filter: 'drop-shadow(0 2px 4px rgba(245,158,11,0.4))' }} />
+              <span>{displayLabel}</span>
+              <span className="top-kw-count">{kw.count}</span>
+            </span>
+          );
+        })}
 
         <span className="trending-hint">
           {t('dashboard.trendingHint')}
@@ -134,15 +137,16 @@ function TrendingStrip({ keywords, onSelectKeyword }) {
           {items.map((kw, i) => {
             const originalRank = (i % keywords.length) + 1;
             const isTop3 = originalRank <= 3;
+            const displayLabel = kw.display_term || kw.term;
             return (
               <span
                 key={i}
                 className={`trending-keyword-chip ${getRankClass(originalRank)}`}
-                onClick={() => onSelectKeyword && onSelectKeyword(kw.term)}
-                title={t('dashboard.trendingRankTooltip', { rank: originalRank, term: kw.term })}
+                onClick={() => onSelectKeyword && onSelectKeyword(displayLabel)}
+                title={t('dashboard.trendingRankTooltip', { rank: originalRank, term: displayLabel })}
               >
                 {isTop3 && renderRankIcon(originalRank)}
-                <span className="chip-term-text">{kw.term}</span>
+                <span className="chip-term-text">{displayLabel}</span>
                 <span className="chip-count-tag">{kw.count}</span>
               </span>
             );
@@ -1408,7 +1412,7 @@ export default function DashboardPage() {
   // Fetch trending keywords
   const fetchTrending = async (limit = 15, force = false) => {
     try {
-      const data = await statsService.getTrending(limit, force);
+      const data = await statsService.getTrending(limit, force, lang);
       setTrending(data || []);
     } catch (e) {
       console.warn('Trending error:', e);

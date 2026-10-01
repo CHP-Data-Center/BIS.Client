@@ -49,16 +49,15 @@ api.interceptors.response.use(
 
     // Chuẩn hóa thông báo lỗi thân thiện cho UI
     if (err.response?.status === 429) {
-      err.userMessage = 'Hệ thống đang quá tải hoặc nhận quá nhiều yêu cầu. Vui lòng thử lại sau vài giây.';
+      err.userMessage = 'auth.errorRateLimit';
     } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-      err.userMessage = 'Yêu cầu phản hồi quá lâu (hết thời gian chờ). Vui lòng thử lại.';
+      err.userMessage = 'auth.errorTimeout';
     } else if (!err.response) {
       // Cấu hình sai thì nói thẳng là sai cấu hình — bảo người dùng "kiểm tra kết nối mạng"
       // chỉ khiến họ ngồi thử lại mật khẩu trong khi request chưa từng rời khỏi trình duyệt.
       err.userMessage = isApiUnreachableByDesign
-        ? 'Bản web này chưa được cấu hình địa chỉ máy chủ (đang trỏ vào localhost). '
-          + 'Vui lòng báo quản trị viên build lại với địa chỉ API https.'
-        : 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.';
+        ? 'auth.errorConfigUnreachable'
+        : 'auth.errorNetwork';
     }
 
     // Retry tự động tối đa 2 lần với phương thức GET khi gặp 502/503/504 hoặc lỗi mạng/timeout

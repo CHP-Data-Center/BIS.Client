@@ -188,6 +188,7 @@ function getLocalBookmarks() {
 }
 
 export default function BookmarksPage() {
+  const { t, lang } = useLang();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const currentQ = searchParams.get('q') || '';
@@ -197,7 +198,8 @@ export default function BookmarksPage() {
   const [viewMode, setViewMode]   = useState('list'); // 'list' | 'grid'
 
   useEffect(() => {
-    articlesService.getBookmarks()
+    setLoading(true);
+    articlesService.getBookmarks(false, lang)
       .then((serverBms) => {
         const localBms = getLocalBookmarks();
         const combined = [...(serverBms || []), ...localBms];
@@ -208,7 +210,7 @@ export default function BookmarksPage() {
         setBookmarks(getLocalBookmarks());
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [lang]);
 
   const handleRemove = async (articleId) => {
     setRemoving(articleId);
@@ -275,7 +277,7 @@ export default function BookmarksPage() {
     amount: bm.amount ? formatProjectAmount(bm.amount, bm.source_type) : null,
   });
 
-  const { t } = useLang();
+// useLang hoisted
 
   return (
     <div style={{ width: '100%' }}>
@@ -372,9 +374,9 @@ export default function BookmarksPage() {
               const srcInfo = getSourceInfo(bm);
               const imageUrl = bm.article_image_url || bm.image_url;
               const displayDate = bm.published_at
-                ? new Date(bm.published_at).toLocaleDateString('vi-VN')
+                ? new Date(bm.published_at).toLocaleDateString(lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'vi-VN')
                 : bm.created_at
-                  ? new Date(bm.created_at).toLocaleDateString('vi-VN')
+                  ? new Date(bm.created_at).toLocaleDateString(lang === 'ja' ? 'ja-JP' : lang === 'en' ? 'en-US' : 'vi-VN')
                   : null;
               const formattedAmt = formatProjectAmount(bm.amount, bm.source_type);
               const statusStyle = getStatusStyle(bm.status);

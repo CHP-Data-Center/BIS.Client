@@ -96,9 +96,12 @@ export const projectsService = {
     }
   },
 
-  /** Timeline bài viết của dự án */
-  async getTimeline(id, limit = 100) {
-    const { data } = await api.get(`/projects/${id}/timeline`, { params: { limit } });
+  /** Timeline bài viết của dự án (hỗ trợ đa ngôn ngữ) */
+  async getTimeline(id, limit = 100, customLang = null) {
+    const activeLang = customLang || localStorage.getItem('app_lang') || localStorage.getItem('news_lang') || 'vi';
+    const params = { limit };
+    if (activeLang && activeLang !== 'vi') params.lang = activeLang;
+    const { data } = await api.get(`/projects/${id}/timeline`, { params });
     return data; // ProjectTimeline
   },
 

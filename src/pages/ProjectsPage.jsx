@@ -217,7 +217,7 @@ export default function ProjectsPage() {
     const loadTimeline = async () => {
       setTimelineLoading(true);
       try {
-        const res = await projectsService.getTimeline(selectedProjectId, 100);
+        const res = await projectsService.getTimeline(selectedProjectId, 100, lang);
         setTimelineData(res);
       } catch (e) {
         console.warn('Failed to load project timeline:', e);
@@ -227,7 +227,7 @@ export default function ProjectsPage() {
       }
     };
     loadTimeline();
-  }, [selectedProjectId]);
+  }, [selectedProjectId, lang]);
 
   const handleCreateProject = async (e) => {
     e.preventDefault();

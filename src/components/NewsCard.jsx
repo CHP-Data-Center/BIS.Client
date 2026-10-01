@@ -75,8 +75,8 @@ export default function NewsCard({ article, index = 0, onOpenPost }) {
       ? new Date(article.date).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' })
       : null;
 
-  const titleText = article.titleVi || article.title;
-  const excerptText = article.excerptVi || article.excerpt;
+  const titleText = (lang === 'vi' ? (article.titleVi || article.title) : (article.title || article.titleVi));
+  const excerptText = (lang === 'vi' ? (article.excerptVi || article.excerpt) : (article.excerpt || article.excerptVi));
 
   const rawKeywords = article.matched_keywords || [];
   const sortedKeywords = useMemo(() => {

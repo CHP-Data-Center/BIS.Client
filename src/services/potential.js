@@ -39,7 +39,8 @@ export const potentialService = {
     const inv = (investor || '').trim();
     const rel = relatedOnly ? 1 : 0;
 
-    const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${rel}_${page}_${size}`;
+    const activeLang = localStorage.getItem('app_lang') || localStorage.getItem('news_lang') || 'vi';
+    const cacheKey = `potential_list_${activeLang}_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${rel}_${page}_${size}`;
     if (!forceFresh) {
       const cached = apiCache.get(cacheKey);
       if (cached) return cached;
@@ -53,6 +54,7 @@ export const potentialService = {
     if (prov) params.province = prov;
     if (inv) params.investor = inv;
     if (relatedOnly) params.related_only = true;
+    if (activeLang && activeLang !== 'vi') params.lang = activeLang;
 
     const { data } = await api.get('/potential-projects', { params });
     apiCache.set(cacheKey, data, TTL_LIST);
@@ -61,11 +63,12 @@ export const potentialService = {
 
   /** Lấy nhanh từ cache nếu có (trả về null nếu chưa có) */
   getCachedList({ sectors, kinds, minAmount, title, province, investor, relatedOnly = false, page = 1, size = 8 } = {}) {
+    const activeLang = localStorage.getItem('app_lang') || localStorage.getItem('news_lang') || 'vi';
     const t = (title || '').trim();
     const prov = (province || '').trim();
     const inv = (investor || '').trim();
     const rel = relatedOnly ? 1 : 0;
-    const cacheKey = `potential_list_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${rel}_${page}_${size}`;
+    const cacheKey = `potential_list_${activeLang}_${(sectors || []).sort().join(',')}_${(kinds || []).sort().join(',')}_${minAmount || 0}_${t}_${prov}_${inv}_${rel}_${page}_${size}`;
     return apiCache.get(cacheKey);
   },
 

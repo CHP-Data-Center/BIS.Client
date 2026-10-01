@@ -52,18 +52,20 @@ export function AuthProvider({ children }) {
       setLoginError('');
       return me;
     } catch (err) {
-      let msg = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.';
+      let msg = 'auth.errorInvalidCredentials';
       if (err.response) {
         const status = err.response.status;
         const detail = err.response.data?.detail;
         if (status === 401) {
-          msg = typeof detail === 'string' ? detail : 'Email hoặc mật khẩu không chính xác.';
+          msg = typeof detail === 'string' ? detail : 'auth.errorInvalidCredentials';
         } else if (status === 403) {
-          msg = typeof detail === 'string' ? detail : 'Tài khoản đã bị khóa hoặc tạm dừng. Vui lòng liên hệ Quản trị viên.';
+          msg = typeof detail === 'string' ? detail : 'auth.errorAccountLocked';
+        } else if (status === 429) {
+          msg = 'auth.errorRateLimit';
         } else if (detail) {
           if (typeof detail === 'string') {
-            if (detail === 'Dữ liệu không hợp lệ.') {
-              msg = 'Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại email và mật khẩu.';
+            if (detail === 'Dữ liệu không hợp lệ.' || detail.includes('không hợp lệ')) {
+              msg = 'auth.errorInvalidCredentials';
             } else {
               msg = detail;
             }
@@ -71,16 +73,18 @@ export function AuthProvider({ children }) {
             const first = detail[0];
             const loc = first?.loc || [];
             if (loc.includes('email')) {
-              msg = 'Định dạng email không hợp lệ.';
+              msg = 'auth.errorEmailInvalid';
             } else if (loc.includes('password')) {
-              msg = 'Vui lòng nhập mật khẩu đầy đủ.';
+              msg = 'auth.errorPasswordRequired';
             } else {
-              msg = first?.msg || 'Thông tin đăng nhập không hợp lệ. Vui lòng thử lại.';
+              msg = first?.msg || 'auth.errorGeneric';
             }
           }
         }
+      } else if (err.userMessage) {
+        msg = err.userMessage;
       } else if (err.request) {
-        msg = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.';
+        msg = 'auth.errorNetwork';
       }
       setLoginError(msg);
       return null;
@@ -106,7 +110,7 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('bis_token');
       setToken(null);
       setUser(null);
-      let msg = 'Đăng nhập Google không thành công. Vui lòng thử lại.';
+      let msg = 'auth.errorGoogleFailed';
       if (err.response?.data?.detail) {
         const detail = err.response.data.detail;
         if (typeof detail === 'string') {

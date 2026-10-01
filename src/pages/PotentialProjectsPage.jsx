@@ -1739,7 +1739,7 @@ export default function PotentialProjectsPage() {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [load, filterSectors, kind, minAmount, filterName, filterLocation, filterInvestor, page]);
+  }, [load, filterSectors, kind, minAmount, filterName, filterLocation, filterInvestor, page, lang]);
 
 
   // Danh sách các dự án chuẩn hóa từ DB của user để tra cứu tức thời

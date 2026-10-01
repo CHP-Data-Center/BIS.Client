@@ -25,14 +25,17 @@ export const statsService = {
     return data; // StatsOverview
   },
 
-  /** Từ khóa nổi bật theo số bài khớp */
-  async getTrending(limit = 10, force = false) {
-    const cacheKey = getUserStatsKey(`stats:trending:${limit}`);
+  /** Từ khóa nổi bật theo số bài khớp (kèm display_term theo lang) */
+  async getTrending(limit = 10, force = false, lang = null) {
+    const activeLang = lang || (typeof localStorage !== 'undefined' ? localStorage.getItem('bis_lang') : null);
+    const cacheKey = getUserStatsKey(`stats:trending:${limit}:${activeLang || 'vi'}`);
     if (!force) {
       const cached = apiCache.get(cacheKey);
       if (cached) return cached;
     }
-    const { data } = await api.get('/stats/trending', { params: { limit } });
+    const params = { limit };
+    if (activeLang) params.lang = activeLang;
+    const { data } = await api.get('/stats/trending', { params });
     apiCache.set(cacheKey, data, 30000); // cache 30s
     return data; // TrendingTerm[]
   },

@@ -238,7 +238,7 @@ function CompactNewsRow({ article, index, onOpenPost }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.15s'
           }}
-          title={bookmarked ? 'Bỏ lưu' : 'Lưu bài viết'}
+          title={bookmarked ? t('news.unbookmark') : t('news.save')}
         >
           {bookmarked ? <BookmarkCheck size={16} fill="#f59e0b" /> : <Bookmark size={16} />}
         </button>)}
@@ -1029,7 +1029,7 @@ export default function NewsPage() {
                   onClick={() => handlePresetDate('all')}
                   style={{ background: 'none', border: 'none', fontSize: 10, color: '#ef4444', cursor: 'pointer', padding: 0, fontWeight: 600 }}
                 >
-                  Xóa lọc
+                  {t('news.clearFilter')}
                 </button>
               )}
             </div>
@@ -1037,10 +1037,10 @@ export default function NewsPage() {
             {/* Phím tắt chọn nhanh */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginBottom: 8 }}>
               {[
-                { label: 'Hôm nay', type: 'today' },
-                { label: '7 ngày qua', type: '7d' },
-                { label: '30 ngày qua', type: '30d' },
-                { label: 'Tháng này', type: 'month' },
+                { label: t('news.today'), type: 'today' },
+                { label: t('news.last7Days'), type: '7d' },
+                { label: t('news.last30Days'), type: '30d' },
+                { label: t('news.thisMonth'), type: 'month' },
               ].map((p) => {
                 const isActive = activePreset === p.type;
                 return (
@@ -1103,7 +1103,7 @@ export default function NewsPage() {
 
             {dateFrom && dateTo && dateFrom > dateTo && (
               <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 600, display: 'block', marginTop: 4 }}>
-                ⚠️ Ngày bắt đầu không được sau ngày kết thúc
+                {t('news.dateOrderError')}
               </span>
             )}
           </div>
@@ -1269,16 +1269,16 @@ export default function NewsPage() {
                     <div className="empty-state" style={{ minHeight: 300 }}>
                       <div className="empty-icon">{onlyBookmarked ? '🔖' : '📭'}</div>
                       <div className="empty-title">
-                        {onlyBookmarked ? 'Chưa có bài viết nào được lưu' : 'Không tìm thấy bài viết'}
+                        {onlyBookmarked ? t('news.noBookmarkedArticles') : t('news.emptyTitle')}
                       </div>
                       <div className="empty-sub">
                         {onlyBookmarked
-                          ? 'Bấm vào biểu tượng bookmark trên dòng bài viết để lưu lại.'
-                          : (search ? `Không có kết quả cho "${search}". Thử từ khóa khác.` : 'Hệ thống tự động crawl dữ liệu mới nhất.')}
+                          ? t('news.bookmarkHintRow')
+                          : (search ? t('news.noSearchResult', { search }) : t('news.autoCrawlSub'))}
                       </div>
                       {(search || onlyBookmarked) && (
                         <button className="btn btn-secondary" onClick={handleReset} style={{ marginTop: 12 }}>
-                          Xóa bộ lọc
+                          {t('news.clearFilters')}
                         </button>
                       )}
                     </div>
@@ -1302,16 +1302,16 @@ export default function NewsPage() {
                     <div className="empty-state" style={{ gridColumn: '1 / -1', minHeight: 300 }}>
                       <div className="empty-icon">{onlyBookmarked ? '🔖' : '📭'}</div>
                       <div className="empty-title">
-                        {onlyBookmarked ? 'Chưa có bài viết nào được lưu' : 'Không tìm thấy bài viết'}
+                        {onlyBookmarked ? t('news.noBookmarkedArticles') : t('news.emptyTitle')}
                       </div>
                       <div className="empty-sub">
                         {onlyBookmarked
-                          ? 'Bấm vào biểu tượng bookmark trên thẻ bài viết để lưu lại.'
-                          : (search ? `Không có kết quả cho "${search}". Thử từ khóa khác.` : 'Hệ thống tự động crawl dữ liệu mới nhất.')}
+                          ? t('news.bookmarkHintCard')
+                          : (search ? t('news.noSearchResult', { search }) : t('news.autoCrawlSub'))}
                       </div>
                       {(search || onlyBookmarked) && (
                         <button className="btn btn-secondary" onClick={handleReset} style={{ marginTop: 12 }}>
-                          Xóa bộ lọc
+                          {t('news.clearFilters')}
                         </button>
                       )}
                     </div>
