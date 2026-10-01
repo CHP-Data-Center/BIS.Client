@@ -78,8 +78,12 @@ function processFile(file) {
       .join('/');
     const spec = rel.startsWith('.') ? rel : `./${rel}`;
     const imp = `import { tUI } from '${spec}';\n`;
+    // Phải nhảy tới dấu ';' KẾT THÚC CÂU import rồi mới xuống dòng: câu import nhiều dòng
+    // (`import {\n  a, b,\n} from '...';`) thì ký tự xuống dòng đầu tiên nằm NGAY SAU `import {`,
+    // chèn vào đó là cắt đôi câu import và cả file hỏng cú pháp (đã xảy ra với 3 file).
     const lastImport = src.lastIndexOf('\nimport ');
-    const eol = src.indexOf('\n', lastImport + 1);
+    const ketCau = src.indexOf(';', lastImport);
+    const eol = src.indexOf('\n', ketCau === -1 ? lastImport + 1 : ketCau);
     src = src.slice(0, eol + 1) + imp + src.slice(eol + 1);
   }
   if (count && APPLY && src !== before) fs.writeFileSync(file, src, 'utf8');

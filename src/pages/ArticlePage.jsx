@@ -332,8 +332,8 @@ export default function ArticlePage() {
                     <CheckCircle2 size={15} /> Điểm tin then chốt (Key Takeaways)
                   </div>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-                    <li>Cập nhật diễn biến mới nhất liên quan đến chủ đề: <strong>{article.title}</strong>.</li>
-                    <li>Ghi nhận từ nguồn tin chính thống <strong>{srcName}</strong>{publishedDate ? ` ngày ${publishedDate}` : ''}.</li>
+                    <li>{tUI('ui.cap-nhat-dien-bien-moi-nhat-lien-quan-den-chu-de')} <strong>{article.title}</strong>.</li>
+                    <li>{tUI('ui.ghi-nhan-tu-nguon-tin-chinh-thong')} <strong>{srcName}</strong>{publishedDate ? ` ngày ${publishedDate}` : ''}.</li>
                     {article.matched_keywords?.length > 0 && (
                       <li>Trọng tâm từ khóa giám sát: {article.matched_keywords.map(k => `#${k}`).join(', ')}.</li>
                     )}
@@ -350,9 +350,9 @@ export default function ArticlePage() {
                     <Building2 size={15} /> Chủ thể &amp; Địa bàn liên quan
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-                    <div>• <strong>Cơ quan/Nguồn tin:</strong> {srcName}</div>
-                    <div>• <strong>Phạm vi:</strong> Địa bàn dự án và các vùng kinh tế trọng điểm liên quan.</div>
-                    <div>• <strong>Đối tượng quan tâm:</strong> Chủ đầu tư, Ban QLDA, Doanh nghiệp thi công &amp; tư vấn.</div>
+                    <div>• <strong>{tUI('ui.co-quan-nguon-tin')}</strong> {srcName}</div>
+                    <div>• <strong>{tUI('ui.pham-vi')}</strong> {tUI('ui.dia-ban-du-an-va-cac-vung-kinh-te-trong-diem-lie')}</div>
+                    <div>• <strong>{tUI('ui.doi-tuong-quan-tam')}</strong> {tUI('ui.chu-dau-tu-ban-qlda-doanh-nghiep-thi-cong-amp-tu')}</div>
                   </div>
                 </div>
 
@@ -366,9 +366,9 @@ export default function ArticlePage() {
                     <Coins size={15} /> Quy mô &amp; Mốc tiến độ
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-                    {article.amount && <div>• <strong>Tổng giá trị:</strong> {article.amount}</div>}
-                    <div>• <strong>Giai đoạn:</strong> Kế hoạch đầu tư / Khảo sát / Lựa chọn nhà thầu.</div>
-                    <div>• <strong>Cập nhật:</strong> Dữ liệu lưu trữ và phân tích tự động trên BIS.</div>
+                    {article.amount && <div>• <strong>{tUI('ui.tong-gia-tri')}</strong> {article.amount}</div>}
+                    <div>• <strong>{tUI('ui.giai-doan')}</strong> {tUI('ui.ke-hoach-dau-tu-khao-sat-lua-chon-nha-thau')}</div>
+                    <div>• <strong>{tUI('ui.cap-nhat')}</strong> {tUI('ui.du-lieu-luu-tru-va-phan-tich-tu-dong-tren-bis')}</div>
                   </div>
                 </div>
 
@@ -382,8 +382,8 @@ export default function ArticlePage() {
                     <TrendingUp size={15} /> Ý nghĩa &amp; Cơ hội thị trường
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
-                    <div>• Hỗ trợ bộ phận phát triển dự án nắm bắt sớm cơ hội tiếp cận hồ sơ.</div>
-                    <div>• Cung cấp góc nhìn tham mưu lãnh đạo về tiến độ và biến động thị trường.</div>
+                    <div>{tUI('ui.ho-tro-bo-phan-phat-trien-du-an-nam-bat-som-co-h')}</div>
+                    <div>{tUI('ui.cung-cap-goc-nhin-tham-muu-lanh-dao-ve-tien-do-v')}</div>
                   </div>
                 </div>
               </div>

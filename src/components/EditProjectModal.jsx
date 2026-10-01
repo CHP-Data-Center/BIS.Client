@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { X, Sparkles, Loader2, Save, Pencil, Building2, MapPin, Layers, Briefcase, DollarSign, Calendar, FileText, Globe } from 'lucide-react';
 import { projectsService } from '../services/projects';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 const STATUS_OPTIONS = [
   { value: 'watching', labelKey: 'projects.statusWatching', defaultLabel: 'Đang theo dõi' },
@@ -296,7 +297,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                 className="form-input"
                 value={keywordFilter}
                 onChange={(e) => setKeywordFilter(e.target.value)}
-                placeholder="Ví dụ: cầu Trần Hưng Đạo, THĐ..."
+                placeholder={tUI('ui.vi-du-cau-tran-hung-dao-thd')}
                 style={{
                   flex: 1,
                   minWidth: 0,
@@ -343,7 +344,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                 className="form-input"
                 value={investor}
                 onChange={(e) => setInvestor(e.target.value)}
-                placeholder="Ví dụ: Ban QLDA ĐTXD Công trình giao thông TP Hà Nội..."
+                placeholder={tUI('ui.vi-du-ban-qlda-dtxd-cong-trinh-giao-thong-tp-ha-')}
                 style={{
                   width: '100%',
                   padding: '9px 12px',
@@ -369,7 +370,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                 className="form-input"
                 value={province}
                 onChange={(e) => setProvince(e.target.value)}
-                placeholder="Ví dụ: Hà Nội, TP.HCM, Toàn quốc..."
+                placeholder={tUI('ui.vi-du-ha-noi-tp-hcm-toan-quoc')}
                 style={{
                   width: '100%',
                   padding: '9px 12px',
@@ -397,7 +398,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
               className="form-input"
               value={investorUrl}
               onChange={(e) => setInvestorUrl(e.target.value)}
-              placeholder="Ví dụ: vietnamairport.vn hoặc trang chuyên mục tin tức của chủ đầu tư"
+              placeholder={tUI('ui.vi-du-vietnamairport-vn-hoac-trang-chuyen-muc-ti')}
               style={{
                 width: '100%',
                 padding: '9px 12px',
@@ -483,7 +484,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
               rows={2}
               value={workItems}
               onChange={(e) => setWorkItems(e.target.value)}
-              placeholder="Ví dụ: Thi công cọc khoan nhồi, xây lắp cầu chính, tư vấn giám sát, giải phóng mặt bằng..."
+              placeholder={tUI('ui.vi-du-thi-cong-coc-khoan-nhoi-xay-lap-cau-chinh-')}
               style={{
                 width: '100%',
                 padding: '9px 12px',
@@ -520,7 +521,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                   type="text"
                   value={totalInvestment}
                   onChange={(e) => setTotalInvestment(e.target.value)}
-                  placeholder="Ví dụ: 1.200 tỷ VNĐ, 50 triệu USD..."
+                  placeholder={tUI('ui.vi-du-1-200-ty-vnd-50-trieu-usd')}
                   style={{
                     width: '100%',
                     padding: '8px 10px',
@@ -542,7 +543,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                   type="text"
                   value={capitalSource}
                   onChange={(e) => setCapitalSource(e.target.value)}
-                  placeholder="Ví dụ: Ngân sách Nhà nước, Vốn ODA, BOT..."
+                  placeholder={tUI('ui.vi-du-ngan-sach-nha-nuoc-von-oda-bot')}
                   style={{
                     width: '100%',
                     padding: '8px 10px',
@@ -564,7 +565,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
                   type="text"
                   value={progress}
                   onChange={(e) => setProgress(e.target.value)}
-                  placeholder="Ví dụ: Đang lập FS, Đang đấu thầu, Đang thi công..."
+                  placeholder={tUI('ui.vi-du-dang-lap-fs-dang-dau-thau-dang-thi-cong')}
                   style={{
                     width: '100%',
                     padding: '8px 10px',
@@ -634,7 +635,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
               rows={2}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Ghi chú nội bộ về dự án, đối tác, lịch trình liên hệ..."
+              placeholder={tUI('ui.ghi-chu-noi-bo-ve-du-an-doi-tac-lich-trinh-lien-')}
               style={{
                 width: '100%',
                 padding: '9px 12px',

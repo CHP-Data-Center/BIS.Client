@@ -17,6 +17,7 @@ import { projectDocumentsService, documentToItem } from '../services/projectDocu
 import ProjectDocumentPostModal from '../components/ProjectDocumentPostModal';
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { tUI } from '../locales';
 
 const PAGE_SIZE = 8;
 
@@ -547,7 +548,7 @@ function SectorConfigModal({ open, onClose, sectors, watched, onSave, saving }) 
             </p>
           </div>
           <button
-            type="button" onClick={onClose} aria-label="Đóng"
+            type="button" onClick={onClose} aria-label={tUI('ui.dong')}
             className="potential-modal-close-btn"
           >
             <X size={18} />
@@ -2097,7 +2098,7 @@ export default function PotentialProjectsPage() {
                 type="button"
                 onClick={() => { setFilterName(''); setPage(1); }}
                 className="potential-search-clear"
-                title="Xóa tìm kiếm tên dự án"
+                title={tUI('ui.xoa-tim-kiem-ten-du-an')}
               >
                 <X size={14} />
               </button>

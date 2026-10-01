@@ -14,6 +14,7 @@ import { projectsService } from '../services/projects';
 import {
   projectDocumentsService, documentFileProblem, todayVN, apiErrorMessage, DOCUMENT_ACCEPT,
 } from '../services/projectDocuments';
+import { tUI } from '../locales';
 
 // Chuẩn hóa chuỗi tiếng Việt không dấu
 function normalizeText(text) {
@@ -438,7 +439,7 @@ export default function ProjectDocumentPostModal({
                 }}
               >
                 <FileText size={13} />
-                <span>Hồ sơ tài liệu & Đăng bài báo chí</span>
+                <span>{tUI('ui.ho-so-tai-lieu-dang-bai-bao-chi')}</span>
               </span>
               <span
                 style={{
@@ -450,7 +451,7 @@ export default function ProjectDocumentPostModal({
                 }}
               >
                 <Shield size={12} />
-                <span>Quy trình có phê duyệt</span>
+                <span>{tUI('ui.quy-trinh-co-phe-duyet')}</span>
               </span>
             </div>
             <h2 style={{ margin: '8px 0 0', fontSize: 19, fontWeight: 900, color: 'var(--text-primary)' }}>
@@ -466,7 +467,7 @@ export default function ProjectDocumentPostModal({
             onClick={onClose}
             className="potential-modal-close-btn"
             style={{ padding: 6, background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 10 }}
-            aria-label="Đóng"
+            aria-label={tUI('ui.dong')}
           >
             <X size={18} />
           </button>
@@ -524,7 +525,7 @@ export default function ProjectDocumentPostModal({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Building2 size={16} style={{ color: 'var(--brand-500)' }} />
-              <span>1. Lọc và chọn tên dự án đang theo dõi</span>
+              <span>{tUI('ui.1-loc-va-chon-ten-du-an-dang-theo-doi')}</span>
             </span>
             {selectedProject && (
               <button
@@ -552,7 +553,7 @@ export default function ProjectDocumentPostModal({
               type="text"
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
-              placeholder="Gõ tìm kiếm tên dự án đang theo dõi..."
+              placeholder={tUI('ui.go-tim-kiem-ten-du-an-dang-theo-doi')}
               className="form-input"
               style={{ width: '100%', paddingLeft: 34, fontSize: 12.5, borderRadius: 10 }}
             />
@@ -616,7 +617,7 @@ export default function ProjectDocumentPostModal({
               }}>
                 {/* 1. Tên dự án */}
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>TÊN DỰ ÁN:</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>{tUI('ui.ten-du-an')}</span>
                   <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)' }}>
                     {selectedProject.name}
                   </span>
@@ -676,7 +677,7 @@ export default function ProjectDocumentPostModal({
               <form onSubmit={handleRequestEditApproval} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label className="form-label" style={{ fontSize: 11.5 }}>Tên dự án *</label>
+                    <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ten-du-an-2')}</label>
                     <input
                       type="text"
                       className="form-input"
@@ -687,25 +688,25 @@ export default function ProjectDocumentPostModal({
                     />
                   </div>
                   <div>
-                    <label className="form-label" style={{ fontSize: 11.5 }}>Vị trí / Địa phương</label>
+                    <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.vi-tri-dia-phuong')}</label>
                     <input
                       type="text"
                       className="form-input"
                       value={editForm.province}
                       onChange={(e) => setEditForm({ ...editForm, province: e.target.value })}
-                      placeholder="VD: Hà Nội, TP.HCM, Vĩnh Long..."
+                      placeholder={tUI('ui.vd-ha-noi-tp-hcm-vinh-long')}
                       style={{ fontSize: 12.5 }}
                     />
                   </div>
                   <div>
-                    <label className="form-label" style={{ fontSize: 11.5 }}>Lĩnh vực</label>
+                    <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.linh-vuc')}</label>
                     <select
                       className="form-select"
                       value={editForm.sector}
                       onChange={(e) => setEditForm({ ...editForm, sector: e.target.value })}
                       style={{ fontSize: 12.5 }}
                     >
-                      <option value="">— Chưa xác định —</option>
+                      <option value="">{tUI('ui.chua-xac-dinh')}</option>
                       {editForm.sector && !sectors.some((s) => s.slug === editForm.sector) && (
                         <option value={editForm.sector}>
                           {selectedProject?.sector_name || editForm.sector}
@@ -717,7 +718,7 @@ export default function ProjectDocumentPostModal({
                     </select>
                   </div>
                   <div>
-                    <label className="form-label" style={{ fontSize: 11.5 }}>Ngày bắt đầu</label>
+                    <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ngay-bat-dau')}</label>
                     <input
                       type="date"
                       className="form-input"
@@ -727,7 +728,7 @@ export default function ProjectDocumentPostModal({
                     />
                   </div>
                   <div>
-                    <label className="form-label" style={{ fontSize: 11.5 }}>Ngày kết thúc</label>
+                    <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ngay-ket-thuc')}</label>
                     <input
                       type="date"
                       className="form-input"
@@ -738,17 +739,17 @@ export default function ProjectDocumentPostModal({
                     />
                   </div>
                   <div>
-                    <label className="form-label" style={{ fontSize: 11.5 }}>Trạng thái</label>
+                    <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.trang-thai')}</label>
                     <select
                       className="form-select"
                       value={editForm.status}
                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                       style={{ fontSize: 12.5 }}
                     >
-                      <option value="watching">Đang theo dõi</option>
-                      <option value="active">Đang thực hiện</option>
-                      <option value="completed">Đã hoàn thành</option>
-                      <option value="closed">Đã đóng / Tạm dừng</option>
+                      <option value="watching">{tUI('ui.dang-theo-doi')}</option>
+                      <option value="active">{tUI('ui.dang-thuc-hien')}</option>
+                      <option value="completed">{tUI('ui.da-hoan-thanh')}</option>
+                      <option value="closed">{tUI('ui.da-dong-tam-dung')}</option>
                     </select>
                   </div>
                 </div>
@@ -768,7 +769,7 @@ export default function ProjectDocumentPostModal({
                     style={{ fontSize: 12, padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                   >
                     <Save size={13} />
-                    <span>Lưu (Yêu cầu phê duyệt)</span>
+                    <span>{tUI('ui.luu-yeu-cau-phe-duyet')}</span>
                   </button>
                 </div>
               </form>
@@ -795,7 +796,7 @@ export default function ProjectDocumentPostModal({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <FileCheck size={16} style={{ color: '#059669' }} />
-              <span>2. Form tài liệu dự án, biên bản (.DOCX, .PDF) & Trích xuất</span>
+              <span>{tUI('ui.2-form-tai-lieu-du-an-bien-ban-docx-pdf-trich-xu')}</span>
             </span>
 
             {attachedFiles.length > 0 && (
@@ -883,7 +884,7 @@ export default function ProjectDocumentPostModal({
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeFile(); }}
                         style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
-                        title="Xóa file này"
+                        title={tUI('ui.xoa-file-nay')}
                       >
                         <X size={13} />
                       </button>
@@ -906,26 +907,26 @@ export default function ProjectDocumentPostModal({
                 value={docProjectName}
                 maxLength={255}
                 onChange={(e) => setDocProjectName(e.target.value)}
-                placeholder="Tên dự án theo tài liệu trích xuất..."
+                placeholder={tUI('ui.ten-du-an-theo-tai-lieu-trich-xuat')}
                 style={{ fontSize: 12.5 }}
               />
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Vị trí địa bàn</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.vi-tri-dia-ban')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={docProvince}
                 maxLength={255}
                 onChange={(e) => setDocProvince(e.target.value)}
-                placeholder="Địa phương thực hiện..."
+                placeholder={tUI('ui.dia-phuong-thuc-hien')}
                 style={{ fontSize: 12.5 }}
               />
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Ngày văn bản / biên bản</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ngay-van-ban-bien-ban')}</label>
               <input
                 type="date"
                 className="form-input"
@@ -936,7 +937,7 @@ export default function ProjectDocumentPostModal({
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Ngày tóm tắt</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ngay-tom-tat')}</label>
               <input
                 type="date"
                 className="form-input"
@@ -956,28 +957,28 @@ export default function ProjectDocumentPostModal({
                 value={docSummary}
                 maxLength={5000}
                 onChange={(e) => setDocSummary(e.target.value)}
-                placeholder="Nội dung chính hoặc thông tin tóm tắt sau khi phân tích tài liệu..."
+                placeholder={tUI('ui.noi-dung-chinh-hoac-thong-tin-tom-tat-sau-khi-ph')}
                 style={{ fontSize: 12.5, resize: 'vertical' }}
               />
             </div>
 
             {/* Bài tin: tài liệu được trình bày dưới dạng bài báo để người khác đọc nhanh */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Tiêu đề bài viết</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.tieu-de-bai-viet')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={articleTitle}
                 maxLength={255}
                 onChange={(e) => { setArticleTitle(e.target.value); setArticleSource('manual'); }}
-                placeholder="Tiêu đề kiểu báo chí; để trống thì lấy tên dự án"
+                placeholder={tUI('ui.tieu-de-kieu-bao-chi-de-trong-thi-lay-ten-du-an')}
                 style={{ fontSize: 12.5 }}
               />
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label className="form-label" style={{ fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <span>Nội dung bài viết (hiển thị dạng bài tin)</span>
+                <span>{tUI('ui.noi-dung-bai-viet-hien-thi-dang-bai-tin')}</span>
                 {articleSource === 'ai' && (
                   <span style={{
                     fontSize: 10.5, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
@@ -1001,7 +1002,7 @@ export default function ProjectDocumentPostModal({
                 value={articleBody}
                 maxLength={20000}
                 onChange={(e) => { setArticleBody(e.target.value); setArticleSource('manual'); }}
-                placeholder="Bấm 'Trích xuất thông tin từ tài liệu' để máy soạn bài, rồi sửa lại. Cách đoạn bằng một dòng trống."
+                placeholder={tUI('ui.bam-trich-xuat-thong-tin-tu-tai-lieu-de-may-soan')}
                 style={{ fontSize: 12.5, resize: 'vertical', lineHeight: 1.6 }}
               />
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
@@ -1026,15 +1027,15 @@ export default function ProjectDocumentPostModal({
         }}>
           <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Globe2 size={16} style={{ color: 'var(--brand-600)' }} />
-            <span>3. Đăng bài dưới dạng báo chí & Lựa chọn quyền riêng tư</span>
+            <span>{tUI('ui.3-dang-bai-duoi-dang-bao-chi-lua-chon-quyen-rien')}</span>
           </span>
 
           <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
-            Bài đăng sẽ được định dạng theo cấu trúc <strong>Báo chí</strong> trong hệ thống. Thẻ bài viết sẽ hiển thị <strong>tên người dùng ({authorName})</strong> thay cho nhãn liên kết ngoài.
+            Bài đăng sẽ được định dạng theo cấu trúc <strong>{tUI('ui.bao-chi')}</strong> {tUI('ui.trong-he-thong-the-bai-viet-se-hien-thi')} <strong>tên người dùng ({authorName})</strong> thay cho nhãn liên kết ngoài.
           </p>
 
           {/* Lựa chọn 3 cấp độ quyền riêng tư */}
-          <div role="radiogroup" aria-label="Quyền riêng tư" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          <div role="radiogroup" aria-label={tUI('ui.quyen-rieng-tu')} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
             {Object.values(PRIVACY_CONFIG).map((p) => {
               const active = privacy === p.id;
               // Máy chủ từ chối "Tổ chức" khi tài khoản chưa thuộc tổ chức nào.
@@ -1113,7 +1114,7 @@ export default function ProjectDocumentPostModal({
               boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
             }}
           >
-            <span>Duyệt & Đăng bài báo chí</span>
+            <span>{tUI('ui.duyet-dang-bai-bao-chi')}</span>
             <ArrowRight size={15} />
           </button>
         </div>
@@ -1161,9 +1162,9 @@ export default function ProjectDocumentPostModal({
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ textAlign: 'left', color: 'var(--text-muted)' }}>
-                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>Thông tin</th>
-                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>Hiện tại</th>
-                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>Sau chỉnh sửa</th>
+                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>{tUI('ui.thong-tin')}</th>
+                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>{tUI('ui.hien-tai')}</th>
+                    <th style={{ padding: '4px 6px', fontWeight: 700 }}>{tUI('ui.sau-chinh-sua')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1199,7 +1200,7 @@ export default function ProjectDocumentPostModal({
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
                 {savingEdit ? <Loader2 size={14} className="spin" /> : <CheckCircle2 size={14} />}
-                <span>Xác nhận phê duyệt & Lưu</span>
+                <span>{tUI('ui.xac-nhan-phe-duyet-luu')}</span>
               </button>
             </div>
           </div>
@@ -1279,7 +1280,7 @@ export default function ProjectDocumentPostModal({
 
               {/* Tên dự án */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TÊN DỰ ÁN:</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.ten-du-an')}</div>
                 <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', marginTop: 2 }}>
                   {finalTitle}
                 </div>
@@ -1287,18 +1288,18 @@ export default function ProjectDocumentPostModal({
 
               {/* Vị trí, ngày văn bản, ngày tóm tắt, dự án theo dõi */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span>📍 <strong>Vị trí:</strong> {docProvince.trim() || '—'}</span>
-                <span>📅 <strong>Ngày văn bản:</strong> {fmtDate(docDate)}</span>
-                <span>🗓️ <strong>Ngày tóm tắt:</strong> {fmtDate(docSummaryDate)}</span>
+                <span>📍 <strong>{tUI('ui.vi-tri')}</strong> {docProvince.trim() || '—'}</span>
+                <span>📅 <strong>{tUI('ui.ngay-van-ban')}</strong> {fmtDate(docDate)}</span>
+                <span>🗓️ <strong>{tUI('ui.ngay-tom-tat-2')}</strong> {fmtDate(docSummaryDate)}</span>
                 {selectedProject && (
-                  <span>📌 <strong>Dự án theo dõi:</strong> {selectedProject.name}</span>
+                  <span>📌 <strong>{tUI('ui.du-an-theo-doi')}</strong> {selectedProject.name}</span>
                 )}
               </div>
 
 
               {matchedKeywords.length > 0 && (
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TỪ KHÓA MÁY GẮN:</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.tu-khoa-may-gan')}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 5 }}>
                     {matchedKeywords.map((kw) => (
                       <span key={kw} style={{
@@ -1319,7 +1320,7 @@ export default function ProjectDocumentPostModal({
 
               {articleTitle.trim() && (
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TIÊU ĐỀ BÀI VIẾT:</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.tieu-de-bai-viet-2')}</div>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
                     {articleTitle.trim()}
                   </div>
@@ -1328,7 +1329,7 @@ export default function ProjectDocumentPostModal({
 
               {/* Tóm tắt nội dung */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>NỘI DUNG TÓM TẮT:</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.noi-dung-tom-tat')}</div>
                 <div style={{
                   fontSize: 12.5, color: 'var(--text-primary)', lineHeight: 1.5, marginTop: 4,
                   background: 'var(--bg-surface)', padding: 10, borderRadius: 8, border: '1px solid var(--border)',
@@ -1396,7 +1397,7 @@ export default function ProjectDocumentPostModal({
                 }}
               >
                 {publishing ? <Loader2 size={15} className="spin" /> : <CheckCircle2 size={15} />}
-                <span>Xác nhận phê duyệt & Đăng bài</span>
+                <span>{tUI('ui.xac-nhan-phe-duyet-dang-bai')}</span>
               </button>
             </div>
           </div>

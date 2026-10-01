@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { projectDocumentsService, documentToItem, apiErrorMessage } from '../services/projectDocuments';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -170,7 +171,7 @@ export default function ProjectDocumentArticlePage() {
 
         {doc.matched_keywords?.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '0 0 16px' }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>🏷️ Từ khóa khớp:</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>{tUI('ui.tu-khoa-khop')}</span>
             {doc.matched_keywords.map((kw) => (
               <button
                 key={kw}

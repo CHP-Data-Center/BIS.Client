@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { keywordSuggestionsService } from '../../services/keywordSuggestions';
 import { useLang } from '../../context/LanguageContext';
+import { tUI } from '../../locales';
 
 const STATUS_TABS = [
   { id: 'pending', labelKey: 'suggest.pending' },
@@ -728,7 +729,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
                   display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--text-secondary)'
                 }}>
                   <Building2 size={15} style={{ color: 'var(--brand-500)', flexShrink: 0 }} />
-                  <span><strong>Cơ quan / Bên mời thầu:</strong> {selectedArticle.procuring_entity}</span>
+                  <span><strong>{tUI('ui.co-quan-ben-moi-thau')}</strong> {selectedArticle.procuring_entity}</span>
                 </div>
               )}
 

@@ -12,6 +12,7 @@ import {
 import { projectsService } from '../services/projects';
 import { potentialService } from '../services/potential';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 function formatRowError(err, t) {
   if (!err) return null;
@@ -221,7 +222,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
             <input
               type="text"
               value={keywordFilter} onChange={(e) => setKeywordFilter(e.target.value)}
-              placeholder="Bỏ trống thì hệ thống tự rút từ tên dự án"
+              placeholder={tUI('ui.bo-trong-thi-he-thong-tu-rut-tu-ten-du-an')}
               style={{
                 width: '100%', padding: '8px 11px', borderRadius: 8, fontSize: 12.5,
                 border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -253,7 +254,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
             <input
               type="text"
               value={investorUrl} onChange={(e) => setInvestorUrl(e.target.value)}
-              placeholder="vd: acv.vn hoặc https://acv.vn"
+              placeholder={tUI('ui.vd-acv-vn-hoac-https-acv-vn')}
               style={{
                 width: '100%', padding: '8px 11px', borderRadius: 8, fontSize: 12.5,
                 border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -275,7 +276,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
                   color: 'var(--text-primary)', boxSizing: 'border-box',
                 }}
               >
-                <option value="">— Chưa chọn —</option>
+                <option value="">{tUI('ui.chua-chon')}</option>
                 {sectors.map((s) => (
                   <option key={s.slug} value={s.slug}>{s.name}</option>
                 ))}
@@ -310,7 +311,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
             <input
               type="text"
               value={province} onChange={(e) => setProvince(e.target.value)}
-              placeholder="Hà Nội, TP.HCM, Toàn quốc..."
+              placeholder={tUI('ui.ha-noi-tp-hcm-toan-quoc')}
               style={{
                 width: '100%', padding: '8px 11px', borderRadius: 8, fontSize: 12.5,
                 border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -326,7 +327,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
             <textarea
               rows={2}
               value={workItems} onChange={(e) => setWorkItems(e.target.value)}
-              placeholder="Ví dụ: Cọc khoan nhồi, xây lắp cầu chính, tư vấn giám sát..."
+              placeholder={tUI('ui.vi-du-coc-khoan-nhoi-xay-lap-cau-chinh-tu-van-gi')}
               style={{
                 width: '100%', padding: '8px 11px', borderRadius: 8, fontSize: 12.5,
                 border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -343,7 +344,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
               <input
                 type="text"
                 value={totalInvestment} onChange={(e) => setTotalInvestment(e.target.value)}
-                placeholder="1.200 tỷ VNĐ..."
+                placeholder={tUI('ui.1-200-ty-vnd')}
                 style={{
                   width: '100%', padding: '7px 9px', borderRadius: 8, fontSize: 12,
                   border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -358,7 +359,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
               <input
                 type="text"
                 value={capitalSource} onChange={(e) => setCapitalSource(e.target.value)}
-                placeholder="Ngân sách, ODA..."
+                placeholder={tUI('ui.ngan-sach-oda')}
                 style={{
                   width: '100%', padding: '7px 9px', borderRadius: 8, fontSize: 12,
                   border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -373,7 +374,7 @@ function RowEditModal({ row, sectors, onSave, onClose }) {
               <input
                 type="text"
                 value={progress} onChange={(e) => setProgress(e.target.value)}
-                placeholder="Đang đấu thầu..."
+                placeholder={tUI('ui.dang-dau-thau')}
                 style={{
                   width: '100%', padding: '7px 9px', borderRadius: 8, fontSize: 12,
                   border: '1px solid var(--border)', background: 'var(--bg-surface-2)',
@@ -985,11 +986,11 @@ function ExcelTab({ onDone, onStepChange }) {
                           fontWeight: 700,
                           color: hasErr ? '#b91c1c' : 'var(--text-primary)',
                         }}>
-                          {r.name || <em style={{ color: '#ef4444' }}>[Chưa có tên dự án]</em>}
+                          {r.name || <em style={{ color: '#ef4444' }}>{tUI('ui.chua-co-ten-du-an')}</em>}
                         </span>
                         {r.work_items && (
                           <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.3 }}>
-                            📋 <strong>Hạng mục:</strong> {r.work_items}
+                            📋 <strong>{tUI('ui.hang-muc')}</strong> {r.work_items}
                           </span>
                         )}
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>

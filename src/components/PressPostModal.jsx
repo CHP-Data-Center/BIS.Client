@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   projectDocumentsService, documentFileProblem, todayVN, apiErrorMessage, DOCUMENT_ACCEPT,
 } from '../services/projectDocuments';
+import { tUI } from '../locales';
 
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -253,7 +254,7 @@ export default function PressPostModal({
                 }}
               >
                 <Newspaper size={13} />
-                <span>Đăng Bài Báo Chí Dự Án</span>
+                <span>{tUI('ui.dang-bai-bao-chi-du-an')}</span>
               </span>
               <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
                 Tác giả: <strong>{authorName}</strong>
@@ -272,7 +273,7 @@ export default function PressPostModal({
             onClick={onClose}
             className="potential-modal-close-btn"
             style={{ padding: 6, background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 10 }}
-            aria-label="Đóng"
+            aria-label={tUI('ui.dong')}
           >
             <X size={18} />
           </button>
@@ -329,10 +330,10 @@ export default function PressPostModal({
         }}>
           <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Shield size={15} style={{ color: 'var(--brand-600)' }} />
-            <span>Quyền riêng tư bài viết (Privacy) *</span>
+            <span>{tUI('ui.quyen-rieng-tu-bai-viet-privacy')}</span>
           </span>
 
-          <div role="radiogroup" aria-label="Quyền riêng tư" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          <div role="radiogroup" aria-label={tUI('ui.quyen-rieng-tu')} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
             {PRIVACY_OPTIONS.map((opt) => {
               const active = privacy === opt.id;
               // Máy chủ từ chối "Tổ chức" khi tài khoản chưa thuộc tổ chức nào.
@@ -398,7 +399,7 @@ export default function PressPostModal({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <Paperclip size={15} style={{ color: 'var(--brand-500)' }} />
-              <span>Tài liệu đính kèm (.DOCX, .PDF) * & trích xuất</span>
+              <span>{tUI('ui.tai-lieu-dinh-kem-docx-pdf-trich-xuat')}</span>
             </span>
 
             {attachedFiles.length > 0 && (
@@ -487,27 +488,27 @@ export default function PressPostModal({
                 value={title}
                 maxLength={255}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="VD: Khởi công xây dựng tuyến cao tốc kết nối vùng kinh tế trọng điểm..."
+                placeholder={tUI('ui.vd-khoi-cong-xay-dung-tuyen-cao-toc-ket-noi-vung')}
                 style={{ fontSize: 12.5 }}
                 required
               />
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Vị trí / Địa phương</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.vi-tri-dia-phuong')}</label>
               <input
                 type="text"
                 className="form-input"
                 value={province}
                 maxLength={255}
                 onChange={(e) => setProvince(e.target.value)}
-                placeholder="VD: Hà Nội, TP.HCM, Vĩnh Long..."
+                placeholder={tUI('ui.vd-ha-noi-tp-hcm-vinh-long')}
                 style={{ fontSize: 12.5 }}
               />
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Ngày văn bản / bài báo</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ngay-van-ban-bai-bao')}</label>
               <input
                 type="date"
                 className="form-input"
@@ -518,7 +519,7 @@ export default function PressPostModal({
             </div>
 
             <div>
-              <label className="form-label" style={{ fontSize: 11.5 }}>Ngày tóm tắt</label>
+              <label className="form-label" style={{ fontSize: 11.5 }}>{tUI('ui.ngay-tom-tat')}</label>
               <input
                 type="date"
                 className="form-input"
@@ -530,7 +531,7 @@ export default function PressPostModal({
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label className="form-label" style={{ fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <span>Nội dung bài viết (hiển thị dạng bài tin)</span>
+                <span>{tUI('ui.noi-dung-bai-viet-hien-thi-dang-bai-tin')}</span>
                 {articleSource === 'ai' && (
                   <span style={{
                     fontSize: 10.5, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
@@ -546,7 +547,7 @@ export default function PressPostModal({
                 value={articleBody}
                 maxLength={20000}
                 onChange={(e) => { setArticleBody(e.target.value); setArticleSource('manual'); }}
-                placeholder="Bấm 'Trích xuất vào bài báo' để máy soạn bài từ tài liệu, rồi sửa lại. Cách đoạn bằng một dòng trống."
+                placeholder={tUI('ui.bam-trich-xuat-vao-bai-bao-de-may-soan-bai-tu-ta')}
                 style={{ fontSize: 12.5, resize: 'vertical', lineHeight: 1.6 }}
               />
             </div>
@@ -561,7 +562,7 @@ export default function PressPostModal({
                 value={summary}
                 maxLength={5000}
                 onChange={(e) => setSummary(e.target.value)}
-                placeholder="Nội dung truyền thông, tóm tắt diễn biến, thông số kỹ thuật hoặc biên bản cuộc họp..."
+                placeholder={tUI('ui.noi-dung-truyen-thong-tom-tat-dien-bien-thong-so')}
                 style={{ fontSize: 12.5, resize: 'vertical' }}
                 required
               />
@@ -603,7 +604,7 @@ export default function PressPostModal({
             }}
           >
             <Send size={15} />
-            <span>Phê duyệt & Đăng bài</span>
+            <span>{tUI('ui.phe-duyet-dang-bai')}</span>
           </button>
         </div>
       </div>
@@ -657,22 +658,22 @@ export default function PressPostModal({
               border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10,
             }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TIÊU ĐỀ BÀI BÁO:</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.tieu-de-bai-bao')}</div>
                 <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', marginTop: 2 }}>
                   {title}
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span>📍 <strong>Vị trí:</strong> {province.trim() || '—'}</span>
-                <span>📅 <strong>Ngày văn bản:</strong> {fmtDate(date)}</span>
-                <span>⏱️ <strong>Ngày tóm tắt:</strong> {fmtDate(summaryDate)}</span>
+                <span>📍 <strong>{tUI('ui.vi-tri')}</strong> {province.trim() || '—'}</span>
+                <span>📅 <strong>{tUI('ui.ngay-van-ban')}</strong> {fmtDate(date)}</span>
+                <span>⏱️ <strong>{tUI('ui.ngay-tom-tat-2')}</strong> {fmtDate(summaryDate)}</span>
               </div>
 
 
               {matchedKeywords.length > 0 && (
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TỪ KHÓA MÁY GẮN:</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.tu-khoa-may-gan')}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 5 }}>
                     {matchedKeywords.map((kw) => (
                       <span key={kw} style={{
@@ -692,7 +693,7 @@ export default function PressPostModal({
               )}
 
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>QUYỀN RIÊNG TƯ:</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.quyen-rieng-tu-2')}</div>
                 <div style={{ marginTop: 4 }}>
                   <span
                     style={{
@@ -707,7 +708,7 @@ export default function PressPostModal({
               </div>
 
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>TÓM TẮT NỘI DUNG:</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{tUI('ui.tom-tat-noi-dung')}</div>
                 <div style={{
                   fontSize: 12.5, color: 'var(--text-primary)', lineHeight: 1.5, marginTop: 4,
                   background: 'var(--bg-surface)', padding: 10, borderRadius: 8, border: '1px solid var(--border)',
@@ -763,7 +764,7 @@ export default function PressPostModal({
                 }}
               >
                 {publishing ? <Loader2 size={15} className="spin" /> : <CheckCircle2 size={15} />}
-                <span>Xác nhận phê duyệt & Đăng bài</span>
+                <span>{tUI('ui.xac-nhan-phe-duyet-dang-bai')}</span>
               </button>
             </div>
           </div>

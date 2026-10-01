@@ -16,6 +16,7 @@ import { keywordsService } from '../services/keywords';
 import { useLang } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { apiCache } from '../utils/apiCache';
+import { tUI } from '../locales';
 
 function formatRelativeTime(dateStr, lang = 'vi') {
   if (!dateStr) return lang === 'ja' ? '本日' : lang === 'en' ? 'Today' : 'Hôm nay';
@@ -357,7 +358,7 @@ function TrendingMarqueeStrip({ keywords, userKeywords, onSelectKeyword, activeT
         ))}
 
         {userMatchedCount > 0 && (
-          <span className="user-matched-summary-pill" title="Các từ khóa bạn đã lưu đang nằm trong top xu hướng thị trường">
+          <span className="user-matched-summary-pill" title={tUI('ui.cac-tu-khoa-ban-da-luu-dang-nam-trong-top-xu-huo')}>
             <Star size={13} style={{ fill: '#f59e0b', color: '#f59e0b' }} />
             <span>{userMatchedCount} từ khóa của bạn đang nổi bật</span>
           </span>
@@ -1320,8 +1321,8 @@ export default function TrendingPage() {
             <Zap size={15} style={{ color: '#f59e0b' }} />
             <span>
               {filteredArticles.length === 0
-                ? <>Không có mục nào khớp từ khóa nổi bật: <strong>#{activeTrendingTag}</strong></>
-                : <>Đang lọc bài viết theo từ khóa nổi bật: <strong>#{activeTrendingTag}</strong> ({filteredArticles.length} mục)</>}
+                ? <>{tUI('ui.khong-co-muc-nao-khop-tu-khoa-noi-bat')} <strong>#{activeTrendingTag}</strong></>
+                : <>{tUI('ui.dang-loc-bai-viet-theo-tu-khoa-noi-bat')} <strong>#{activeTrendingTag}</strong> ({filteredArticles.length} mục)</>}
             </span>
             {isUserKeyword(activeTrendingTag) && (
               <span className="user-matched-tag-chip" style={{ fontSize: 11, padding: '2px 8px' }}>
@@ -1338,7 +1339,7 @@ export default function TrendingPage() {
             }}
           >
             <X size={13} />
-            <span>Bỏ lọc</span>
+            <span>{tUI('ui.bo-loc')}</span>
           </button>
         </div>
       )}
@@ -1553,12 +1554,12 @@ export default function TrendingPage() {
                         {card.title}
                       </h3>
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', padding: '6px 10px', borderRadius: 6 }}>
-                        🏛️ <strong>Bên mời thầu:</strong> {card.procuring_entity || 'Mua sắm công'}
+                        🏛️ <strong>{tUI('ui.ben-moi-thau')}</strong> {card.procuring_entity || 'Mua sắm công'}
                       </div>
                     </div>
 
                     <div className="sub-card-footer">
-                      <span className="sub-card-source" style={{ color: '#8b5cf6', fontWeight: 800 }}>Đấu Thầu Công</span>
+                      <span className="sub-card-source" style={{ color: '#8b5cf6', fontWeight: 800 }}>{tUI('ui.dau-thau-cong')}</span>
                       <span className="sub-card-time">{formatRelativeTime(card.publish_date || card.published_at || card.date, lang)}</span>
                     </div>
                   </div>
@@ -1812,7 +1813,7 @@ export default function TrendingPage() {
                     className="trending-announcement-banner"
                     onClick={() => nav('/projects')}
                   >
-                    <div className="announcement-banner-badge">★ TIÊU ĐIỂM QUỐC GIA ★</div>
+                    <div className="announcement-banner-badge">{tUI('ui.tieu-diem-quoc-gia')}</div>
                     <div className="announcement-banner-text">
                       {t('trending.bannerTitle')}
                     </div>
@@ -2773,15 +2774,15 @@ export default function TrendingPage() {
                 }}
               >
                 <ArrowLeft size={14} />
-                <span>Tạp chí Xu Hướng</span>
+                <span>{tUI('ui.tap-chi-xu-huong')}</span>
               </button>
               <div style={{ height: 20, width: 1, background: 'var(--border)' }} />
               <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 {activeSourceFilter === 'keywords' && <><span>🎯</span> Bản Tin Theo Từ Khóa Đã Lưu ({userKeywords.length} từ khóa)</>}
-                {activeSourceFilter === 'adb' && <><span>🏦</span> Dự Án ODA Ngân Hàng Phát Triển Châu Á (ADB)</>}
-                {activeSourceFilter === 'worldbank' && <><span>🌍</span> Dự Án ODA Ngân Hàng Thế Giới (World Bank)</>}
-                {activeSourceFilter === 'gov' && <><span>📋</span> Gói Thầu & KHLCNT Đấu Thầu Quốc Gia (e-GP)</>}
-                {activeSourceFilter === 'press' && <><span>📰</span> Toàn Bộ Bản Tin Báo Chí & Phân Tích Thị Trường</>}
+                {activeSourceFilter === 'adb' && <><span>🏦</span> {tUI('ui.du-an-oda-ngan-hang-phat-trien-chau-a-adb')}</>}
+                {activeSourceFilter === 'worldbank' && <><span>🌍</span> {tUI('ui.du-an-oda-ngan-hang-the-gioi-world-bank')}</>}
+                {activeSourceFilter === 'gov' && <><span>📋</span> {tUI('ui.goi-thau-khlcnt-dau-thau-quoc-gia-e-gp')}</>}
+                {activeSourceFilter === 'press' && <><span>📰</span> {tUI('ui.toan-bo-ban-tin-bao-chi-phan-tich-thi-truong')}</>}
                 <span style={{
                   fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
                   background: 'var(--brand-50)', color: 'var(--brand-600)', border: '1px solid var(--brand-200)'
@@ -2913,7 +2914,7 @@ export default function TrendingPage() {
                   boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)'
                 }}
               >
-                <span>+ Thêm từ khóa theo dõi ngay</span>
+                <span>{tUI('ui.them-tu-khoa-theo-doi-ngay')}</span>
                 <ArrowUpRight size={15} />
               </button>
             </div>
@@ -3060,7 +3061,7 @@ export default function TrendingPage() {
                           handleItemClick(heroItem);
                         }}
                       >
-                        <span>Xem chi tiết nội dung</span>
+                        <span>{tUI('ui.xem-chi-tiet-noi-dung')}</span>
                         <ExternalLink size={14} />
                       </button>
                     </div>
@@ -3163,7 +3164,7 @@ export default function TrendingPage() {
                             padding: '7px 10px', borderRadius: 8, marginBottom: 12, lineHeight: 1.4,
                             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
                           }}>
-                            🏛️ <strong>Bên mời thầu:</strong> {item.procuring_entity || item.investor || 'Cổng thông tin đấu thầu'}
+                            🏛️ <strong>{tUI('ui.ben-moi-thau')}</strong> {item.procuring_entity || item.investor || 'Cổng thông tin đấu thầu'}
                           </div>
                           <div style={{
                             marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border-subtle)',

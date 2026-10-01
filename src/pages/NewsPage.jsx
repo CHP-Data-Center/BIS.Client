@@ -253,7 +253,7 @@ function CompactNewsRow({ article, index, onOpenPost }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               textDecoration: 'none'
             }}
-            title="Xem bài gốc"
+            title={tUI('ui.xem-bai-goc')}
           >
             <ExternalLink size={14} />
           </a>
@@ -1165,7 +1165,7 @@ export default function NewsPage() {
                   }}
                 >
                   <Newspaper size={14} />
-                  <span>Đăng bài báo chí</span>
+                  <span>{tUI('ui.dang-bai-bao-chi')}</span>
                 </button>
               )}
 

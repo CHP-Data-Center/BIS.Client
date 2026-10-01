@@ -1026,7 +1026,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <label className="form-label">{t('admin.sourceUrl')} *</label>
-                    <input className="form-input" placeholder="Link RSS hoặc trang chuyên mục tin tức" title="Dán link RSS (vd https://vnexpress.net/rss/kinh-doanh.rss) hoặc link trang chuyên mục tin tức — hệ thống tự nhận diện" value={newSource.url} onChange={e => setNewSource({ ...newSource, url: e.target.value })} required />
+                    <input className="form-input" placeholder={tUI('ui.link-rss-hoac-trang-chuyen-muc-tin-tuc')} title={tUI('ui.dan-link-rss-vd-https-vnexpress-net-rss-kinh-doa')} value={newSource.url} onChange={e => setNewSource({ ...newSource, url: e.target.value })} required />
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
@@ -1036,7 +1036,7 @@ export default function AdminPage() {
                 {/* Trước đây form này ngầm coi mọi link là RSS: dán trang chủ báo vào thì nguồn
                     ra 0 bài mà nhật ký crawl vẫn ghi "thành công". Nay máy chủ tự nhận diện. */}
                 <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  Có thể dán <b>link RSS</b> hoặc <b>trang chuyên mục tin tức</b> — hệ thống tự nhận diện.
+                  Có thể dán <b>link RSS</b> {tUI('ui.hoac')} <b>{tUI('ui.trang-chuyen-muc-tin-tuc')}</b> — hệ thống tự nhận diện.
                   Trang chặn truy cập tự động (yêu cầu chạy JavaScript) sẽ báo lỗi kèm lý do trong nhật ký crawl.
                 </p>
               </div>
@@ -1160,7 +1160,7 @@ export default function AdminPage() {
                                       ? 'Kích hoạt lại: nguồn được thu thập từ lượt kế tiếp'
                                       : 'Tạm ngưng: các lượt thu thập sau bỏ qua nguồn này')}
                                 >
-                                  {s.is_active === false ? <><Play size={14} /> Kích hoạt</> : <><Pause size={14} /> Tạm ngưng</>}
+                                  {s.is_active === false ? <><Play size={14} /> {tUI('ui.kich-hoat')}</> : <><Pause size={14} /> {tUI('ui.tam-ngung')}</>}
                                 </button>
                                   );
                                 })()}

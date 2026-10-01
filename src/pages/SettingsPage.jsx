@@ -379,14 +379,14 @@ export default function SettingsPage() {
                     <option value="Miền Bắc">{t('settings.regionNorth')}</option>
                     <option value="Miền Trung">{t('settings.regionCentral')}</option>
                     <option value="Miền Nam">{t('settings.regionSouth')}</option>
-                    <option value="Hà Nội">Hà Nội</option>
-                    <option value="TP.HCM">TP. Hồ Chí Minh</option>
-                    <option value="Đà Nẵng">Đà Nẵng</option>
-                    <option value="Hải Phòng">Hải Phòng</option>
-                    <option value="Cần Thơ">Cần Thơ</option>
-                    <option value="Quảng Ninh">Quảng Ninh</option>
-                    <option value="Bình Dương">Bình Dương</option>
-                    <option value="Đồng Nai">Đồng Nai</option>
+                    <option value="Hà Nội">{tUI('ui.ha-noi')}</option>
+                    <option value="TP.HCM">{tUI('ui.tp-ho-chi-minh')}</option>
+                    <option value="Đà Nẵng">{tUI('ui.da-nang')}</option>
+                    <option value="Hải Phòng">{tUI('ui.hai-phong')}</option>
+                    <option value="Cần Thơ">{tUI('ui.can-tho')}</option>
+                    <option value="Quảng Ninh">{tUI('ui.quang-ninh')}</option>
+                    <option value="Bình Dương">{tUI('ui.binh-duong')}</option>
+                    <option value="Đồng Nai">{tUI('ui.dong-nai')}</option>
                     <option value="__custom__">{t('settings.regionCustom')}</option>
                   </select>
                   <input

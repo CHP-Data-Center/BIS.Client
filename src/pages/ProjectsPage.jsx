@@ -956,7 +956,7 @@ export default function ProjectsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ ...LINK_STYLE, display: 'flex' }}
-                        title="Hệ thống đang theo dõi trang tin trên website này"
+                        title={tUI('ui.he-thong-dang-theo-doi-trang-tin-tren-website-na')}
                       >
                         {t('projects.investorWebsite')}
                       </a>
@@ -1659,7 +1659,7 @@ export default function ProjectsPage() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: Ban QLDA Thăng Long, EVN, v.v."
+                  placeholder={tUI('ui.vi-du-ban-qlda-thang-long-evn-v-v')}
                   value={investor}
                   onChange={(e) => setInvestor(e.target.value)}
                 />
@@ -1712,7 +1712,7 @@ export default function ProjectsPage() {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ví dụ: Hà Nội, TP.HCM, Toàn quốc..."
+                  placeholder={tUI('ui.vi-du-ha-noi-tp-hcm-toan-quoc')}
                   value={province}
                   onChange={(e) => setProvince(e.target.value)}
                 />
@@ -1723,7 +1723,7 @@ export default function ProjectsPage() {
                 <textarea
                   rows={2}
                   className="form-input"
-                  placeholder="Ví dụ: Cọc khoan nhồi, thi công hầm, tư vấn giám sát..."
+                  placeholder={tUI('ui.vi-du-coc-khoan-nhoi-thi-cong-ham-tu-van-giam-sa')}
                   value={workItems}
                   onChange={(e) => setWorkItems(e.target.value)}
                   style={{ resize: 'vertical' }}
@@ -1736,7 +1736,7 @@ export default function ProjectsPage() {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="1.200 tỷ VNĐ..."
+                    placeholder={tUI('ui.1-200-ty-vnd')}
                     value={totalInvestment}
                     onChange={(e) => setTotalInvestment(e.target.value)}
                     style={{ fontSize: 12 }}
@@ -1747,7 +1747,7 @@ export default function ProjectsPage() {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Ngân sách, ODA..."
+                    placeholder={tUI('ui.ngan-sach-oda')}
                     value={capitalSource}
                     onChange={(e) => setCapitalSource(e.target.value)}
                     style={{ fontSize: 12 }}
@@ -1758,7 +1758,7 @@ export default function ProjectsPage() {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Đang đấu thầu..."
+                    placeholder={tUI('ui.dang-dau-thau')}
                     value={progress}
                     onChange={(e) => setProgress(e.target.value)}
                     style={{ fontSize: 12 }}
@@ -1792,7 +1792,7 @@ export default function ProjectsPage() {
                 <textarea
                   rows={2}
                   className="form-input"
-                  placeholder="Ghi chú thêm về dự án..."
+                  placeholder={tUI('ui.ghi-chu-them-ve-du-an')}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   style={{ resize: 'vertical' }}

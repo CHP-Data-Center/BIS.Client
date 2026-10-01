@@ -1,6 +1,7 @@
 // src/services/adb.js
 import api from './api';
 import { apiCache } from '../utils/apiCache';
+import { currentLang } from './articles';
 
 const ADB_SAVED_KEY = 'saved_adb_projects';
 
@@ -15,7 +16,11 @@ export const adbService = {
   /**
    * Lấy danh sách dự án ADB từ Database Server
    */
-  async fetchProjects(params = {}, force = false) {
+  async fetchProjects(rawParams = {}, force = false) {
+    // Gắn ngôn ngữ đang chọn như odaService: thiếu nó thì trang ADB luôn hiện tiêu đề gốc
+    // dù backend ĐÃ hỗ trợ lang. ODA gốc là tiếng Anh nên lang='en' không cần đắp bản dịch.
+    const lang = currentLang();
+    const params = 'lang' in rawParams || lang === 'en' ? rawParams : { ...rawParams, lang };
     const cacheKey = `adb:projects:${JSON.stringify(params)}`;
     if (!force) {
       const cached = apiCache.get(cacheKey);
@@ -78,8 +83,9 @@ export const adbService = {
       );
       if (found) return found;
 
+      const langCt = currentLang();
       const res = await api.get('/oda-projects', {
-        params: { source: 'adb', q: id, size: 20 },
+        params: { source: 'adb', q: id, size: 20, ...(langCt === 'en' ? {} : { lang: langCt }) },
       });
       const items = res.data?.items || [];
       const item = items.find(p => 

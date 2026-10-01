@@ -7,6 +7,7 @@ import {
   Building2, Calendar, ArrowRight, ShieldCheck, FileText
 } from 'lucide-react';
 import { useLang } from '../context/LanguageContext';
+import { tUI } from '../locales';
 
 export default function ProcurementListModal({
   open,
@@ -483,7 +484,7 @@ export default function ProcurementListModal({
                       }}
                     >
                       <Building2 size={13} style={{ flexShrink: 0, color: '#3b82f6' }} />
-                      <span style={{ fontWeight: 600 }}>Bên mời thầu:</span>
+                      <span style={{ fontWeight: 600 }}>{tUI('ui.ben-moi-thau')}</span>
                       <span style={{ color: 'var(--text-secondary, #334155)', fontWeight: 700 }}>
                         {t.procuring_entity}
                       </span>

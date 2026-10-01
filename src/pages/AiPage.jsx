@@ -11,6 +11,7 @@ import {
 import { aiService } from '../services/ai';
 import { useLang } from '../context/LanguageContext';
 import ConfirmModal from '../components/common/ConfirmModal';
+import { tUI } from '../locales';
 
 /**
  * Xác định route nội bộ của hệ thống dựa trên loại dữ liệu và mã ID của nguồn
@@ -384,7 +385,7 @@ function SourcesRightPanel({ sources, highlightedId, onClose }) {
             lineHeight: 1.6,
           }}>
             <Layers size={28} style={{ margin: '0 auto 10px', color: 'var(--text-muted)', opacity: 0.5 }} />
-            <div>Chưa có nguồn trích dẫn cho câu trả lời này.</div>
+            <div>{tUI('ui.chua-co-nguon-trich-dan-cho-cau-tra-loi-nay')}</div>
           </div>
         ) : (
           sources.map((s, idx) => {
@@ -488,7 +489,7 @@ function SourcesRightPanel({ sources, highlightedId, onClose }) {
                   color: 'var(--brand-600, #7c3aed)',
                 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <span>Mở trang nội bộ</span>
+                    <span>{tUI('ui.mo-trang-noi-bo')}</span>
                     <ChevronRight size={12} />
                   </span>
 
@@ -498,7 +499,7 @@ function SourcesRightPanel({ sources, highlightedId, onClose }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      title="Mở liên kết cổng thông tin gốc"
+                      title={tUI('ui.mo-lien-ket-cong-thong-tin-goc')}
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -513,7 +514,7 @@ function SourcesRightPanel({ sources, highlightedId, onClose }) {
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#38bdf8'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                     >
-                      <span>Web gốc</span>
+                      <span>{tUI('ui.web-goc')}</span>
                       <ExternalLink size={10} />
                     </a>
                   )}
@@ -1646,7 +1647,7 @@ export default function AiPage() {
               onClick={() => setShowSources((v) => !v)}
               className={`ai-top-btn ${showSources ? 'active' : ''}`}
               id="btn-ai-toggle-sources"
-              title="Nguồn tham khảo"
+              title={tUI('ui.nguon-tham-khao')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1874,7 +1875,7 @@ export default function AiPage() {
                 <Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} />
               ) : (
                 <>
-                  <span>Gửi</span>
+                  <span>{tUI('ui.gui')}</span>
                   <CornerDownLeft size={14} />
                 </>
               )}
