@@ -237,7 +237,7 @@ export default function ProjectsPage() {
       const created = await projectsService.createProject({
         name: name.trim(),
         // Bỏ trống từ khóa thì lấy chính tên dự án — người dùng không phải gõ hai lần.
-        keyword_filter: keywordFilter.trim() || name.trim(),
+        keyword_filter: keywordFilter.trim() || undefined,
         // Chỉ gửi trường có giá trị: gửi chuỗi rỗng sẽ ghi đè thành rỗng chứ không phải "bỏ qua".
         investor: investor.trim() || undefined,
         investor_url: investorUrl.trim() || undefined,

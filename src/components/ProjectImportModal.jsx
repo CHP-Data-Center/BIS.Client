@@ -1225,7 +1225,7 @@ function ProfileTab({ onDone }) {
       try {
         await projectsService.createProject({
           name: c.name.slice(0, 255),
-          keyword_filter: (c.keyword_filter || c.name).slice(0, 512),
+          keyword_filter: (c.keyword_filter || undefined)?.slice(0, 512),
           investor: c.investor || undefined,
           sector: c.sector || undefined,
           origin: undefined,

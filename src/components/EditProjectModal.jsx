@@ -97,7 +97,7 @@ export default function EditProjectModal({ project, sectors = [], onClose, onSav
 
     const payload = {
       name: name.trim(),
-      keyword_filter: keywordFilter.trim() || name.trim(),
+      keyword_filter: keywordFilter.trim() || undefined,
       investor: investor.trim() || null,
       // Gửi nguyên thứ người dùng gõ — máy chủ tự chuẩn hóa ("acv.vn" → "https://acv.vn/")
       // và trả lỗi 400 kèm lý do nếu không dùng được. Không tự kiểm lại ở đây: hai bộ luật
