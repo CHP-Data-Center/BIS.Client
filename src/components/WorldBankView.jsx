@@ -116,7 +116,7 @@ const CONFIG_MAP = {
 
 export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const nav = useNavigate();
-  const { t } = useLang();
+  const { t, tCountry, tCategory, tSector } = useLang();
   const [searchParams] = useSearchParams();
 
   const initialQ = searchParams.get('q') || '';
@@ -561,32 +561,49 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
   const getStatusLabel = (status) => {
     if (!status) return 'N/A';
     const s = String(status).toLowerCase().trim();
-    if (s.includes('đang đăng tải') || s.includes('đang đăng')) return t('status.published');
+    if (s.includes('đang đăng tải') || s.includes('đang đăng') || s === 'published') return t('status.published');
     if (s === 'active' || s.includes('triển khai') || s.includes('hoạt động')) return t('status.active');
     if (s === 'closed' || s.includes('hoàn thành') || s.includes('đóng')) return t('status.closed');
     if (s === 'pipeline' || s.includes('chuẩn bị') || s.includes('concept') || s.includes('proposed') || s.includes('kế hoạch')) return t('status.pipeline');
     if (s.includes('hết hạn') || s.includes('expired')) return t('status.expired');
-    if (s.includes('hủy') || s.includes('cancelled')) return t('status.cancelled');
+    if (s.includes('hủy') || s.includes('cancelled') || s.includes('dropped')) return t('status.cancelled');
+    if (s.includes('approved') || s.includes('phê duyệt')) return t('stage.approved');
     return status;
   };
 
   const getStageLabel = (stage) => {
     if (!stage) return 'N/A';
     const s = String(stage).toLowerCase().trim();
+    if (s.includes('procurement notice') || s === 'notice') return t('stage.procurementNotice');
     if (s.includes('tbmt') || s.includes('mời thầu')) return t('stage.tbmt');
     if (s.includes('khlcnt') || s.includes('kế hoạch')) return t('stage.khlcnt');
-    if (s.includes('concept review') || s.includes('concept')) return t('stage.conceptReview');
+    if (s.includes('concept review') || s.includes('concept') || s.includes('ý tưởng')) return t('stage.conceptReview');
+    if (s.includes('decision meeting') || s.includes('quyết định')) return t('stage.decisionMeeting');
+    if (s.includes('technical design') || s.includes('thiết kế')) return t('stage.technicalDesign');
     if (s.includes('appraisal') || s.includes('thẩm định')) return t('stage.appraisal');
     if (s.includes('negotiation') || s.includes('đàm phán')) return t('stage.negotiation');
-    if (s.includes('implementation') || s.includes('thực hiện')) return t('stage.implementation');
-    if (s.includes('completion') || s.includes('hoàn tất')) return t('stage.completion');
-    if (s.includes('approved') || s.includes('phê duyệt')) return t('stage.approved');
-    if (s.includes('nông nghiệp') || s.includes('agriculture')) return t('stage.agriculture');
-    if (s.includes('giao thông') || s.includes('transport')) return t('stage.transport');
-    if (s.includes('năng lượng') || s.includes('energy')) return t('stage.energy');
+    if (s.includes('implementation') || s.includes('triển khai') || s.includes('thực hiện')) return t('stage.implementation');
+    if (s.includes('completion') || s.includes('hoàn tất') || s.includes('hoàn thành')) return t('stage.completion');
+    if (s.includes('approved') || s.includes('phê duyệt') || s.includes('sign-off')) return t('stage.approved');
+    if (s.includes('công nghiệp') || s.includes('industry') || s.includes('tm') || s.includes('trade')) return t('stage.industry');
+    if (s.includes('quản lý công') || s.includes('public sector') || s.includes('governance')) return t('stage.publicManagement');
+    if (s.includes('tài chính') || s.includes('finance')) return t('stage.finance');
+    if (s.includes('đa ngành') || s.includes('multisector')) return t('stage.multisector');
+    if (s.includes('nông nghiệp') || s.includes('agriculture') || s.includes('tntn') || s.includes('natural resources')) return t('stage.agriculture');
+    if (s.includes('giao thông') || s.includes('transport') || s.includes('đường')) return t('stage.transport');
+    if (s.includes('năng lượng') || s.includes('energy') || s.includes('điện')) return t('stage.energy');
     if (s.includes('giáo dục') || s.includes('education')) return t('stage.education');
-    if (s.includes('y tế') || s.includes('health')) return t('stage.health');
-    if (s.includes('nước') || s.includes('water')) return t('stage.water');
+    if (s.includes('y tế') || s.includes('health') || s.includes('healthcare')) return t('stage.health');
+    if (s.includes('nước') || s.includes('water') || s.includes('đô thị') || s.includes('urban') || s.includes('drainage')) return t('stage.water');
+    if (s.includes('môi trường') || s.includes('environment')) return t('stage.environment');
+    if (s.includes('thông tin') || s.includes('ict') || s.includes('telecom') || s.includes('công nghệ')) return t('stage.tech');
+    if (s.includes('pipeline') || s.includes('proposed') || s.includes('chuẩn bị')) return t('status.pipeline');
+
+    const cat = tCategory(stage);
+    if (cat && cat !== stage) return cat;
+    const sec = tSector(stage);
+    if (sec && sec !== stage) return sec;
+
     return stage;
   };
 
@@ -931,16 +948,22 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                 >
                   <input
                     type="text"
-                    placeholder={`Lọc ${getOrgFilterLabel()}...`}
+                    placeholder={`${t('common.search') || 'Tìm'} ${getOrgFilterLabel()}...`}
                     value={countrySearch}
                     onChange={(e) => setCountrySearch(e.target.value)}
                     style={{ width: '100%', padding: '4px 8px', fontSize: 11, marginBottom: 6, borderRadius: 6, border: '1px solid var(--border)' }}
                   />
                   <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {uniqueCountries
-                      .filter((c) => c.toLowerCase().includes(countrySearch.toLowerCase()))
+                      .filter((c) => {
+                        const q = countrySearch.toLowerCase().trim();
+                        if (!q) return true;
+                        const localized = normType === 'procurement' ? c : tCountry(c);
+                        return c.toLowerCase().includes(q) || (localized && localized.toLowerCase().includes(q));
+                      })
                       .map((c) => {
                         const isChecked = selectedCountries.includes(c);
+                        const display = normType === 'procurement' ? c : (tCountry(c) || c);
                         return (
                           <label key={c} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>
                             <input
@@ -952,7 +975,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                                 );
                               }}
                             />
-                            {c}
+                            <span>{display}</span>
                           </label>
                         );
                       })}
@@ -1275,7 +1298,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                               width: normType === 'procurement' ? 170 : 130,
                             }}
                           >
-                            {p.countryshortname || 'N/A'}
+                            {normType === 'procurement' ? (p.countryshortname || 'N/A') : (tCountry(p.countryshortname) || p.countryshortname || 'N/A')}
                           </td>
 
                           {/* ID */}
@@ -1369,7 +1392,7 @@ export default function WorldBankView({ type = 'worldbank', kind = null }) {
                         </h4>
 
                         <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                          🏢 <strong>{config.orgLabel}:</strong> {p.countryshortname || 'N/A'}
+                          🏢 <strong>{config.orgLabel}:</strong> {normType === 'procurement' ? (p.countryshortname || 'N/A') : (tCountry(p.countryshortname) || p.countryshortname || 'N/A')}
                         </div>
 
                         <div style={{ fontSize: 13, fontWeight: 800, color: config.brandColor, marginBottom: 6 }}>

@@ -182,7 +182,7 @@ export default function ProjectsPage() {
   // hơn hẳn, để nó chậm thì cả trang chậm theo.
   const loadSummary = async () => {
     try {
-      const res = await projectsService.getSummary(7, 50);
+      const res = await projectsService.getSummary(7, 50, lang);
       const map = {};
       (res.items || []).forEach((row) => { map[row.project.id] = row; });
       setSummary(map);
@@ -193,9 +193,12 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     loadProjects();
-    loadSummary();
     potentialService.getSectors().then(setSectors).catch(() => setSectors([]));
   }, []);
+
+  useEffect(() => {
+    loadSummary();
+  }, [lang]);
 
   // Khóa cuộn trang nền khi modal tạo dự án mở
   useEffect(() => {
@@ -379,17 +382,20 @@ export default function ProjectsPage() {
     return true;
   });
 
-  // Lấy danh sách gói thầu khớp của dự án được chọn (từ summary hoặc timelineData)
-  const currentTenders = selectedSummary?.procurement_samples || timelineData?.procurement_samples || [];
-  const currentTendersCount = selectedSummary?.procurement_matches !== undefined
-    ? selectedSummary.procurement_matches
-    : (timelineData?.procurement_matches !== undefined ? timelineData.procurement_matches : currentTenders.length);
+  // Lấy danh sách gói thầu khớp của dự án được chọn: ưu tiên timelineData (đã dịch theo lang), fallback về selectedSummary
+  const currentTenders = (timelineData && timelineData.procurement_samples)
+    ? timelineData.procurement_samples
+    : (selectedSummary?.procurement_samples || []);
+  const currentTendersCount = timelineData?.procurement_matches !== undefined
+    ? timelineData.procurement_matches
+    : (selectedSummary?.procurement_matches !== undefined ? selectedSummary.procurement_matches : currentTenders.length);
 
   // Chuẩn hóa các gói thầu e-GP thành các item dòng thời gian để hiển thị khi người dùng lọc tab Mua sắm công
+  const procuringLabel = t('proc.procuringEntity') || 'Bên mời thầu';
   const procurementTimelineItems = currentTenders.map(t => ({
     id: t.id,
     title: t.title,
-    excerpt: t.procuring_entity ? `Bên mời thầu: ${t.procuring_entity}` : '',
+    excerpt: t.procuring_entity ? `${procuringLabel}: ${t.procuring_entity}` : '',
     source_name: 'Đấu thầu Quốc gia (e-GP)',
     source_type: 'gov',
     published_at: t.publish_date,

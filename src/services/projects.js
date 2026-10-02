@@ -40,8 +40,11 @@ export const projectsService = {
   },
 
   /** Tổng hợp cho Dashboard: mỗi dự án + nhịp tin gần đây */
-  async getSummary(days = 7, limit = 50) {
-    const { data } = await api.get('/projects/summary', { params: { days, limit } });
+  async getSummary(days = 7, limit = 50, customLang = null) {
+    const activeLang = customLang || localStorage.getItem('app_lang') || localStorage.getItem('news_lang') || 'vi';
+    const params = { days, limit };
+    if (activeLang && activeLang !== 'vi') params.lang = activeLang;
+    const { data } = await api.get('/projects/summary', { params });
     return data; // { days, items, total }
   },
 
