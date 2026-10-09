@@ -9,21 +9,20 @@ import {
 import { worldBankService } from '../services/worldbank';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import ThemePageLoader from '../components/common/ThemePageLoader';
-import { tUI } from '../locales';
-import { formatFullDate as fmtDate, formatShortDate as fmtShortDate } from '../utils/format';
+import { tUI, translateCountry, translateStatus, translateSector, translateStage } from '../locales';
+import { useLang } from '../context/LanguageContext';
+import { formatFullDate as fmtDate, formatShortDate as fmtShortDate, formatUsdAmount as formatAmountDisplay } from '../utils/format';
 
-const fmtM = (usd) => {
+const fmtM = (usd, lang = 'vi') => {
   if (usd == null || usd === 0) return null;
-  if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)} tỷ (B)`;
-  if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)} triệu (M)`;
+  if (lang === 'vi') {
+    if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)} tỷ (B)`;
+    if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)} triệu (M)`;
+  } else {
+    if (usd >= 1e9) return `$${(usd / 1e9).toFixed(2)} B`;
+    if (usd >= 1e6) return `$${(usd / 1e6).toFixed(2)} M`;
+  }
   return `$${usd.toLocaleString('en-US')}`;
-};
-
-const formatAmountDisplay = (amount) => {
-  if (!amount || amount <= 0) return 'N/A';
-  if (amount >= 1e9) return `$${(amount / 1e9).toFixed(2)} B`;
-  if (amount >= 1e6) return `$${(amount / 1e6).toFixed(2)} M`;
-  return `$${amount.toLocaleString('en-US')}`;
 };
 
 const getStatusBadge = (status) => {
@@ -41,6 +40,7 @@ const getStatusBadge = (status) => {
 };
 
 export default function WbProjectDetailPage() {
+  const { t, lang } = useLang();
   const { id } = useParams();
   const nav = useNavigate();
   const location = useLocation();
@@ -136,7 +136,7 @@ export default function WbProjectDetailPage() {
 
   const extId = project.external_id || project.id;
   const externalUrl = project.rawUrl || worldBankProjectUrl(project.url || extId);
-  const statusInfo = getStatusBadge(project.projectstatusdisplay);
+  const statusInfo = getStatusBadge(project.projectstatusdisplay, lang);
   const publishedDate = fmtDate(project.boardapprovaldate);
   const details = project.details || {};
   const dates = details.dates || {};
@@ -146,14 +146,22 @@ export default function WbProjectDetailPage() {
   const abstract = details.abstract || project.development_objective || project.ai_summary;
 
   // Tags list
-  const tags = [
-    'WorldBank',
-    extId,
-    project.countryshortname !== 'N/A' ? project.countryshortname : null,
-    project.projectstatusdisplay,
-    project.last_stage_reached_name !== 'N/A' ? project.last_stage_reached_name : null,
-    project.sector !== 'N/A' ? project.sector : null,
-    'ODA',
+    const tags = [
+    { key: 'org', raw: 'WorldBank', label: 'WorldBank' },
+    extId ? { key: 'id', raw: extId, label: extId } : null,
+    project.countryshortname && project.countryshortname !== 'N/A'
+      ? { key: 'country', raw: project.countryshortname, label: translateCountry(project.countryshortname, lang) }
+      : null,
+    project.projectstatusdisplay
+      ? { key: 'status', raw: project.projectstatusdisplay, label: translateStatus(project.projectstatusdisplay, lang) }
+      : null,
+    project.last_stage_reached_name && project.last_stage_reached_name !== 'N/A'
+      ? { key: 'stage', raw: project.last_stage_reached_name, label: translateStage(project.last_stage_reached_name, lang) }
+      : null,
+    project.sector && project.sector !== 'N/A'
+      ? { key: 'sector', raw: project.sector, label: translateSector(project.sector, lang) }
+      : null,
+    { key: 'oda', raw: 'ODA', label: 'ODA' },
   ].filter(Boolean);
 
   return (
@@ -247,7 +255,7 @@ export default function WbProjectDetailPage() {
 
                 {project.countryshortname && project.countryshortname !== 'N/A' && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--bg-surface)', padding: '3px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
-                    🏢 {project.countryshortname}
+                    🏢 {translateCountry(project.countryshortname, lang)}
                   </span>
                 )}
               </div>
@@ -256,7 +264,7 @@ export default function WbProjectDetailPage() {
               <div style={{ marginTop: 12, zIndex: 1 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{tUI('ui.cam-ket-tai-chinh-usd')}</span>
                 <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981', lineHeight: 1.2 }}>
-                  {formatAmountDisplay(project.totalCommitmentAmount)}
+                  {formatAmountDisplay(project.totalCommitmentAmount, lang)}
                 </div>
               </div>
             </div>
@@ -288,7 +296,7 @@ export default function WbProjectDetailPage() {
                         boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)',
                       }}
                     >
-                      <Cpu size={12} /> Tóm Tắt & Mục Tiêu Phát Triển (PDO)
+                      <Cpu size={12} /> {t('wb.pdoBadge', 'Tóm Tắt & Mục Tiêu Phát Triển (PDO)')}
                     </span>
                   </div>
                   <p style={{ fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
@@ -322,7 +330,7 @@ export default function WbProjectDetailPage() {
                 <div>
                   <div style={{ lineHeight: 1.2 }}>{tUI('ui.noi-dung-chi-tiet-du-an-world-bank')}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Thông tin toàn văn & phân tích kỹ thuật được trích xuất trực tiếp
+                    {t('wb.fullContentSub', 'Thông tin toàn văn & phân tích kỹ thuật được trích xuất trực tiếp')}
                   </div>
                 </div>
               </div>
@@ -335,7 +343,7 @@ export default function WbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.quoc-gia-khu-vuc')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {project.countryshortname} {project.region ? `(${project.region})` : ''}
+                        {translateCountry(project.countryshortname, lang)} {project.region ? `(${project.region})` : ''}
                       </div>
                     </div>
                   </div>
@@ -359,7 +367,7 @@ export default function WbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cam-ket-von-commitment')}</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#10b981' }}>
-                        {formatAmountDisplay(project.totalCommitmentAmount)}
+                        {formatAmountDisplay(project.totalCommitmentAmount, lang)}
                       </div>
                     </div>
                   </div>
@@ -394,9 +402,7 @@ export default function WbProjectDetailPage() {
                     <Layers size={16} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.giai-doan-cuoi')}</div>
-                      <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {project.last_stage_reached_name}
-                      </div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>{translateStage(project.last_stage_reached_name, lang)}</div>
                     </div>
                   </div>
                 )}
@@ -407,7 +413,7 @@ export default function WbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ngay-phe-duyet')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {fmtShortDate(project.boardapprovaldate)}
+                        {fmtShortDate(project.boardapprovaldate, lang)}
                       </div>
                     </div>
                   </div>
@@ -419,7 +425,7 @@ export default function WbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cap-nhat-cuoi')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {fmtShortDate(project.proj_last_upd_date)}
+                        {fmtShortDate(project.proj_last_upd_date, lang)}
                       </div>
                     </div>
                   </div>
@@ -431,7 +437,7 @@ export default function WbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ngay-dong-du-an')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {fmtShortDate(project.closing_date)}
+                        {fmtShortDate(project.closing_date, lang)}
                       </div>
                     </div>
                   </div>
@@ -502,7 +508,7 @@ export default function WbProjectDetailPage() {
               {(financers.length > 0 || financing.total || financing.ibrd || financing.ida) && (
                 <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Wallet size={15} color="#10b981" /> Cơ Cấu Tài Chính (Financing Structure)
+                    <Wallet size={15} color="#10b981" /> {t('wb.financingStructure', 'Cơ Cấu Tài Chính (Financing Structure)')}
                   </div>
 
                   {financers.length > 0 && (
@@ -514,17 +520,17 @@ export default function WbProjectDetailPage() {
                       {financers.map((f, i) => (
                         <div key={i} style={{ display: 'flex', padding: '8px 12px', fontSize: 13, borderTop: '1px solid var(--border-subtle)' }}>
                           <div style={{ flex: 1, color: 'var(--text-primary)', fontWeight: 600 }}>{f.name}</div>
-                          <div style={{ width: 160, textAlign: 'right', fontWeight: 700, color: '#10b981' }}>{fmtM(f.amount) || 'N/A'}</div>
+                          <div style={{ width: 160, textAlign: 'right', fontWeight: 700, color: '#10b981' }}>{fmtM(f.amount, lang) || 'N/A'}</div>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, background: 'var(--bg-surface-2)', padding: 12, borderRadius: 10 }}>
-                    {financing.ibrd > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>IBRD:</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.ibrd)}</strong></div>}
-                    {financing.ida > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>IDA:</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.ida)}</strong></div>}
-                    {financing.grant > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.grant-vien-tro')}</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.grant)}</strong></div>}
-                    {financing.total > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.tong-tai-chinh')}</span> <strong style={{ color: '#10b981' }}>{fmtM(financing.total)}</strong></div>}
+                    {financing.ibrd > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>IBRD:</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.ibrd, lang)}</strong></div>}
+                    {financing.ida > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>IDA:</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.ida, lang)}</strong></div>}
+                    {financing.grant > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.grant-vien-tro')}</span> <strong style={{ color: 'var(--text-primary)' }}>{fmtM(financing.grant, lang)}</strong></div>}
+                    {financing.total > 0 && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.tong-tai-chinh')}</span> <strong style={{ color: '#10b981' }}>{fmtM(financing.total, lang)}</strong></div>}
                   </div>
                 </div>
               )}
@@ -533,7 +539,7 @@ export default function WbProjectDetailPage() {
               {sectors.length > 0 && (
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Layers size={15} color="#10b981" /> Phân Tích Lĩnh Vực (Sectors)
+                    <Layers size={15} color="#10b981" /> {t('wb.sectorsAnalysis', 'Phân Tích Lĩnh Vực (Sectors)')}
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {sectors.map((s, i) => (
@@ -554,7 +560,7 @@ export default function WbProjectDetailPage() {
                 marginTop: 24,
               }}>
                 <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>📌</span> Thông Tin Phân Tích Kỹ Thuật (System Metadata):
+                  <span>📌</span> {t('common.systemMetadata', 'Thông Tin Phân Tích Kỹ Thuật (System Metadata):')}
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <li><strong>{tUI('ui.ten-du-an-day-du')}</strong> {project.project_name}</li>
@@ -565,7 +571,7 @@ export default function WbProjectDetailPage() {
                     <li>
                       <strong>{tUI('ui.lien-ket-bai-goc')}</strong>{' '}
                       <a href={externalUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontWeight: 700, textDecoration: 'underline' }}>
-                        Trích xuất trực tiếp từ World Bank Official ↗
+                        {t('wb.extractDirectOfficial', 'Trích xuất trực tiếp từ World Bank Official ↗')}
                       </a>
                     </li>
                   )}
@@ -584,11 +590,11 @@ export default function WbProjectDetailPage() {
             }}>
               {publishedDate !== 'N/A' && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Calendar size={12} /> Ngày phê duyệt: {publishedDate}
+                  <Calendar size={12} /> {t('oda.approvalDate', 'Ngày phê duyệt')}: {publishedDate}
                 </span>
               )}
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Globe size={12} /> Nguồn: World Bank API
+                <Globe size={12} /> {t('common.source', 'Nguồn')}: World Bank API
               </span>
             </div>
 
@@ -601,7 +607,7 @@ export default function WbProjectDetailPage() {
                 className="btn btn-secondary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
               >
-                <ExternalLink size={15} /> Xem bài gốc / World Bank ↗
+                <ExternalLink size={15} /> {t('wb.viewOriginal', 'Xem bài gốc / World Bank ↗')}
               </a>
 
               <button
@@ -614,7 +620,7 @@ export default function WbProjectDetailPage() {
                 }}
               >
                 {bookmarked ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
-                {bookmarked ? 'Đã lưu dự án' : 'Lưu lại'}
+                {bookmarked ? t('common.saved', 'Đã lưu dự án') : t('common.save', 'Lưu lại')}
               </button>
 
               <button
@@ -622,7 +628,7 @@ export default function WbProjectDetailPage() {
                 onClick={handleShare}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
-                <Share2 size={15} /> Chia sẻ
+                <Share2 size={15} /> {t('common.share', 'Chia sẻ')}
               </button>
 
               <button
@@ -630,7 +636,7 @@ export default function WbProjectDetailPage() {
                 onClick={() => nav(-1)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}
               >
-                <ArrowLeft size={15} /> Quay lại
+                <ArrowLeft size={15} /> {t('common.back', 'Quay lại')}
               </button>
             </div>
           </article>
@@ -641,10 +647,10 @@ export default function WbProjectDetailPage() {
           {/* Card 1: VỀ WORLD BANK */}
           <div className="article-sidebar-card">
             <div className="article-sidebar-title">
-              <Globe size={15} color="#10b981" /> Về World Bank (WB)
+              <Globe size={15} color="#10b981" /> {t('wb.aboutTitle', 'Về World Bank (WB)')}
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 12px' }}>
-              Dữ liệu dự án ODA được hệ thống BIS Crawler thu thập và đồng bộ tự động từ Ngân hàng Thế giới (World Bank) phục vụ tra cứu chuyên sâu.
+              {t('wb.aboutDesc')}
             </p>
             <a
               href={externalUrl}
@@ -655,7 +661,7 @@ export default function WbProjectDetailPage() {
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
-              Xem trang gốc World Bank <ExternalLink size={12} />
+              {t('wb.viewOriginalSite', 'Xem trang gốc World Bank')} <ExternalLink size={12} />
             </a>
           </div>
 
@@ -663,24 +669,28 @@ export default function WbProjectDetailPage() {
           {tags.length > 0 && (
             <div className="article-sidebar-card">
               <div className="article-sidebar-title">
-                <Tag size={15} color="#10b981" /> Từ khóa & Phân loại
+                <Tag size={15} color="#10b981" /> {t('common.tagsAndCategories', 'Từ khóa & Phân loại')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    onClick={() => nav(`/worldbank?q=${encodeURIComponent(tag)}`)}
-                    style={{
-                      fontSize: 11, fontWeight: 600, padding: '3px 10px',
-                      borderRadius: 12, background: 'var(--bg-surface-2)',
-                      color: 'var(--text-secondary)', border: '1px solid var(--border)',
-                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3,
-                    }}
-                    title={`Lọc dự án với #${tag}`}
-                  >
-                    #{tag}
-                  </span>
-                ))}
+                {tags.map((tItem) => {
+                  const rawVal = typeof tItem === 'string' ? tItem : tItem.raw;
+                  const labelVal = typeof tItem === 'string' ? tItem : (tItem.label || tItem.raw);
+                  return (
+                    <span
+                      key={rawVal}
+                      onClick={() => nav(`/worldbank?q=${encodeURIComponent(rawVal)}`)}
+                      style={{
+                        fontSize: 11, fontWeight: 600, padding: '3px 10px',
+                        borderRadius: 12, background: 'var(--bg-surface-2)',
+                        color: 'var(--text-secondary)', border: '1px solid var(--border)',
+                        cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3,
+                      }}
+                      title={t('common.filterByTag', { tag: labelVal })}
+                    >
+                      #{labelVal}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -689,15 +699,15 @@ export default function WbProjectDetailPage() {
           {relatedProjects.length > 0 && (
             <div className="article-sidebar-card">
               <div className="article-sidebar-title">
-                <FileText size={15} color="#10b981" /> Dự án liên quan
+                <FileText size={15} color="#10b981" /> {t('oda.relatedProjects', 'Dự án liên quan')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {relatedProjects.map((rel) => {
-                  const relStatus = getStatusBadge(rel.projectstatusdisplay);
+                  const relStatus = getStatusBadge(rel.projectstatusdisplay, lang);
                   return (
                     <div
                       key={rel.id}
-                      onClick={() => nav(`/worldbank/project/${rel.id}`, { state: { project: rel } })}
+                      onClick={() => nav(`/worldbank?q=${encodeURIComponent(rawVal)}`)}
                       style={{
                         padding: '10px 12px', borderRadius: 10,
                         background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)',
@@ -718,8 +728,8 @@ export default function WbProjectDetailPage() {
                         {rel.project_name}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>🏢 {rel.countryshortname}</span>
-                        <span style={{ fontWeight: 700, color: '#10b981' }}>{formatAmountDisplay(rel.totalCommitmentAmount)}</span>
+                        <span>🏢 {translateCountry(rel.countryshortname, lang)}</span>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>{formatAmountDisplay(rel.totalCommitmentAmount, lang)}</span>
                       </div>
                     </div>
                   );

@@ -12,6 +12,8 @@ import {
 import { odaService } from '../services/oda';
 import { MUASAMCONG_SEARCH_URL, tbmtCode } from '../utils/procurementLink';
 import { useLang } from '../context/LanguageContext';
+import { formatMoney } from '../utils/format';
+import { translateProcurementValue, localizePeriod, translateSector } from '../locales';
 
 const BRAND = '#0ea5e9';           // xanh dương — phân biệt với ADB (cam) / WB (xanh lá)
 const SAVED_KEY = 'saved_procurement_items';  // dùng chung với danh sách ở WorldBankView
@@ -92,10 +94,32 @@ function SimpleTable({ cols, rows }) {
   );
 }
 
+
+function getProcStatusLabel(status, t) {
+  if (!status) return null;
+  const s = String(status).toUpperCase().trim();
+  if (s === 'PUB_MT' || s === 'PUBLISHED' || s.includes('MỜI THẦU') || s.includes('ĐANG ĐĂNG') || s.includes('公示中')) {
+    return t('status.published');
+  }
+  if (s === 'WAIT_CLOSE' || s.includes('CHỜ ĐÓNG')) {
+    return t('status.waitClose') || 'Chờ đóng thầu';
+  }
+  if (s === 'CLOSED' || s.includes('ĐÓNG') || s.includes('HOÀN THÀNH')) {
+    return t('status.closed');
+  }
+  if (s === 'CANCEL' || s.includes('HỦY')) {
+    return t('status.cancelled');
+  }
+  if (s === 'ACTIVE' || s.includes('TRIỂN KHAI')) {
+    return t('status.active');
+  }
+  return status;
+}
+
 export default function ProcurementDetailPage() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -222,19 +246,29 @@ export default function ProcurementDetailPage() {
   // Mã in trên cổng không có hậu tố phiên bản (id `IB2600458335-01` -> mã `IB2600458335`).
   const codeToSearch = tbmtCode(item.id);
   const title = d.name || item.title;
-  const price = fmtMoney(d.bid_price, d.price_unit) || fmtMoney(d.invest_total, d.invest_total_unit);
+  const price = formatMoney(d.bid_price, d.price_unit, lang) || formatMoney(d.invest_total, d.invest_total_unit, lang);
   const left = daysUntil(d.close_date || item.close_date);
   const lots = d.lots || [];
   const packages = d.packages || [];
   const decision = d.decision || null;
   const yesNo = (v) => (v === true ? t('proc.yes') : v === false ? t('proc.no') : null);
 
+    const noticeLabel = isNotice
+    ? (lang === 'ja' ? '入札公告 (TBMT)' : lang === 'en' ? 'Bidding Notice (TBMT)' : 'TBMT')
+    : (lang === 'ja' ? '調達計画 (KHLCNT)' : lang === 'en' ? 'Procurement Plan (KHLCNT)' : 'KHLCNT');
+
   const tags = [
-    isNotice ? 'TBMT' : 'KHLCNT',
-    item.id,
-    d.field || item.sector,
-    d.bid_form,
-    item.procuring_entity,
+    { key: 'kind', raw: isNotice ? 'TBMT' : 'KHLCNT', label: noticeLabel },
+    item.id ? { key: 'id', raw: item.id, label: item.id } : null,
+    (d.field || item.sector)
+      ? { key: 'sector', raw: d.field || item.sector, label: translateSector(d.field || item.sector, lang) }
+      : null,
+    d.bid_form
+      ? { key: 'bid_form', raw: d.bid_form, label: translateProcurementValue('bidForms', d.bid_form, lang) }
+      : null,
+    item.procuring_entity
+      ? { key: 'entity', raw: item.procuring_entity, label: item.procuring_entity }
+      : null,
   ].filter(Boolean);
 
   return (
@@ -284,7 +318,7 @@ export default function ProcurementDetailPage() {
                 </span>
                 {(item.status || d.status) && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-                    {item.status || d.status}
+                    {getProcStatusLabel(item.status || d.status, t)}
                   </span>
                 )}
                 {left != null && (
@@ -362,11 +396,11 @@ export default function ProcurementDetailPage() {
                 <Row label={t('proc.publicDate')} value={fmtDate(d.public_date || item.publish_date)} />
                 <Row label={t('proc.closeDate')} value={fmtDate(d.close_date || item.close_date)} />
                 <Row label={t('proc.openDate')} value={fmtDate(d.open_date)} />
-                <Row label={t('proc.status')} value={item.status || d.status} />
-                <Row label={t('proc.field')} value={d.field || item.sector} />
+                <Row label={t('proc.status')} value={getProcStatusLabel(item.status || d.status, t)} />
+                <Row label={t('proc.field')} value={translateProcurementValue('fields', d.field || item.sector, lang)} />
                 <Row label={t('proc.packageCount')} value={d.package_count ?? item.package_count} />
                 <Row label={t('proc.planName')} value={d.plan_name} />
-                <Row label={t('proc.planType')} value={d.plan_type} />
+                <Row label={t('proc.planType')} value={translateProcurementValue('planTypes', d.plan_type, lang)} />
               </div>
 
               {/* Điều kiện dự thầu (chỉ TBMT có) */}
@@ -374,12 +408,12 @@ export default function ProcurementDetailPage() {
                 || d.guarantee_value || d.capital_detail || d.domestic != null) && (
                 <Section title={t('proc.moreInfo')} icon={Wallet}>
                   <div style={GRID}>
-                    <Row label={t('proc.bidForm')} value={d.bid_form} />
-                    <Row label={t('proc.bidMode')} value={d.bid_mode} />
-                    <Row label={t('proc.contractType')} value={d.contract_type} />
-                    <Row label={t('proc.contractPeriod')} value={d.contract_period} />
-                    <Row label={t('proc.validity')} value={d.validity} />
-                    <Row label={t('proc.guarantee')} value={fmtMoney(d.guarantee_value)} />
+                    <Row label={t('proc.bidForm')} value={translateProcurementValue('bidForms', d.bid_form, lang)} />
+                    <Row label={t('proc.bidMode')} value={translateProcurementValue('bidModes', d.bid_mode, lang)} />
+                    <Row label={t('proc.contractType')} value={translateProcurementValue('contractTypes', d.contract_type, lang)} />
+                    <Row label={t('proc.contractPeriod')} value={localizePeriod(d.contract_period, lang)} />
+                    <Row label={t('proc.validity')} value={localizePeriod(d.validity, lang)} />
+                    <Row label={t('proc.guarantee')} value={formatMoney(d.guarantee_value, 'VND', lang)} />
                     <Row label={t('proc.capital')} value={d.capital_detail} />
                     <Row label={t('proc.domestic')} value={yesNo(d.domestic)} />
                     <Row label={t('proc.internet')} value={yesNo(d.internet)} />
@@ -415,7 +449,7 @@ export default function ProcurementDetailPage() {
                     cols={[
                       { key: 'no', label: '#', width: '60px' },
                       { key: 'name', label: t('proc.lotName') },
-                      { key: 'price', label: t('proc.price'), width: '190px', align: 'right', render: (r) => fmtMoney(r.price, d.price_unit) },
+                      { key: 'price', label: t('proc.price'), width: '190px', align: 'right', render: (r) => formatMoney(r.price, d.price_unit, lang) },
                     ]}
                     rows={lots}
                   />
@@ -434,15 +468,15 @@ export default function ProcurementDetailPage() {
                             {p.name}
                           </span>
                           <span style={{ fontSize: 13, fontWeight: 800, color: '#0369a1', whiteSpace: 'nowrap' }}>
-                            {fmtMoney(p.price, p.price_unit) || '—'}
+                            {formatMoney(p.price, p.price_unit, lang) || '—'}
                           </span>
                         </div>
                         <div style={{ ...GRID, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px 18px' }}>
-                          <Row label={t('proc.field')} value={p.field} />
-                          <Row label={t('proc.bidForm')} value={p.bid_form} />
-                          <Row label={t('proc.bidMode')} value={p.bid_mode} />
-                          <Row label={t('proc.contractType')} value={p.contract_type} />
-                          <Row label={t('proc.contractPeriod')} value={p.period} />
+                          <Row label={t('proc.field')} value={translateProcurementValue('fields', p.field, lang)} />
+                          <Row label={t('proc.bidForm')} value={translateProcurementValue('bidForms', p.bid_form, lang)} />
+                          <Row label={t('proc.bidMode')} value={translateProcurementValue('bidModes', p.bid_mode, lang)} />
+                          <Row label={t('proc.contractType')} value={translateProcurementValue('contractTypes', p.contract_type, lang)} />
+                          <Row label={t('proc.contractPeriod')} value={localizePeriod(p.period, lang)} />
                           <Row label={t('proc.duration')} value={p.duration} />
                           <Row label={t('proc.start')} value={p.start} />
                           <Row label={t('proc.capital')} value={p.capital_detail} />
@@ -544,15 +578,20 @@ export default function ProcurementDetailPage() {
                 <Tag size={15} color={BRAND} /> {t('proc.tags')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    onClick={() => nav(`${listPath}?q=${encodeURIComponent(tag)}`)}
-                    style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 12, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border)', cursor: 'pointer' }}
-                  >
-                    #{tag}
-                  </span>
-                ))}
+                {tags.map((tItem) => {
+                  const rawVal = typeof tItem === 'string' ? tItem : tItem.raw;
+                  const labelVal = typeof tItem === 'string' ? tItem : (tItem.label || tItem.raw);
+                  return (
+                    <span
+                      key={rawVal}
+                      onClick={() => nav(`${listPath}?q=${encodeURIComponent(rawVal)}`)}
+                      style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 12, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border)', cursor: 'pointer' }}
+                      title={t('common.filterByTag', { tag: labelVal })}
+                    >
+                      #{labelVal}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -573,7 +612,7 @@ export default function ProcurementDetailPage() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8, background: 'rgba(14,165,233,0.12)', color: '#0369a1' }}>
-                        {rel.kind === 'notice' ? 'TBMT' : 'KHLCNT'}
+                        {rel.kind === 'notice' ? (lang === 'ja' ? '入札公告' : 'TBMT') : (lang === 'ja' ? '調達計画' : 'KHLCNT')}
                       </span>
                       <span style={{ fontSize: 10, fontFamily: 'monospace', color: 'var(--text-muted)' }}>{rel.id}</span>
                     </div>

@@ -7,10 +7,10 @@ import { useState, useEffect } from 'react';
 import { articlesService } from '../services/articles';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LanguageContext';
-import { getSourceStyle } from '../utils/sourceStyle';
+import { getSourceStyle, formatArticleSource } from '../utils/sourceStyle';
 import ThemePageLoader from '../components/common/ThemePageLoader';
 import { tUI } from '../locales';
-import { stripAccents } from '../utils/format';
+import { stripAccents, formatFullDate } from '../utils/format';
 
 function isTagMatched(tag, query) {
   if (!query || !query.trim()) return false;
@@ -25,7 +25,7 @@ export default function ArticlePage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const currentQ = searchParams.get('q') || '';
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { isPersonalUser } = useAuth();
 
   // Article có thể được truyền qua navigation state (từ NewsCard click)
@@ -167,14 +167,12 @@ export default function ArticlePage() {
   }
 
   // Lấy source info thống nhất từ getSourceStyle
-  const src = getSourceStyle(article);
+  const src = getSourceStyle(article, lang);
   const srcName = src.name;
   const srcIcon = src.icon;
   const srcColor = src.color;
 
-  const publishedDate = article.published_at
-    ? new Date(article.published_at).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
-    : null;
+  const publishedDate = article.published_at ? formatFullDate(article.published_at, lang) : null;
 
   return (
     <div>
@@ -255,7 +253,7 @@ export default function ArticlePage() {
                       alignItems: 'center',
                       gap: 3,
                     }}
-                    title={`Bấm để tìm bài viết với từ khóa #${kw}`}
+                    title={t('common.filterByTag', { tag: kw })}
                   >
                     {matched && <span style={{ fontSize: 9 }}>⚡</span>}
                     #{kw}
@@ -296,13 +294,13 @@ export default function ArticlePage() {
                   </div>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {t('article.summary') || 'Tóm Tắt Điều Hành AI'} (Executive Summary)
+                      {t('article.summary', 'Tóm Tắt Điều Hành AI')} {lang === 'ja' ? '（エグゼクティブサマリー）' : (lang === 'en' ? '(Executive Summary)' : '(Tóm Tắt Điều Hành)')}
                       <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: 'rgba(139, 92, 246, 0.15)', color: '#7c3aed' }}>
-                        TOÀN DIỆN &amp; CHI TIẾT
+                        {lang === 'ja' ? '包括的＆詳細分析' : (lang === 'en' ? 'COMPREHENSIVE & DETAILED' : 'TOÀN DIỆN & CHI TIẾT')}
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                      Tổng hợp thông tin trọng tâm đa chiều giúp nắm bắt nhanh toàn bộ diễn biến bài viết
+                      {lang === 'ja' ? '多角的な重要情報をまとめ、記事全体の動向を迅速に把握できます。' : (lang === 'en' ? 'Multi-dimensional synthesis of key information to quickly grasp all article developments.' : 'Tổng hợp thông tin trọng tâm đa chiều giúp nắm bắt nhanh toàn bộ diễn biến bài viết')}
                     </div>
                   </div>
                 </div>
@@ -329,13 +327,13 @@ export default function ArticlePage() {
                   display: 'flex', flexDirection: 'column', gap: 8
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#2563eb' }}>
-                    <CheckCircle2 size={15} /> Điểm tin then chốt (Key Takeaways)
+                    <CheckCircle2 size={15} /> {lang === 'ja' ? '重要ポイント (Key Takeaways)' : (lang === 'en' ? 'Key Takeaways' : 'Điểm tin then chốt (Key Takeaways)')}
                   </div>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
                     <li>{tUI('ui.cap-nhat-dien-bien-moi-nhat-lien-quan-den-chu-de')} <strong>{article.title}</strong>.</li>
-                    <li>{tUI('ui.ghi-nhan-tu-nguon-tin-chinh-thong')} <strong>{srcName}</strong>{publishedDate ? ` ngày ${publishedDate}` : ''}.</li>
+                    <li>{tUI('ui.ghi-nhan-tu-nguon-tin-chinh-thong')} <strong>{srcName}</strong>{publishedDate ? (lang === 'ja' ? ` (${publishedDate})` : (lang === 'en' ? ` on ${publishedDate}` : ` ngày ${publishedDate}`)) : ''}.</li>
                     {article.matched_keywords?.length > 0 && (
-                      <li>Trọng tâm từ khóa giám sát: {article.matched_keywords.map(k => `#${k}`).join(', ')}.</li>
+                      <li>{lang === 'ja' ? '監視キーワード重点: ' : (lang === 'en' ? 'Monitored Keywords: ' : 'Trọng tâm từ khóa giám sát: ')}{article.matched_keywords.map(k => `#${k}`).join(', ')}.</li>
                     )}
                   </ul>
                 </div>
@@ -347,7 +345,7 @@ export default function ArticlePage() {
                   display: 'flex', flexDirection: 'column', gap: 8
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#059669' }}>
-                    <Building2 size={15} /> Chủ thể &amp; Địa bàn liên quan
+                    <Building2 size={15} /> {lang === 'ja' ? '関係主体＆関連地域' : (lang === 'en' ? 'Entities & Location' : 'Chủ thể & Địa bàn liên quan')}
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
                     <div>• <strong>{tUI('ui.co-quan-nguon-tin')}</strong> {srcName}</div>
@@ -363,7 +361,7 @@ export default function ArticlePage() {
                   display: 'flex', flexDirection: 'column', gap: 8
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#d97706' }}>
-                    <Coins size={15} /> Quy mô &amp; Mốc tiến độ
+                    <Coins size={15} /> {lang === 'ja' ? '規模＆進捗マイルストーン' : (lang === 'en' ? 'Scale & Timeline' : 'Quy mô & Mốc tiến độ')}
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
                     {article.amount && <div>• <strong>{tUI('ui.tong-gia-tri')}</strong> {article.amount}</div>}
@@ -379,7 +377,7 @@ export default function ArticlePage() {
                   display: 'flex', flexDirection: 'column', gap: 8
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 800, color: '#7c3aed' }}>
-                    <TrendingUp size={15} /> Ý nghĩa &amp; Cơ hội thị trường
+                    <TrendingUp size={15} /> {lang === 'ja' ? '意義＆市場機会' : (lang === 'en' ? 'Significance & Market Opportunities' : 'Ý nghĩa & Cơ hội thị trường')}
                   </div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
                     <div>{tUI('ui.ho-tro-bo-phan-phat-trien-du-an-nam-bat-som-co-h')}</div>
@@ -435,12 +433,29 @@ export default function ArticlePage() {
                   }
 
                   // Default multi-paragraph detailed article content generator
-                  const p1 = `${article.excerpt || article.title}. Tin tức được cập nhật trực tiếp từ nguồn chính thống ${srcName}${publishedDate ? ` vào ngày ${publishedDate}` : ''}.`;
-                  const kwText = article.matched_keywords?.length > 0
-                    ? `Nội dung thuộc nhóm chủ đề được hệ thống giám sát tự động theo dõi với các từ khóa trọng tâm: ${article.matched_keywords.map(k => `#${k}`).join(', ')}.`
-                    : 'Nội dung thuộc nhóm danh mục dự án & tin tức kinh tế hạ tầng được hệ thống giám sát BIS ghi nhận.';
-                  const p2 = `Theo ghi nhận chi tiết, dự án/bài viết "${article.title}" đang thu hút sự chú ý lớn từ các cơ quan quản lý và nhà đầu tư trong ngành. ${kwText} Các thông tin quy hoạch, mốc tiến độ và kế hoạch triển khai liên quan đang được cập nhật liên tục để hỗ trợ công tác thẩm định và tham mưu.`;
-                  const p3 = `Việc tổng hợp thông tin tự động từ nguồn ${srcName} giúp đảm bảo tính kịp thời, khách quan và minh bạch, hỗ trợ tối đa cho quy trình quản lý dự án và theo dõi biến động thị trường.`;
+                  let p1, p2, p3;
+                  if (lang === 'ja') {
+                    const kwText = article.matched_keywords?.length > 0
+                      ? `本内容は、主要キーワード（${article.matched_keywords.map(k => `#${k}`).join('、')}）に基づき自動監視システムによって追跡されているテーマグループに属しています。`
+                      : '本内容は、BIS監視システムによって記録されたプロジェクト・インフラ経済ニュースのカテゴリーに属しています。';
+                    p1 = `${article.excerpt || article.title}。${srcName}の公式情報源から直接取得・更新されました${publishedDate ? `（${publishedDate}）` : ''}。`;
+                    p2 = `詳細な記録によると、プロジェクト/記事「${article.title}」は業界の管理者や投資家から大きな注目を集めています。${kwText}関連する計画情報、マイルストーン、実施スケジュールは、審査やコンサルティング業務を支援するために継続的に更新されています。`;
+                    p3 = `${srcName}からの自動情報集約により、適時性、客観性、透明性が確保され、プロジェクト管理および市場動向のモニタリングが強力にサポートされます。`;
+                  } else if (lang === 'en') {
+                    const kwText = article.matched_keywords?.length > 0
+                      ? `The content belongs to the thematic group automatically tracked by the monitoring system with key focus keywords: ${article.matched_keywords.map(k => `#${k}`).join(', ')}.`
+                      : 'The content belongs to the infrastructure economics & project category recorded by the BIS monitoring system.';
+                    p1 = `${article.excerpt || article.title}. Information is directly updated from the official source ${srcName}${publishedDate ? ` on ${publishedDate}` : ''}.`;
+                    p2 = `According to detailed records, the project/article "${article.title}" is attracting significant attention from industry regulators and investors. ${kwText} Planning information, milestones, and implementation plans are continuously updated to support appraisal and advisory work.`;
+                    p3 = `Automated information aggregation from ${srcName} ensures timeliness, objectivity, and transparency, maximizing support for project management and market monitoring.`;
+                  } else {
+                    const kwText = article.matched_keywords?.length > 0
+                      ? `Nội dung thuộc nhóm chủ đề được hệ thống giám sát tự động theo dõi với các từ khóa trọng tâm: ${article.matched_keywords.map(k => `#${k}`).join(', ')}.`
+                      : 'Nội dung thuộc nhóm danh mục dự án & tin tức kinh tế hạ tầng được hệ thống giám sát BIS ghi nhận.';
+                    p1 = `${article.excerpt || article.title}. Tin tức được cập nhật trực tiếp từ nguồn chính thống ${srcName}${publishedDate ? ` vào ngày ${publishedDate}` : ''}.`;
+                    p2 = `Theo ghi nhận chi tiết, dự án/bài viết "${article.title}" đang thu hút sự chú ý lớn từ các cơ quan quản lý và nhà đầu tư trong ngành. ${kwText} Các thông tin quy hoạch, mốc tiến độ và kế hoạch triển khai liên quan đang được cập nhật liên tục để hỗ trợ công tác thẩm định và tham mưu.`;
+                    p3 = `Việc tổng hợp thông tin tự động từ nguồn ${srcName} giúp đảm bảo tính kịp thời, khách quan và minh bạch, hỗ trợ tối đa cho quy trình quản lý dự án và theo dõi biến động thị trường.`;
+                  }
 
                   return (
                     <>
@@ -456,19 +471,19 @@ export default function ArticlePage() {
                         marginTop: 10,
                       }}>
                         <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>📌</span> Thông Tin Phân Tích Kỹ Thuật (System Metadata):
+                          <span>📌</span> {t('common.systemMetadata', 'Thông Tin Phân Tích Kỹ Thuật (System Metadata):')}
                         </div>
                         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 7 }}>
                           <li><strong>{tUI('ui.tieu-de-bai-viet')}</strong> {article.title}</li>
                           <li><strong>{t('article.extractSource')}:</strong> {srcName}</li>
-                          <li><strong>{tUI('ui.phan-loai-he-thong')}</strong> {article.source_type === 'gov' ? 'Gói thầu / Mua sắm công (GOV)' : 'Báo chí & Truyền thông (PRESS)'}</li>
+                          <li><strong>{tUI('ui.phan-loai-he-thong')}</strong> {article.source_type === 'gov' ? (lang === 'ja' ? '公共調達・入札 (GOV)' : lang === 'en' ? 'Public Procurement (GOV)' : 'Gói thầu / Mua sắm công (GOV)') : (lang === 'ja' ? '報道・ニュースメディア (PRESS)' : lang === 'en' ? 'Press & Media (PRESS)' : 'Báo chí & Truyền thông (PRESS)')}</li>
                           {publishedDate && <li><strong>{tUI('ui.thoi-gian-phat-hanh')}</strong> {publishedDate}</li>}
                           {article.matched_keywords?.length > 0 && <li><strong>{t('article.systemKeywords')}:</strong> {article.matched_keywords.join(', ')}</li>}
                           {article.url && (
                             <li>
                               <strong>{tUI('ui.lien-ket-bai-goc')}</strong>{' '}
                               <a href={article.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-600)', textDecoration: 'underline' }}>
-                                Trích xuất trực tiếp từ {srcName} ↗
+                                {lang === 'ja' ? `${srcName} から直接抽出 ↗` : lang === 'en' ? `Extracted directly from ${srcName} ↗` : `Trích xuất trực tiếp từ ${srcName} ↗`}
                               </a>
                             </li>
                           )}
@@ -505,7 +520,7 @@ export default function ArticlePage() {
             {article.sources?.length > 1 && (
               <div style={{ marginBottom: 'var(--space-6)' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                  🔗 Xem từ nguồn khác:
+                  🔗 {lang === 'ja' ? '他のソースで表示:' : (lang === 'en' ? 'View from other sources:' : 'Xem từ nguồn khác:')}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {article.sources.map((s) => (
@@ -570,7 +585,7 @@ export default function ArticlePage() {
           {/* Source info */}
           <div className="article-sidebar-card">
             <div className="article-sidebar-title">
-              <span>{srcIcon}</span> Về {srcName}
+              <span>{srcIcon}</span> {lang === 'ja' ? `${srcName} について` : (lang === 'en' ? `About ${srcName}` : `Về ${srcName}`)}
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               {t('article.crawlNote', { source: srcName })}
@@ -618,7 +633,7 @@ export default function ArticlePage() {
                           : 'none',
                         transition: 'all 0.15s ease',
                       }}
-                      title={`Bấm để tìm bài viết với từ khóa #${kw}`}
+                      title={t('common.filterByTag', { tag: kw })}
                     >
                       {matched ? '⚡ ' : ''}#{kw}
                     </span>
@@ -687,7 +702,7 @@ export default function ArticlePage() {
                           {ra.title}
                         </div>
                         <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span>{ra.source_name || (isGov ? 'Đấu thầu' : 'Báo chí')}</span>
+                          <span>{formatArticleSource(ra.source_name || ra.source, lang) || (isGov ? (lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Bidding' : 'Đấu thầu')) : (lang === 'ja' ? '報道' : (lang === 'en' ? 'Press' : 'Báo chí')))}</span>
                           <span>{ra.published_at ? new Date(ra.published_at).toLocaleDateString('vi-VN') : ''}</span>
                         </div>
                       </div>

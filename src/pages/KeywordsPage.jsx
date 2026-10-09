@@ -497,7 +497,13 @@ export default function KeywordsPage() {
               className="form-input"
               placeholder={t('keywords.termPlaceholder')}
               value={newTerm}
-              onChange={(e) => setNewTerm(e.target.value)}
+              onChange={(e) => {
+                setNewTerm(e.target.value);
+                e.target.setCustomValidity('');
+              }}
+              onInvalid={(e) => {
+                e.target.setCustomValidity(t('validation.required', lang === 'ja' ? 'このフィールドを入力してください。' : (lang === 'vi' ? 'Vui lòng điền vào trường này.' : 'Please fill out this field.')));
+              }}
               required
               style={{ fontSize: 13.5, height: 40 }}
             />

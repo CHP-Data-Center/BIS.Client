@@ -29,6 +29,114 @@ import TrackedProjectsPanel from '../components/admin/TrackedProjectsPanel';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { tUI } from '../locales';
 
+
+function formatUserPackage(u, lang = 'vi') {
+  if (!u) return '';
+  if (u.role === 'super_admin') return '👑 FULL DATA (SUPER ADMIN)';
+  if (u.active_package === 'enterprise' || u.role === 'admin') {
+    const max = u.max_users || 10;
+    if (lang === 'ja') return `🏢 エンタープライズプラン (最大${max}名)`;
+    if (lang === 'en') return `🏢 Enterprise Plan (Max ${max} Users)`;
+    return `🏢 Gói Enterprise (Max ${max} User)`;
+  }
+  if (u.active_package === 'full') {
+    if (lang === 'ja') return '💎 フルデータパック';
+    if (lang === 'en') return '💎 Full Data Pack';
+    return '💎 Full Data Pack';
+  }
+  if (u.active_package === 'single') {
+    const srcMap = {
+      adb: 'ADB',
+      worldbank: 'World Bank',
+      gov: lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Gov Bidding' : 'Đấu Thầu')
+    };
+    const sName = srcMap[(u.selected_sources || ['adb'])[0]] || '1 Source';
+    if (lang === 'ja') return `📦 1ソースプラン (${sName})`;
+    if (lang === 'en') return `📦 1-Source Plan (${sName})`;
+    return `📦 Gói 1 Nguồn (${sName})`;
+  }
+  if (u.active_package === 'combo2') {
+    const srcMap = {
+      adb: 'ADB',
+      worldbank: 'WB',
+      gov: lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Gov' : 'Đấu Thầu')
+    };
+    const sNames = (u.selected_sources || ['adb', 'worldbank']).map(k => srcMap[k] || k).join('+');
+    if (lang === 'ja') return `⚡ 2ソースコンボ (${sNames})`;
+    if (lang === 'en') return `⚡ 2-Source Combo (${sNames})`;
+    return `⚡ Combo 2 (${sNames})`;
+  }
+  if (lang === 'ja') return '📰 無料ニュースプラン';
+  if (lang === 'en') return '📰 Free News Plan';
+  return '📰 Báo Chí Miễn Phí';
+}
+
+function formatUserExpiration(exp, role, activePackage, lang = 'vi') {
+  const isPerm = activePackage === 'free' || role === 'super_admin' || !exp || exp.includes('Vcnh') || exp.includes('Vĩnh') || exp.includes('Vinh') || exp.toLowerCase().includes('permanent');
+  if (isPerm) {
+    if (lang === 'ja') return '無期限';
+    if (lang === 'en') return 'Permanent';
+    return 'Vĩnh viễn';
+  }
+  return exp;
+}
+
+function formatOrgName(name, lang = 'vi') {
+  if (!name) return '';
+  if (name === 'Tổ chức Toàn quốc' || name === 'Toàn quốc') {
+    if (lang === 'ja') return '全国組織';
+    if (lang === 'en') return 'Nationwide Org';
+    return 'Tổ chức Toàn quốc';
+  }
+  if (name === 'TEST_To chuc Mien Bắc' || name === 'TEST_To chuc Mien Bac') {
+    if (lang === 'ja') return 'TEST_北部組織';
+    if (lang === 'en') return 'TEST_Northern Org';
+    return name;
+  }
+  if (name.startsWith('Tổ chức ') || name.startsWith('To chuc ')) {
+    const regionPart = name.replace('Tổ chức ', '').replace('To chuc ', '').trim();
+    const regionMapJa = { 'Toàn quốc': '全国', 'Miền Bắc': '北部', 'Mien Bac': '北部', 'Miền Trung': '中部', 'Mien Trung': '中部', 'Miền Nam': '南部', 'Mien Nam': '南部', 'Hà Nội': 'ハノイ', 'TP.HCM': 'ホーチミン', 'Đà Nẵng': 'ダナン', 'Hải Phòng': 'ハイフォン', 'Cần Thơ': 'カントー', 'Quảng Ninh': 'クアンニン', 'Bình Dương': 'ビンズオン', 'Đồng Nai': 'ドンナイ' };
+    const regionMapEn = { 'Toàn quốc': 'Nationwide', 'Miền Bắc': 'Northern', 'Mien Bac': 'Northern', 'Miền Trung': 'Central', 'Mien Trung': 'Central', 'Miền Nam': 'Southern', 'Mien Nam': 'Southern', 'Hà Nội': 'Hanoi', 'TP.HCM': 'HCMC', 'Đà Nẵng': 'Da Nang', 'Hải Phòng': 'Hai Phong', 'Cần Thơ': 'Can Tho', 'Quảng Ninh': 'Quang Ninh', 'Bình Dương': 'Binh Duong', 'Đồng Nai': 'Dong Nai' };
+    if (lang === 'ja') return `${regionMapJa[regionPart] || regionPart}組織`;
+    if (lang === 'en') return `${regionMapEn[regionPart] || regionPart} Org`;
+  }
+  return name;
+}
+
+function formatRegionName(r, lang = 'vi') {
+  if (!r) return '';
+  const regMap = {
+    'Toàn quốc': lang === 'ja' ? '全国' : (lang === 'en' ? 'Nationwide' : 'Toàn quốc'),
+    'Miền Bắc': lang === 'ja' ? '北部' : (lang === 'en' ? 'Northern' : 'Miền Bắc'),
+    'Miền Trung': lang === 'ja' ? '中部' : (lang === 'en' ? 'Central' : 'Miền Trung'),
+    'Miền Nam': lang === 'ja' ? '南部' : (lang === 'en' ? 'Southern' : 'Miền Nam'),
+    'Hà Nội': lang === 'ja' ? 'ハノイ' : (lang === 'en' ? 'Hanoi' : 'Hà Nội'),
+    'TP.HCM': lang === 'ja' ? 'ホーチミン' : (lang === 'en' ? 'HCMC' : 'TP.HCM'),
+    'Đà Nẵng': lang === 'ja' ? 'ダナン' : (lang === 'en' ? 'Da Nang' : 'Đà Nẵng'),
+    'Hải Phòng': lang === 'ja' ? 'ハイフォン' : (lang === 'en' ? 'Hai Phong' : 'Hải Phòng'),
+    'Cần Thơ': lang === 'ja' ? 'カントー' : (lang === 'en' ? 'Can Tho' : 'Cần Thơ'),
+    'Quảng Ninh': lang === 'ja' ? 'クアンニン' : (lang === 'en' ? 'Quang Ninh' : 'Quảng Ninh'),
+    'Bình Dương': lang === 'ja' ? 'ビンズオン' : (lang === 'en' ? 'Binh Duong' : 'Bình Dương'),
+    'Đồng Nai': lang === 'ja' ? 'ドンナイ' : (lang === 'en' ? 'Dong Nai' : 'Đồng Nai'),
+  };
+  return regMap[r] || r;
+}
+
+function formatDisplayName(name, lang = 'vi') {
+  if (!name) return '';
+  if (name === 'Quản trị Phân Vùng') {
+    if (lang === 'ja') return '地域管理者';
+    if (lang === 'en') return 'Regional Admin';
+    return 'Quản trị Phân Vùng';
+  }
+  if (name === 'Quản trị Tối cao' || name === 'Super Admin') {
+    if (lang === 'ja') return '最高管理者';
+    if (lang === 'en') return 'Super Admin';
+    return 'Quản trị Tối cao';
+  }
+  return name;
+}
+
 export default function AdminPage() {
   const { lang, t } = useLang();
   const { user, isSuperAdmin, isRegionalAdmin, userRegion } = useAuth();
@@ -275,7 +383,7 @@ export default function AdminPage() {
     setActionLoading(true);
     try {
       const res = await adminService.crawlWorldBank(rows);
-      baoKetQuaCrawl(res, 'Cào World Bank');
+      baoKetQuaCrawl(res, lang === 'ja' ? 'World Bank クロール' : (lang === 'en' ? 'Crawl World Bank' : 'Cào World Bank'));
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào World Bank.');
@@ -287,7 +395,7 @@ export default function AdminPage() {
   const handleCrawlAdb = async () => {
     setActionLoading(true);
     try {
-      baoKetQuaCrawl(await adminService.crawlAdb(), 'Cào dữ liệu ADB');
+      baoKetQuaCrawl(await adminService.crawlAdb(), lang === 'ja' ? 'ADB クロール' : (lang === 'en' ? 'Crawl ADB' : 'Cào dữ liệu ADB'));
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào ADB.');
@@ -299,7 +407,7 @@ export default function AdminPage() {
   const handleCrawlDauthau = async (kind = 'all', q = '', pages = 1) => {
     setActionLoading(true);
     try {
-      baoKetQuaCrawl(await adminService.crawlDauthau(kind, q, pages), `Cào dauthau.asia (${kind})`);
+      baoKetQuaCrawl(await adminService.crawlDauthau(kind, q, pages), lang === 'ja' ? `dauthau.asia クロール (${kind})` : (lang === 'en' ? `Crawl dauthau.asia (${kind})` : `Cào dauthau.asia (${kind})`));
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào dauthau.asia.');
@@ -311,7 +419,7 @@ export default function AdminPage() {
   const handleCrawlMuasamcong = async () => {
     setActionLoading(true);
     try {
-      baoKetQuaCrawl(await adminService.crawlMuasamcong(), 'Cào Mua sắm công (Playwright)');
+      baoKetQuaCrawl(await adminService.crawlMuasamcong(), lang === 'ja' ? '公共調達 クロール (Playwright)' : (lang === 'en' ? 'Crawl Public Procurement (Playwright)' : 'Cào Mua sắm công (Playwright)'));
       loadData();
     } catch (e) {
       showAlert('error', e.response?.data?.detail || 'Lỗi khi cào Muasamcong.');
@@ -432,9 +540,9 @@ export default function AdminPage() {
       type: 'user',
       item: u,
       title: tUI('ui.xoa-tai-khoan-nguoi-dung'),
-      message: 'Bạn có chắc chắn muốn xóa tài khoản này khỏi hệ thống?',
+      message: lang === 'ja' ? 'このアカウントをシステムから削除してもよろしいですか？' : (lang === 'en' ? 'Are you sure you want to delete this account from the system?' : 'Bạn có chắc chắn muốn xóa tài khoản này khỏi hệ thống?'),
       itemName: u.email,
-      itemSub: u.display_name ? `Họ tên: ${u.display_name}` : ''
+      itemSub: u.display_name ? `${lang === 'ja' ? '氏名: ' : (lang === 'en' ? 'Name: ' : 'Họ tên: ')}${formatDisplayName(u.display_name, lang)}` : ''
     });
   };
 
@@ -446,7 +554,7 @@ export default function AdminPage() {
     setEditingUser({
       id: u.id,
       email: u.email || '',
-      display_name: u.display_name || '',
+      display_name: formatDisplayName(u.display_name, lang) || '',
       role: role,
       organization_id: u.organization_id || null,
       region: u.region || userRegion || 'Toàn quốc',
@@ -604,7 +712,7 @@ export default function AdminPage() {
     }
   };
 
-  // Tạm ngưng / kích hoạt lại nguồn (FR-02 Phụ lục B: Admin thêm/xóa/TẠM NGƯNG nguồn).
+  // Tạm ngưng / kích hoạt lại nguồn (FR-02 Phụ lục B: Admin thêm/xóa/{lang === 'ja' ? '一時停止' : (lang === 'en' ? 'PAUSED' : 'TẠM NGƯNG')} nguồn).
   // Máy chủ đã nhận `is_active` ở PUT /admin/sources/{id}; trước đây giao diện không có nút.
   const handleToggleSourceActive = async (s) => {
     const bat = s.is_active === false;
@@ -613,10 +721,10 @@ export default function AdminPage() {
       const updated = await adminService.updateSource(s.id, { is_active: bat });
       setSources(prev => prev.map(x => (x.id === s.id ? { ...x, ...updated } : x)));
       showAlert('success', bat
-        ? `Đã kích hoạt lại nguồn "${s.name}". Nguồn được thu thập từ lượt kế tiếp.`
-        : `Đã tạm ngưng nguồn "${s.name}". Các lượt thu thập sau sẽ bỏ qua nguồn này.`);
+        ? (lang === 'ja' ? `ソース「${s.name}」を再開しました。次回の収集から反映されます。` : (lang === 'en' ? `Reactivated source "${s.name}". Will be collected next crawl.` : `Đã kích hoạt lại nguồn "${s.name}". Nguồn được thu thập từ lượt kế tiếp.`))
+        : (lang === 'ja' ? `ソース「${s.name}」を一時停止しました。` : (lang === 'en' ? `Paused source "${s.name}".` : `Đã tạm ngưng nguồn "${s.name}". Các lượt thu thập sau sẽ bỏ qua nguồn này.`)));
     } catch (err) {
-      showAlert('error', err?.response?.data?.detail || 'Không đổi được trạng thái nguồn.');
+      showAlert('error', err?.response?.data?.detail || (lang === 'ja' ? 'ソース状態の変更に失敗しました。' : (lang === 'en' ? 'Failed to update source status.' : 'Không đổi được trạng thái nguồn.')));
     } finally {
       setActionLoading(false);
     }
@@ -627,7 +735,7 @@ export default function AdminPage() {
       type: 'source',
       item: s,
       title: tUI('ui.xoa-nguon-tin'),
-      message: 'Bạn có chắc chắn muốn xóa nguồn tin này khỏi hệ thống?',
+      message: lang === 'ja' ? 'このソースをシステムから削除してもよろしいですか？' : (lang === 'en' ? 'Are you sure you want to delete this source from the system?' : 'Bạn có chắc chắn muốn xóa nguồn tin này khỏi hệ thống?'),
       itemName: s.name,
       itemSub: s.url
     });
@@ -882,7 +990,7 @@ export default function AdminPage() {
                 }}>
                   <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <AlertCircle size={20} style={{ color: '#d97706' }} />
-                    📥 Nguồn Tin Đề Xuất Chờ Super Admin Duyệt ({pendingSources.length})
+                    📥 {lang === 'ja' ? `Super Admin承認待ちの提案ソース (${pendingSources.length})` : (lang === 'en' ? `Pending Source Suggestions (${pendingSources.length})` : `Nguồn Tin Đề Xuất Chờ Super Admin Duyệt (${pendingSources.length})`)}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {pendingSources.map(ps => (
@@ -895,7 +1003,7 @@ export default function AdminPage() {
                             <span>{ps.type === 'gov' ? '📋' : '📰'}</span>
                             {ps.name}
                             <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12, background: 'rgba(59, 130, 246, 0.12)', color: 'var(--brand-600, #2563eb)' }}>
-                              Phân vùng: {ps.region || 'Không xác định'}
+                              {lang === 'ja' ? '地域' : (lang === 'en' ? 'Region' : 'Phân vùng')}: {ps.region || (lang === 'ja' ? '未定義' : (lang === 'en' ? 'Undefined' : 'Không xác định'))}
                             </span>
                           </div>
                           <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
@@ -908,14 +1016,14 @@ export default function AdminPage() {
                             onClick={() => handleApproveSource(ps.id)}
                             style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 10, padding: '6px 14px', fontWeight: 800, gap: 4 }}
                           >
-                            <CheckCircle size={14} /> Duyệt Nguồn
+                            <CheckCircle size={14} /> {lang === 'ja' ? '承認' : (lang === 'en' ? 'Approve' : 'Duyệt Nguồn')}
                           </button>
                           <button
                             className="btn btn-sm"
                             onClick={() => handleRejectSource(ps.id)}
                             style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 10, padding: '6px 14px', fontWeight: 800, gap: 4 }}
                           >
-                            <XCircle size={14} /> Từ Chối
+                            <XCircle size={14} /> {lang === 'ja' ? '拒否' : (lang === 'en' ? 'Reject' : 'Từ Chối')}
                           </button>
                         </div>
                       </div>
@@ -944,7 +1052,7 @@ export default function AdminPage() {
                     className="btn"
                     style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
                   >
-                    🌐 Crawl World Bank
+                    {t('admin.crawlWb', '🌐 Crawl World Bank')}
                   </button>
 
                   <button
@@ -954,7 +1062,7 @@ export default function AdminPage() {
                     className="btn"
                     style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
                   >
-                    🏢 Crawl ADB (RSS)
+                    {t('admin.crawlAdb', '🏢 Crawl ADB (RSS)')}
                   </button>
 
                   <button
@@ -964,7 +1072,7 @@ export default function AdminPage() {
                     className="btn"
                     style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
                   >
-                    📋 Crawl dauthau.asia
+                    {t('admin.crawlDauthau', '📋 Crawl dauthau.asia')}
                   </button>
 
                   <button
@@ -974,7 +1082,7 @@ export default function AdminPage() {
                     className="btn"
                     style={{ background: 'linear-gradient(135deg, #ec4899, #db2777)', color: 'white', border: 'none', padding: '12px 16px', borderRadius: 14, fontWeight: 800, fontSize: 13, gap: 8, justifyContent: 'center' }}
                   >
-                    ⚡ Crawl Muasamcong (Playwright)
+                    {t('admin.crawlMuasamcong', '⚡ Crawl Muasamcong (Playwright)')}
                   </button>
 
                   <button
@@ -984,7 +1092,7 @@ export default function AdminPage() {
                     className="btn"
                     style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 14, fontWeight: 700, fontSize: 12.5, gap: 8, justifyContent: 'center' }}
                   >
-                    🔗 Backfill URL Muasamcong
+                    {t('admin.backfillMuasamcong', '🔗 Backfill URL Muasamcong')}
                   </button>
 
                   <button
@@ -994,7 +1102,7 @@ export default function AdminPage() {
                     className="btn"
                     style={{ background: 'var(--bg-surface-2)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 14, fontWeight: 700, fontSize: 12.5, gap: 8, justifyContent: 'center' }}
                   >
-                    ✨ Enrich Procurement Details
+                    {t('admin.enrichProcurement', '✨ Enrich Procurement Details')}
                   </button>
                 </div>
               </div>
@@ -1015,7 +1123,7 @@ export default function AdminPage() {
                 <form onSubmit={handleCreateSource} className="responsive-grid-form" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr 1fr', gap: 14, alignItems: 'end' }}>
                   <div>
                     <label className="form-label">{t('admin.sourceName')} *</label>
-                    <input className="form-input" placeholder="vd: VnExpress Kinh Doanh" value={newSource.name} onChange={e => setNewSource({ ...newSource, name: e.target.value })} required />
+                    <input className="form-input" placeholder={lang === 'ja' ? '例: 日本経済新聞、ロイター...' : (lang === 'en' ? 'e.g. Reuters, Nikkei...' : 'vd: VnExpress Kinh Doanh')} value={newSource.name} onChange={e => setNewSource({ ...newSource, name: e.target.value })} required />
                   </div>
                   <div>
                     <label className="form-label">{t('admin.sourceType')} *</label>
@@ -1036,8 +1144,11 @@ export default function AdminPage() {
                 {/* Trước đây form này ngầm coi mọi link là RSS: dán trang chủ báo vào thì nguồn
                     ra 0 bài mà nhật ký crawl vẫn ghi "thành công". Nay máy chủ tự nhận diện. */}
                 <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  Có thể dán <b>link RSS</b> {tUI('ui.hoac')} <b>{tUI('ui.trang-chuyen-muc-tin-tuc')}</b> — hệ thống tự nhận diện.
-                  Trang chặn truy cập tự động (yêu cầu chạy JavaScript) sẽ báo lỗi kèm lý do trong nhật ký crawl.
+                  {lang === 'ja'
+                    ? 'RSSリンクまたはニュースカテゴリURLを入力可能 — システムが自動認識します。自動アクセスをブロックするサイト（JavaScript必須）はクロールログに理由とともにエラーが記録されます。'
+                    : (lang === 'en'
+                      ? 'Paste RSS feed or news category page URL — system auto-detects. Sites blocking automated access (requiring JavaScript) will report errors with details in the crawl log.'
+                      : 'Có thể dán link RSS hoặc trang chuyên mục tin tức — hệ thống tự nhận diện. Trang chặn truy cập tự động (yêu cầu chạy JavaScript) sẽ báo lỗi kèm lý do trong nhật ký crawl.')}
                 </p>
               </div>
 
@@ -1095,8 +1206,8 @@ export default function AdminPage() {
                           <tr>
                             <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
                               {sources.length === 0
-                                ? 'Chưa có nguồn tin nào. Thêm nguồn đầu tiên ở trên.'
-                                : 'Không tìm thấy nguồn phù hợp.'}
+                                ? (lang === 'ja' ? 'ニュースソースがありません。上で追加してください。' : (lang === 'en' ? 'No sources yet. Add one above.' : 'Chưa có nguồn tin nào. Thêm nguồn đầu tiên ở trên.'))
+                                : (lang === 'ja' ? '一致するソースが見つかりません。' : (lang === 'en' ? 'No matching sources found.' : 'Không tìm thấy nguồn phù hợp.'))}
                             </td>
                           </tr>
                         );
@@ -1116,7 +1227,7 @@ export default function AdminPage() {
                                     background: 'rgba(245, 158, 11, 0.14)', color: '#b45309',
                                     border: '1px solid rgba(245, 158, 11, 0.3)', whiteSpace: 'nowrap',
                                   }}>
-                                    TẠM NGƯNG
+                                    {lang === 'ja' ? '一時停止' : (lang === 'en' ? 'PAUSED' : 'TẠM NGƯNG')}
                                   </span>
                                 )}
                               </div>
@@ -1128,7 +1239,7 @@ export default function AdminPage() {
                                 color: isGov ? 'var(--color-dau-thau, #8b5cf6)' : 'var(--brand-500, #3b82f6)',
                                 border: `1px solid ${isGov ? 'rgba(139, 92, 246, 0.25)' : 'rgba(59, 130, 246, 0.25)'}`,
                               }}>
-                                {isGov ? 'ĐẤU THẦU (GOV)' : 'BÁO CHÍ (PRESS)'}
+                                {isGov ? (lang === 'ja' ? '公共調達 (GOV)' : (lang === 'en' ? 'BIDDING (GOV)' : 'ĐẤU THẦU (GOV)')) : (lang === 'ja' ? '報道 (PRESS)' : (lang === 'en' ? 'NEWS (PRESS)' : 'BÁO CHÍ (PRESS)'))}
                               </span>
                             </td>
                             <td style={{ padding: '14px 20px', color: 'var(--text-muted)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1137,7 +1248,7 @@ export default function AdminPage() {
                               </a>
                             </td>
                             <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12 }}>
-                              {s.last_crawled_at ? new Date(s.last_crawled_at).toLocaleString('vi-VN') : 'Vừa khởi tạo'}
+                              {s.last_crawled_at ? new Date(s.last_crawled_at).toLocaleString(lang === 'ja' ? 'ja-JP' : (lang === 'en' ? 'en-US' : 'vi-VN')) : (lang === 'ja' ? '初期化直後' : (lang === 'en' ? 'Just Initialized' : 'Vừa khởi tạo'))}
                             </td>
                             <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -1155,10 +1266,10 @@ export default function AdminPage() {
                                     padding: '6px 10px', cursor: khongDuocDoi ? 'not-allowed' : 'pointer',
                                   }}
                                   title={khongDuocDoi
-                                    ? 'Nguồn dùng chung — chỉ Super Admin được tạm ngưng'
+                                    ? (lang === 'ja' ? '共用ソース — Super Adminのみ一時停止可能' : (lang === 'en' ? 'Shared source — Super Admin only' : 'Nguồn dùng chung — chỉ Super Admin được tạm ngưng'))
                                     : (s.is_active === false
-                                      ? 'Kích hoạt lại: nguồn được thu thập từ lượt kế tiếp'
-                                      : 'Tạm ngưng: các lượt thu thập sau bỏ qua nguồn này')}
+                                      ? (lang === 'ja' ? '再開: 次回の収集から反映' : (lang === 'en' ? 'Reactivate: collected from next run' : 'Kích hoạt lại: nguồn được thu thập từ lượt kế tiếp'))
+                                      : (lang === 'ja' ? '一時停止: 次回以降の収集をスキップ' : (lang === 'en' ? 'Pause: skip in future runs' : 'Tạm ngưng: các lượt thu thập sau bỏ qua nguồn này')))}
                                 >
                                   {s.is_active === false ? <><Play size={14} /> {tUI('ui.kich-hoat')}</> : <><Pause size={14} /> {tUI('ui.tam-ngung')}</>}
                                 </button>
@@ -1170,7 +1281,7 @@ export default function AdminPage() {
                                   style={{ color: 'var(--brand-600, #2563eb)', padding: '6px 10px' }}
                                   title={tUI('ui.chinh-sua-nguon-tin')}
                                 >
-                                  <Edit size={14} /> Sửa
+                                  <Edit size={14} /> {lang === 'ja' ? '編集' : (lang === 'en' ? 'Edit' : 'Sửa')}
                                 </button>
                                 {isSuperAdmin ? (
                                   <button
@@ -1179,7 +1290,7 @@ export default function AdminPage() {
                                     title={tUI('ui.xoa-nguon')}
                                     style={{ color: '#ef4444', padding: '6px 10px' }}
                                   >
-                                    <Trash2 size={14} /> Xóa
+                                    <Trash2 size={14} /> {lang === 'ja' ? '削除' : (lang === 'en' ? 'Delete' : 'Xóa')}
                                   </button>
                                 ) : (
                                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.chi-super-admin-duoc-xoa')}</span>
@@ -1299,32 +1410,31 @@ export default function AdminPage() {
                           <span>🏢 {t('ui.admin-phan-vung')}: {userRegion === 'Toàn quốc' ? t('common.nationwide') : userRegion} ({t('upgrade.tableEnterprise')})</span>
                           {extraSlotCount > 0 && !isCancelled && (
                             <span style={{ fontSize: 11, fontWeight: 700, background: '#f3e8ff', color: '#9333ea', padding: '2px 8px', borderRadius: 12, border: '1px solid rgba(147,51,234,0.3)' }}>
-                              ⚡ Mua thêm +{extraSlotCount} Slot User
+                              ⚡ {lang === 'ja' ? `+${extraSlotCount}スロット追加購入済` : (lang === 'en' ? `+${extraSlotCount} Extra Slots Purchased` : `Mua thêm +${extraSlotCount} Slot User`)}
                             </span>
                           )}
                           {isCancelled && (
                             <span style={{ fontSize: 11, fontWeight: 700, background: '#fff7ed', color: '#ea580c', padding: '2px 8px', borderRadius: 12, border: '1px solid #ffedd5' }}>
-                              ⚠️ Đã hủy gia hạn tự động (Hạn dùng đến {slotExpDate || 'cuối tháng'})
+                              ⚠️ {lang === 'ja' ? `自動更新キャンセル済 (有効期限: ${slotExpDate || '月末まで'})` : (lang === 'en' ? `Auto-renewal cancelled (Valid until ${slotExpDate || 'month end'})` : `Đã hủy gia hạn tự động (Hạn dùng đến ${slotExpDate || 'cuối tháng'})`)}
                             </span>
                           )}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.45 }}>
-                          Quyền quản trị tối đa <b>{myMaxUsers} tài khoản thành viên</b> (Mặc định: 10 user base
-                          {extraSlotCount > 0 ? ` + ${extraSlotCount} slot nâng cấp ${slotExpDate ? `· Hạn dùng đến ${slotExpDate}` : ''}` : ''}).
+                          {lang === 'ja' ? '最大管理者権限' : (lang === 'en' ? 'Max Admin Quota' : 'Quyền quản trị tối đa')} <b>{myMaxUsers} {lang === 'ja' ? 'メンバー' : (lang === 'en' ? 'members' : 'tài khoản thành viên')}</b> ({lang === 'ja' ? '基本10ユーザー' : (lang === 'en' ? 'Default: 10 base users' : 'Mặc định: 10 user base')}{extraSlotCount > 0 ? ` + ${extraSlotCount} ${lang === 'ja' ? 'アップグレード' : (lang === 'en' ? 'upgraded slots' : 'slot nâng cấp')} ${slotExpDate ? `· ${lang === 'ja' ? '有効期限' : (lang === 'en' ? 'Valid until' : 'Hạn dùng đến')} ${slotExpDate}` : ''}` : ''}).
                           {isCancelled
-                            ? ` Bạn vẫn được sử dụng đầy đủ ${myMaxUsers} User cho đến hết ngày ${slotExpDate || 'hạn thanh toán'}. Sau ngày này, hạn ngạch mới trả về 10 User mặc định.`
-                            : ' Các thành viên tự động kế thừa Full Data Pack.'}
+                            ? (lang === 'ja' ? ` ${slotExpDate || '請求期日'}まで${myMaxUsers}ユーザーを引き続き全機能でご利用いただけます。期日以降は基本10ユーザーに戻ります。` : (lang === 'en' ? ` You can continue to use all ${myMaxUsers} users until ${slotExpDate || 'due date'}. After this, quota resets to 10 users.` : ` Bạn vẫn được sử dụng đầy đủ ${myMaxUsers} User cho đến hết ngày ${slotExpDate || 'hạn thanh toán'}. Sau ngày này, hạn ngạch mới trả về 10 User mặc định.`))
+                            : (lang === 'ja' ? ' メンバーはフルデータパックを自動継承します。' : (lang === 'en' ? ' Members automatically inherit Full Data Pack.' : ' Các thành viên tự động kế thừa Full Data Pack.'))}
                         </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <div style={{ textAlign: 'right', paddingRight: 4 }}>
                         <div style={{ fontSize: 14, fontWeight: 900, color: isFullQuota ? '#ef4444' : '#10b981' }}>
-                          👥 {regCount} / {myMaxUsers} Thành Viên
+                          👥 {regCount} / {myMaxUsers} {lang === 'ja' ? 'メンバー' : (lang === 'en' ? 'Members' : 'Thành Viên')}
                         </div>
                         {isFullQuota && (
                           <span style={{ fontSize: 10.5, color: '#ef4444', fontWeight: 800, background: '#fef2f2', padding: '2px 8px', borderRadius: 6, border: '1px solid #fca5a5', display: 'inline-block', marginTop: 3 }}>
-                            ⚠️ Đã đạt giới hạn ({myMaxUsers})
+                            ⚠️ {lang === 'ja' ? `上限到達 (${myMaxUsers})` : (lang === 'en' ? `Limit Reached (${myMaxUsers})` : `Đã đạt giới hạn (${myMaxUsers})`)}
                           </span>
                         )}
                       </div>
@@ -1339,7 +1449,7 @@ export default function AdminPage() {
                           display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
                         }}
                       >
-                        ➕ Mua Thêm Slot (+10 User / 50k)
+                        ➕ {lang === 'ja' ? 'スロット追加購入 (+10名/50k)' : (lang === 'en' ? 'Buy Extra Slots (+10 Users / 50k)' : 'Mua Thêm Slot (+10 User / 50k)')}
                       </button>
 
                       {extraSlotCount > 0 && !isCancelled && (
@@ -1348,10 +1458,10 @@ export default function AdminPage() {
                           onClick={() => setDeleteConfirm({
                             type: 'cancel_extra_slots',
                             title: tUI('ui.huy-gia-han-mua-them-slot-user'),
-                            message: `Bạn có chắc chắn muốn hủy tự động gia hạn gói mua thêm slot (+50.000đ/tháng/10 user)? Bạn vẫn tiếp tục được sử dụng đầy đủ ${myMaxUsers} User cho tới hết ngày ${slotExpDate || 'hạn thanh toán hiện tại'}.`,
+                            message: lang === 'ja' ? `ユーザースロット追加購入プラン（+50,000đ/月/10名）の自動更新をキャンセルしますか？${slotExpDate || '現請求期日'}まで${myMaxUsers}ユーザーを引き続きご利用いただけます。` : (lang === 'en' ? `Are you sure you want to cancel auto-renewal for extra slots (+50,000 VND/mo/10 users)? You will keep ${myMaxUsers} users until ${slotExpDate || 'due date'}.` : `Bạn có chắc chắn muốn hủy tự động gia hạn gói mua thêm slot (+50.000đ/tháng/10 user)? Bạn vẫn tiếp tục được sử dụng đầy đủ ${myMaxUsers} User cho tới hết ngày ${slotExpDate || 'hạn thanh toán hiện tại'}.`),
                             itemName: t('admin.orgNameItem', { name: userRegion }),
-                            itemSub: `Hạn ngạch hiện tại: ${myMaxUsers} User (Vẫn giữ nguyên sử dụng tới hết ${slotExpDate || 'hạn dùng'})`,
-                            confirmText: 'Xác Nhận Hủy Gia Hạn',
+                            itemSub: lang === 'ja' ? `現在の割当: ${myMaxUsers}名 (${slotExpDate || '期日'}まで維持)` : (lang === 'en' ? `Current quota: ${myMaxUsers} Users (Maintained until ${slotExpDate || 'due date'})` : `Hạn ngạch hiện tại: ${myMaxUsers} User (Vẫn giữ nguyên sử dụng tới hết ${slotExpDate || 'hạn dùng'})`),
+                            confirmText: lang === 'ja' ? '解約を確定' : (lang === 'en' ? 'Confirm Cancellation' : 'Xác Nhận Hủy Gia Hạn'),
                           })}
                           style={{
                             padding: '8px 12px', borderRadius: 10, fontSize: 11.5, fontWeight: 700,
@@ -1362,7 +1472,7 @@ export default function AdminPage() {
                           }}
                           title={tUI('ui.huy-tu-dong-tinh-tien-gia-han-cho-cac-thang-tiep')}
                         >
-                          ❌ Hủy Đăng Ký Mua Thêm
+                          ❌ {lang === 'ja' ? '追加登録をキャンセル' : (lang === 'en' ? 'Cancel Add-on' : 'Hủy Đăng Ký Mua Thêm')}
                         </button>
                       )}
 
@@ -1383,7 +1493,7 @@ export default function AdminPage() {
                           }}
                           title={tUI('ui.bat-lai-tinh-nang-tu-dong-gia-han-hang-thang')}
                         >
-                          🔄 Khôi Phục Gia Hạn Tự Động
+                          🔄 {lang === 'ja' ? '自動更新を復元' : (lang === 'en' ? 'Restore Auto-renewal' : 'Khôi Phục Gia Hạn Tự Động')}
                         </button>
                       )}
                     </div>
@@ -1399,7 +1509,7 @@ export default function AdminPage() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: '#f5f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}>
                     <Users size={16} />
                   </div>
-                  Tạo Tài Khoản Người Dùng Mới
+                  {lang === 'ja' ? '新規ユーザーアカウント作成' : (lang === 'en' ? 'Create New User Account' : 'Tạo Tài Khoản Người Dùng Mới')}
                 </div>
 
                 <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, alignItems: 'end' }}>
@@ -1517,15 +1627,15 @@ export default function AdminPage() {
                         }}
                       >
                         {organizations.length > 0 && (
-                          <optgroup label={t('admin.officialOrganizations')}>
+                          <optgroup label={lang === 'ja' ? '🏢 正式な組織' : (lang === 'en' ? '🏢 Official Organizations' : '🏢 Tổ chức chính thức')}>
                             {organizations.map(o => (
-                              <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {o.name}</option>
+                              <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {formatOrgName(o.name, lang)}</option>
                             ))}
                           </optgroup>
                         )}
-                        <optgroup label="📍 Vùng địa lý mặc định">
+                        <optgroup label={lang === 'ja' ? '📍 デフォルト地域' : (lang === 'en' ? '📍 Default Geographic Regions' : '📍 Vùng địa lý mặc định')}>
                           {allRegions.map(r => (
-                            <option key={r} value={r}>📍 {r}</option>
+                            <option key={r} value={r}>📍 {formatRegionName(r, lang)}</option>
                           ))}
                         </optgroup>
                         <option value="__add_new__">{tUI('ui.them-phan-vung-moi')}</option>
@@ -1535,7 +1645,7 @@ export default function AdminPage() {
 
                   <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ gap: 6, height: 42, justifyContent: 'center' }}>
                     {actionLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Plus size={15} />}
-                    Tạo Tài Khoản Mới
+                    {lang === 'ja' ? '新規アカウント作成' : (lang === 'en' ? 'Create New Account' : 'Tạo Tài Khoản Mới')}
                   </button>
                 </form>
               </div>
@@ -1550,7 +1660,7 @@ export default function AdminPage() {
                   fontWeight: 800, fontSize: 15, background: 'var(--bg-surface-2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                  <span>Danh Sách Người Dùng ({users.length})</span>
+                  <span>{lang === 'ja' ? `ユーザー一覧 (${users.length})` : (lang === 'en' ? `User List (${users.length})` : `Danh Sách Người Dùng (${users.length})`)}</span>
                   <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{tUI('ui.tu-dong-cap-quyen-jwt')}</span>
                 </div>
 
@@ -1586,10 +1696,10 @@ export default function AdminPage() {
                                 {(u.display_name || u.email).slice(0, 2).toUpperCase()}
                               </div>
                               <span>
-                                {u.display_name || u.email}
+                                {formatDisplayName(u.display_name, lang) || u.email}
                                 {isMe && (
                                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-600, #2563eb)', marginLeft: 6 }}>
-                                    (bạn)
+                                    ({lang === 'ja' ? 'あなた' : (lang === 'en' ? 'you' : 'bạn')})
                                   </span>
                                 )}
                               </span>
@@ -1608,18 +1718,18 @@ export default function AdminPage() {
                                 {u.role === 'super_admin' ? ('👑 ' + t('role.superAdminShort')) : u.role === 'admin' ? ('🔰 ' + t('role.regionAdmin')) : u.role === 'staff' ? ('🧑‍💼 ' + t('role.staff')) : ('👤 ' + t('role.user'))}
                               </span>
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                {u.organization_id ? `🏢 ${organizations.find(o => o.id === u.organization_id)?.name || u.region || tUI('ui.to-chuc')}` : `📍 ${u.region === 'Toàn quốc' || !u.region ? t('common.nationwide') : u.region}`}
+                                {u.organization_id ? `🏢 ${formatOrgName(organizations.find(o => o.id === u.organization_id)?.name, lang) || u.region || tUI('ui.to-chuc')}` : `📍 ${u.region === 'Toàn quốc' || !u.region ? t('common.nationwide') : u.region}`}
                               </span>
                             </div>
                           </td>
                           <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                               <span style={{ fontSize: 11, fontWeight: 800, color: u.role === 'super_admin' || u.active_package === 'full' ? '#059669' : u.active_package === 'enterprise' || u.role === 'admin' ? '#9333ea' : u.active_package === 'combo2' || u.active_package === 'single' ? '#2563eb' : '#64748b', whiteSpace: 'nowrap' }}>
-                                {u.role === 'super_admin' ? '👑 FULL DATA (SUPER ADMIN)' : u.active_package === 'enterprise' || u.role === 'admin' ? `🏢 Gói Enterprise (Max ${u.max_users || 10} User)` : u.active_package === 'full' ? '👑 Full Data Pack' : u.active_package === 'single' ? `🎯 Gói 1 Nguồn (${({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[(u.selected_sources || ['adb'])[0]] || '1 Nguồn'})` : u.active_package === 'combo2' ? `⚡ Combo 2 (${(u.selected_sources || ['adb', 'worldbank']).map(k => ({ adb: 'ADB', worldbank: 'WB', gov: 'Đấu Thầu' })[k] || k).join('+')})` : '📰 Báo Chí Miễn Phí'}
+                                {formatUserPackage(u, lang)}
                                 {u.has_ai && <span style={{ marginLeft: 6, color: '#9333ea', background: '#f3e8ff', padding: '1px 6px', borderRadius: 8, fontSize: 9.5, border: '1px solid #e9d5ff', whiteSpace: 'nowrap' }}>🤖 AI</span>}
                               </span>
                               <span style={{ fontSize: 10.5, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                                📅 {u.active_package === 'free' || u.role === 'super_admin' ? 'Vĩnh viễn' : (u.package_expiration || 'Vĩnh viễn')}
+                                📅 {formatUserExpiration(u.package_expiration, u.role, u.active_package, lang)}
                               </span>
                             </div>
                           </td>
@@ -1642,7 +1752,7 @@ export default function AdminPage() {
                               border: `1px solid ${isActive ? '#a7f3d0' : '#fca5a5'}`,
                               display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
                             }}>
-                              {isActive ? '🟢 HOẠT ĐỘNG' : '🔴 ĐÃ KHÓA'}
+                              {isActive ? (lang === 'ja' ? '🟢 有効' : lang === 'en' ? '🟢 ACTIVE' : '🟢 HOẠT ĐỘNG') : (lang === 'ja' ? '🔴 停止中' : lang === 'en' ? '🔴 LOCKED' : '🔴 ĐÃ KHÓA')}
                             </span>
                           </td>
                           <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
@@ -1656,7 +1766,7 @@ export default function AdminPage() {
                                 style={{ color: '#8b5cf6', padding: '6px 10px' }}
                                 title={tUI('ui.xem-chi-tiet-tai-khoan')}
                               >
-                                <Eye size={14} /> Chi tiết
+                                <Eye size={14} /> {lang === 'ja' ? '詳細' : (lang === 'en' ? 'Details' : 'Chi tiết')}
                               </button>
                               <button
                                 className="btn btn-ghost btn-sm"
@@ -1664,7 +1774,7 @@ export default function AdminPage() {
                                 style={{ color: '#2563eb', padding: '6px 10px' }}
                                 title={tUI('ui.chinh-sua-tai-khoan')}
                               >
-                                <Edit size={14} /> Sửa
+                                <Edit size={14} /> {lang === 'ja' ? '編集' : (lang === 'en' ? 'Edit' : 'Sửa')}
                               </button>
                               <button
                                 className="btn btn-ghost btn-sm"
@@ -1672,7 +1782,7 @@ export default function AdminPage() {
                                 style={{ color: '#ef4444', padding: '6px 10px' }}
                                 title={tUI('ui.xoa-tai-khoan')}
                               >
-                                <Trash2 size={14} /> Xóa
+                                <Trash2 size={14} /> {lang === 'ja' ? '削除' : (lang === 'en' ? 'Delete' : 'Xóa')}
                               </button>
                             </div>
                           </td>
@@ -1705,15 +1815,15 @@ export default function AdminPage() {
                 borderRadius: 20, padding: 24, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
               }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#ef4444', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <ShieldAlert size={20} /> Blacklist (Từ Khóa Cấm Quét)
+                  <ShieldAlert size={20} /> {lang === 'ja' ? 'ブラックリスト（除外キーワード）' : (lang === 'en' ? 'Blacklist (Blocked Keywords)' : 'Blacklist (Từ Khóa Cấm Quét)')}
                 </div>
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
-                  Các tin tức chứa từ khóa trong danh sách này sẽ bị tự động bỏ qua khi crawl.
+                  {lang === 'ja' ? 'このリストのキーワードを含むニュースは収集時に自動的に除外されます。' : (lang === 'en' ? 'Articles containing keywords in this list will be skipped during crawl.' : 'Các tin tức chứa từ khóa trong danh sách này sẽ bị tự động bỏ qua khi crawl.')}
                 </p>
                 <form onSubmit={handleAddBlacklist} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                   <input className="form-input" placeholder={tUI('ui.nhap-tu-khoa-cam')} value={newBlacklist} onChange={e => setNewBlacklist(e.target.value)} />
                   <button type="submit" className="btn btn-primary" style={{ gap: 4, padding: '0 16px' }}>
-                    <Plus size={15} /> Thêm
+                    <Plus size={15} /> {lang === 'ja' ? '追加' : (lang === 'en' ? 'Add' : 'Thêm')}
                   </button>
                 </form>
 
@@ -1732,7 +1842,7 @@ export default function AdminPage() {
                           type: 'blacklist',
                           item: b,
                           title: tUI('ui.xoa-tu-khoa-blacklist'),
-                          message: 'Bạn có chắc chắn muốn xóa từ khóa cấm này?',
+                          message: lang === 'ja' ? 'この除外キーワードを削除してもよろしいですか？' : (lang === 'en' ? 'Are you sure you want to delete this blocked keyword?' : 'Bạn có chắc chắn muốn xóa từ khóa cấm này?'),
                           itemName: b.term
                         })} 
                         style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#e11d48', padding: 0, fontSize: 14, lineHeight: 1 }}
@@ -1749,15 +1859,15 @@ export default function AdminPage() {
                 borderRadius: 20, padding: 24, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
               }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: '#10b981', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CheckCircle2 size={20} /> Whitelist (Từ Khóa Ưu Tiên)
+                  <CheckCircle2 size={20} /> {lang === 'ja' ? 'ホワイトリスト（優先キーワード）' : (lang === 'en' ? 'Whitelist (Priority Keywords)' : 'Whitelist (Từ Khóa Ưu Tiên)')}
                 </div>
                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
-                  Các tin tức chứa từ khóa ưu tiên sẽ được gắn cờ mốc quan trọng và đưa lên đầu.
+                  {lang === 'ja' ? '優先キーワードを含むニュースには重要フラグが付与され、上位に表示されます。' : (lang === 'en' ? 'Articles containing priority keywords will be flagged as important and pinned to the top.' : 'Các tin tức chứa từ khóa ưu tiên sẽ được gắn cờ mốc quan trọng và đưa lên đầu.')}
                 </p>
                 <form onSubmit={handleAddWhitelist} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                   <input className="form-input" placeholder={tUI('ui.nhap-tu-khoa-uu-tien')} value={newWhitelist} onChange={e => setNewWhitelist(e.target.value)} />
                   <button type="submit" className="btn btn-primary" style={{ gap: 4, padding: '0 16px' }}>
-                    <Plus size={15} /> Thêm
+                    <Plus size={15} /> {lang === 'ja' ? '追加' : (lang === 'en' ? 'Add' : 'Thêm')}
                   </button>
                 </form>
 
@@ -1776,7 +1886,7 @@ export default function AdminPage() {
                           type: 'whitelist',
                           item: w,
                           title: tUI('ui.xoa-tu-khoa-whitelist'),
-                          message: 'Bạn có chắc chắn muốn xóa từ khóa ưu tiên này?',
+                          message: lang === 'ja' ? 'この優先キーワードを削除してもよろしいですか？' : (lang === 'en' ? 'Are you sure you want to delete this priority keyword?' : 'Bạn có chắc chắn muốn xóa từ khóa ưu tiên này?'),
                           itemName: w.term
                         })} 
                         style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#047857', padding: 0, fontSize: 14, lineHeight: 1 }}
@@ -1812,10 +1922,10 @@ export default function AdminPage() {
                 <Mail size={32} />
               </div>
               <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
-                Gửi Email Digest Hàng Ngày Toàn Hệ Thống
+                {lang === 'ja' ? 'システム全体のデイリーダイジェスト送信' : (lang === 'en' ? 'Send System-wide Daily Email Digest' : 'Gửi Email Digest Hàng Ngày Toàn Hệ Thống')}
               </h2>
               <p style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.6 }}>
-                Hệ thống sẽ quét tất cả bài viết mới nhất khớp với bộ từ khóa cá nhân của từng người dùng và tự động gửi bản tin qua Email.
+                {lang === 'ja' ? 'システムは各ユーザーの個人キーワードに一致する最新記事をすべてスキャンし、メールで自動配信します。' : (lang === 'en' ? 'The system scans all latest articles matching each user\'s personal keywords and sends an email digest.' : 'Hệ thống sẽ quét tất cả bài viết mới nhất khớp với bộ từ khóa cá nhân của từng người dùng và tự động gửi bản tin qua Email.')}
               </p>
               <button
                 className="btn btn-primary"
@@ -1824,7 +1934,7 @@ export default function AdminPage() {
                 style={{ gap: 8, padding: '12px 28px', fontSize: 14, fontWeight: 800, borderRadius: 14 }}
               >
                 {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Mail size={16} />}
-                Kích Hoạt Gửi Email Digest Ngay
+                {lang === 'ja' ? '今すぐメールダイジェストを送信' : (lang === 'en' ? 'Trigger Email Digest Now' : 'Kích Hoạt Gửi Email Digest Ngay')}
               </button>
             </div>
           )}
@@ -1859,7 +1969,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
-                    Chỉnh Sửa Tài Khoản Người Dùng
+                    {lang === 'ja' ? 'ユーザーアカウント編集' : (lang === 'en' ? 'Edit User Account' : 'Chỉnh Sửa Tài Khoản Người Dùng')}
                   </h3>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{tUI('ui.cap-nhat-phan-quyen-mat-khau-va-cai-dat-ca-nhan')}</span>
                 </div>
@@ -2001,15 +2111,15 @@ export default function AdminPage() {
                     }}
                   >
                     {organizations.length > 0 && (
-                      <optgroup label={t('admin.officialOrganizations')}>
+                      <optgroup label={lang === 'ja' ? '🏢 正式な組織' : (lang === 'en' ? '🏢 Official Organizations' : '🏢 Tổ chức chính thức')}>
                         {organizations.map(o => (
-                          <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {o.name}</option>
+                          <option key={`org_${o.id}`} value={`org_${o.id}`}>🏢 {formatOrgName(o.name, lang)}</option>
                         ))}
                       </optgroup>
                     )}
-                    <optgroup label="📍 Vùng địa lý mặc định">
+                    <optgroup label={lang === 'ja' ? '📍 デフォルト地域' : (lang === 'en' ? '📍 Default Geographic Regions' : '📍 Vùng địa lý mặc định')}>
                       {allRegions.map(r => (
-                        <option key={r} value={r}>📍 {r}</option>
+                        <option key={r} value={r}>📍 {formatRegionName(r, lang)}</option>
                       ))}
                     </optgroup>
                     <option value="__add_new__">{tUI('ui.them-phan-vung-moi')}</option>
@@ -2032,12 +2142,12 @@ export default function AdminPage() {
               {/* Granular Staff Permissions Section */}
               <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
                 <label className="form-label" style={{ marginBottom: 10, fontWeight: 800, display: 'block', color: 'var(--text-primary)' }}>
-                  🔑 Phân Quyền Mô-đun Xem/Sử Dụng Cho Người Dùng
+                  🔑 {lang === 'ja' ? 'ユーザーモジュールアクセス権限' : (lang === 'en' ? 'User Module Permissions' : 'Phân Quyền Mô-đun Xem/Sử Dụng Cho Người Dùng')}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, fontSize: 12.5 }}>
                   {[
                     { key: 'can_view_press', label: tUI('ui.xem-tin-bao-chi') },
-                    { key: 'can_view_dashboard', label: '📊 Xem Dashboard Thống Kê' },
+                    { key: 'can_view_dashboard', label: lang === 'ja' ? '📊 ダッシュボード統計を見る' : (lang === 'en' ? '📊 View Analytics Dashboard' : '📊 Xem Dashboard Thống Kê') },
                     { key: 'can_view_bidding', label: tUI('ui.xem-goi-thau-gov') },
                     { key: 'can_view_oda', label: tUI('ui.xem-du-an-oda-wb') },
                     { key: 'can_manage_keywords', label: tUI('ui.dang-ky-tu-khoa-loc') },
@@ -2115,7 +2225,7 @@ export default function AdminPage() {
                           }}
                           style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', border: '1px solid rgba(59, 130, 246, 0.25)', cursor: 'pointer' }}
                         >
-                          ⚡ 1 Tháng
+                          ⚡ {lang === 'ja' ? '1ヶ月' : (lang === 'en' ? '1 Month' : '1 Tháng')}
                         </button>
                         <button
                           type="button"
@@ -2128,14 +2238,14 @@ export default function AdminPage() {
                           }}
                           style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.25)', cursor: 'pointer' }}
                         >
-                          📅 1 Năm
+                          📅 {lang === 'ja' ? '1年' : (lang === 'en' ? '1 Year' : '1 Năm')}
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingUser({ ...editingUser, package_expiration: 'Vĩnh viễn' })}
                           style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'var(--bg-surface)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
                         >
-                          ♾️ Vĩnh viễn
+                          ♾️ {lang === 'ja' ? '無期限' : (lang === 'en' ? 'Permanent' : 'Vĩnh viễn')}
                         </button>
                       </div>
                     </div>
@@ -2144,7 +2254,7 @@ export default function AdminPage() {
                     {editingUser.active_package === 'single' && (
                       <div style={{ gridColumn: 'span 2', background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 12, border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                         <label className="form-label" style={{ fontWeight: 800, color: '#2563eb', marginBottom: 8, display: 'block' }}>
-                          🎯 Chọn 1 Nguồn Dữ Liệu Được Cấp Quyền Cho User:
+                          🎯 {lang === 'ja' ? 'ユーザーに付与するデータソースを1つ選択:' : (lang === 'en' ? 'Select 1 Data Source Granted to User:' : 'Chọn 1 Nguồn Dữ Liệu Được Cấp Quyền Cho User:')}
                         </label>
                         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                           {[
@@ -2172,7 +2282,7 @@ export default function AdminPage() {
                       <div style={{ gridColumn: 'span 2', background: 'rgba(59, 130, 246, 0.08)', padding: 12, borderRadius: 12, border: '1px solid rgba(59, 130, 246, 0.25)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <label className="form-label" style={{ fontWeight: 800, color: '#2563eb', margin: 0 }}>
-                            ⚡ Chọn 2 Nguồn Dữ Liệu Trong Gói Combo 2:
+                            ⚡ {lang === 'ja' ? 'コンボ2プランのデータソースを2つ選択:' : (lang === 'en' ? 'Select 2 Data Sources in Combo 2:' : 'Chọn 2 Nguồn Dữ Liệu Trong Gói Combo 2:')}
                           </label>
                           <span style={{ fontSize: 11, fontWeight: 800, color: (editingUser.selected_sources || []).length === 2 ? '#10b981' : '#f59e0b' }}>
                             {(editingUser.selected_sources || []).length === 2 ? tUI('ui.da-chon-2-2-nguon') : `${tUI('ui.vui-long-chon-2-nguon')} (${(editingUser.selected_sources || []).length}/2)`}
@@ -2232,7 +2342,7 @@ export default function AdminPage() {
                             onChange={e => setEditingUser({ ...editingUser, max_users: Math.max(10, parseInt(e.target.value, 10) || 10) })}
                           />
                           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                            thành viên (Mặc định: 10 user. Mỗi +10 user nâng cấp là 50.000đ/tháng, quản lý theo tháng).
+                            {lang === 'ja' ? 'メンバー (デフォルト: 10名。+10名ごと月額50,000đ、月額管理)' : lang === 'en' ? 'members (Default: 10 users. Each +10 slots is 50,000 VND/month)' : 'thành viên (Mặc định: 10 user. Mỗi +10 user nâng cấp là 50.000đ/tháng, quản lý theo tháng).'}
                           </span>
                         </div>
                       </div>
@@ -2253,7 +2363,7 @@ export default function AdminPage() {
                           })}
                           style={{ width: 16, height: 16, accentColor: '#2563eb' }}
                         />
-                        📊 Cho phép xem Dashboard Analytics (Báo cáo & Thống kê tổng hợp)
+                        📊 {lang === 'ja' ? 'ダッシュボード分析の閲覧を許可（総合レポート＆統計）' : (lang === 'en' ? 'Allow viewing Dashboard Analytics (Comprehensive reports & stats)' : 'Cho phép xem Dashboard Analytics (Báo cáo & Thống kê tổng hợp)')}
                       </label>
 
                       <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13, color: '#9333ea' }}>
@@ -2263,13 +2373,13 @@ export default function AdminPage() {
                           onChange={e => setEditingUser({ ...editingUser, has_ai: e.target.checked })}
                           style={{ width: 16, height: 16, accentColor: '#a855f7' }}
                         />
-                        🤖 Kích hoạt Trợ Lý AI Gemini 2.0 (Hỏi-đáp 24/7)
+                        🤖 {lang === 'ja' ? 'AI Gemini 2.0 アシスタントを有効化（24時間対応）' : (lang === 'en' ? 'Activate AI Gemini 2.0 Assistant (24/7 Q&A)' : 'Kích hoạt Trợ Lý AI Gemini 2.0 (Hỏi-đáp 24/7)')}
                       </label>
                     </div>
 
                     <div style={{ gridColumn: 'span 2' }}>
                       <label className="form-label" style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8, display: 'block' }}>
-                        🎨 Các Gói Theme UI Đã Mở Khóa / Cấp Quyền Cho User:
+                        🎨 {lang === 'ja' ? 'ユーザーに解放/付与されたUIテーマパッケージ:' : (lang === 'en' ? 'Unlocked UI Theme Packages for User:' : 'Các Gói Theme UI Đã Mở Khóa / Cấp Quyền Cho User:')}
                       </label>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12 }}>
                         {[
@@ -2348,7 +2458,7 @@ export default function AdminPage() {
                   onClick={() => setEditingUser(null)}
                   style={{ padding: '10px 20px', borderRadius: 12 }}
                 >
-                  Hủy bỏ
+                  {lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy bỏ')}
                 </button>
                 <button
                   type="submit"
@@ -2357,7 +2467,7 @@ export default function AdminPage() {
                   style={{ padding: '10px 24px', borderRadius: 12, gap: 8, fontWeight: 800 }}
                 >
                   {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
-                  Lưu Thay Đổi
+                  {lang === 'ja' ? '変更を保存' : (lang === 'en' ? 'Save Changes' : 'Lưu Thay Đổi')}
                 </button>
               </div>
             </form>
@@ -2394,11 +2504,11 @@ export default function AdminPage() {
                   color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 18, fontWeight: 900, boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                 }}>
-                  {(viewingUser.display_name || viewingUser.email).slice(0, 2).toUpperCase()}
+                  {(formatDisplayName(viewingUser.display_name, lang) || viewingUser.email).slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {viewingUser.display_name || viewingUser.email}
+                    {formatDisplayName(viewingUser.display_name, lang) || viewingUser.email}
                   </h3>
                   <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{viewingUser.email}</span>
                 </div>
@@ -2426,7 +2536,7 @@ export default function AdminPage() {
               </span>
 
               <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center' }}>
-                {viewingUser.organization_id ? `🏢 ${organizations.find(o => o.id === viewingUser.organization_id)?.name || viewingUser.region || tUI('ui.to-chuc')}` : `📍 ${viewingUser.region === 'Toàn quốc' || !viewingUser.region ? t('common.nationwide') : viewingUser.region}`}
+                {viewingUser.organization_id ? `🏢 ${formatOrgName(organizations.find(o => o.id === viewingUser.organization_id)?.name, lang) || viewingUser.region || tUI('ui.to-chuc')}` : `📍 ${viewingUser.region === 'Toàn quốc' || !viewingUser.region ? t('common.nationwide') : viewingUser.region}`}
               </span>
 
               <span style={{
@@ -2445,23 +2555,23 @@ export default function AdminPage() {
               {/* Section 1: Gói Dữ Liệu & Hạn Dùng */}
               <div style={{ background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
-                  ⚡ GÓI DỮ LIỆU & HẠN DÙNG
+                  ⚡ {lang === 'ja' ? 'データプラン＆有効期限' : (lang === 'en' ? 'DATA PLAN & VALIDITY' : 'GÓI DỮ LIỆU & HẠN DÙNG')}
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: viewingUser.role === 'super_admin' || viewingUser.active_package === 'full' ? '#10b981' : viewingUser.active_package === 'enterprise' || viewingUser.role === 'admin' ? '#9333ea' : viewingUser.active_package === 'combo2' || viewingUser.active_package === 'single' ? '#3b82f6' : 'var(--text-primary)' }}>
-                  {viewingUser.role === 'super_admin' ? '👑 FULL DATA (SUPER ADMIN)' : viewingUser.active_package === 'enterprise' || viewingUser.role === 'admin' ? `🏢 Gói Enterprise (Max ${viewingUser.max_users || 10} User)` : viewingUser.active_package === 'full' ? '👑 Full Data Pack (3 Nguồn)' : viewingUser.active_package === 'single' ? `🎯 Gói 1 Nguồn (${({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[(viewingUser.selected_sources || ['adb'])[0]] || '1 Nguồn'})` : viewingUser.active_package === 'combo2' ? `⚡ Combo 2 Nguồn (${(viewingUser.selected_sources || ['adb', 'worldbank']).map(k => ({ adb: 'ADB', worldbank: 'World Bank', gov: 'Đấu Thầu' })[k] || k).join(' + ')})` : '📰 Báo Chí Miễn Phí'}
+                  {formatUserPackage(viewingUser, lang)}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span>{tUI('ui.han-dung')}</span>
                   <b style={{ color: 'var(--text-primary)' }}>
-                    {viewingUser.active_package === 'free' || viewingUser.role === 'super_admin' ? 'Vĩnh viễn' : (viewingUser.package_expiration || 'Vĩnh viễn')}
+                    {formatUserExpiration(viewingUser.package_expiration, viewingUser.role, viewingUser.active_package, lang)}
                   </b>
                 </div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: viewingUser.can_view_dashboard ? '#eff6ff' : 'var(--bg-surface)', color: viewingUser.can_view_dashboard ? '#2563eb' : 'var(--text-muted)', border: `1px solid ${viewingUser.can_view_dashboard ? '#bfdbfe' : 'var(--border-subtle)'}` }}>
-                    📊 Dashboard: {viewingUser.can_view_dashboard ? 'Được phép xem' : 'Không có quyền'}
+                    📊 Dashboard: {viewingUser.can_view_dashboard ? (lang === 'ja' ? '閲覧許可' : (lang === 'en' ? 'Allowed' : 'Được phép xem')) : (lang === 'ja' ? '権限なし' : (lang === 'en' ? 'No Access' : 'Không có quyền'))}
                   </div>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 12, background: viewingUser.has_ai ? '#f3e8ff' : 'var(--bg-surface)', color: viewingUser.has_ai ? '#9333ea' : 'var(--text-muted)', border: `1px solid ${viewingUser.has_ai ? '#e9d5ff' : 'var(--border-subtle)'}` }}>
-                    🤖 AI Gemini: {viewingUser.has_ai ? 'Đã kích hoạt' : 'Chưa đăng ký'}
+                    🤖 AI Gemini: {viewingUser.has_ai ? (lang === 'ja' ? '有効化済' : (lang === 'en' ? 'Active' : 'Đã kích hoạt')) : (lang === 'ja' ? '未登録' : (lang === 'en' ? 'Not Registered' : 'Chưa đăng ký'))}
                   </div>
                 </div>
               </div>
@@ -2469,11 +2579,11 @@ export default function AdminPage() {
               {/* Section 2: Gói Theme UI Sở Hữu */}
               <div style={{ background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, letterSpacing: 0.5 }}>
-                  🎨 GÓI THEME UI ĐÃ MỞ KHÓA
+                  🎨 {lang === 'ja' ? '所有UIテーマパッケージ' : (lang === 'en' ? 'UNLOCKED UI THEMES' : 'GÓI THEME UI ĐÃ MỞ KHÓA')}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
-                    Mặc định
+                    {lang === 'ja' ? 'デフォルト' : (lang === 'en' ? 'Default' : 'Mặc định')}
                   </span>
                   {(viewingUser.purchased_themes || []).map(tKey => (
                     <span key={tKey} style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
@@ -2482,7 +2592,7 @@ export default function AdminPage() {
                   ))}
                   {viewingUser.role === 'super_admin' && (
                     <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
-                      👑 Trọn bộ Theme (Super Admin)
+                      {lang === 'ja' ? '👑 全テーマ (Super Admin)' : (lang === 'en' ? '👑 All Themes (Super Admin)' : '👑 Trọn bộ Theme (Super Admin)')}
                     </span>
                   )}
                 </div>
@@ -2491,7 +2601,7 @@ export default function AdminPage() {
               {/* Section 3: Granular Permissions */}
               <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 }}>
-                  🔑 PHÂN QUYỀN TRUY CẬP MÔ-ĐỤN
+                  🔑 {lang === 'ja' ? 'モジュールアクセス権限' : (lang === 'en' ? 'MODULE ACCESS PERMISSIONS' : 'PHÂN QUYỀN TRUY CẬP MÔ-ĐUN')}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, fontSize: 12 }}>
                   {[
@@ -2516,7 +2626,7 @@ export default function AdminPage() {
               <div style={{ gridColumn: 'span 2', background: 'var(--bg-surface-2)', padding: 16, borderRadius: 16, border: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Email Digest: </span>
-                  <b>{viewingUser.email_digest_enabled ? `📧 Đã bật (${viewingUser.digest_hour ?? 7}h)` : '🔕 Tắt'}</b>
+                  <b>{viewingUser.email_digest_enabled ? (lang === 'ja' ? `📧 有効 (${viewingUser.digest_hour ?? 7}時)` : lang === 'en' ? `📧 Enabled (${viewingUser.digest_hour ?? 7}:00)` : `📧 Đã bật (${viewingUser.digest_hour ?? 7}h)`) : (lang === 'ja' ? '🔕 無効' : lang === 'en' ? '🔕 Disabled' : '🔕 Tắt')}</b>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.ngay-tao-2')} </span>
@@ -2538,15 +2648,13 @@ export default function AdminPage() {
                 className="btn btn-primary"
                 style={{ padding: '10px 20px', borderRadius: 12, gap: 6, fontWeight: 800 }}
               >
-                <Edit size={15} /> Chỉnh Sửa Tài Khoản Này
+                <Edit size={15} /> {lang === 'ja' ? 'このアカウントを編集' : (lang === 'en' ? 'Edit This Account' : 'Chỉnh Sửa Tài Khoản Này')}
               </button>
               <button
                 onClick={() => setViewingUser(null)}
                 className="btn btn-ghost"
                 style={{ padding: '10px 20px', borderRadius: 12 }}
-              >
-                Đóng
-              </button>
+              >{lang === 'ja' ? '閉じる' : (lang === 'en' ? 'Close' : 'Đóng')}</button>
             </div>
           </div>
         </div>,
@@ -2579,10 +2687,10 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
-                    Chỉnh Sửa Nguồn Crawl Dữ Liệu
+                    {lang === 'ja' ? '収集ソース編集' : (lang === 'en' ? 'Edit Crawl Source' : 'Chỉnh Sửa Nguồn Crawl Dữ Liệu')}
                   </h3>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    {isSuperAdmin ? 'Cập nhật cấu hình nguồn crawl trực tiếp' : 'Chỉnh sửa nguồn (cần Super Admin duyệt lại)'}
+                    {isSuperAdmin ? (lang === 'ja' ? '収集ソースの設定を直接更新' : (lang === 'en' ? 'Directly update crawl source configuration' : 'Cập nhật cấu hình nguồn crawl trực tiếp')) : (lang === 'ja' ? 'ソースを編集（Super Adminの再承認が必要）' : (lang === 'en' ? 'Edit source (requires Super Admin re-approval)' : 'Chỉnh sửa nguồn (cần Super Admin duyệt lại)'))}
                   </span>
                 </div>
               </div>
@@ -2690,7 +2798,7 @@ export default function AdminPage() {
                     }}
                   >
                     {allRegions.map(r => (
-                      <option key={r} value={r}>📍 {r}</option>
+                      <option key={r} value={r}>📍 {formatRegionName(r, lang)}</option>
                     ))}
                     <option value="__add_new__">{tUI('ui.them-phan-vung-moi')}</option>
                   </select>
@@ -2707,7 +2815,7 @@ export default function AdminPage() {
                   onClick={() => setEditingSource(null)}
                   style={{ padding: '10px 20px', borderRadius: 12 }}
                 >
-                  Hủy bỏ
+                  {lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy bỏ')}
                 </button>
                 <button
                   type="submit"
@@ -2728,12 +2836,12 @@ export default function AdminPage() {
       {/* CONFIRM DELETE MODAL */}
       <ConfirmModal
         isOpen={!!deleteConfirm}
-        title={deleteConfirm?.title || 'Xác Nhận Xóa'}
+        title={deleteConfirm?.title || (lang === 'ja' ? '削除の確認' : (lang === 'en' ? 'Confirm Delete' : 'Xác Nhận Xóa'))}
         message={deleteConfirm?.message || ''}
         itemName={deleteConfirm?.itemName || ''}
         itemSub={deleteConfirm?.itemSub || ''}
-        confirmText={deleteConfirm?.confirmText || 'Xác Nhận Xóa'}
-        cancelText={deleteConfirm?.cancelText || 'Hủy Bỏ'}
+        confirmText={deleteConfirm?.confirmText || (lang === 'ja' ? '削除を確認' : (lang === 'en' ? 'Confirm Delete' : 'Xác Nhận Xóa'))}
+        cancelText={deleteConfirm?.cancelText || (lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy Bỏ'))}
         type={deleteConfirm?.type === 'cancel_extra_slots' ? 'warning' : (deleteConfirm?.modalType || 'danger')}
         loading={actionLoading}
         onConfirm={handleConfirmDelete}
@@ -2767,10 +2875,10 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: 17, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
-                    Nâng Cấp Mua Thêm Slot User
+                    {lang === 'ja' ? 'ユーザースロット追加アップグレード' : (lang === 'en' ? 'Upgrade Additional User Slots' : 'Nâng Cấp Mua Thêm Slot User')}
                   </h3>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Mở rộng quy mô thành viên cho {userRegion} (Quản lý đăng ký theo tháng)
+                    {lang === 'ja' ? `${userRegion}のメンバー規模を拡張（月額管理）` : (lang === 'en' ? `Expand member quota for ${userRegion} (Monthly billing)` : `Mở rộng quy mô thành viên cho ${userRegion} (Quản lý đăng ký theo tháng)`)}
                   </div>
                 </div>
               </div>
@@ -2800,7 +2908,7 @@ export default function AdminPage() {
                   setUsers(prev => prev.map(u => (u.email === user?.email || u.id === user?.id) ? { ...u, max_users: newMax } : u));
                   setSlotSubmitting(false);
                   setShowBuySlotModal(false);
-                  showAlert('success', `⚡ Đã nâng cấp mua thêm +${selectedSlotPackage} slot thành viên (${selectedSlotMonths} tháng) thành công! Hạn ngạch mới: ${newMax} User.`);
+                  showAlert('success', lang === 'ja' ? `⚡ +${selectedSlotPackage}スロット (${selectedSlotMonths}ヶ月) のアップグレードが完了しました！新割当: ${newMax}名。` : (lang === 'en' ? `⚡ Successfully upgraded +${selectedSlotPackage} slots (${selectedSlotMonths} months)! New quota: ${newMax} Users.` : `⚡ Đã nâng cấp mua thêm +${selectedSlotPackage} slot thành viên (${selectedSlotMonths} tháng) thành công! Hạn ngạch mới: ${newMax} User.`));
                 }, 1200);
               }}
               style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', margin: 0 }}
@@ -2810,14 +2918,14 @@ export default function AdminPage() {
                 {/* 1. Chọn Số Lượng Slot Mua Thêm */}
                 <div style={{ marginBottom: 16 }}>
                   <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
-                    📦 CHỌN SỐ LƯỢNG SLOT USER MUA THÊM:
+                    📦 {lang === 'ja' ? '追加購入するユーザースロット数を選択:' : (lang === 'en' ? 'SELECT EXTRA USER SLOTS TO PURCHASE:' : 'CHỌN SỐ LƯỢNG SLOT USER MUA THÊM:')}
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                     {[
-                      { count: 10, label: '+10 User Slot', priceStr: '50.000đ/tháng' },
-                      { count: 20, label: '+20 User Slot', priceStr: '100.000đ/tháng' },
-                      { count: 30, label: '+30 User Slot', priceStr: '150.000đ/tháng' },
-                      { count: 50, label: '+50 User Slot', priceStr: '250.000đ/tháng' },
+                      { count: 10, label: '+10 User Slot', priceStr: lang === 'ja' ? '50,000đ/月' : (lang === 'en' ? '50,000 VND/mo' : '50.000đ/tháng') },
+                      { count: 20, label: '+20 User Slot', priceStr: lang === 'ja' ? '100,000đ/月' : (lang === 'en' ? '100,000 VND/mo' : '100.000đ/tháng') },
+                      { count: 30, label: '+30 User Slot', priceStr: lang === 'ja' ? '150,000đ/月' : (lang === 'en' ? '150,000 VND/mo' : '150.000đ/tháng') },
+                      { count: 50, label: '+50 User Slot', priceStr: lang === 'ja' ? '250,000đ/月' : (lang === 'en' ? '250,000 VND/mo' : '250.000đ/tháng') },
                     ].map(opt => {
                       const isSelected = selectedSlotPackage === opt.count;
                       return (
@@ -2844,14 +2952,14 @@ export default function AdminPage() {
                 {/* 2. Chọn Thời Gian Mua Theo Tháng */}
                 <div style={{ marginBottom: 20 }}>
                   <label className="form-label" style={{ fontWeight: 800, fontSize: 12, color: '#9333ea', marginBottom: 8, display: 'block' }}>
-                    ⏳ CHỌN THỜI GIAN THUÊ SỬ DỤNG (THEO THÁNG):
+                    ⏳ {lang === 'ja' ? '利用契約期間（月単位）を選択:' : (lang === 'en' ? 'SELECT SUBSCRIPTION DURATION (MONTHS):' : 'CHỌN THỜI GIAN THUÊ SỬ DỤNG (THEO THÁNG):')}
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                     {[
-                      { months: 1, label: tUI('ui.1-thang'), tag: 'Tiêu chuẩn' },
-                      { months: 3, label: tUI('ui.3-thang'), tag: 'Giảm 5%' },
-                      { months: 6, label: tUI('ui.6-thang'), tag: 'Giảm 10%' },
-                      { months: 12, label: tUI('ui.12-thang'), tag: 'Giảm 20%' },
+                      { months: 1, label: tUI('ui.1-thang'), tag: lang === 'ja' ? '標準' : (lang === 'en' ? 'Standard' : 'Tiêu chuẩn') },
+                      { months: 3, label: tUI('ui.3-thang'), tag: lang === 'ja' ? '5% OFF' : (lang === 'en' ? '5% Off' : 'Giảm 5%') },
+                      { months: 6, label: tUI('ui.6-thang'), tag: lang === 'ja' ? '10% OFF' : (lang === 'en' ? '10% Off' : 'Giảm 10%') },
+                      { months: 12, label: tUI('ui.12-thang'), tag: lang === 'ja' ? '20% OFF' : (lang === 'en' ? '20% Off' : 'Giảm 20%') },
                     ].map(mOpt => {
                       const isSelected = selectedSlotMonths === mOpt.months;
                       return (
@@ -2889,15 +2997,15 @@ export default function AdminPage() {
                     <div style={{ background: 'linear-gradient(135deg, rgba(147,51,234,0.06), rgba(37,99,235,0.06))', padding: 16, borderRadius: 16, border: '1px solid rgba(147,51,234,0.2)', marginBottom: 20 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
                         <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.goi-bo-sung-chon')}</span>
-                        <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ {selectedSlotPackage} Slot User ({selectedSlotMonths} tháng)</span>
+                        <span style={{ fontWeight: 800, color: '#9333ea' }}>➕ {selectedSlotPackage} {lang === 'ja' ? 'スロット' : 'Slot User'} ({selectedSlotMonths} {lang === 'ja' ? 'ヶ月' : (lang === 'en' ? 'months' : 'tháng')})</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12.5 }}>
                         <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.han-ngach-sau-nang-cap')}</span>
                         <b style={{ color: '#10b981' }}>{currentMax} ➔ {newMax} User</b>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed var(--border-subtle)', paddingTop: 10, marginTop: 8 }}>
-                        <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>Tổng tiền thanh toán ({selectedSlotMonths} tháng):</span>
-                        <span style={{ fontWeight: 900, color: '#9333ea', fontSize: 18 }}>{totalPrice.toLocaleString('vi-VN')}đ</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>{lang === 'ja' ? `お支払い合計金額 (${selectedSlotMonths}ヶ月):` : (lang === 'en' ? `Total Payment (${selectedSlotMonths} months):` : `Tổng tiền thanh toán (${selectedSlotMonths} tháng):`)}</span>
+                        <span style={{ fontWeight: 900, color: '#9333ea', fontSize: 18 }}>{totalPrice.toLocaleString(lang === 'ja' ? 'ja-JP' : (lang === 'en' ? 'en-US' : 'vi-VN'))}đ</span>
                       </div>
                     </div>
                   );
@@ -2919,10 +3027,10 @@ export default function AdminPage() {
               {/* Modal Footer */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
                 <button type="button" className="btn btn-ghost" onClick={() => setShowBuySlotModal(false)}>
-                  Hủy Bỏ
+                  {lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy Bỏ')}
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={slotSubmitting} style={{ background: 'linear-gradient(135deg, #9333ea, #7e22ce)', border: 'none', padding: '10px 20px', borderRadius: 12, fontWeight: 800 }}>
-                  {slotSubmitting ? 'Đang Xử Lý...' : `Xác Nhận Đăng Ký (${(Math.round(50000 * (selectedSlotPackage/10) * (selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0)) * selectedSlotMonths).toLocaleString('vi-VN')}đ)`}
+                  {slotSubmitting ? (lang === 'ja' ? '処理中...' : (lang === 'en' ? 'Processing...' : 'Đang Xử Lý...')) : (lang === 'ja' ? `登録を確定 (${(Math.round(50000 * (selectedSlotPackage/10) * (selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0)) * selectedSlotMonths).toLocaleString('ja-JP')}đ)` : (lang === 'en' ? `Confirm Subscription (${(Math.round(50000 * (selectedSlotPackage/10) * (selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0)) * selectedSlotMonths).toLocaleString('en-US')} VND)` : `Xác Nhận Đăng Ký (${(Math.round(50000 * (selectedSlotPackage/10) * (selectedSlotMonths === 12 ? 0.8 : selectedSlotMonths === 6 ? 0.9 : selectedSlotMonths === 3 ? 0.95 : 1.0)) * selectedSlotMonths).toLocaleString('vi-VN')}đ)`))}
                 </button>
               </div>
             </form>

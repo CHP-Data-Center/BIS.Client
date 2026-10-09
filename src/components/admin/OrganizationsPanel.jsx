@@ -7,9 +7,11 @@ import { useAuth } from '../../context/AuthContext';
 import ScopePanel from './ScopePanel';
 import ConfirmModal from '../common/ConfirmModal';
 import { tUI } from '../../locales';
+import { useLang } from '../../context/LanguageContext';
 
 export default function OrganizationsPanel({ sources = [], allUsers = [], onMessage, onUserUpdated }) {
   const { user: currentUser } = useAuth();
+  const { lang, t } = useLang();
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -38,7 +40,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
     try {
       setOrgs(await orgService.listOrganizations());
     } catch (e) {
-      onMessage?.('error', e.response?.data?.detail || 'Không tải được danh sách tổ chức.');
+      onMessage?.('error', e.response?.data?.detail || (lang === 'ja' ? '組織一覧の取得に失敗しました。' : (lang === 'en' ? 'Failed to fetch organizations list.' : 'Không tải được danh sách tổ chức.')));
     } finally {
       setLoading(false);
     }
@@ -63,11 +65,11 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
     try {
       const org = await orgService.createOrganization({ name });
       setNewOrgName('');
-      onMessage?.('success', `Đã tạo tổ chức "${org.name}".`);
+      onMessage?.('success', lang === 'ja' ? `組織「${org.name}」を作成しました。` : (lang === 'en' ? `Created organization "${org.name}".` : `Đã tạo tổ chức "${org.name}".`));
       await loadOrgs();
       selectOrg(org);
     } catch (e) {
-      onMessage?.('error', e.response?.data?.detail || 'Tạo tổ chức thất bại.');
+      onMessage?.('error', e.response?.data?.detail || (lang === 'ja' ? '組織の作成に失敗しました。' : (lang === 'en' ? 'Failed to create organization.' : 'Tạo tổ chức thất bại.')));
     } finally {
       setCreating(false);
     }
@@ -84,7 +86,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
     setUpdating(true);
     try {
       const updated = await orgService.updateOrganization(orgId, { name: trimmed });
-      onMessage?.('success', `Đã đổi tên tổ chức thành "${updated.name}".`);
+      onMessage?.('success', lang === 'ja' ? `組織名を「${updated.name}」に変更しました。` : (lang === 'en' ? `Renamed organization to "${updated.name}".` : `Đã đổi tên tổ chức thành "${updated.name}".`));
       setEditingOrgId(null);
       await loadOrgs();
       if (selected?.id === orgId) {
@@ -92,7 +94,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
       }
       onUserUpdated?.();
     } catch (e) {
-      onMessage?.('error', e.response?.data?.detail || 'Cập nhật tên thất bại.');
+      onMessage?.('error', e.response?.data?.detail || (lang === 'ja' ? '組織名の更新に失敗しました。' : (lang === 'en' ? 'Failed to update organization name.' : 'Cập nhật tên thất bại.')));
     } finally {
       setUpdating(false);
     }
@@ -108,7 +110,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
     setDeleting(true);
     try {
       await orgService.deleteOrganization(org.id);
-      onMessage?.('success', `Đã xóa tổ chức "${org.name}".`);
+      onMessage?.('success', lang === 'ja' ? `組織「${org.name}」を削除しました。` : (lang === 'en' ? `Deleted organization "${org.name}".` : `Đã xóa tổ chức "${org.name}".`));
       if (selected?.id === org.id) {
         setSelected(null);
       }
@@ -116,7 +118,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
       await loadOrgs();
       onUserUpdated?.();
     } catch (e) {
-      onMessage?.('error', e.response?.data?.detail || 'Xóa tổ chức thất bại.');
+      onMessage?.('error', e.response?.data?.detail || (lang === 'ja' ? '組織の削除に失敗しました。' : (lang === 'en' ? 'Failed to delete organization.' : 'Xóa tổ chức thất bại.')));
     } finally {
       setDeleting(false);
     }
@@ -177,7 +179,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
             value={newOrgName} onChange={e => setNewOrgName(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') createOrg(); }} />
           <button className="btn btn-primary btn-sm" onClick={createOrg} disabled={creating} style={{ gap: 4, flexShrink: 0 }}>
-            {creating ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} Tạo
+            {creating ? <Loader2 size={14} className="spin" /> : <Plus size={14} />} {lang === 'ja' ? '作成' : (lang === 'en' ? 'Create' : 'Tạo')}
           </button>
         </div>
 
@@ -221,7 +223,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                       </span>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, flexShrink: 0,
                         background: org.is_active ? '#dcfce7' : '#fee2e2', color: org.is_active ? '#166534' : '#991b1b' }}>
-                        {org.is_active ? 'Hoạt động' : 'Khóa'}
+                        {org.is_active ? (lang === 'ja' ? '有効' : (lang === 'en' ? 'Active' : 'Hoạt động')) : (lang === 'ja' ? '停止中' : (lang === 'en' ? 'Locked' : 'Khóa'))}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
@@ -274,7 +276,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                     title={tUI('ui.luu-ten')}
                     style={{ gap: 4 }}
                   >
-                    {updating ? <Loader2 size={14} className="spin" /> : <Check size={14} />} Lưu
+                    {updating ? <Loader2 size={14} className="spin" /> : <Check size={14} />} {lang === 'ja' ? '保存' : (lang === 'en' ? 'Save' : 'Lưu')}
                   </button>
                   <button
                     className="btn btn-ghost btn-sm"
@@ -301,7 +303,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button className="btn btn-ghost btn-sm" onClick={() => toggleActive(selected)}>
-                  {selected.is_active ? 'Khóa tổ chức' : 'Mở khóa'}
+                  {selected.is_active ? (lang === 'ja' ? '組織をロック' : (lang === 'en' ? 'Lock Org' : 'Khóa tổ chức')) : (lang === 'ja' ? 'ロック解除' : (lang === 'en' ? 'Unlock Org' : 'Mở khóa'))}
                 </button>
                 <button
                   className="btn btn-ghost btn-sm"
@@ -310,7 +312,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                   style={{ color: '#ef4444', gap: 4 }}
                   title={tUI('ui.xoa-to-chuc')}
                 >
-                  {deleting ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />} Xóa tổ chức
+                  {deleting ? <Loader2 size={14} className="spin" /> : <Trash2 size={14} />} {lang === 'ja' ? '組織を削除' : (lang === 'en' ? 'Delete Org' : 'Xóa tổ chức')}
                 </button>
               </div>
             </div>
@@ -318,7 +320,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
             {/* Tab con */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid var(--border-subtle)' }}>
               {[
-                { id: 'users', label: `Người dùng (${orgUsers.length})`, icon: <Users size={14} /> },
+                { id: 'users', label: lang === 'ja' ? `ユーザー (${orgUsers.length})` : (lang === 'en' ? `Users (${orgUsers.length})` : `Người dùng (${orgUsers.length})`), icon: <Users size={14} /> },
                 { id: 'scope', label: tUI('ui.pham-vi-du-lieu'), icon: <Sliders size={14} /> },
                 { id: 'admin', label: tUI('ui.cap-quyen-admin'), icon: <ShieldCheck size={14} /> },
               ].map(t => (
@@ -375,7 +377,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
 
                   {orgUsers.filter(u => u.role === 'admin').length === 0 ? (
                     <div style={{ fontSize: 12.5, color: 'var(--text-muted)', background: 'var(--bg-surface-2)', padding: '10px 14px', borderRadius: 10, fontStyle: 'italic' }}>
-                      Tổ chức này chưa có Quản trị viên nào.
+                      {lang === 'ja' ? 'この組織にはまだ管理者が設定されていません。' : (lang === 'en' ? 'This organization does not have an admin yet.' : 'Tổ chức này chưa có Quản trị viên nào.')}
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 10 }}>
@@ -411,7 +413,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Thêm Quản Trị Viên
+                      {lang === 'ja' ? '管理者を追加' : (lang === 'en' ? 'Add Admin' : 'Thêm Quản Trị Viên')}
                     </span>
 
                     {/* Sub-toggle */}
@@ -424,7 +426,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                           color: adminMode === 'assign' ? 'var(--brand-600)' : 'var(--text-muted)',
                           boxShadow: adminMode === 'assign' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                         }}>
-                        <UserPlus size={12} style={{ display: 'inline', marginRight: 4 }} /> Nâng cấp TK sẵn có
+                        <UserPlus size={12} style={{ display: 'inline', marginRight: 4 }} /> {lang === 'ja' ? '既存アカウントを昇格' : (lang === 'en' ? 'Upgrade Existing Account' : 'Nâng cấp TK sẵn có')}
                       </button>
                       <button
                         onClick={() => setAdminMode('create')}
@@ -434,7 +436,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                           color: adminMode === 'create' ? 'var(--brand-600)' : 'var(--text-muted)',
                           boxShadow: adminMode === 'create' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                         }}>
-                        <Plus size={12} style={{ display: 'inline', marginRight: 4 }} /> Tạo TK Mới
+                        <Plus size={12} style={{ display: 'inline', marginRight: 4 }} /> {lang === 'ja' ? '新規アカウント作成' : (lang === 'en' ? 'Create New Account' : 'Tạo TK Mới')}
                       </button>
                     </div>
                   </div>
@@ -462,7 +464,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                         style={{ gap: 6, whiteSpace: 'nowrap' }}
                       >
                         {assigning ? <Loader2 size={15} className="spin" /> : <ShieldCheck size={15} />}
-                        Gán Quyền Admin
+                        {lang === 'ja' ? '管理者権限を付与' : (lang === 'en' ? 'Grant Admin Role' : 'Gán Quyền Admin')}
                       </button>
                     </div>
                   ) : (
@@ -476,7 +478,7 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
                           value={newAdmin.display_name} onChange={e => setNewAdmin({ ...newAdmin, display_name: e.target.value })} />
                       </div>
                       <button className="btn btn-primary" onClick={createAdmin} style={{ gap: 6, width: 'fit-content', alignSelf: 'flex-end' }}>
-                        <ShieldCheck size={15} /> Tạo Admin Mới
+                        <ShieldCheck size={15} /> {lang === 'ja' ? '新規管理者を作成' : (lang === 'en' ? 'Create New Admin' : 'Tạo Admin Mới')}
                       </button>
                     </div>
                   )}
@@ -491,10 +493,10 @@ export default function OrganizationsPanel({ sources = [], allUsers = [], onMess
       <ConfirmModal
         isOpen={!!deletingOrg}
         title={tUI('ui.xoa-to-chuc-2')}
-        message="Tất cả người dùng thuộc tổ chức này sẽ được tự động chuyển thành chưa thuộc tổ chức."
+        message={lang === 'ja' ? 'この組織に所属するすべてのユーザーは自動的に未所属になります。' : (lang === 'en' ? 'All users belonging to this organization will be unassigned.' : 'Tất cả người dùng thuộc tổ chức này sẽ được tự động chuyển thành chưa thuộc tổ chức.')}
         itemName={deletingOrg?.name}
-        confirmText="Xóa Tổ Chức"
-        cancelText="Hủy Bỏ"
+        confirmText={lang === 'ja' ? '組織を削除' : (lang === 'en' ? 'Delete Org' : 'Xóa Tổ Chức')}
+        cancelText={lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy Bỏ')}
         type="danger"
         loading={deleting}
         onConfirm={confirmDeleteOrg}

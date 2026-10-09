@@ -192,14 +192,34 @@ export default function SettingsPage() {
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 900, color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
-              {(user?.name === 'Quản trị Tối cao' || user?.name === 'Super Admin') ? t('role.superAdmin') : (user?.name || user?.email)}
-              {isAdmin ? (
+              {(user?.name === 'Quản trị Tối cao' || user?.name === 'Super Admin')
+                ? t('role.superAdmin')
+                : (user?.name === 'Quản trị Phân Vùng'
+                  ? t('role.regionAdmin')
+                  : (user?.name || user?.email))}
+              {user?.role === 'super_admin' ? (
                 <span style={{
                   fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
                   background: 'linear-gradient(135deg, #f59e0b, #ec4899)', color: 'white',
                   letterSpacing: '0.5px', boxShadow: '0 2px 8px rgba(245,158,11,0.3)',
                 }}>
                   👑 {t('role.superAdminShort')}
+                </span>
+              ) : user?.role === 'admin' ? (
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
+                  background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe',
+                  letterSpacing: '0.5px',
+                }}>
+                  🔰 {t('role.regionAdmin')}
+                </span>
+              ) : user?.role === 'staff' ? (
+                <span style={{
+                  fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
+                  background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
+                  letterSpacing: '0.5px',
+                }}>
+                  🧑‍💼 {t('role.staff')}
                 </span>
               ) : (
                 <span style={{
@@ -214,7 +234,20 @@ export default function SettingsPage() {
             <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
               <span>✉️ {user?.email}</span>
               <span>•</span>
-              <span>📍 {userRegion === 'Toàn quốc' ? t('common.nationwide') : userRegion}</span>
+              <span>📍 {({
+                'Toàn quốc': t('common.nationwide'),
+                'Miền Bắc': t('settings.regionNorth'),
+                'Miền Trung': t('settings.regionCentral'),
+                'Miền Nam': t('settings.regionSouth'),
+                'Hà Nội': tUI('ui.ha-noi'),
+                'TP.HCM': tUI('ui.tphcm'),
+                'Đà Nẵng': tUI('ui.da-nang'),
+                'Hải Phòng': tUI('ui.hai-phong'),
+                'Cần Thơ': tUI('ui.can-tho'),
+                'Quảng Ninh': tUI('ui.quang-ninh'),
+                'Bình Dương': tUI('ui.binh-duong'),
+                'Đồng Nai': tUI('ui.dong-nai')
+              })[userRegion] || userRegion}</span>
               <span>•</span>
               <span style={{ color: '#4ade80', fontWeight: 600 }}>{tUI('ui.da-xac-thuc-jwt')}</span>
             </div>

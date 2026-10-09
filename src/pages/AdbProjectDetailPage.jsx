@@ -8,63 +8,71 @@ import {
 } from 'lucide-react';
 import { adbService } from '../services/adb';
 import ThemePageLoader from '../components/common/ThemePageLoader';
-import { tUI } from '../locales';
+import { tUI, translateCountry, translateStatus, translateSector } from '../locales';
+import { useLang } from '../context/LanguageContext';
 import { formatFullDate as fmtDate, formatShortDate as fmtShortDate, formatUsdAmount as formatAmountDisplay } from '../utils/format';
 
-const ADB_LABEL_VI = {
-  'Project Number': 'Mã dự án',
-  'Country / Economy': 'Quốc gia / Nền kinh tế',
-  'Project Status': 'Trạng thái dự án',
-  'Project Type / Modality of Assistance': 'Loại dự án / Hình thức hỗ trợ',
-  'Source of Funding / Amount': 'Nguồn vốn / Số tiền',
-  'Strategic Agendas': 'Chương trình chiến lược',
-  'Drivers of Change': 'Động lực thay đổi',
-  'Sector / Subsector': 'Lĩnh vực / Phân ngành',
-  'Gender': 'Yếu tố giới',
-  'Geographical Location': 'Địa bàn triển khai',
-  'Responsible ADB Officer': 'Cán bộ ADB phụ trách',
-  'Responsible ADB Department': 'Vụ/Ban ADB phụ trách',
-  'Responsible ADB Division': 'Phòng ADB phụ trách',
-  'Executing Agencies': 'Cơ quan thực hiện',
-  'Concept Clearance': 'Thông qua ý tưởng',
-  'Fact Finding': 'Khảo sát thực địa',
-  'Last Review Mission': 'Đợt rà soát gần nhất',
-  'Last PDS Update': 'Cập nhật PDS gần nhất',
-  'Approval': 'Phê duyệt',
-  'Description': 'Mô tả tổng quan dự án',
-  'Project Rationale and Linkage to Country/Regional Strategy': 'Cơ sở & liên kết chiến lược',
-  'Impact': 'Tác động dự kiến',
-  'Description of Outcome': 'Kết quả đầu ra (Outcome)',
-  'Progress Toward Outcome': 'Tiến độ đạt kết quả',
-  'Description of Project Outputs': 'Các thành phần đầu ra (Outputs)',
-  'Status of Implementation Progress (Outputs, Activities, and Issues)': 'Tiến độ thực hiện chi tiết',
-  'During Project Design': 'Tham vấn khi thiết kế dự án',
-  'During Project Implementation': 'Tham vấn trong quá trình triển khai',
-  'Consulting Services': 'Tuyển chọn dịch vụ tư vấn',
-  'Procurement': 'Mua sắm & Đấu thầu',
-  'Environmental Aspects': 'Đánh giá tác động môi trường',
-  'Involuntary Resettlement': 'Kế hoạch tái định cư',
-  'Indigenous Peoples': 'Bảo vệ dân tộc bản địa',
-  'Summary of Environmental and Social Aspects': 'Tóm tắt khía cạnh môi trường & xã hội',
+const ADB_LABELS = {
+  'Project Number': { vi: 'Mã dự án', en: 'Project Number', ja: 'プロジェクト番号' },
+  'Country / Economy': { vi: 'Quốc gia / Nền kinh tế', en: 'Country / Economy', ja: '国／経済' },
+  'Project Status': { vi: 'Trạng thái dự án', en: 'Project Status', ja: 'プロジェクトステータス' },
+  'Project Type / Modality of Assistance': { vi: 'Loại dự án / Hình thức hỗ trợ', en: 'Project Type / Modality of Assistance', ja: 'プロジェクト種別／支援形態' },
+  'Source of Funding / Amount': { vi: 'Nguồn vốn / Số tiền', en: 'Source of Funding / Amount', ja: '資金源／金額' },
+  'Strategic Agendas': { vi: 'Chương trình chiến lược', en: 'Strategic Agendas', ja: '戦略アジェンダ' },
+  'Drivers of Change': { vi: 'Động lực thay đổi', en: 'Drivers of Change', ja: '変革の牽引役' },
+  'Sector / Subsector': { vi: 'Lĩnh vực / Phân ngành', en: 'Sector / Subsector', ja: 'セクター／サブセクター' },
+  'Gender': { vi: 'Yếu tố giới', en: 'Gender', ja: 'ジェンダー' },
+  'Geographical Location': { vi: 'Địa bàn triển khai', en: 'Geographical Location', ja: '実施地域' },
+  'Responsible ADB Officer': { vi: 'Cán bộ ADB phụ trách', en: 'Responsible ADB Officer', ja: '担当ADB担当官' },
+  'Responsible ADB Department': { vi: 'Vụ/Ban ADB phụ trách', en: 'Responsible ADB Department', ja: '担当ADB部署' },
+  'Responsible ADB Division': { vi: 'Phòng ADB phụ trách', en: 'Responsible ADB Division', ja: '担当ADB課' },
+  'Executing Agencies': { vi: 'Cơ quan thực hiện', en: 'Executing Agencies', ja: '実施機関' },
+  'Concept Clearance': { vi: 'Thông qua ý tưởng', en: 'Concept Clearance', ja: '構想承認' },
+  'Fact Finding': { vi: 'Khảo sát thực địa', en: 'Fact Finding', ja: '現地調査（ファクトファインディング）' },
+  'Last Review Mission': { vi: 'Đợt rà soát gần nhất', en: 'Last Review Mission', ja: '最終レビューミッション' },
+  'Last PDS Update': { vi: 'Cập nhật PDS gần nhất', en: 'Last PDS Update', ja: '最終PDS更新' },
+  'Approval': { vi: 'Phê duyệt', en: 'Approval', ja: '承認' },
+  'Description': { vi: 'Mô tả tổng quan dự án', en: 'Description', ja: 'プロジェクト概要' },
+  'Project Rationale and Linkage to Country/Regional Strategy': { vi: 'Cơ sở & liên kết chiến lược', en: 'Project Rationale & Linkage', ja: 'プロジェクト根拠・戦略連携' },
+  'Impact': { vi: 'Tác động dự kiến', en: 'Impact', ja: '期待される効果・インパクト' },
+  'Description of Outcome': { vi: 'Kết quả đầu ra (Outcome)', en: 'Description of Outcome', ja: '成果（Outcome）の概要' },
+  'Progress Toward Outcome': { vi: 'Tiến độ đạt kết quả', en: 'Progress Toward Outcome', ja: '成果達成への進捗' },
+  'Description of Project Outputs': { vi: 'Các thành phần đầu ra (Outputs)', en: 'Description of Outputs', ja: '産出（Outputs）の概要' },
+  'Status of Implementation Progress (Outputs, Activities, and Issues)': { vi: 'Tiến độ thực hiện chi tiết', en: 'Implementation Progress', ja: '実施進捗状況（活動・課題）' },
+  'During Project Design': { vi: 'Tham vấn khi thiết kế dự án', en: 'During Project Design', ja: '設計段階の協議' },
+  'During Project Implementation': { vi: 'Tham vấn trong quá trình triển khai', en: 'During Project Implementation', ja: '実施中の協議' },
+  'Consulting Services': { vi: 'Tuyển chọn dịch vụ tư vấn', en: 'Consulting Services', ja: 'コンサルティングサービス' },
+  'Procurement': { vi: 'Mua sắm & Đấu thầu', en: 'Procurement', ja: '調達・入札' },
+  'Environmental Aspects': { vi: 'Đánh giá tác động môi trường', en: 'Environmental Aspects', ja: '環境への配慮' },
+  'Involuntary Resettlement': { vi: 'Kế hoạch tái định cư', en: 'Involuntary Resettlement', ja: '非自発的移転' },
+  'Indigenous Peoples': { vi: 'Bảo vệ dân tộc bản địa', en: 'Indigenous Peoples', ja: '先住民族への配慮' },
+  'Summary of Environmental and Social Aspects': { vi: 'Tóm tắt khía cạnh môi trường & xã hội', en: 'Environmental & Social Aspects Summary', ja: '環境・社会配慮の概要' },
+  'Notice Type': { vi: 'Loại thông báo', en: 'Notice Type', ja: '公告種別' },
+  'Financing Number': { vi: 'Mã số tài trợ', en: 'Financing Number', ja: '融資番号' },
+  'Project': { vi: 'Dự án', en: 'Project', ja: 'プロジェクト' },
+  'Contract / Package': { vi: 'Hợp đồng / Gói thầu', en: 'Contract / Package', ja: '契約・パッケージ' },
+  'Source': { vi: 'Nguồn', en: 'Source', ja: '情報源' },
 };
 
-const adbLabel = (en) => ADB_LABEL_VI[en] || en;
+const adbLabel = (en, lang = 'vi') => ADB_LABELS[en]?.[lang] || ADB_LABELS[en]?.vi || en;
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, lang = 'vi') => {
   const s = (status || '').toLowerCase();
-  if (s.includes('active') || s.includes('approved') || s.includes('đang')) {
-    return { bg: '#fffbeb', color: '#d97706', border: '#fde68a', label: status || 'Active' };
+  const label = translateStatus(status, lang);
+  if (s.includes('active') || s.includes('approved') || s.includes('dang')) {
+    return { bg: '#fffbeb', color: '#d97706', border: '#fde68a', label };
   }
-  if (s.includes('closed') || s.includes('completed') || s.includes('đóng')) {
-    return { bg: '#f3f4f6', color: '#4b5563', border: '#e5e7eb', label: status || 'Closed' };
+  if (s.includes('closed') || s.includes('completed') || s.includes('dong') || s.includes('đóng')) {
+    return { bg: '#f3f4f6', color: '#4b5563', border: '#e5e7eb', label };
   }
   if (s.includes('proposed') || s.includes('pipeline') || s.includes('concept')) {
-    return { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label: status || 'Proposed' };
+    return { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe', label };
   }
-  return { bg: '#fffbeb', color: '#b45309', border: '#fcd34d', label: status || 'Active' };
+  return { bg: '#fffbeb', color: '#b45309', border: '#fcd34d', label };
 };
 
 export default function AdbProjectDetailPage() {
+  const { t, lang } = useLang();
   const { id } = useParams();
   const nav = useNavigate();
   const location = useLocation();
@@ -158,7 +166,7 @@ export default function AdbProjectDetailPage() {
 
   const extId = project.external_id || project.id;
   const externalUrl = project.url || `https://www.adb.org/projects/${extId}/main`;
-  const statusInfo = getStatusBadge(project.projectstatusdisplay);
+  const statusInfo = getStatusBadge(project.projectstatusdisplay, lang);
   const publishedDate = fmtDate(project.boardapprovaldate);
   
   const details = project.details || {};
@@ -178,13 +186,19 @@ export default function AdbProjectDetailPage() {
     else shortRows.push([k, v]);
   });
 
-  const tags = [
-    'ADB',
-    extId,
-    project.countryshortname !== 'N/A' ? project.countryshortname : null,
-    project.projectstatusdisplay,
-    project.sector !== 'N/A' ? project.sector : null,
-    'ODA',
+    const tags = [
+    { key: 'org', raw: 'ADB', label: 'ADB' },
+    extId ? { key: 'id', raw: extId, label: extId } : null,
+    project.countryshortname && project.countryshortname !== 'N/A'
+      ? { key: 'country', raw: project.countryshortname, label: translateCountry(project.countryshortname, lang) }
+      : null,
+    project.projectstatusdisplay
+      ? { key: 'status', raw: project.projectstatusdisplay, label: translateStatus(project.projectstatusdisplay, lang) }
+      : null,
+    project.sector && project.sector !== 'N/A'
+      ? { key: 'sector', raw: project.sector, label: translateSector(project.sector, lang) }
+      : null,
+    { key: 'oda', raw: 'ODA', label: 'ODA' },
   ].filter(Boolean);
 
   return (
@@ -264,7 +278,7 @@ export default function AdbProjectDetailPage() {
                     padding: '3px 9px', borderRadius: 8, border: '1px solid rgba(245, 158, 11, 0.3)',
                   }}
                 >
-                  Mã: {extId}
+                  {(lang === 'vi' ? 'Mã' : 'ID')}: {extId}
                 </span>
 
                 <span
@@ -278,7 +292,7 @@ export default function AdbProjectDetailPage() {
 
                 {project.countryshortname && project.countryshortname !== 'N/A' && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', background: 'var(--bg-surface)', padding: '3px 10px', borderRadius: 8, border: '1px solid var(--border)' }}>
-                    🏢 {project.countryshortname}
+                    🏢 {translateCountry(project.countryshortname, lang)}
                   </span>
                 )}
               </div>
@@ -287,7 +301,7 @@ export default function AdbProjectDetailPage() {
               <div style={{ marginTop: 12, zIndex: 1 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{tUI('ui.cam-ket-tai-chinh-von-ho-tro-usd')}</span>
                 <div style={{ fontSize: 24, fontWeight: 800, color: '#d97706', lineHeight: 1.2 }}>
-                  {formatAmountDisplay(project.totalamt || project.totalCommitmentAmount)}
+                  {formatAmountDisplay(project.totalamt || project.totalCommitmentAmount, lang)}
                 </div>
               </div>
             </div>
@@ -319,7 +333,7 @@ export default function AdbProjectDetailPage() {
                         boxShadow: '0 2px 6px rgba(245, 158, 11, 0.25)',
                       }}
                     >
-                      <Cpu size={12} /> Tóm Tắt & Mô Tả Tổng Quan Dự Án
+                      <Cpu size={12} /> {t('adb.overviewBadge', 'Tóm Tắt & Mô Tả Tổng Quan Dự Án')}
                     </span>
                   </div>
                   <p style={{ fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.7, margin: 0, fontWeight: 500, whiteSpace: 'pre-line' }}>
@@ -353,7 +367,7 @@ export default function AdbProjectDetailPage() {
                 <div>
                   <div style={{ lineHeight: 1.2 }}>{tUI('ui.noi-dung-chi-tiet-du-an-adb')}</div>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', marginTop: 2 }}>
-                    Thông tin toàn văn & thông số kỹ thuật được trích xuất từ adb.org
+                    {t('adb.subtitle', 'Thông tin toàn văn & thông số kỹ thuật được trích xuất từ adb.org')}
                   </div>
                 </div>
               </div>
@@ -366,7 +380,7 @@ export default function AdbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.quoc-gia-nen-kinh-te')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {project.countryshortname} {project.region ? `(${project.region})` : ''}
+                        {translateCountry(project.countryshortname, lang)} {project.region ? `(${project.region})` : ''}
                       </div>
                     </div>
                   </div>
@@ -390,7 +404,7 @@ export default function AdbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cam-ket-von-commitment')}</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#d97706' }}>
-                        {formatAmountDisplay(project.totalamt || project.totalCommitmentAmount)}
+                        {formatAmountDisplay(project.totalamt || project.totalCommitmentAmount, lang)}
                       </div>
                     </div>
                   </div>
@@ -426,7 +440,7 @@ export default function AdbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.ngay-phe-duyet')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {fmtShortDate(project.boardapprovaldate)}
+                        {fmtShortDate(project.boardapprovaldate, lang)}
                       </div>
                     </div>
                   </div>
@@ -438,7 +452,7 @@ export default function AdbProjectDetailPage() {
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{tUI('ui.cap-nhat-cuoi')}</div>
                       <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {fmtShortDate(project.proj_last_upd_date)}
+                        {fmtShortDate(project.proj_last_upd_date, lang)}
                       </div>
                     </div>
                   </div>
@@ -485,12 +499,12 @@ export default function AdbProjectDetailPage() {
               {shortRows.length > 0 && (
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 12 }}>
-                    Các Thông Số ADB Khác
+                    {t('adb.otherSpecs', 'Các Thông Số ADB Khác')}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px 20px' }}>
                     {shortRows.map(([k, v]) => (
                       <div key={k} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{adbLabel(k)}:</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{adbLabel(k, lang)}:</span>
                         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{v}</span>
                       </div>
                     ))}
@@ -502,7 +516,7 @@ export default function AdbProjectDetailPage() {
               {funding.length > 0 && (
                 <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Wallet size={15} color="#d97706" /> Cơ Cấu Nguồn Vốn (Funding Sources)
+                    <Wallet size={15} color="#d97706" /> {t('adb.fundingSources', 'Cơ Cấu Nguồn Vốn (Funding Sources)')}
                   </div>
 
                   <div style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
@@ -524,7 +538,7 @@ export default function AdbProjectDetailPage() {
               {milestones && Object.keys(milestones).length > 0 && (
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <CalendarDays size={15} color="#d97706" /> Các Mốc Tiến Độ (Milestones)
+                    <CalendarDays size={15} color="#d97706" /> {t('adb.milestones', 'Các Mốc Tiến Độ (Milestones)')}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, background: 'var(--bg-surface-2)', padding: 14, borderRadius: 10 }}>
                     {milestones.approval && <div><span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{tUI('ui.phe-duyet')}</span> <strong style={{ color: 'var(--text-primary)' }}>{milestones.approval}</strong></div>}
@@ -540,7 +554,7 @@ export default function AdbProjectDetailPage() {
               {longSections.map(([k, v]) => (
                 <div key={k} style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <FileText size={15} color="#d97706" /> {adbLabel(k)}
+                    <FileText size={15} color="#d97706" /> {adbLabel(k, lang)}
                   </div>
                   <p style={{ fontSize: 13.5, lineHeight: 1.65, color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-line' }}>
                     {v}
@@ -552,7 +566,7 @@ export default function AdbProjectDetailPage() {
               {documents.length > 0 && (
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--border-subtle)' }}>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <FileText size={15} color="#d97706" /> Tài Liệu Dự Án ({documents.length})
+                    <FileText size={15} color="#d97706" /> {t('adb.documentsWithCount', { count: documents.length })}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {documents.map((doc, idx) => (
@@ -574,7 +588,7 @@ export default function AdbProjectDetailPage() {
                 marginTop: 24,
               }}>
                 <div style={{ fontWeight: 800, fontSize: 13.5, color: 'var(--text-primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>📌</span> Thông Tin Phân Tích Kỹ Thuật (System Metadata):
+                  <span>📌</span> {t('common.systemMetadata', 'Thông Tin Phân Tích Kỹ Thuật (System Metadata):')}
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <li><strong>{tUI('ui.ten-du-an-day-du')}</strong> {project.project_name}</li>
@@ -585,7 +599,7 @@ export default function AdbProjectDetailPage() {
                     <li>
                       <strong>{tUI('ui.lien-ket-bai-goc')}</strong>{' '}
                       <a href={externalUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#d97706', fontWeight: 700, textDecoration: 'underline' }}>
-                        Trích xuất trực tiếp từ adb.org Official ↗
+                        {t('adb.extractDirectOfficial', 'Trích xuất trực tiếp từ adb.org Official ↗')}
                       </a>
                     </li>
                   )}
@@ -604,11 +618,11 @@ export default function AdbProjectDetailPage() {
             }}>
               {publishedDate !== 'N/A' && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <Calendar size={12} /> Ngày phê duyệt: {publishedDate}
+                  <Calendar size={12} /> {t('oda.approvalDate', 'Ngày phê duyệt')}: {publishedDate}
                 </span>
               )}
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Building2 size={12} /> Nguồn: Asian Development Bank (ADB)
+                <Building2 size={12} /> {t('common.source', 'Nguồn')}: Asian Development Bank (ADB)
               </span>
             </div>
 
@@ -621,7 +635,7 @@ export default function AdbProjectDetailPage() {
                 className="btn btn-secondary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
               >
-                <ExternalLink size={15} /> Xem bài gốc / adb.org ↗
+                <ExternalLink size={15} /> {t('adb.viewOriginal', 'Xem bài gốc / adb.org ↗')}
               </a>
 
               <button
@@ -634,7 +648,7 @@ export default function AdbProjectDetailPage() {
                 }}
               >
                 {bookmarked ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
-                {bookmarked ? 'Đã lưu dự án' : 'Lưu lại'}
+                {bookmarked ? t('common.saved', 'Đã lưu dự án') : t('common.save', 'Lưu lại')}
               </button>
 
               <button
@@ -642,7 +656,7 @@ export default function AdbProjectDetailPage() {
                 onClick={handleShare}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
-                <Share2 size={15} /> Chia sẻ
+                <Share2 size={15} /> {t('common.share', 'Chia sẻ')}
               </button>
 
               <button
@@ -650,7 +664,7 @@ export default function AdbProjectDetailPage() {
                 onClick={() => nav(-1)}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}
               >
-                <ArrowLeft size={15} /> Quay lại
+                <ArrowLeft size={15} /> {t('common.back', 'Quay lại')}
               </button>
             </div>
           </article>
@@ -661,10 +675,10 @@ export default function AdbProjectDetailPage() {
           {/* Card 1: VỀ ADB */}
           <div className="article-sidebar-card">
             <div className="article-sidebar-title">
-              <Building2 size={15} color="#d97706" /> Về Asian Development Bank (ADB)
+              <Building2 size={15} color="#d97706" /> {t('adb.aboutTitle', 'Về Asian Development Bank (ADB)')}
             </div>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 12px' }}>
-              Dữ liệu dự án ADB được hệ thống BIS Crawler thu thập và đồng bộ tự động từ Ngân hàng Phát triển Châu Á (ADB) phục vụ tra cứu chuyên sâu.
+              {t('adb.aboutDesc')}
             </p>
             <a
               href={externalUrl}
@@ -675,7 +689,7 @@ export default function AdbProjectDetailPage() {
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
-              Xem trang gốc adb.org <ExternalLink size={12} />
+              {t('adb.viewOriginalSite', 'Xem trang gốc adb.org')} <ExternalLink size={12} />
             </a>
           </div>
 
@@ -683,24 +697,28 @@ export default function AdbProjectDetailPage() {
           {tags.length > 0 && (
             <div className="article-sidebar-card">
               <div className="article-sidebar-title">
-                <Tag size={15} color="#d97706" /> Từ khóa & Phân loại
+                <Tag size={15} color="#d97706" /> {t('common.tagsAndCategories', 'Từ khóa & Phân loại')}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    onClick={() => nav(`/news/adb?q=${encodeURIComponent(tag)}`)}
-                    style={{
-                      fontSize: 11, fontWeight: 600, padding: '3px 10px',
-                      borderRadius: 12, background: 'var(--bg-surface-2)',
-                      color: 'var(--text-secondary)', border: '1px solid var(--border)',
-                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3,
-                    }}
-                    title={`Lọc dự án với #${tag}`}
-                  >
-                    #{tag}
-                  </span>
-                ))}
+                {tags.map((tItem) => {
+                  const rawVal = typeof tItem === 'string' ? tItem : tItem.raw;
+                  const labelVal = typeof tItem === 'string' ? tItem : (tItem.label || tItem.raw);
+                  return (
+                    <span
+                      key={rawVal}
+                      onClick={() => nav(`/news/adb?q=${encodeURIComponent(rawVal)}`)}
+                      style={{
+                        fontSize: 11, fontWeight: 600, padding: '3px 10px',
+                        borderRadius: 12, background: 'var(--bg-surface-2)',
+                        color: 'var(--text-secondary)', border: '1px solid var(--border)',
+                        cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3,
+                      }}
+                      title={t('common.filterByTag', { tag: labelVal })}
+                    >
+                      #{labelVal}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -709,11 +727,11 @@ export default function AdbProjectDetailPage() {
           {relatedProjects.length > 0 && (
             <div className="article-sidebar-card">
               <div className="article-sidebar-title">
-                <FileText size={15} color="#d97706" /> Dự án liên quan
+                <FileText size={15} color="#d97706" /> {t('oda.relatedProjects', 'Dự án liên quan')}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {relatedProjects.map((rel) => {
-                  const relStatus = getStatusBadge(rel.projectstatusdisplay);
+                  const relStatus = getStatusBadge(rel.projectstatusdisplay, lang);
                   return (
                     <div
                       key={rel.id}
@@ -738,8 +756,8 @@ export default function AdbProjectDetailPage() {
                         {rel.project_name}
                       </div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>🏢 {rel.countryshortname}</span>
-                        <span style={{ fontWeight: 700, color: '#d97706' }}>{formatAmountDisplay(rel.totalamt || rel.totalCommitmentAmount)}</span>
+                        <span>🏢 {translateCountry(rel.countryshortname, lang)}</span>
+                        <span style={{ fontWeight: 700, color: '#d97706' }}>{formatAmountDisplay(rel.totalamt || rel.totalCommitmentAmount, lang)}</span>
                       </div>
                     </div>
                   );

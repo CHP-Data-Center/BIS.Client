@@ -56,8 +56,47 @@ function highlightKeyword(text, keyword) {
   }
 }
 
+function formatArticleSource(src, lang = 'vi') {
+  if (!src) return '';
+  if (lang === 'vi') return src;
+
+  const suffixMapJa = {
+    'hổ sơ nhà thầu': '入札書類',
+    'hồ sơ nhà thầu': '入札書類',
+    'thông báo mời thầu': '入札招請通知',
+    'đấu thầu': '入札情報',
+    'kế hoạch lựa chọn nhà thầu': '調達計画',
+    'kết quả lựa chọn nhà thầu': '落札結果',
+  };
+  const suffixMapEn = {
+    'hổ sơ nhà thầu': 'Bidder Dossier',
+    'hồ sơ nhà thầu': 'Bidder Dossier',
+    'thông báo mời thầu': 'Invitation to Bid',
+    'đấu thầu': 'Bidding',
+    'kế hoạch lựa chọn nhà thầu': 'Procurement Plan',
+    'kết quả lựa chọn nhà thầu': 'Bidding Results',
+  };
+
+  if (src.includes(' - ')) {
+    const [prefix, suffix] = src.split(' - ').map(s => s.trim());
+    const lowerSuffix = suffix.toLowerCase();
+    if (prefix.toLowerCase().includes('báo đấu thầu')) {
+      if (lang === 'ja') return `入札新聞 - ${suffixMapJa[lowerSuffix] || suffix}`;
+      if (lang === 'en') return `Bidding News - ${suffixMapEn[lowerSuffix] || suffix}`;
+    }
+  }
+
+  if (src.toLowerCase() === 'báo đấu thầu') {
+    return lang === 'ja' ? '入札新聞' : (lang === 'en' ? 'Bidding News' : src);
+  }
+  if (src.toLowerCase().includes('mua sắm công')) {
+    return lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Public Procurement' : src);
+  }
+  return src;
+}
+
 export default function KeywordSuggestionsPanel({ onMessage }) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const nav = useNavigate();
   const [status, setStatus] = useState('pending');
   const [items, setItems] = useState([]);
@@ -402,7 +441,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
                           textTransform: 'uppercase', letterSpacing: 0.4,
                           ...getSourceBadgeStyle(s.source_kind, s.source_kind)
                         }}>
-                          {s.source_kind === 'procurement' ? 'Mua sắm công' : s.source_kind === 'article' ? 'Báo chí' : s.source_kind}
+                          {s.source_kind === 'procurement' ? (lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Bidding' : 'Mua sắm công')) : s.source_kind === 'article' ? (lang === 'ja' ? '報道' : (lang === 'en' ? 'Press' : 'Báo chí')) : s.source_kind}
                         </span>
                       )}
                     </div>
@@ -560,7 +599,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
                                   fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
                                   ...getSourceBadgeStyle(art.kind, art.source_type)
                                 }}>
-                                  {art.source || (art.kind === 'procurement' ? 'Mua sắm công' : 'Tin tức')}
+                                  {formatArticleSource(art.source, lang) || (art.kind === 'procurement' ? (lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Bidding' : 'Mua sắm công')) : (lang === 'ja' ? 'ニュース' : (lang === 'en' ? 'News' : 'Tin tức')))}
                                 </span>
 
                                 {art.published_at && (
@@ -696,7 +735,7 @@ export default function KeywordSuggestionsPanel({ onMessage }) {
                   fontSize: 11.5, fontWeight: 700, padding: '3px 9px', borderRadius: 6,
                   ...getSourceBadgeStyle(selectedArticle.kind, selectedArticle.source_type)
                 }}>
-                  {selectedArticle.source || (selectedArticle.kind === 'procurement' ? 'Mua sắm công' : 'Tin tức')}
+                  {formatArticleSource(selectedArticle.source, lang) || (selectedArticle.kind === 'procurement' ? (lang === 'ja' ? '公共調達' : (lang === 'en' ? 'Bidding' : 'Mua sắm công')) : (lang === 'ja' ? 'ニュース' : (lang === 'en' ? 'News' : 'Tin tức')))}
                 </span>
 
                 {selectedArticle.published_at && (

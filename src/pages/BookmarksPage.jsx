@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import { Bookmark, Trash2, ExternalLink, Calendar, Loader2, Eye, LayoutGrid, List } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { articlesService } from '../services/articles';
+import { worldBankService } from '../services/worldbank';
+import { adbService } from '../services/adb';
 import { useLang } from '../context/LanguageContext';
 import NewsCard from '../components/NewsCard';
 import { worldBankProjectUrl } from '../utils/wbUrl';
 import { procurementDetailPath } from '../utils/procurementLink';
-import { tUI } from '../locales';
+import { tUI, translateCountry, translateStatus, translateStage } from '../locales';
 import { stripAccents } from '../utils/format';
 
 function isTagMatched(tag, query) {
@@ -200,8 +202,54 @@ export default function BookmarksPage() {
   useEffect(() => {
     setLoading(true);
     articlesService.getBookmarks(false, lang)
-      .then((serverBms) => {
-        const localBms = getLocalBookmarks();
+      .then(async (serverBms) => {
+        let localBms = getLocalBookmarks();
+        try {
+          const wbSaved = JSON.parse(localStorage.getItem('saved_worldbank_projects') || '[]');
+          if (wbSaved.length > 0) {
+            const freshWb = await worldBankService.fetchProjects({ lang }).catch(() => []);
+            const wbMap = new Map(freshWb.map(p => [String(p.id), p]));
+            localBms = localBms.map(b => {
+              if (b.local_key === 'saved_worldbank_projects' && wbMap.has(String(b.original_id))) {
+                const fresh = wbMap.get(String(b.original_id));
+                return {
+                  ...b,
+                  article_title: fresh.project_name || b.article_title,
+                  country: fresh.countryshortname || b.country,
+                  status: fresh.projectstatusdisplay || b.status,
+                  stage: fresh.last_stage_reached_name || b.stage,
+                };
+              }
+              return b;
+            });
+          }
+        } catch (e) {
+          console.warn('Error refreshing WB bookmarks lang:', e);
+        }
+
+        try {
+          const adbSaved = JSON.parse(localStorage.getItem('saved_adb_projects') || '[]');
+          if (adbSaved.length > 0) {
+            const freshAdb = await adbService.fetchProjects({ lang }).catch(() => []);
+            const adbMap = new Map(freshAdb.map(p => [String(p.id), p]));
+            localBms = localBms.map(b => {
+              if (b.local_key === 'saved_adb_projects' && adbMap.has(String(b.original_id))) {
+                const fresh = adbMap.get(String(b.original_id));
+                return {
+                  ...b,
+                  article_title: fresh.project_name || b.article_title,
+                  country: fresh.countryshortname || b.country,
+                  status: fresh.projectstatusdisplay || b.status,
+                  stage: fresh.last_stage_reached_name || b.stage,
+                };
+              }
+              return b;
+            });
+          }
+        } catch (e) {
+          console.warn('Error refreshing ADB bookmarks lang:', e);
+        }
+
         const combined = [...(serverBms || []), ...localBms];
         combined.sort((a, b) => new Date(b.created_at || b.published_at || 0) - new Date(a.created_at || a.published_at || 0));
         setBookmarks(combined);
@@ -476,7 +524,7 @@ export default function BookmarksPage() {
                               title={`Bấm để tìm bài viết với từ khóa #${kw}`}
                             >
                               {matched && <span style={{ fontSize: 9 }}>⚡</span>}
-                              #{kw}
+                              #{translateStage(kw, lang)}
                             </span>
                           );
                         })}
@@ -541,7 +589,7 @@ export default function BookmarksPage() {
                             {bm.country && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                 <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.ben-moi-thau')}</span>
-                                <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{bm.country}</strong>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{translateCountry(bm.country, lang)}</strong>
                               </div>
                             )}
 
@@ -557,7 +605,7 @@ export default function BookmarksPage() {
                             {bm.stage && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                 <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.phan-loai')}</span>
-                                <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bm.stage}</strong>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{translateStage(bm.stage, lang)}</strong>
                               </div>
                             )}
                           </>
@@ -567,7 +615,7 @@ export default function BookmarksPage() {
                             {bm.country && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                 <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.quoc-gia')}</span>
-                                <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{bm.country}</strong>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{translateCountry(bm.country, lang)}</strong>
                               </div>
                             )}
 
@@ -583,7 +631,7 @@ export default function BookmarksPage() {
                             {bm.stage && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                 <span style={{ color: 'var(--text-muted)' }}>{tUI('ui.giai-doan')}</span>
-                                <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bm.stage}</strong>
+                                <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{translateStage(bm.stage, lang)}</strong>
                               </div>
                             )}
                           </>
@@ -593,7 +641,7 @@ export default function BookmarksPage() {
                           <div className="bookmark-metadata-date">
                             <Calendar size={12} style={{ color: 'var(--text-muted)' }} />
                             <span style={{ color: 'var(--text-muted)', fontSize: 11.5 }}>
-                              {isProcurement ? 'Ngày đăng: ' : 'Phê duyệt: '}
+                              {isProcurement ? t('bookmarks.postedDate', 'Ngày đăng: ') : t('bookmarks.approvedDate', 'Phê duyệt: ')}
                               {displayDate}
                             </span>
                           </div>

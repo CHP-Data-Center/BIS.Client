@@ -170,7 +170,73 @@ export const TRANSLATIONS = {
     'tài chính': { vi: 'Tài chính', en: 'Finance', ja: '金融' },
     'đa ngành': { vi: 'Đa ngành', en: 'Multisector', ja: '多分野・複合' },
     'nông nghiệp & tntn': { vi: 'Nông nghiệp & TNTN', en: 'Agriculture & Resources', ja: '農業・天然資源' },
+    
     'nước & đô thị': { vi: 'Nước & Đô thị', en: 'Water & Urban', ja: '水資源・都市開発' },
+  },
+  procurement: {
+    fields: {
+      'hàng hóa': { vi: 'Hàng hóa', en: 'Goods', ja: '物品' },
+      'hh': { vi: 'Hàng hóa', en: 'Goods', ja: '物品' },
+      'xây lắp': { vi: 'Xây lắp', en: 'Works / Construction', ja: '建設・工事' },
+      'xl': { vi: 'Xây lắp', en: 'Works / Construction', ja: '建設・工事' },
+      'tư vấn': { vi: 'Tư vấn', en: 'Consulting', ja: 'コンサルティング' },
+      'tv': { vi: 'Tư vấn', en: 'Consulting', ja: 'コンサルティング' },
+      'phi tư vấn': { vi: 'Phi tư vấn', en: 'Non-consulting Services', ja: '非コンサルティング' },
+      'ptv': { vi: 'Phi tư vấn', en: 'Non-consulting Services', ja: '非コンサルティング' },
+      'hỗn hợp': { vi: 'Hỗn hợp', en: 'Mixed', ja: '複合' },
+      'hon': { vi: 'Hỗn hợp', en: 'Mixed', ja: '複合' },
+      'thuốc': { vi: 'Thuốc', en: 'Pharmaceuticals', ja: '医薬品' },
+      'thuoc': { vi: 'Thuốc', en: 'Pharmaceuticals', ja: '医薬品' },
+    },
+    bidForms: {
+      'đấu thầu rộng rãi': { vi: 'Đấu thầu rộng rãi', en: 'Open Bidding', ja: '一般競争入札' },
+      'dtrr': { vi: 'Đấu thầu rộng rãi', en: 'Open Bidding', ja: '一般競争入札' },
+      'đấu thầu hạn chế': { vi: 'Đấu thầu hạn chế', en: 'Limited Bidding', ja: '指名競争入札' },
+      'dthc': { vi: 'Đấu thầu hạn chế', en: 'Limited Bidding', ja: '指名競争入札' },
+      'chào hàng cạnh tranh': { vi: 'Chào hàng cạnh tranh', en: 'Request for Quotation', ja: '見積合わせ競争' },
+      'chct': { vi: 'Chào hàng cạnh tranh', en: 'Request for Quotation', ja: '見積合わせ競争' },
+      'chào hàng cạnh tranh rút gọn': { vi: 'Chào hàng cạnh tranh rút gọn', en: 'Simplified Quotation', ja: '簡易見積合わせ' },
+      'chct_rg': { vi: 'Chào hàng cạnh tranh rút gọn', en: 'Simplified Quotation', ja: '簡易見積合わせ' },
+      'chỉ định thầu': { vi: 'Chỉ định thầu', en: 'Direct Contracting', ja: '随意契約' },
+      'cdt': { vi: 'Chỉ định thầu', en: 'Direct Contracting', ja: '随意契約' },
+      'chỉ định thầu rút gọn': { vi: 'Chỉ định thầu rút gọn', en: 'Simplified Direct Contracting', ja: '簡易随意契約' },
+      'cdtrg': { vi: 'Chỉ định thầu rút gọn', en: 'Simplified Direct Contracting', ja: '簡易随意契約' },
+      'mua sắm trực tiếp': { vi: 'Mua sắm trực tiếp', en: 'Direct Procurement', ja: '直接調達' },
+      'mstt': { vi: 'Mua sắm trực tiếp', en: 'Direct Procurement', ja: '直接調達' },
+      'tự thực hiện': { vi: 'Tự thực hiện', en: 'Self-implementation', ja: '自己実施' },
+      'tth': { vi: 'Tự thực hiện', en: 'Self-implementation', ja: '自己実施' },
+      'lựa chọn nhà thầu trong trường hợp đặc biệt': { vi: 'Lựa chọn nhà thầu đặc biệt', en: 'Special Case Selection', ja: '特別事例選定' },
+    },
+    bidModes: {
+      'một giai đoạn một túi hồ sơ': { vi: 'Một giai đoạn một túi hồ sơ', en: 'Single-stage single-envelope', ja: '一段階一封筒方式' },
+      '1_mths': { vi: 'Một giai đoạn một túi hồ sơ', en: 'Single-stage single-envelope', ja: '一段階一封筒方式' },
+      'một giai đoạn hai túi hồ sơ': { vi: 'Một giai đoạn hai túi hồ sơ', en: 'Single-stage two-envelope', ja: '一段階二封筒方式' },
+      '1_2ths': { vi: 'Một giai đoạn hai túi hồ sơ', en: 'Single-stage two-envelope', ja: '一段階二封筒方式' },
+      'hai giai đoạn một túi hồ sơ': { vi: 'Hai giai đoạn một túi hồ sơ', en: 'Two-stage single-envelope', ja: '二段階一封筒方式' },
+      '2_mths': { vi: 'Hai giai đoạn một túi hồ sơ', en: 'Two-stage single-envelope', ja: '二段階一封筒方式' },
+      'hai giai đoạn hai túi hồ sơ': { vi: 'Hai giai đoạn hai túi hồ sơ', en: 'Two-stage two-envelope', ja: '二段階二封筒方式' },
+      '2_2ths': { vi: 'Hai giai đoạn hai túi hồ sơ', en: 'Two-stage two-envelope', ja: '二段階二封筒方式' },
+    },
+    contractTypes: {
+      'trọn gói': { vi: 'Trọn gói', en: 'Lump sum', ja: '総額一括請負（ランプサム）' },
+      'tg': { vi: 'Trọn gói', en: 'Lump sum', ja: '総額一括請負（ランプサム）' },
+      'đơn giá cố định': { vi: 'Đơn giá cố định', en: 'Fixed unit price', ja: '固定単価契約' },
+      'dgcd': { vi: 'Đơn giá cố định', en: 'Fixed unit price', ja: '固定単価契約' },
+      'đơn giá điều chỉnh': { vi: 'Đơn giá điều chỉnh', en: 'Adjustable unit price', ja: '変動単価契約' },
+      'dgdc': { vi: 'Đơn giá điều chỉnh', en: 'Adjustable unit price', ja: '変動単価契約' },
+      'theo thời gian': { vi: 'Theo thời gian', en: 'Time-based', ja: 'タイムベース契約' },
+      'tgia': { vi: 'Theo thời gian', en: 'Time-based', ja: 'タイムベース契約' },
+      'theo kết quả đầu ra': { vi: 'Theo kết quả đầu ra', en: 'Output-based', ja: '成果連動型契約' },
+      'hhkq': { vi: 'Theo kết quả đầu ra', en: 'Output-based', ja: '成果連動型契約' },
+    },
+    planTypes: {
+      'chi thường xuyên': { vi: 'Chi thường xuyên', en: 'Recurrent expenditure', ja: '経常支出' },
+      'tx': { vi: 'Chi thường xuyên', en: 'Recurrent expenditure', ja: '経常支出' },
+      'đầu tư phát triển': { vi: 'Đầu tư phát triển', en: 'Development investment', ja: '開発投資' },
+      'dtpt': { vi: 'Đầu tư phát triển', en: 'Development investment', ja: '開発投資' },
+      'khác': { vi: 'Khác', en: 'Other', ja: 'その他' },
+      'khac': { vi: 'Khác', en: 'Other', ja: 'その他' },
+    },
   }
 };
 
@@ -195,4 +261,213 @@ export function tUI(key, fallback) {
     lang = 'vi';
   }
   return DICT[lang]?.[key] ?? DICT.vi?.[key] ?? fallback ?? key;
+}
+
+/**
+ * Dịch các giá trị phân loại đấu thầu (lĩnh vực, hình thức lựa chọn, phương thức, hợp đồng, kế hoạch)
+ */
+export function translateProcurementValue(category, value, lang = 'vi') {
+  if (!value) return value;
+  const key = String(value).trim().toLowerCase();
+  const cat = TRANSLATIONS.procurement?.[category];
+  if (cat && cat[key]) {
+    return cat[key][lang] || cat[key].vi || value;
+  }
+  return value;
+}
+
+/**
+ * Bản địa hóa khoảng thời gian: '8 tháng' -> '8 ヶ月', '90 ngày' -> '90 日'
+ */
+export function localizePeriod(periodStr, lang = 'vi') {
+  if (!periodStr) return periodStr;
+  const m = String(periodStr).match(/^(\d+)\s*(tháng|ngày|năm|thang|ngay|nam|months?|days?|years?|日|ヶ月|年)/i);
+  if (!m) return periodStr;
+  const num = m[1];
+  const unit = m[2].toLowerCase();
+  if (unit.startsWith('tháng') || unit.startsWith('thang') || unit.startsWith('month') || unit === 'ヶ月') {
+    if (lang === 'ja') return `${num} ヶ月`;
+    if (lang === 'en') return `${num} ${num === '1' ? 'month' : 'months'}`;
+    return `${num} tháng`;
+  }
+  if (unit.startsWith('ngày') || unit.startsWith('ngay') || unit.startsWith('day') || unit === '日') {
+    if (lang === 'ja') return `${num} 日`;
+    if (lang === 'en') return `${num} ${num === '1' ? 'day' : 'days'}`;
+    return `${num} ngày`;
+  }
+  if (unit.startsWith('năm') || unit.startsWith('nam') || unit.startsWith('year') || unit === '年') {
+    if (lang === 'ja') return `${num} 年`;
+    if (lang === 'en') return `${num} ${num === '1' ? 'year' : 'years'}`;
+    return `${num} năm`;
+  }
+  return periodStr;
+}
+
+/**
+ * Dich quoc gia (ten tieng Anh hoac ma ISO) sang ngon ngu hien tai
+ */
+export function translateCountry(country, lang = 'vi') {
+  if (!country || country === 'N/A') return country;
+  const raw = String(country).trim();
+  const rawUpper = raw.toUpperCase();
+  if (TRANSLATIONS.countries[rawUpper]) {
+    return TRANSLATIONS.countries[rawUpper][lang] || TRANSLATIONS.countries[rawUpper].vi || raw;
+  }
+  const rawLower = raw.toLowerCase();
+  for (const info of Object.values(TRANSLATIONS.countries)) {
+    if (
+      (info.en && info.en.toLowerCase() === rawLower) ||
+      (info.vi && info.vi.toLowerCase() === rawLower) ||
+      (info.ja && info.ja.toLowerCase() === rawLower)
+    ) {
+      return info[lang] || info.vi || raw;
+    }
+  }
+  return raw;
+}
+
+/**
+ * Dich trang thai du an (Active, Pipeline, Closed, etc.)
+ */
+export function translateStatus(status, lang = 'vi') {
+  if (!status) return status;
+  const s = String(status).trim().toLowerCase();
+  if (TRANSLATIONS.statuses?.[s]) {
+    return TRANSLATIONS.statuses[s][lang] || TRANSLATIONS.statuses[s].vi || status;
+  }
+  if (s.includes('active') || s.includes('approved') || s.includes('trien khai') || s.includes('thuc hien') || s.includes('dang')) {
+    return lang === 'ja' ? '進行中' : lang === 'en' ? 'Active' : 'Đang triển khai';
+  }
+  if (s.includes('closed') || s.includes('completed') || s.includes('dong') || s.includes('hoan thanh')) {
+    return lang === 'ja' ? '完了' : lang === 'en' ? 'Closed' : 'Đã đóng';
+  }
+  if (s.includes('pipeline') || s.includes('chuan bi')) {
+    return lang === 'ja' ? 'パイプライン' : lang === 'en' ? 'Pipeline' : 'Đang chuẩn bị';
+  }
+  if (s.includes('proposed') || s.includes('concept') || s.includes('de xuat')) {
+    return lang === 'ja' ? '提案中' : lang === 'en' ? 'Proposed' : 'Đề xuất';
+  }
+  if (s.includes('dropped') || s.includes('huy')) {
+    return lang === 'ja' ? '中止' : lang === 'en' ? 'Dropped' : 'Hủy bỏ';
+  }
+  return status;
+}
+
+/**
+ * Dich giai doan (World Bank Stage)
+ */
+export function translateStage(stage, lang = 'vi') {
+  if (!stage || stage === 'N/A') return stage;
+  const s = String(stage).trim().toLowerCase();
+  if (s.includes('ois sign-off') || s.includes('ois')) {
+    return lang === 'ja' ? 'OIS承認' : lang === 'en' ? 'OIS Sign-off' : 'Ký duyệt OIS';
+  }
+  if (s.includes('concept')) {
+    return lang === 'ja' ? '構想審査' : lang === 'en' ? 'Concept Review' : 'Đánh giá ý tưởng';
+  }
+  if (s.includes('appraisal')) {
+    return lang === 'ja' ? '審査・評価' : lang === 'en' ? 'Appraisal Review' : 'Thẩm định';
+  }
+  if (s.includes('negotiation')) {
+    return lang === 'ja' ? '交渉段階' : lang === 'en' ? 'Negotiations' : 'Đàm phán';
+  }
+  if (s.includes('board') || s.includes('approval')) {
+    return lang === 'ja' ? '理事会承認' : lang === 'en' ? 'Board Approval' : 'Ban điều hành duyệt';
+  }
+  if (s.includes('sign')) {
+    return lang === 'ja' ? '署名済' : lang === 'en' ? 'Signing' : 'Ký kết';
+  }
+  if (s.includes('effective')) {
+    return lang === 'ja' ? '発効' : lang === 'en' ? 'Effectiveness' : 'Có hiệu lực';
+  }
+  if (s.includes('closing') || s.includes('closed')) {
+    return lang === 'ja' ? '完了・終了' : lang === 'en' ? 'Closed' : 'Hoàn tất';
+  }
+  return stage;
+}
+
+/**
+ * Dich nganh / linh vuc (Sectors & Procurement Fields)
+ */
+export function translateSector(sector, lang = 'vi') {
+  if (!sector || sector === 'N/A') return sector;
+  let clean = String(sector).trim().replace(/\s*\/\s*$/, '');
+  const lower = clean.toLowerCase();
+
+  // ADB / World Bank main sectors
+  if (lower.startsWith('agriculture') || lower.includes('nong nghiep') || lower.includes('nông nghiệp')) {
+    return lang === 'ja' ? '農業・天然資源・農村開発' : lang === 'en' ? 'Agriculture & Rural Development' : 'Nông nghiệp, tài nguyên & PTNT';
+  }
+  if (lower.startsWith('energy') || lower.includes('nang luong') || lower.includes('năng lượng')) {
+    return lang === 'ja' ? 'エネルギー' : lang === 'en' ? 'Energy' : 'Năng lượng';
+  }
+  if (lower.startsWith('transport') || lower.includes('giao thong') || lower.includes('giao thông')) {
+    return lang === 'ja' ? '交通・運輸インフラ' : lang === 'en' ? 'Transport' : 'Giao thông vận tải';
+  }
+  if (lower.startsWith('water and other urban') || lower.startsWith('water') || lower.includes('cap thoat nuoc') || lower.includes('cấp thoát nước')) {
+    return lang === 'ja' ? '水資源・都市インフラ' : lang === 'en' ? 'Water & Urban Infrastructure' : 'Cấp thoát nước & Đô thị';
+  }
+  if (lower.startsWith('industry and trade') || lower.startsWith('industry') || lower.includes('cong nghiep') || lower.includes('công nghiệp')) {
+    return lang === 'ja' ? '産業・貿易' : lang === 'en' ? 'Industry & Trade' : 'Công nghiệp & Thương mại';
+  }
+  if (lower.startsWith('public sector') || lower.startsWith('public admin') || lower.includes('quan ly cong') || lower.includes('quản lý công')) {
+    return lang === 'ja' ? '公共部門管理' : lang === 'en' ? 'Public Sector Management' : 'Quản lý công';
+  }
+  if (lower.startsWith('finance') || lower.includes('tai chinh') || lower.includes('tài chính')) {
+    return lang === 'ja' ? '金融・財務' : lang === 'en' ? 'Finance' : 'Tài chính - Ngân hàng';
+  }
+  if (lower.startsWith('education') || lower.includes('giao duc') || lower.includes('giáo dục')) {
+    return lang === 'ja' ? '教育' : lang === 'en' ? 'Education' : 'Giáo dục';
+  }
+  if (lower.startsWith('health') || lower.includes('y te') || lower.includes('y tế')) {
+    return lang === 'ja' ? '保健・医療' : lang === 'en' ? 'Health' : 'Y tế';
+  }
+  if (lower.startsWith('information and communication') || lower.includes('ict') || lower.includes('cong nghe') || lower.includes('công nghệ')) {
+    return lang === 'ja' ? '情報通信技術 (ICT)' : lang === 'en' ? 'Information & Communications' : 'Công nghệ thông tin & Viễn thông';
+  }
+
+  // Vietnam Procurement Fields
+  if (lower.includes('mua sam cong') || lower.includes('mua sắm công') || lower === 'muasamcong') {
+    return lang === 'ja' ? '公共調達' : lang === 'en' ? 'Public Procurement' : 'Mua sắm công';
+  }
+  if (lower.includes('duong sat') || lower.includes('đường sắt')) {
+    return lang === 'ja' ? '鉄道' : lang === 'en' ? 'Railways' : 'Đường sắt';
+  }
+  if (lower.includes('duong bo') || lower.includes('đường bộ')) {
+    return lang === 'ja' ? '道路' : lang === 'en' ? 'Roads' : 'Đường bộ';
+  }
+  if (lower.includes('cau') || lower.includes('cầu')) {
+    return lang === 'ja' ? '橋梁' : lang === 'en' ? 'Bridges' : 'Cầu';
+  }
+  if (lower.includes('cang') || lower.includes('cảng')) {
+    return lang === 'ja' ? '港湾' : lang === 'en' ? 'Seaports' : 'Cảng biển';
+  }
+  if (lower.includes('hang khong') || lower.includes('hàng không')) {
+    return lang === 'ja' ? '航空' : lang === 'en' ? 'Aviation' : 'Hàng không';
+  }
+  if (lower.includes('xay lap') || lower.includes('xây lắp') || lower === 'xl') {
+    return lang === 'ja' ? '建設工事' : lang === 'en' ? 'Works / Construction' : 'Xây lắp';
+  }
+  if (lower.includes('hang hoa') || lower.includes('hàng hóa') || lower === 'hh') {
+    return lang === 'ja' ? '物品' : lang === 'en' ? 'Goods' : 'Hàng hóa';
+  }
+  if (lower.includes('phi tu van') || lower.includes('phi tư vấn') || lower === 'ptv') {
+    return lang === 'ja' ? '非コンサルティング' : lang === 'en' ? 'Non-consulting' : 'Phi tư vấn';
+  }
+  if (lower.includes('tu van') || lower.includes('tư vấn') || lower === 'tv') {
+    return lang === 'ja' ? 'コンサルティング' : lang === 'en' ? 'Consulting' : 'Tư vấn';
+  }
+  if (lower.includes('hon hop') || lower.includes('hỗn hợp') || lower === 'hon') {
+    return lang === 'ja' ? '混合' : lang === 'en' ? 'Mixed' : 'Hỗn hợp';
+  }
+  if (lower.includes('thuoc') || lower.includes('thuốc')) {
+    return lang === 'ja' ? '医薬品' : lang === 'en' ? 'Pharmaceuticals' : 'Thuốc';
+  }
+
+  // Categories fallback
+  if (TRANSLATIONS.categories?.[lower]) {
+    return TRANSLATIONS.categories[lower][lang] || TRANSLATIONS.categories[lower].vi || clean;
+  }
+
+  return clean;
 }

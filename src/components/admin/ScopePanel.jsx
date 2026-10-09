@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Save, Loader2, X, Plus, Globe, Tag, Database, AlertTriangle, RefreshCw } from 'lucide-react';
 import { orgService } from '../../services/organizations';
 import { tUI } from '../../locales';
+import { useLang } from '../../context/LanguageContext';
 
 function TagInput({ label, icon, values, onChange, placeholder }) {
   const [text, setText] = useState('');
@@ -44,6 +45,7 @@ function TagInput({ label, icon, values, onChange, placeholder }) {
 }
 
 export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
+  const { lang, t } = useLang();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -163,7 +165,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       {/* 1. Loại bài / Nguồn thông tin */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
-          <Tag size={14} /> Loại bài & Nguồn dữ liệu chính
+          <Tag size={14} /> {lang === 'ja' ? '記事種別＆主要データソース' : (lang === 'en' ? 'Article Types & Main Sources' : 'Loại bài & Nguồn dữ liệu chính')}
           <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{tUI('ui.bo-chon-tat-ca-xem-moi-loai-bai')}</span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -188,7 +190,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       {/* 2. Nguồn dữ liệu cụ thể */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, marginBottom: 8, color: 'var(--text-primary)' }}>
-          <Database size={14} /> Nguồn báo chí cụ thể
+          <Database size={14} /> {lang === 'ja' ? '特定の報道ソース' : (lang === 'en' ? 'Specific Press Sources' : 'Nguồn báo chí cụ thể')}
           <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-muted)' }}>{tUI('ui.bo-chon-tat-ca-xem-moi-nguon-bao-chi')}</span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
@@ -211,7 +213,7 @@ export default function ScopePanel({ orgId = null, sources = [], onMessage }) {
       </div>
 
       {/* 3. Loại từ khóa / Lĩnh vực */}
-      <TagInput label="Loại từ khóa / Lĩnh vực" icon={<Tag size={14} />} values={scope.categories}
+      <TagInput label={lang === 'ja' ? 'キーワード種別／分野' : (lang === 'en' ? 'Category / Sector' : 'Loại từ khóa / Lĩnh vực')} icon={<Tag size={14} />} values={scope.categories}
         onChange={v => setScope(s => ({ ...s, categories: v }))} placeholder={tUI('ui.vd-giao-thong-cau-duong-sat-oda-dau-thau')} />
 
       {/* 4. Quốc gia */}
