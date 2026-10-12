@@ -44,6 +44,15 @@ export const adminService = {
   async deleteUser(userId) {
     await api.delete(`/admin/users/${userId}`);
   },
+  async resetUserPassword(userId, payload) {
+    const { data } = await api.post(`/admin/users/${userId}/reset-password`, payload);
+    return data;
+  },
+  async getLoginLogs(params = {}) {
+    const { data } = await api.get('/admin/login-logs', { params });
+    return data;
+  },
+
 
   // ── Sources ─────────────────────────────────────────────────────
   async getSources(force = false) {

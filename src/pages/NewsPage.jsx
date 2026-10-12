@@ -359,6 +359,7 @@ export default function NewsPage() {
   // Filters
   const [searchInput, setSearchInput] = useState(searchParams.get('q') || '');
   const [search, setSearch]           = useState(searchParams.get('q') || '');
+  const [searchOperator, setSearchOperator] = useState(searchParams.get('operator') || 'and');
   const [sortBy, setSortBy]           = useState('newest');
   const [dateFrom, setDateFrom]       = useState(searchParams.get('from') || '');
   const [dateTo, setDateTo]           = useState(searchParams.get('to') || '');
@@ -417,18 +418,20 @@ export default function NewsPage() {
     filtersRef.current = { page, search, sortBy, dateFrom, dateTo, onlyMyKw, selectedSourceId, lang };
   });
 
-  const updateQueryParams = useCallback((newQ, newFrom, newTo, newSourceId) => {
+  const updateQueryParams = useCallback((newQ, newFrom, newTo, newSourceId, newOperator) => {
     const p = new URLSearchParams();
     if (newQ) p.set('q', newQ);
     if (newFrom) p.set('from', newFrom);
     if (newTo) p.set('to', newTo);
     const sid = newSourceId !== undefined ? newSourceId : selectedSourceId;
     if (sid) p.set('source_id', sid);
+    const op = newOperator !== undefined ? newOperator : searchOperator;
+    if (op && op !== 'and') p.set('operator', op);
     const qs = p.toString();
     nav(`/news/${source}${qs ? `?${qs}` : ''}`, { replace: true });
-  }, [nav, source, selectedSourceId]);
+  }, [nav, source, selectedSourceId, searchOperator]);
 
-  const fetchArticles = useCallback(async (p = 1, overrideSearch = null, force = false, overrideFilters = null) => {
+  const fetchArticles = useCallback(async (p = 1, overrideSearch = null, force = false, overrideFilters = null, overrideOp = null) => {
     setLoading(true);
     try {
       const q = (overrideSearch !== null ? overrideSearch : search).trim();
@@ -436,6 +439,7 @@ export default function NewsPage() {
       const to = overrideFilters && overrideFilters.to !== undefined ? overrideFilters.to : dateTo;
       const sid = overrideFilters && overrideFilters.sourceId !== undefined ? overrideFilters.sourceId : selectedSourceId;
       const sec = overrideFilters && overrideFilters.sector !== undefined ? overrideFilters.sector : selectedSector;
+      const op = overrideOp !== null ? overrideOp : searchOperator;
 
       if (from && to && from > to) {
         setLoading(false);
@@ -452,6 +456,7 @@ export default function NewsPage() {
           ...(srcConfig.kind ? { kind: srcConfig.kind } : {}), ...(q ? { q } : {}),
           ...(from ? { date_from: from } : {}),
           ...(to ? { date_to: to } : {}),
+          ...(op ? { operator: op } : {}),
         });
         items = (res.items || []).map(adaptOdaToCard);
         tot = res.total || 0;
@@ -461,6 +466,7 @@ export default function NewsPage() {
           page: p, size: PAGE_SIZE, ...(srcConfig.kind ? { kind: srcConfig.kind } : {}), ...(q ? { q } : {}),
           ...(from ? { date_from: from } : {}),
           ...(to ? { date_to: to } : {}),
+          ...(op ? { operator: op } : {}),
         });
         items = (res.items || []).map(adaptProcToCard);
         tot = res.total || 0;
@@ -473,6 +479,7 @@ export default function NewsPage() {
         if (sec)            params.sector      = sec;
         if (from)           params.date_from   = from;
         if (to)             params.date_to     = to;
+        if (op)             params.operator    = op;
         if (lang !== 'vi')  params.lang        = lang; // bài có bản dịch hiện EN/JA
         const res = await articlesService.getArticles(params, force);
         items = res.items || [];
@@ -533,7 +540,7 @@ export default function NewsPage() {
   useEffect(() => {
     if (dateFrom && dateTo && dateFrom > dateTo) return;
     fetchArticles(page);
-  }, [source, search, page, sortBy, selectedSourceId, selectedSector, dateFrom, dateTo, onlyMyKw, lang, fetchArticles]);
+  }, [source, search, page, sortBy, selectedSourceId, selectedSector, dateFrom, dateTo, onlyMyKw, searchOperator, lang, fetchArticles]);
 
   // Bookmarks & background update event listener
   useEffect(() => {
@@ -553,8 +560,8 @@ export default function NewsPage() {
     const q = searchInput.trim();
     setSearch(q);
     setPage(1);
-    updateQueryParams(q, dateFrom, dateTo, selectedSourceId);
-    fetchArticles(1, q, true, { from: dateFrom, to: dateTo, sourceId: selectedSourceId });
+    updateQueryParams(q, dateFrom, dateTo, selectedSourceId, searchOperator);
+    fetchArticles(1, q, true, { from: dateFrom, to: dateTo, sourceId: selectedSourceId }, searchOperator);
   };
 
   const handleApplyDateRange = (fVal = dateFrom, tVal = dateTo) => {
@@ -838,6 +845,69 @@ export default function NewsPage() {
           </button>
         </form>
 
+        {/* Chế độ tìm kiếm: VÀ / HOẶC (Segmented control phong cách hiện đại) */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          background: 'var(--bg-surface-2)',
+          padding: 2,
+          borderRadius: 8,
+          border: '1px solid var(--border-subtle)',
+          marginTop: 6,
+          marginBottom: 6,
+        }}>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchOperator('and');
+              setPage(1);
+              fetchArticles(1, search, true, undefined, 'and');
+              updateQueryParams(search, dateFrom, dateTo, selectedSourceId, 'and');
+            }}
+            style={{
+              padding: '4px 0',
+              fontSize: 11,
+              fontWeight: searchOperator === 'and' ? 700 : 500,
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'center',
+              background: searchOperator === 'and' ? 'var(--brand-600, #2563eb)' : 'transparent',
+              color: searchOperator === 'and' ? '#ffffff' : 'var(--text-secondary)',
+              boxShadow: searchOperator === 'and' ? '0 1px 3px rgba(37,99,235,0.25)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+            title={t('news.matchAndDesc')}
+          >
+            {t('news.matchAnd')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchOperator('or');
+              setPage(1);
+              fetchArticles(1, search, true, undefined, 'or');
+              updateQueryParams(search, dateFrom, dateTo, selectedSourceId, 'or');
+            }}
+            style={{
+              padding: '4px 0',
+              fontSize: 11,
+              fontWeight: searchOperator === 'or' ? 700 : 500,
+              borderRadius: 6,
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'center',
+              background: searchOperator === 'or' ? 'var(--brand-600, #2563eb)' : 'transparent',
+              color: searchOperator === 'or' ? '#ffffff' : 'var(--text-secondary)',
+              boxShadow: searchOperator === 'or' ? '0 1px 3px rgba(37,99,235,0.25)' : 'none',
+              transition: 'all 0.15s ease',
+            }}
+            title={t('news.matchOrDesc')}
+          >
+            {t('news.matchOr')}
+          </button>
+        </div>
+
         {/* Danh sách từ khóa đã lưu của người dùng (giới hạn 2 dòng, có mở rộng) */}
         {(() => {
           const defaultKws = ['cầu', 'cao tốc', 'đường sắt', 'đấu thầu', 'ODA'];
@@ -862,31 +932,58 @@ export default function NewsPage() {
               >
                 {activeKws.map((kw) => {
                   const tagText = kw.startsWith('#') ? kw : `#${kw}`;
-                  const rawTerm = kw.replace(/^#/, '').toLowerCase();
+                  const rawClean = kw.replace(/^#/, '').trim();
+                  const rawTerm = rawClean.toLowerCase();
                   const curSearch = (search || '').trim().toLowerCase();
+                  const curInput = (searchInput || '').trim().toLowerCase();
+
+                  // Kiểm tra tag có đang active hay không:
+                  // Khớp đơn lẻ HOẶC nằm trong chuỗi tìm kiếm nhiều từ (#tag đi kèm từ khác)
+                  const escapedTerm = rawTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  const tagRegex = new RegExp(`(^|\\s)#${escapedTerm}(\\s|$)`, 'i');
                   const isActive =
                     curSearch === tagText.toLowerCase() ||
                     curSearch === rawTerm ||
-                    curSearch === `#${rawTerm}`;
+                    curSearch === `#${rawTerm}` ||
+                    tagRegex.test(curSearch) ||
+                    tagRegex.test(curInput);
 
                   return (
                     <button
                       key={kw}
                       type="button"
                       onClick={() => {
+                        let nextInput = '';
+                        const currentVal = (searchInput || '').trim();
+
                         if (isActive) {
-                          setSearchInput('');
-                          setSearch('');
-                          setPage(1);
-                          fetchArticles(1, '');
-                          updateQueryParams('', dateFrom, dateTo);
+                          // Đang chọn -> Click để bỏ chọn tag này
+                          if (
+                            currentVal.toLowerCase() === rawTerm ||
+                            currentVal.toLowerCase() === `#${rawTerm}` ||
+                            currentVal.toLowerCase() === tagText.toLowerCase()
+                          ) {
+                            nextInput = '';
+                          } else {
+                            nextInput = currentVal
+                              .replace(tagRegex, ' ')
+                              .replace(/\s+/g, ' ')
+                              .trim();
+                          }
                         } else {
-                          setSearchInput(tagText);
-                          setSearch(tagText);
-                          setPage(1);
-                          fetchArticles(1, tagText);
-                          updateQueryParams(tagText, dateFrom, dateTo);
+                          // Chưa chọn -> Click để CỘNG DỒN thêm tag (cho phép nhiều từ khóa)
+                          if (!currentVal) {
+                            nextInput = tagText;
+                          } else {
+                            nextInput = `${currentVal} ${tagText}`;
+                          }
                         }
+
+                        setSearchInput(nextInput);
+                        setSearch(nextInput);
+                        setPage(1);
+                        fetchArticles(1, nextInput, true);
+                        updateQueryParams(nextInput, dateFrom, dateTo);
                       }}
                       style={{
                         fontSize: 11,

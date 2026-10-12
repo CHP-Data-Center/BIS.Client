@@ -5,7 +5,7 @@ import {
   ShieldCheck, RefreshCw, Users, Database, ShieldAlert, Mail, Plus, Trash2, Sparkles, FolderKanban,
   CheckCircle2, AlertCircle, Loader2, Globe, Zap, Activity,
   Search, Check, X, Edit, CheckCircle, XCircle, Building2,
-  ChevronDown, Eye, Pause, Play
+  ChevronDown, Eye, Pause, Play, Key, History, Copy
 } from 'lucide-react';
 
 // Nhóm nguồn theo tên miền (cha–con). Lấy URL từ nhiều field có thể có.
@@ -183,6 +183,20 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
 
+  // Login Logs & Password Reset states (FR-08)
+  const [loginLogs, setLoginLogs] = useState([]);
+  const [loginLogsTotal, setLoginLogsTotal] = useState(0);
+  const [loginLogsPage, setLoginLogsPage] = useState(1);
+  const [loginLogsSize, setLoginLogsSize] = useState(10);
+  const [loginLogsLoading, setLoginLogsLoading] = useState(false);
+  const [loginLogsSearch, setLoginLogsSearch] = useState('');
+
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [resetPasswordMode, setResetPasswordMode] = useState('direct'); // 'direct' | 'email'
+  const [newPasswordVal, setNewPasswordVal] = useState('');
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [copiedPw, setCopiedPw] = useState(false);
+
   // New item forms
   const [newUser, setNewUser]           = useState({
     email: '',
@@ -222,6 +236,7 @@ export default function AdminPage() {
       if (e.key === 'Escape' || e.key === 'Esc') {
         if (editingUser) setEditingUser(null);
         if (viewingUser) setViewingUser(null);
+        if (resetPasswordUser) setResetPasswordUser(null);
         if (editingSource) setEditingSource(null);
         if (showBuySlotModal) setShowBuySlotModal(false);
         if (deleteConfirm) setDeleteConfirm(null);
@@ -229,17 +244,71 @@ export default function AdminPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingUser, viewingUser, editingSource, showBuySlotModal, deleteConfirm]);
+  }, [editingUser, viewingUser, resetPasswordUser, editingSource, showBuySlotModal, deleteConfirm]);
 
   const showAlert = (type, text) => {
     setMsg({ type, text });
     setTimeout(() => setMsg(null), 4500);
   };
 
+  const loadLoginLogs = async (page = loginLogsPage, size = loginLogsSize, query = loginLogsSearch) => {
+    setLoginLogsLoading(true);
+    try {
+      const res = await adminService.getLoginLogs({ page, size, search: query || undefined });
+      setLoginLogs(res?.items || []);
+      setLoginLogsTotal(res?.total || 0);
+      setLoginLogsPage(page);
+      setLoginLogsSize(size);
+    } catch (err) {
+      showAlert('error', err.response?.data?.detail || t('admin.logsEmpty'));
+    } finally {
+      setLoginLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      loadLoginLogs(loginLogsPage, loginLogsSize, loginLogsSearch);
+    }
+  }, [activeTab]);
+
+  const handleGeneratePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*';
+    let pw = '';
+    for (let i = 0; i < 12; i++) {
+      pw += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPasswordVal(pw);
+  };
+
+  const handleExecuteResetPassword = async (e) => {
+    e?.preventDefault();
+    if (!resetPasswordUser) return;
+    if (resetPasswordMode === 'direct' && !newPasswordVal.trim()) {
+      showAlert('error', t('admin.newPasswordPlaceholder'));
+      return;
+    }
+    setResetPasswordLoading(true);
+    try {
+      const payload = resetPasswordMode === 'email'
+        ? { send_email: true }
+        : { new_password: newPasswordVal.trim(), send_email: false };
+      const res = await adminService.resetUserPassword(resetPasswordUser.id, payload);
+      showAlert('success', res.sent_email ? t('admin.resetEmailSuccess') : t('admin.resetSuccess'));
+      setResetPasswordUser(null);
+      setNewPasswordVal('');
+    } catch (err) {
+      showAlert('error', err.response?.data?.detail || t('common.errorOccurred'));
+    } finally {
+      setResetPasswordLoading(false);
+    }
+  };
+
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const [u, s, pending, logs, bl, wl, orgs] = await Promise.all([
+      const [u, s, pending, logs, bl, wl, orgs, loginLogsRes] = await Promise.all([
         adminService.getUsers().catch(() => []),
         adminService.getSources().catch(() => []),
         isSuperAdmin ? adminService.getPendingSources().catch(() => []) : Promise.resolve([]),
@@ -249,7 +318,10 @@ export default function AdminPage() {
         // Danh sách MỌI phân vùng là API của super admin — admin phân vùng gọi sẽ 403,
         // và họ cũng chỉ cần vùng của mình (tab "Phân Vùng Của Tôi").
         isSuperAdmin ? orgService.listOrganizations().catch(() => []) : Promise.resolve([]),
+        adminService.getLoginLogs({ page: 1, size: 10 }).catch(() => ({ items: [], total: 0 })),
       ]);
+      setLoginLogs(loginLogsRes?.items || []);
+      setLoginLogsTotal(loginLogsRes?.total || 0);
       setUsers((u || []).map(usr => {
         const uKey = usr.email || usr.id;
         const normalizedRole = (usr.role || 'user').toLowerCase();
@@ -807,6 +879,7 @@ export default function AdminPage() {
   const tabs = [
     { id: 'crawl',     label: t('admin.sourcesTab'), icon: <Database size={16} />, badge: sources.length },
     { id: 'users',     label: t('admin.usersTab'),  icon: <Users size={16} />,    badge: users.length },
+    { id: 'logs',      label: t('admin.logsTab'),   icon: <History size={16} />,  badge: loginLogsTotal },
     // Đa tổ chức (ADR-005): super admin quản MỌI phân vùng; admin phân vùng chỉ vùng mình
     // (đổi tên + phạm vi dữ liệu) — gộp chung 1 tab để không phải nhảy qua lại.
     ...(isSuperAdmin ? [{ id: 'orgs', label: t('admin.orgsTab'), icon: <Building2 size={16} /> }] : []),
@@ -1778,6 +1851,19 @@ export default function AdminPage() {
                               </button>
                               <button
                                 className="btn btn-ghost btn-sm"
+                                onClick={() => {
+                                  setResetPasswordUser(u);
+                                  setResetPasswordMode('direct');
+                                  setNewPasswordVal('');
+                                  setCopiedPw(false);
+                                }}
+                                style={{ color: '#059669', padding: '6px 10px' }}
+                                title={t('admin.resetPassword')}
+                              >
+                                <Key size={14} /> {t('admin.resetPassword')}
+                              </button>
+                              <button
+                                className="btn btn-ghost btn-sm"
                                 onClick={() => handleDeleteUser(u)}
                                 style={{ color: '#ef4444', padding: '6px 10px' }}
                                 title={tUI('ui.xoa-tai-khoan')}
@@ -1792,6 +1878,177 @@ export default function AdminPage() {
                   </tbody>
                 </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: NHẬT KÝ ĐĂNG NHẬP (FR-08) */}
+          {activeTab === 'logs' && (
+            <div style={{
+              background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+              borderRadius: 20, padding: 24, boxShadow: '0 6px 24px rgba(0,0,0,0.03)',
+            }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <History size={18} style={{ color: '#6366f1' }} /> {t('admin.logsTitle')}
+                  </div>
+                  <p style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 4 }}>
+                    {t('admin.logsSubtitle')}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ position: 'relative', width: 260 }}>
+                    <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <input
+                      className="form-input"
+                      placeholder={t('admin.logsSearch')}
+                      value={loginLogsSearch}
+                      onChange={e => setLoginLogsSearch(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          setLoginLogsPage(1);
+                          loadLoginLogs(1, loginLogsSize, loginLogsSearch);
+                        }
+                      }}
+                      style={{ paddingLeft: 36, height: 38, fontSize: 12.5 }}
+                    />
+                  </div>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => loadLoginLogs(loginLogsPage, loginLogsSize, loginLogsSearch)}
+                    disabled={loginLogsLoading}
+                    style={{ height: 38, gap: 6, padding: '0 14px' }}
+                    title={t('admin.logsRefresh')}
+                  >
+                    <RefreshCw size={14} className={loginLogsLoading ? 'spin' : ''} />
+                    {t('admin.logsRefresh')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--border-subtle)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-subtle, #f8fafc)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, letterSpacing: '0.5px' }}>
+                      <th style={{ padding: '12px 16px' }}>#</th>
+                      <th style={{ padding: '12px 16px' }}>{t('admin.logsThUser')}</th>
+                      <th style={{ padding: '12px 16px' }}>{t('admin.logsThIp')}</th>
+                      <th style={{ padding: '12px 16px' }}>{t('admin.logsThUserAgent')}</th>
+                      <th style={{ padding: '12px 16px' }}>{t('admin.logsThTime')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loginLogsLoading ? (
+                      <tr>
+                        <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <Loader2 size={24} style={{ animation: 'spin 0.8s linear infinite', margin: '0 auto 10px' }} />
+                          <div>{lang === 'ja' ? '読み込み中...' : (lang === 'en' ? 'Loading logs...' : 'Đang tải nhật ký...')}</div>
+                        </td>
+                      </tr>
+                    ) : loginLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                          {t('admin.logsEmpty')}
+                        </td>
+                      </tr>
+                    ) : (
+                      loginLogs.map((log, idx) => (
+                        <tr key={log.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>
+                          <td style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: 12 }}>
+                            {(loginLogsPage - 1) * loginLogsSize + idx + 1}
+                          </td>
+                          <td style={{ padding: '12px 16px' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{log.user_name || log.user_email}</div>
+                            <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{log.user_email}</div>
+                          </td>
+                          <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, color: '#2563eb' }}>
+                            {log.ip || '—'}
+                          </td>
+                          <td style={{ padding: '12px 16px', color: 'var(--text-secondary)', fontSize: 12, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={log.user_agent}>
+                            {log.user_agent || '—'}
+                          </td>
+                          <td style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
+                            {log.created_at ? new Date(log.created_at).toLocaleString(lang === 'ja' ? 'ja-JP' : (lang === 'en' ? 'en-US' : 'vi-VN')) : '—'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination bar */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+                marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', fontSize: 13, color: 'var(--text-muted)',
+              }}>
+                {/* Left: Per page dropdown & showing summary */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 600 }}>{t('admin.logsPerPage')}</span>
+                  <select
+                    className="form-input"
+                    value={loginLogsSize}
+                    onChange={e => {
+                      const newSize = parseInt(e.target.value, 10);
+                      setLoginLogsSize(newSize);
+                      setLoginLogsPage(1);
+                      loadLoginLogs(1, newSize, loginLogsSearch);
+                    }}
+                    style={{ width: 85, height: 34, padding: '4px 8px', fontSize: 12.5, borderRadius: 8 }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  {loginLogsTotal > 0 && (
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {t('admin.logsShowing', {
+                        from: (loginLogsPage - 1) * loginLogsSize + 1,
+                        to: Math.min(loginLogsPage * loginLogsSize, loginLogsTotal),
+                        total: loginLogsTotal,
+                      })}
+                    </span>
+                  )}
+                </div>
+
+                {/* Right: Page navigation */}
+                {Math.ceil(loginLogsTotal / loginLogsSize) > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={loginLogsPage <= 1 || loginLogsLoading}
+                      onClick={() => {
+                        const newPage = Math.max(1, loginLogsPage - 1);
+                        setLoginLogsPage(newPage);
+                        loadLoginLogs(newPage, loginLogsSize, loginLogsSearch);
+                      }}
+                      style={{ height: 34, padding: '0 12px', borderRadius: 8, fontSize: 12 }}
+                    >
+                      {t('common.previous')}
+                    </button>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, padding: '0 8px', color: 'var(--text-primary)' }}>
+                      {loginLogsPage} / {Math.max(1, Math.ceil(loginLogsTotal / loginLogsSize))}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      disabled={loginLogsPage >= Math.ceil(loginLogsTotal / loginLogsSize) || loginLogsLoading}
+                      onClick={() => {
+                        const newPage = Math.min(Math.ceil(loginLogsTotal / loginLogsSize), loginLogsPage + 1);
+                        setLoginLogsPage(newPage);
+                        loadLoginLogs(newPage, loginLogsSize, loginLogsSearch);
+                      }}
+                      style={{ height: 34, padding: '0 12px', borderRadius: 8, fontSize: 12 }}
+                    >
+                      {t('common.next')}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2660,6 +2917,165 @@ export default function AdminPage() {
         </div>,
         document.body
       )}
+
+      {/* ── Reset Password Modal (FR-08) ── */}
+      {resetPasswordUser && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setResetPasswordUser(null); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            width: '100vw', height: '100vh', boxSizing: 'border-box',
+            background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000000, padding: 20,
+          }}
+        >
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+            borderRadius: 24, width: '100%', maxWidth: 520,
+            boxShadow: '0 24px 60px rgba(0,0,0,0.35)', position: 'relative',
+            maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column',
+            overflow: 'hidden', animation: 'fadeIn 0.2s ease-out', margin: 'auto',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}>
+                  <Key size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                    {t('admin.resetPasswordTitle')}
+                  </h3>
+                  <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                    {resetPasswordUser.display_name} ({resetPasswordUser.email})
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setResetPasswordUser(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 6, borderRadius: 8 }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={handleExecuteResetPassword} style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                {t('admin.resetPasswordDesc')}
+              </p>
+
+              {/* Mode Switcher */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, background: 'var(--bg-subtle, #f1f5f9)', padding: 4, borderRadius: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setResetPasswordMode('direct')}
+                  style={{
+                    padding: '8px 12px', borderRadius: 9, fontSize: 12.5, fontWeight: 700,
+                    border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                    background: resetPasswordMode === 'direct' ? 'white' : 'transparent',
+                    color: resetPasswordMode === 'direct' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    boxShadow: resetPasswordMode === 'direct' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  🔑 {t('admin.resetModeDirect')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetPasswordMode('email')}
+                  style={{
+                    padding: '8px 12px', borderRadius: 9, fontSize: 12.5, fontWeight: 700,
+                    border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                    background: resetPasswordMode === 'email' ? 'white' : 'transparent',
+                    color: resetPasswordMode === 'email' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    boxShadow: resetPasswordMode === 'email' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  ✉️ {t('admin.resetModeEmail')}
+                </button>
+              </div>
+
+              {resetPasswordMode === 'direct' ? (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label className="form-label" style={{ margin: 0 }}>{lang === 'ja' ? '新しいパスワード' : (lang === 'en' ? 'New Password' : 'Mật khẩu mới')}</label>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={handleGeneratePassword}
+                      style={{ fontSize: 11.5, color: '#2563eb', padding: '2px 8px', gap: 4 }}
+                    >
+                      <Sparkles size={13} /> {t('admin.generateRandomPassword')}
+                    </button>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={newPasswordVal}
+                      onChange={e => setNewPasswordVal(e.target.value)}
+                      placeholder={t('admin.newPasswordPlaceholder')}
+                      style={{ fontFamily: 'monospace', fontSize: 13, paddingRight: 40 }}
+                    />
+                    {newPasswordVal && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(newPasswordVal);
+                          setCopiedPw(true);
+                          setTimeout(() => setCopiedPw(false), 2000);
+                        }}
+                        style={{
+                          position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                          background: 'none', border: 'none', cursor: 'pointer', color: copiedPw ? '#10b981' : 'var(--text-muted)',
+                          padding: 4,
+                        }}
+                        title={t('admin.copiedPassword')}
+                      >
+                        {copiedPw ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                    )}
+                  </div>
+                  {copiedPw && (
+                    <span style={{ fontSize: 11.5, color: '#10b981', marginTop: 4, display: 'inline-block' }}>
+                      {t('admin.copiedPassword')}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div style={{ padding: 14, borderRadius: 12, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.18)', fontSize: 13, color: 'var(--text-secondary)' }}>
+                  <div>{t('admin.sendEmailNotice')}</div>
+                  <strong style={{ color: '#4f46e5', display: 'block', marginTop: 4 }}>{resetPasswordUser.email}</strong>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setResetPasswordUser(null)}
+                  style={{ padding: '8px 16px', borderRadius: 10 }}
+                >
+                  {lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy')}
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={resetPasswordLoading}
+                  style={{ padding: '8px 20px', borderRadius: 10, gap: 6, fontWeight: 700 }}
+                >
+                  {resetPasswordLoading ? <Loader2 size={15} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Key size={15} />}
+                  {t('admin.btnConfirmReset')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ── Edit Source Modal ── */}
       {editingSource && createPortal(
         <div

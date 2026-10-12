@@ -8,39 +8,94 @@ import { useLang } from '../context/LanguageContext';
 import { tUI } from '../locales';
 import { stripAccents } from '../utils/format';
 
+export function getQueryTokens(query) {
+  if (!query || !query.trim()) return [];
+  const q = query.trim();
+  const rawTokens = [];
+
+  // Tách các cụm theo hashtag nếu có
+  if (q.includes('#')) {
+    const segments = q.split('#').map((s) => s.trim()).filter(Boolean);
+    for (const seg of segments) {
+      rawTokens.push(seg);
+      const subWords = seg.split(/\s+/).filter((w) => w.trim().length >= 2);
+      if (subWords.length > 1) {
+        for (let i = 0; i < subWords.length - 1; i++) {
+          rawTokens.push(`${subWords[i]} ${subWords[i + 1]}`);
+        }
+        rawTokens.push(...subWords);
+      }
+    }
+  } else {
+    rawTokens.push(q);
+    const subWords = q.split(/\s+/).filter((w) => w.trim().length >= 2);
+    if (subWords.length > 1) {
+      for (let i = 0; i < subWords.length - 1; i++) {
+        rawTokens.push(`${subWords[i]} ${subWords[i + 1]}`);
+      }
+      rawTokens.push(...subWords);
+    }
+  }
+
+  const seen = new Set();
+  const sorted = [];
+  for (const t of rawTokens) {
+    const clean = t.replace(/^#/, '').trim();
+    if (clean.length >= 2 && !seen.has(clean.toLowerCase())) {
+      seen.add(clean.toLowerCase());
+      sorted.push(clean);
+    }
+  }
+  return sorted.sort((a, b) => b.length - a.length);
+}
+
 function isTagMatched(tag, query) {
-  if (!query || !query.trim()) return false;
-  const qClean = query.trim().replace(/^#/, '');
-  const normTag = stripAccents(tag);
-  const normQ = stripAccents(qClean);
-  return normTag.includes(normQ);
+  if (!tag || !query || !query.trim()) return false;
+  const normTag = stripAccents(tag.replace(/^#/, '').trim().toLowerCase());
+  if (!normTag) return false;
+
+  const tokens = getQueryTokens(query);
+  for (const token of tokens) {
+    const normToken = stripAccents(token.replace(/^#/, '').trim().toLowerCase());
+    if (!normToken) continue;
+    if (normTag === normToken || normTag.includes(normToken) || normToken.includes(normTag)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function highlightText(text, query) {
   if (!text || !query || !query.trim()) return text;
-  const qClean = query.trim();
+  const tokens = getQueryTokens(query);
+  if (!tokens.length) return text;
+
   try {
-    const escaped = qClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
-    return parts.map((part, i) =>
-      part.toLowerCase() === qClean.toLowerCase() ? (
-        <mark
-          key={i}
-          style={{
-            backgroundColor: 'rgba(254, 240, 138, 0.95)',
-            color: '#854d0e',
-            fontWeight: 700,
-            padding: '0px 3px',
-            borderRadius: 3,
-            boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
-          }}
-        >
-          {part}
-        </mark>
-      ) : (
-        part
-      )
-    );
+    const escaped = tokens.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, i) => {
+      const isMatch = tokens.some((t) => t.toLowerCase() === part.toLowerCase());
+      if (isMatch) {
+        return (
+          <mark
+            key={i}
+            style={{
+              backgroundColor: 'rgba(254, 240, 138, 0.95)',
+              color: '#854d0e',
+              fontWeight: 700,
+              padding: '0px 3px',
+              borderRadius: 3,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+            }}
+          >
+            {part}
+          </mark>
+        );
+      }
+      return part;
+    });
   } catch {
     return text;
   }
