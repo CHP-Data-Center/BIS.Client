@@ -100,6 +100,7 @@ export default function LoginPage() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetToken, setResetToken] = useState('');
   const [resetNewPw, setResetNewPw] = useState('');
+  const [resetConfirmPw, setResetConfirmPw] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState(null);
 
@@ -139,6 +140,28 @@ export default function LoginPage() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (!resetToken.trim() || !resetNewPw) return;
+    if (resetNewPw.length < 8) {
+      setResetMsg({
+        type: 'error',
+        text: lang === 'ja'
+          ? 'パスワードは8文字以上である必要があります。'
+          : (lang === 'en'
+            ? 'Password must be at least 8 characters.'
+            : 'Mật khẩu phải có ít nhất 8 ký tự.'),
+      });
+      return;
+    }
+    if (resetNewPw !== resetConfirmPw) {
+      setResetMsg({
+        type: 'error',
+        text: t('settings.pwMismatch') || (lang === 'ja'
+          ? '新しいパスワードが一致しません。'
+          : (lang === 'en'
+            ? 'The new passwords do not match.'
+            : 'Mật khẩu xác nhận không khớp.')),
+      });
+      return;
+    }
     setResetLoading(true);
     setResetMsg(null);
     try {
@@ -147,6 +170,7 @@ export default function LoginPage() {
       setTimeout(() => {
         setShowResetModal(false);
         setResetNewPw('');
+        setResetConfirmPw('');
       }, 2500);
     } catch (err) {
       setResetMsg({ type: 'error', text: err.response?.data?.detail || t('auth.resetTokenInvalid') });
@@ -701,26 +725,30 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label className="form-label">{tUI('ui.token-khoi-phuc')}</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder={tUI('ui.ma-token-nhan-qua-email')}
-                  value={resetToken}
-                  onChange={(e) => setResetToken(e.target.value)}
-                  required
-                />
-              </div>
+              {/* Token được truyền ngầm từ đường link email, ẩn khỏi UI */}
+              <input type="hidden" value={resetToken} />
 
               <div>
-                <label className="form-label">{tUI('ui.mat-khau-moi')}</label>
+                <label className="form-label">{tUI('ui.mat-khau-moi')} *</label>
                 <input
                   type="password"
                   className="form-input"
                   placeholder={tUI('ui.8-ky-tu')}
                   value={resetNewPw}
                   onChange={(e) => setResetNewPw(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="form-label">{t('settings.confirmNewPassword')} *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder={tUI('ui.8-ky-tu')}
+                  value={resetConfirmPw}
+                  onChange={(e) => setResetConfirmPw(e.target.value)}
                   required
                 />
               </div>
