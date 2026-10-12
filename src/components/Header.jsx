@@ -325,7 +325,10 @@ export default function Header({ onToggleSidebar, isSidebarOpen }) {
     }
   };
 
-  const displayName = user?.display_name || user?.name || user?.email || 'User';
+  const rawName = user?.display_name || user?.name || user?.email || 'User';
+  const displayName = (rawName === 'Quản trị Tối cao' || rawName === 'Super Admin' || rawName === 'Quản trị tối cao' || user?.email === 'superadmin@ckjvn.vn')
+    ? 'CDC'
+    : rawName;
   const nameParts = displayName.split(' ').filter(Boolean);
   const shortName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : 'User';
 

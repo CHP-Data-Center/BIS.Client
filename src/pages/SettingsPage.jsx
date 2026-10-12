@@ -192,11 +192,11 @@ export default function SettingsPage() {
           </div>
           <div>
             <div style={{ fontSize: 20, fontWeight: 900, color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
-              {(user?.name === 'Quản trị Tối cao' || user?.name === 'Super Admin')
-                ? t('role.superAdmin')
+              {(user?.name === 'Quản trị Tối cao' || user?.name === 'Super Admin' || user?.email === 'superadmin@ckjvn.vn' || user?.display_name === 'Quản trị Tối cao')
+                ? 'CDC'
                 : (user?.name === 'Quản trị Phân Vùng'
                   ? t('role.regionAdmin')
-                  : (user?.name || user?.email))}
+                  : (user?.name || user?.display_name || user?.email))}
               {user?.role === 'super_admin' ? (
                 <span style={{
                   fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,

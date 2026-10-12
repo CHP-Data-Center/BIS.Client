@@ -40,8 +40,12 @@ export const authService = {
   },
 
   /** Quên mật khẩu — luôn 204, không lộ email tồn tại */
-  async forgotPassword(email) {
-    await api.post('/auth/forgot-password', { email });
+  async forgotPassword(email, lang = 'vi', frontendBaseUrl = null) {
+    await api.post('/auth/forgot-password', {
+      email,
+      lang,
+      frontend_base_url: frontendBaseUrl,
+    });
   },
 
   /** Đặt lại mật khẩu bằng token email */

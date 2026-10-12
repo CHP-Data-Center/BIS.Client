@@ -32,7 +32,7 @@ import { tUI } from '../locales';
 
 function formatUserPackage(u, lang = 'vi') {
   if (!u) return '';
-  if (u.role === 'super_admin') return '👑 FULL DATA (SUPER ADMIN)';
+  if (u.role === 'super_admin') return '👑 FULL DATA (ADMIN)';
   if (u.active_package === 'enterprise' || u.role === 'admin') {
     const max = u.max_users || 10;
     if (lang === 'ja') return `🏢 エンタープライズプラン (最大${max}名)`;
@@ -127,12 +127,10 @@ function formatDisplayName(name, lang = 'vi') {
   if (name === 'Quản trị Phân Vùng') {
     if (lang === 'ja') return '地域管理者';
     if (lang === 'en') return 'Regional Admin';
-    return 'Quản trị Phân Vùng';
+    return 'Admin Tổ Chức';
   }
-  if (name === 'Quản trị Tối cao' || name === 'Super Admin') {
-    if (lang === 'ja') return '最高管理者';
-    if (lang === 'en') return 'Super Admin';
-    return 'Quản trị Tối cao';
+  if (name === 'Quản trị Tối cao' || name === 'Super Admin' || name === 'Quản trị tối cao') {
+    return 'CDC';
   }
   return name;
 }
@@ -182,6 +180,7 @@ export default function AdminPage() {
   // Edit User state
   const [editingUser, setEditingUser] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
+  const [customizingThemes, setCustomizingThemes] = useState(false);
 
   // Login Logs & Password Reset states (FR-08)
   const [loginLogs, setLoginLogs] = useState([]);
@@ -290,8 +289,15 @@ export default function AdminPage() {
     }
     setResetPasswordLoading(true);
     try {
+      const baseUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}`
+        : null;
       const payload = resetPasswordMode === 'email'
-        ? { send_email: true }
+        ? {
+            send_email: true,
+            lang: lang || 'vi',
+            frontend_base_url: baseUrl,
+          }
         : { new_password: newPasswordVal.trim(), send_email: false };
       const res = await adminService.resetUserPassword(resetPasswordUser.id, payload);
       showAlert('success', res.sent_email ? t('admin.resetEmailSuccess') : t('admin.resetSuccess'));
@@ -533,7 +539,7 @@ export default function AdminPage() {
     const myMaxUsers = user?.max_users || parseInt(localStorage.getItem(`bis_max_users_${user?.email || user?.id}`) || '10', 10);
     const currentRegionalUsers = users.filter(u => u.role !== 'super_admin' && (isSuperAdmin || u.region === userRegion));
     if (isRegionalAdmin && currentRegionalUsers.length >= myMaxUsers) {
-      showAlert('error', `⚠️ Bạn đã đạt giới hạn tối đa ${myMaxUsers} tài khoản thành viên của Gói Enterprise Tổ Chức. Vui lòng liên hệ Super Admin để nâng cấp mua thêm slot!`);
+      showAlert('error', `⚠️ Bạn đã đạt giới hạn tối đa ${myMaxUsers} tài khoản thành viên của Gói Enterprise Tổ Chức. Vui lòng liên hệ Admin để nâng cấp mua thêm slot!`);
       return;
     }
 
@@ -623,6 +629,7 @@ export default function AdminPage() {
     const validRoles = ['super_admin', 'admin', 'staff', 'user'];
     const role = validRoles.includes(rawRole) ? rawRole : 'user';
 
+    setCustomizingThemes(false);
     setEditingUser({
       id: u.id,
       email: u.email || '',
@@ -735,7 +742,7 @@ export default function AdminPage() {
     try {
       const created = await adminService.createSource(newSource);
       if (isRegionalAdmin || created.status === 'pending') {
-        showAlert('success', `⚡ Đã gửi đề xuất nguồn tin "${created.name}" tới Super Admin chờ duyệt!`);
+        showAlert('success', `⚡ Đã gửi đề xuất nguồn tin "${created.name}" tới Admin chờ duyệt!`);
       } else {
         setSources(prev => [...prev, created]);
         showAlert('success', `Đã thêm nguồn tin "${created.name}"!`);
@@ -771,7 +778,7 @@ export default function AdminPage() {
           const exists = prev.some(p => p.id === updated.id);
           return exists ? prev.map(p => p.id === updated.id ? updated : p) : [...prev, updated];
         });
-        showAlert('success', `⚡ Đã cập nhật nguồn tin "${updated.name}"! Đề xuất đã được gửi tới Super Admin chờ duyệt lại.`);
+        showAlert('success', `⚡ Đã cập nhật nguồn tin "${updated.name}"! Đề xuất đã được gửi tới Admin chờ duyệt lại.`);
       } else {
         setSources(prev => prev.map(s => s.id === updated.id ? updated : s));
         showAlert('success', `Đã cập nhật nguồn tin "${updated.name}" thành công!`);
@@ -1063,7 +1070,7 @@ export default function AdminPage() {
                 }}>
                   <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <AlertCircle size={20} style={{ color: '#d97706' }} />
-                    📥 {lang === 'ja' ? `Super Admin承認待ちの提案ソース (${pendingSources.length})` : (lang === 'en' ? `Pending Source Suggestions (${pendingSources.length})` : `Nguồn Tin Đề Xuất Chờ Super Admin Duyệt (${pendingSources.length})`)}
+                    📥 {lang === 'ja' ? `Admin承認待ちの提案ソース (${pendingSources.length})` : (lang === 'en' ? `Pending Source Suggestions (${pendingSources.length})` : `Nguồn Tin Đề Xuất Chờ Admin Duyệt (${pendingSources.length})`)}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {pendingSources.map(ps => (
@@ -1339,7 +1346,7 @@ export default function AdminPage() {
                                     padding: '6px 10px', cursor: khongDuocDoi ? 'not-allowed' : 'pointer',
                                   }}
                                   title={khongDuocDoi
-                                    ? (lang === 'ja' ? '共用ソース — Super Adminのみ一時停止可能' : (lang === 'en' ? 'Shared source — Super Admin only' : 'Nguồn dùng chung — chỉ Super Admin được tạm ngưng'))
+                                    ? (lang === 'ja' ? '共用ソース — Adminのみ一時停止可能' : (lang === 'en' ? 'Shared source — Admin only' : 'Nguồn dùng chung — chỉ Admin được tạm ngưng'))
                                     : (s.is_active === false
                                       ? (lang === 'ja' ? '再開: 次回の収集から反映' : (lang === 'en' ? 'Reactivate: collected from next run' : 'Kích hoạt lại: nguồn được thu thập từ lượt kế tiếp'))
                                       : (lang === 'ja' ? '一時停止: 次回以降の収集をスキップ' : (lang === 'en' ? 'Pause: skip in future runs' : 'Tạm ngưng: các lượt thu thập sau bỏ qua nguồn này')))}
@@ -1758,15 +1765,16 @@ export default function AdminPage() {
                       const isMe = user && (u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase()));
                       return (
                         <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                          <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                               <div style={{
-                                width: 32, height: 32, borderRadius: '50%',
+                                width: 36, height: 36, minWidth: 36, minHeight: 36, flexShrink: 0,
+                                borderRadius: '50%',
                                 background: isAdminRole ? 'linear-gradient(135deg, #f59e0b, #ec4899)' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
                                 color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 12, fontWeight: 800,
+                                fontSize: 13, fontWeight: 800,
                               }}>
-                                {(u.display_name || u.email).slice(0, 2).toUpperCase()}
+                                {(formatDisplayName(u.display_name, lang) || u.email).slice(0, 2).toUpperCase()}
                               </div>
                               <span>
                                 {formatDisplayName(u.display_name, lang) || u.email}
@@ -1808,13 +1816,18 @@ export default function AdminPage() {
                           </td>
                           <td style={{ padding: '14px 20px' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 180 }}>
-                              <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569', whiteSpace: 'nowrap' }}>{tUI('ui.mac-dinh')}</span>
-                              {(u.purchased_themes || []).map(tKey => (
-                                <span key={tKey} style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
-                                  {tKey === 'classic' ? 'Win98' : tKey === 'sapphire' ? 'Sapphire' : tKey === 'luxury' ? 'Luxury' : tKey === 'anime' ? 'Anime 🌸' : tKey}
-                                </span>
-                              ))}
-                              {u.role === 'super_admin' && <span style={{ fontSize: 9.5, fontWeight: 800, color: '#b45309', background: '#fffbeb', padding: '1px 6px', borderRadius: 6, border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>👑 All Themes</span>}
+                              {(u.role === 'super_admin' || (u.purchased_themes && u.purchased_themes.length >= 4)) ? (
+                                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#b45309', background: '#fffbeb', padding: '2px 8px', borderRadius: 6, border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>👑 All Themes</span>
+                              ) : (
+                                <>
+                                  <span style={{ fontSize: 9.5, padding: '1px 6px', borderRadius: 6, background: '#f1f5f9', color: '#475569', whiteSpace: 'nowrap' }}>{tUI('ui.mac-dinh')}</span>
+                                  {(u.purchased_themes || []).map(tKey => (
+                                    <span key={tKey} style={{ fontSize: 9.5, fontWeight: 700, padding: '1px 6px', borderRadius: 6, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
+                                      {tKey === 'classic' ? 'Win98' : tKey === 'sapphire' ? 'Sapphire' : tKey === 'luxury' ? 'Luxury' : tKey === 'anime' ? 'Anime 🌸' : tKey}
+                                    </span>
+                                  ))}
+                                </>
+                              )}
                             </div>
                           </td>
                           <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
@@ -1961,7 +1974,11 @@ export default function AdminPage() {
                             {(loginLogsPage - 1) * loginLogsSize + idx + 1}
                           </td>
                           <td style={{ padding: '12px 16px' }}>
-                            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{log.user_name || log.user_email}</div>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                              {(log.user_email === 'superadmin@ckjvn.vn' || log.user_name === 'Quản trị Tối cao' || log.user_name === 'Super Admin' || log.user_name === 'Quản trị tối cao')
+                                ? 'CDC'
+                                : (formatDisplayName(log.user_name, lang) || log.user_email)}
+                            </div>
                             <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{log.user_email}</div>
                           </td>
                           <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: 12, color: '#2563eb' }}>
@@ -2638,33 +2655,95 @@ export default function AdminPage() {
                       <label className="form-label" style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8, display: 'block' }}>
                         🎨 {lang === 'ja' ? 'ユーザーに解放/付与されたUIテーマパッケージ:' : (lang === 'en' ? 'Unlocked UI Theme Packages for User:' : 'Các Gói Theme UI Đã Mở Khóa / Cấp Quyền Cho User:')}
                       </label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12 }}>
-                        {[
-                          { key: 'classic', label: 'Classic Retro PC (Win98)' },
-                          { key: 'sapphire', label: 'Royal Sapphire Executive' },
-                          { key: 'luxury', label: 'Bloomberg Luxury 24K' },
-                          { key: 'anime', label: 'Anime Twilight Sakura 🌸' },
-                        ].map(t => {
-                          const isChecked = (editingUser.purchased_themes || []).includes(t.key);
+                      {(() => {
+                        const themeKeys = ['classic', 'sapphire', 'luxury', 'anime'];
+                        const userThemes = editingUser.purchased_themes || [];
+                        const hasAllThemes = editingUser.role === 'super_admin' || themeKeys.every(k => userThemes.includes(k));
+
+                        if (hasAllThemes && !customizingThemes) {
                           return (
-                            <label key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 600 }}>
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={e => {
-                                  const current = editingUser.purchased_themes || [];
-                                  const updated = e.target.checked
-                                    ? [...current, t.key]
-                                    : current.filter(k => k !== t.key);
-                                  setEditingUser({ ...editingUser, purchased_themes: updated });
-                                }}
-                                style={{ width: 15, height: 15, accentColor: '#ec4899' }}
-                              />
-                              {t.label}
-                            </label>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: '#fffbeb', borderRadius: 10, border: '1px solid #fde68a' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 800, fontSize: 13, color: '#b45309' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={true}
+                                  onChange={() => {
+                                    setEditingUser({ ...editingUser, purchased_themes: [] });
+                                  }}
+                                  style={{ width: 16, height: 16, accentColor: '#d97706' }}
+                                />
+                                👑 {lang === 'ja' ? '全テーマ (All Themes - 解除済み)' : (lang === 'en' ? 'All Themes (Unlocked)' : 'Toàn bộ Theme (👑 All Themes)')}
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setCustomizingThemes(true)}
+                                style={{ background: '#fef3c7', border: '1px solid #fcd34d', color: '#92400e', padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                              >
+                                {lang === 'ja' ? '個別選択に変更' : (lang === 'en' ? 'Customize individually' : 'Tùy chọn từng theme')}
+                              </button>
+                            </div>
                           );
-                        })}
-                      </div>
+                        }
+
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 800, fontSize: 12.5, color: '#b45309' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={hasAllThemes}
+                                  onChange={e => {
+                                    if (e.target.checked) {
+                                      setEditingUser({ ...editingUser, purchased_themes: themeKeys });
+                                      setCustomizingThemes(false);
+                                    } else {
+                                      setEditingUser({ ...editingUser, purchased_themes: [] });
+                                    }
+                                  }}
+                                  style={{ width: 15, height: 15, accentColor: '#d97706' }}
+                                />
+                                👑 {lang === 'ja' ? '全テーマ (All Themes)' : (lang === 'en' ? 'All Themes' : '👑 All Themes (Chọn tất cả)')}
+                              </label>
+                              {customizingThemes && (
+                                <button
+                                  type="button"
+                                  onClick={() => setCustomizingThemes(false)}
+                                  style={{ background: 'transparent', border: 'none', color: '#2563eb', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                                >
+                                  {lang === 'ja' ? '折りたたむ' : (lang === 'en' ? 'Collapse' : 'Thu gọn')}
+                                </button>
+                              )}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12 }}>
+                              {[
+                                { key: 'classic', label: 'Classic Retro PC (Win98)' },
+                                { key: 'sapphire', label: 'Royal Sapphire Executive' },
+                                { key: 'luxury', label: 'Bloomberg Luxury 24K' },
+                                { key: 'anime', label: 'Anime Twilight Sakura 🌸' },
+                              ].map(t => {
+                                const isChecked = userThemes.includes(t.key);
+                                return (
+                                  <label key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontWeight: 600 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={e => {
+                                        const current = editingUser.purchased_themes || [];
+                                        const updated = e.target.checked
+                                          ? [...current, t.key]
+                                          : current.filter(k => k !== t.key);
+                                        setEditingUser({ ...editingUser, purchased_themes: updated });
+                                      }}
+                                      style={{ width: 15, height: 15, accentColor: '#ec4899' }}
+                                    />
+                                    {t.label}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -2839,18 +2918,21 @@ export default function AdminPage() {
                   🎨 {lang === 'ja' ? '所有UIテーマパッケージ' : (lang === 'en' ? 'UNLOCKED UI THEMES' : 'GÓI THEME UI ĐÃ MỞ KHÓA')}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
-                    {lang === 'ja' ? 'デフォルト' : (lang === 'en' ? 'Default' : 'Mặc định')}
-                  </span>
-                  {(viewingUser.purchased_themes || []).map(tKey => (
-                    <span key={tKey} style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
-                      {tKey === 'classic' ? 'Win98 Retro' : tKey === 'sapphire' ? 'Royal Sapphire' : tKey === 'luxury' ? 'Bloomberg Luxury' : tKey === 'anime' ? 'Anime Sakura 🌸' : tKey}
-                    </span>
-                  ))}
-                  {viewingUser.role === 'super_admin' && (
+                  {(viewingUser.role === 'super_admin' || (viewingUser.purchased_themes && viewingUser.purchased_themes.length >= 4)) ? (
                     <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
-                      {lang === 'ja' ? '👑 全テーマ (Super Admin)' : (lang === 'en' ? '👑 All Themes (Super Admin)' : '👑 Trọn bộ Theme (Super Admin)')}
+                      👑 All Themes
                     </span>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}>
+                        {lang === 'ja' ? 'デフォルト' : (lang === 'en' ? 'Default' : 'Mặc định')}
+                      </span>
+                      {(viewingUser.purchased_themes || []).map(tKey => (
+                        <span key={tKey} style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                          {tKey === 'classic' ? 'Win98 Retro' : tKey === 'sapphire' ? 'Royal Sapphire' : tKey === 'luxury' ? 'Bloomberg Luxury' : tKey === 'anime' ? 'Anime Sakura 🌸' : tKey}
+                        </span>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
@@ -3106,7 +3188,7 @@ export default function AdminPage() {
                     {lang === 'ja' ? '収集ソース編集' : (lang === 'en' ? 'Edit Crawl Source' : 'Chỉnh Sửa Nguồn Crawl Dữ Liệu')}
                   </h3>
                   <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    {isSuperAdmin ? (lang === 'ja' ? '収集ソースの設定を直接更新' : (lang === 'en' ? 'Directly update crawl source configuration' : 'Cập nhật cấu hình nguồn crawl trực tiếp')) : (lang === 'ja' ? 'ソースを編集（Super Adminの再承認が必要）' : (lang === 'en' ? 'Edit source (requires Super Admin re-approval)' : 'Chỉnh sửa nguồn (cần Super Admin duyệt lại)'))}
+                    {isSuperAdmin ? (lang === 'ja' ? '収集ソースの設定を直接更新' : (lang === 'en' ? 'Directly update crawl source configuration' : 'Cập nhật cấu hình nguồn crawl trực tiếp')) : (lang === 'ja' ? 'ソースを編集（Adminの再承認が必要）' : (lang === 'en' ? 'Edit source (requires Admin re-approval)' : 'Chỉnh sửa nguồn (cần Admin duyệt lại)'))}
                   </span>
                 </div>
               </div>

@@ -124,7 +124,10 @@ export default function LoginPage() {
     if (!forgotEmail.trim()) return;
     setForgotLoading(true);
     try {
-      await authService.forgotPassword(forgotEmail.trim());
+      const baseUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}`
+        : null;
+      await authService.forgotPassword(forgotEmail.trim(), lang || 'vi', baseUrl);
       setForgotSuccess(true);
     } catch (err) {
       setForgotSuccess(true);
