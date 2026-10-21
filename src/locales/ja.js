@@ -188,6 +188,8 @@ export default {
   'news.bookmarkHintRow': '記事行のブックマークアイコンをクリックして保存します。',
   'news.bookmarkHintCard': '記事カードのブックマークアイコンをクリックして保存します。',
   'news.noSearchResult': '「{search}」に一致する結果はありません。別のキーワードをお試しください。',
+  'news.relatedDivider': '関連記事',
+  'news.noExactMatch': '「{search}」に完全一致する記事はありません — 関連記事',
   'news.autoCrawlSub': 'システムが最新データを自動収集しています。',
   'news.readOriginal': '原文を見る',
   'news.save': '保存',

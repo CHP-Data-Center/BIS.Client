@@ -188,6 +188,8 @@ export default {
   'news.bookmarkHintRow': 'Click the bookmark icon on the article row to save it.',
   'news.bookmarkHintCard': 'Click the bookmark icon on the article card to save it.',
   'news.noSearchResult': 'No results for "{search}". Try other keywords.',
+  'news.relatedDivider': 'Related articles',
+  'news.noExactMatch': 'No exact match for "{search}" — related articles',
   'news.autoCrawlSub': 'The system automatically crawls the latest data.',
   'news.readOriginal': 'View original',
   'news.save': 'Save',

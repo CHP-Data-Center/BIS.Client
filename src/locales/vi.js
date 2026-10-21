@@ -188,6 +188,8 @@ export default {
   'news.bookmarkHintRow': 'Bấm vào biểu tượng bookmark trên dòng bài viết để lưu lại.',
   'news.bookmarkHintCard': 'Bấm vào biểu tượng bookmark trên thẻ bài viết để lưu lại.',
   'news.noSearchResult': 'Không có kết quả cho "{search}". Thử từ khóa khác.',
+  'news.relatedDivider': 'Bài viết liên quan',
+  'news.noExactMatch': 'Không có bài khớp chính xác "{search}" — bài viết liên quan',
   'news.autoCrawlSub': 'Hệ thống tự động crawl dữ liệu mới nhất.',
   'news.readOriginal': 'Xem bài gốc',
   'news.save': 'Lưu lại',

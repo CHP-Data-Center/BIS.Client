@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Fragment, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import {
   Search, Filter, ChevronRight, ChevronDown, ChevronUp, Bookmark, BookmarkCheck,
@@ -70,6 +70,23 @@ function CompactSkeleton() {
         <div className="skeleton" style={{ width: '90%', height: 12, borderRadius: 4 }} />
       </div>
       <div className="skeleton" style={{ width: 28, height: 28, borderRadius: 6, flexShrink: 0 }} />
+    </div>
+  );
+}
+
+// Đường kẻ ngang ngăn nhóm "khớp chính xác cụm từ" với nhóm "bài viết liên quan".
+function RelatedDivider({ label }) {
+  return (
+    <div
+      role="separator"
+      style={{
+        gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12,
+        margin: '8px 0', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600,
+      }}
+    >
+      <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      <span style={{ whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
     </div>
   );
 }
@@ -331,6 +348,7 @@ export default function NewsPage() {
   const [loading, setLoading]                 = useState(true);
   const [articles, setArticles]               = useState([]);
   const [total, setTotal]                     = useState(0);
+  const [exactTotal, setExactTotal]           = useState(null); // số bài khớp nguyên cụm (null = không tìm)
   const [page, setPage]                       = useState(1);
   const [onlyBookmarked, setOnlyBookmarked]   = useState(false);
   const [bookmarkedArticles, setBookmarkedArticles] = useState([]);
@@ -448,6 +466,7 @@ export default function NewsPage() {
 
       let items = [];
       let tot = 0;
+      let exact = null;
 
       if (srcConfig.api === 'oda') {
         // Dự án ADB / World Bank (bảng oda_projects).
@@ -484,14 +503,17 @@ export default function NewsPage() {
         const res = await articlesService.getArticles(params, force);
         items = res.items || [];
         tot = res.total || 0;
+        exact = res.exact_total ?? null;
       }
 
       setArticles(items);
       setTotal(tot);
+      setExactTotal(exact);
     } catch (e) {
       console.warn('NewsPage fetch error:', e);
       setArticles([]);
       setTotal(0);
+      setExactTotal(null);
     } finally {
       setLoading(false);
     }
@@ -681,6 +703,18 @@ export default function NewsPage() {
   const displayedArticles = onlyBookmarked ? bookmarkedArticles : [...filteredUserArticles, ...articles];
   const effectiveTotal = onlyBookmarked ? bookmarkedArticles.length : total + filteredUserArticles.length;
   const isPageLoading = onlyBookmarked ? loadingBookmarks : loading;
+  // Bài đầu tiên của nhóm "liên quan" trên trang này → chèn đường kẻ phân tách ngay trước nó.
+  const firstRelatedId = useMemo(() => {
+    if (onlyBookmarked || exactTotal == null) return null;
+    const first = articles.find((a) => a.match_kind === 'related');
+    return first ? first.id : null;
+  }, [articles, exactTotal, onlyBookmarked]);
+  const relatedLabel = exactTotal === 0
+    ? t('news.noExactMatch', { search: (search || '').trim() })
+    : t('news.relatedDivider');
+  const dividerBefore = (a) => (!a.is_user_post && a.id === firstRelatedId
+    ? <RelatedDivider label={relatedLabel} />
+    : null);
   const bookmarkedCount = bookmarkedArticles.length;
 
   if (source === 'worldbank') {
@@ -1381,12 +1415,14 @@ export default function NewsPage() {
                     </div>
                   )
                   : displayedArticles.map((a, i) => (
-                      <CompactNewsRow
-                        key={a.is_user_post ? `doc-${a.id}` : a.id}
-                        article={a}
-                        index={i}
-                        onOpenPost={(post) => nav(`/project-documents/${post.id}`)}
-                      />
+                      <Fragment key={a.is_user_post ? `doc-${a.id}` : a.id}>
+                        {dividerBefore(a)}
+                        <CompactNewsRow
+                          article={a}
+                          index={i}
+                          onOpenPost={(post) => nav(`/project-documents/${post.id}`)}
+                        />
+                      </Fragment>
                     ))
               }
             </div>
@@ -1414,12 +1450,14 @@ export default function NewsPage() {
                     </div>
                   )
                   : displayedArticles.map((a, i) => (
-                      <NewsCard
-                        key={a.is_user_post ? `doc-${a.id}` : a.id}
-                        article={a}
-                        index={i}
-                        onOpenPost={(post) => nav(`/project-documents/${post.id}`)}
-                      />
+                      <Fragment key={a.is_user_post ? `doc-${a.id}` : a.id}>
+                        {dividerBefore(a)}
+                        <NewsCard
+                          article={a}
+                          index={i}
+                          onOpenPost={(post) => nav(`/project-documents/${post.id}`)}
+                        />
+                      </Fragment>
                     ))
               }
             </div>
