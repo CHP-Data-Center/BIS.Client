@@ -614,13 +614,32 @@ export default function AdminPage() {
   };
 
   const handleDeleteUser = (u) => {
+    const isMe = user && (u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase()));
+    if (isMe) {
+      showAlert('error', lang === 'ja' ? 'ログイン中の自身のアカウントは削除できません。' : (lang === 'en' ? 'Cannot delete your own active account.' : 'Không thể xóa tài khoản bạn đang đăng nhập.'));
+      return;
+    }
+
+    const displayName = formatDisplayName(u.display_name, lang) || u.email;
+    const roleLabel = u.role === 'super_admin' ? (lang === 'ja' ? '👑 システム管理者 (Super Admin)' : lang === 'en' ? '👑 Super Admin' : '👑 Quản trị tối cao (Super Admin)')
+      : u.role === 'admin' ? (lang === 'ja' ? '🔰 組織管理者 (Admin)' : lang === 'en' ? '🔰 Admin' : '🔰 Quản trị viên (Admin)')
+      : u.role === 'staff' ? (lang === 'ja' ? '🧑‍💼 スタッフ' : lang === 'en' ? '🧑‍💼 Staff' : '🧑‍💼 Nhân viên')
+      : (lang === 'ja' ? '👤 一般ユーザー' : lang === 'en' ? '👤 User' : '👤 Người dùng');
+
     setDeleteConfirm({
       type: 'user',
       item: u,
-      title: tUI('ui.xoa-tai-khoan-nguoi-dung'),
-      message: lang === 'ja' ? 'このアカウントをシステムから削除してもよろしいですか？' : (lang === 'en' ? 'Are you sure you want to delete this account from the system?' : 'Bạn có chắc chắn muốn xóa tài khoản này khỏi hệ thống?'),
-      itemName: u.email,
-      itemSub: u.display_name ? `${lang === 'ja' ? '氏名: ' : (lang === 'en' ? 'Name: ' : 'Họ tên: ')}${formatDisplayName(u.display_name, lang)}` : ''
+      modalType: 'danger',
+      title: lang === 'ja' ? 'アカウントの削除確認' : (lang === 'en' ? 'Confirm Permanent Account Deletion' : 'Xác Nhận Xóa Vĩnh Viễn Tài Khoản'),
+      message: lang === 'ja'
+        ? 'このアカウントをシステムから完全に削除してもよろしいですか？関連するすべてのセッション、権限、およびデータは永久に削除され、元に戻すことはできません。'
+        : (lang === 'en'
+          ? 'Are you sure you want to permanently delete this account from the system? All associated sessions, permissions, and data will be permanently removed and cannot be undone.'
+          : 'Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản này khỏi hệ thống không? Toàn bộ phiên đăng nhập, quyền hạn và dữ liệu liên quan sẽ bị xóa và không thể khôi phục.'),
+      itemName: `${displayName} (${u.email})`,
+      itemSub: `${lang === 'ja' ? '役割' : lang === 'en' ? 'Role' : 'Vai trò'}: ${roleLabel} • ID: #${u.id}`,
+      confirmText: lang === 'ja' ? '完全に削除する' : (lang === 'en' ? 'Delete Permanently' : 'Xác Nhận Xóa Vĩnh Viễn'),
+      cancelText: lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy Bỏ'),
     });
   };
 
@@ -828,7 +847,9 @@ export default function AdminPage() {
       if (type === 'user') {
         await adminService.deleteUser(item.id);
         setUsers(prev => prev.filter(u => u.id !== item.id));
-        showAlert('success', `Đã xóa tài khoản "${item.email}" thành công.`);
+        if (viewingUser?.id === item.id) setViewingUser(null);
+        if (editingUser?.id === item.id) setEditingUser(null);
+        showAlert('success', lang === 'ja' ? `ユーザー「${item.email}」を完全に削除しました。` : (lang === 'en' ? `Account "${item.email}" deleted successfully.` : `Đã xóa vĩnh viễn tài khoản "${item.email}" thành công.`));
       } else if (type === 'source') {
         await adminService.deleteSource(item.id);
         setSources(prev => prev.filter(s => s.id !== item.id));
@@ -1748,14 +1769,22 @@ export default function AdminPage() {
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 1080 }}>
                     <thead>
                       <tr style={{ background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                        <th style={{ padding: '12px 20px' }}>{tUI('ui.ho-amp-ten')}</th>
-                        <th style={{ padding: '12px 20px' }}>Email</th>
-                        <th style={{ padding: '12px 20px' }}>{tUI('ui.vai-tro')}</th>
-                        <th style={{ padding: '12px 20px' }}>{tUI('ui.goi-du-lieu-amp-han-dung')}</th>
-                        <th style={{ padding: '12px 20px' }}>{tUI('ui.theme-ui-so-huu')}</th>
-                        <th style={{ padding: '12px 20px' }}>{tUI('ui.trang-thai')}</th>
-                        <th style={{ padding: '12px 20px' }}>{tUI('ui.ngay-tao')}</th>
-                        <th style={{ padding: '12px 20px', textAlign: 'right' }}>{tUI('ui.hanh-dong')}</th>
+                        <th style={{ padding: '12px 14px' }}>{tUI('ui.ho-amp-ten')}</th>
+                        <th style={{ padding: '12px 14px' }}>Email</th>
+                        <th style={{ padding: '12px 14px' }}>{tUI('ui.vai-tro')}</th>
+                        <th style={{ padding: '12px 14px' }}>{tUI('ui.goi-du-lieu-amp-han-dung')}</th>
+                        <th style={{ padding: '12px 14px' }}>{tUI('ui.theme-ui-so-huu')}</th>
+                        <th style={{ padding: '12px 14px' }}>{tUI('ui.trang-thai')}</th>
+                        <th style={{ padding: '12px 14px' }}>{tUI('ui.ngay-tao')}</th>
+                        <th style={{
+                          padding: '12px 16px',
+                          textAlign: 'right',
+                          position: 'sticky',
+                          right: 0,
+                          background: 'var(--bg-surface-2)',
+                          zIndex: 10,
+                          boxShadow: '-6px 0 10px -4px rgba(0,0,0,0.06)'
+                        }}>{tUI('ui.hanh-dong')}</th>
                       </tr>
                     </thead>
                   <tbody>
@@ -1764,8 +1793,8 @@ export default function AdminPage() {
                       const isActive = u.is_active !== false;
                       const isMe = user && (u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase()));
                       return (
-                        <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                          <td style={{ padding: '14px 20px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                        <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
+                          <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                               <div style={{
                                 width: 36, height: 36, minWidth: 36, minHeight: 36, flexShrink: 0,
@@ -1786,8 +1815,8 @@ export default function AdminPage() {
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{u.email}</td>
-                          <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 14px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{u.email}</td>
+                          <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <span style={{
                                 fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20, width: 'fit-content',
@@ -1803,7 +1832,7 @@ export default function AdminPage() {
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                               <span style={{ fontSize: 11, fontWeight: 800, color: u.role === 'super_admin' || u.active_package === 'full' ? '#059669' : u.active_package === 'enterprise' || u.role === 'admin' ? '#9333ea' : u.active_package === 'combo2' || u.active_package === 'single' ? '#2563eb' : '#64748b', whiteSpace: 'nowrap' }}>
                                 {formatUserPackage(u, lang)}
@@ -1814,7 +1843,7 @@ export default function AdminPage() {
                               </span>
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px' }}>
+                          <td style={{ padding: '12px 14px' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 180 }}>
                               {(u.role === 'super_admin' || (u.purchased_themes && u.purchased_themes.length >= 4)) ? (
                                 <span style={{ fontSize: 9.5, fontWeight: 800, color: '#b45309', background: '#fffbeb', padding: '2px 8px', borderRadius: 6, border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>👑 All Themes</span>
@@ -1830,7 +1859,7 @@ export default function AdminPage() {
                               )}
                             </div>
                           </td>
-                          <td style={{ padding: '14px 20px', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                             <span style={{
                               fontSize: 10.5, fontWeight: 800, padding: '3px 10px', borderRadius: 20,
                               background: isActive ? '#ecfdf5' : '#fef2f2',
@@ -1841,15 +1870,24 @@ export default function AdminPage() {
                               {isActive ? (lang === 'ja' ? '🟢 有効' : lang === 'en' ? '🟢 ACTIVE' : '🟢 HOẠT ĐỘNG') : (lang === 'ja' ? '🔴 停止中' : lang === 'en' ? '🔴 LOCKED' : '🔴 ĐÃ KHÓA')}
                             </span>
                           </td>
-                          <td style={{ padding: '14px 20px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 14px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
                             {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '-'}
                           </td>
-                          <td style={{ padding: '14px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <td style={{
+                            padding: '12px 16px',
+                            textAlign: 'right',
+                            whiteSpace: 'nowrap',
+                            position: 'sticky',
+                            right: 0,
+                            background: 'var(--bg-surface)',
+                            zIndex: 5,
+                            boxShadow: '-6px 0 10px -4px rgba(0,0,0,0.06)'
+                          }}>
                             <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                               <button
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => setViewingUser(u)}
-                                style={{ color: '#8b5cf6', padding: '6px 10px' }}
+                                style={{ color: '#8b5cf6', padding: '6px 9px' }}
                                 title={tUI('ui.xem-chi-tiet-tai-khoan')}
                               >
                                 <Eye size={14} /> {lang === 'ja' ? '詳細' : (lang === 'en' ? 'Details' : 'Chi tiết')}
@@ -1857,7 +1895,7 @@ export default function AdminPage() {
                               <button
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => handleOpenEditUser(u)}
-                                style={{ color: '#2563eb', padding: '6px 10px' }}
+                                style={{ color: '#2563eb', padding: '6px 9px' }}
                                 title={tUI('ui.chinh-sua-tai-khoan')}
                               >
                                 <Edit size={14} /> {lang === 'ja' ? '編集' : (lang === 'en' ? 'Edit' : 'Sửa')}
@@ -1870,19 +1908,36 @@ export default function AdminPage() {
                                   setNewPasswordVal('');
                                   setCopiedPw(false);
                                 }}
-                                style={{ color: '#059669', padding: '6px 10px' }}
+                                style={{ color: '#059669', padding: '6px 9px' }}
                                 title={t('admin.resetPassword')}
                               >
-                                <Key size={14} /> {t('admin.resetPassword')}
+                                <Key size={14} /> {lang === 'ja' ? 'PW再設定' : (lang === 'en' ? 'Reset PW' : 'Đổi MK')}
                               </button>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => handleDeleteUser(u)}
-                                style={{ color: '#ef4444', padding: '6px 10px' }}
-                                title={tUI('ui.xoa-tai-khoan')}
-                              >
-                                <Trash2 size={14} /> {lang === 'ja' ? '削除' : (lang === 'en' ? 'Delete' : 'Xóa')}
-                              </button>
+                              {isMe ? (
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  disabled
+                                  style={{ color: 'var(--text-muted)', padding: '6px 9px', opacity: 0.4, cursor: 'not-allowed' }}
+                                  title={lang === 'ja' ? 'ログイン中の自身のアカウントは削除できません' : (lang === 'en' ? 'Cannot delete your own account' : 'Không thể xóa tài khoản của chính mình')}
+                                >
+                                  <Trash2 size={14} /> {lang === 'ja' ? '削除' : (lang === 'en' ? 'Delete' : 'Xóa')}
+                                </button>
+                              ) : (
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  onClick={() => handleDeleteUser(u)}
+                                  style={{
+                                    color: '#ef4444',
+                                    padding: '6px 10px',
+                                    background: 'rgba(239, 68, 68, 0.08)',
+                                    borderRadius: 8,
+                                    fontWeight: 700
+                                  }}
+                                  title={tUI('ui.xoa-tai-khoan')}
+                                >
+                                  <Trash2 size={14} /> {lang === 'ja' ? '削除' : (lang === 'en' ? 'Delete' : 'Xóa')}
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -2787,24 +2842,45 @@ export default function AdminPage() {
               </div>
 
               {/* Modal Footer */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setEditingUser(null)}
-                  style={{ padding: '10px 20px', borderRadius: 12 }}
-                >
-                  {lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy bỏ')}
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={actionLoading}
-                  style={{ padding: '10px 24px', borderRadius: 12, gap: 8, fontWeight: 800 }}
-                >
-                  {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
-                  {lang === 'ja' ? '変更を保存' : (lang === 'en' ? 'Save Changes' : 'Lưu Thay Đổi')}
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
+                <div>
+                  {!(user && (editingUser.id === user.id || (editingUser.email && user.email && editingUser.email.toLowerCase() === user.email.toLowerCase()))) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const originalUser = users.find(u => u.id === editingUser.id);
+                        if (originalUser) {
+                          setEditingUser(null);
+                          handleDeleteUser(originalUser);
+                        }
+                      }}
+                      className="btn btn-ghost"
+                      style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.08)', padding: '10px 18px', borderRadius: 12, gap: 6, fontWeight: 700 }}
+                      title={tUI('ui.xoa-tai-khoan')}
+                    >
+                      <Trash2 size={15} /> {lang === 'ja' ? 'アカウントを削除' : (lang === 'en' ? 'Delete Account' : 'Xóa Tài Khoản')}
+                    </button>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setEditingUser(null)}
+                    style={{ padding: '10px 20px', borderRadius: 12 }}
+                  >
+                    {lang === 'ja' ? 'キャンセル' : (lang === 'en' ? 'Cancel' : 'Hủy bỏ')}
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={actionLoading}
+                    style={{ padding: '10px 24px', borderRadius: 12, gap: 8, fontWeight: 800 }}
+                  >
+                    {actionLoading ? <Loader2 size={16} style={{ animation: 'spin 0.6s linear infinite' }} /> : <Check size={16} />}
+                    {lang === 'ja' ? '変更を保存' : (lang === 'en' ? 'Save Changes' : 'Lưu Thay Đổi')}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -2977,23 +3053,42 @@ export default function AdminPage() {
             </div>
 
             {/* Footer Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
-              <button
-                onClick={() => {
-                  const uToEdit = viewingUser;
-                  setViewingUser(null);
-                  handleOpenEditUser(uToEdit);
-                }}
-                className="btn btn-primary"
-                style={{ padding: '10px 20px', borderRadius: 12, gap: 6, fontWeight: 800 }}
-              >
-                <Edit size={15} /> {lang === 'ja' ? 'このアカウントを編集' : (lang === 'en' ? 'Edit This Account' : 'Chỉnh Sửa Tài Khoản Này')}
-              </button>
-              <button
-                onClick={() => setViewingUser(null)}
-                className="btn btn-ghost"
-                style={{ padding: '10px 20px', borderRadius: 12 }}
-              >{lang === 'ja' ? '閉じる' : (lang === 'en' ? 'Close' : 'Đóng')}</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '16px 28px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', flexShrink: 0 }}>
+              <div>
+                {!(user && (viewingUser.id === user.id || (viewingUser.email && user.email && viewingUser.email.toLowerCase() === user.email.toLowerCase()))) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const uToDelete = viewingUser;
+                      setViewingUser(null);
+                      handleDeleteUser(uToDelete);
+                    }}
+                    className="btn btn-ghost"
+                    style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.08)', padding: '10px 18px', borderRadius: 12, gap: 6, fontWeight: 700 }}
+                    title={tUI('ui.xoa-tai-khoan')}
+                  >
+                    <Trash2 size={15} /> {lang === 'ja' ? 'アカウントを削除' : (lang === 'en' ? 'Delete Account' : 'Xóa Tài Khoản')}
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={() => {
+                    const uToEdit = viewingUser;
+                    setViewingUser(null);
+                    handleOpenEditUser(uToEdit);
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: '10px 20px', borderRadius: 12, gap: 6, fontWeight: 800 }}
+                >
+                  <Edit size={15} /> {lang === 'ja' ? 'このアカウントを編集' : (lang === 'en' ? 'Edit This Account' : 'Chỉnh Sửa')}
+                </button>
+                <button
+                  onClick={() => setViewingUser(null)}
+                  className="btn btn-ghost"
+                  style={{ padding: '10px 20px', borderRadius: 12 }}
+                >{lang === 'ja' ? '閉じる' : (lang === 'en' ? 'Close' : 'Đóng')}</button>
+              </div>
             </div>
           </div>
         </div>,
