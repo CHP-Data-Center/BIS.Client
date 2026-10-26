@@ -496,56 +496,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Điền nhanh tài khoản dùng thử — CHỈ khi chạy `npm run dev`.
-            Điều kiện phải là `import.meta.env.DEV &&` đứng đầu, KHÔNG được `||` với
-            kiểm tra hostname: Vite thay `import.meta.env.DEV` bằng hằng `false` lúc
-            build, nên `false && (...)` bị loại bỏ hoàn toàn, còn `false || hostname===…`
-            thì cả khối vẫn nằm nguyên trong bundle. Đã kiểm bằng `vite build`: bản cũ
-            để lộ nguyên ba mật khẩu trong dist/assets/LoginPage-*.js — ai mở DevTools
-            trên trang production cũng đọc được. */}
-        {import.meta.env.DEV && (
-          <div className="login-demo-hint">
-            <div className="demo-hint-title">
-              <ShieldCheck size={13} style={{ color: 'var(--brand-600)' }} />
-              <span>{tUI('ui.tai-khoan-dung-thu-dev-only')}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('superadmin@ckjvn.vn');
-                  setPassword('SuperAdmin@12345');
-                }}
-                id="btn-demo-superadmin"
-                className="btn-demo-acc"
-              >
-                👑 {t('role.superAdmin')}: superadmin@ckjvn.vn
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@ckjvn.vn');
-                  setPassword('Admin@12345');
-                }}
-                id="btn-demo-admin"
-                className="btn-demo-acc"
-              >
-                ⚡ {t('auth.demoEnterpriseAdmin')}: admin@ckjvn.vn
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('personal@ckjvn.vn');
-                  setPassword('User@12345');
-                }}
-                id="btn-demo-user"
-                className="btn-demo-acc"
-              >
-                👤 {t('auth.demoPersonalUser')}: personal@ckjvn.vn
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Centered Modal Popup: Quên mật khẩu ── */}
